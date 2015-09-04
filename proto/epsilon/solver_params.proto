@@ -1,0 +1,52 @@
+
+syntax = "proto2";
+
+message SolverParams {
+  // General parameters
+  optional double tolerance = 1 [default=1e-3];
+  optional int32 max_iterations = 2 [default=10000];
+  optional int32 block_size = 10 [default=1000];
+  optional double rho = 11 [default=1];
+  optional bool normalize = 12 [default=false];
+
+  // Parameters for SCS
+  optional double scs_alpha = 3 [default=1.5];
+  optional double scs_rho_x = 4 [default=1e-3];
+  optional bool scs_normalize = 5 [default=true];
+  optional double scs_normalize_scale = 6 [default=5];
+
+  // Parameters for CG inner loop in SCS
+  optional double scs_cg_best_tol = 7 [default=1e-9];
+  optional double scs_cg_min_tol = 8 [default=1e-1];
+  optional double scs_cg_rate = 9 [default=2.0];
+
+  // Parameters for ADMM
+  optional double rel_tol = 13 [default=1e-2];
+  optional double abs_tol = 14 [default=1e-4];
+  optional double alpha_relaxation = 16 [default=1];
+
+  // Parameters for block splitting
+  optional int32 desired_block_size = 15 [default=1000];
+  optional double kappa_rate = 17 [default=1.5];
+
+  // Run solver for this many iterations uninterrupted
+  optional int32 epoch_iterations = 18 [default=20];
+
+  // Async mode parameters
+  optional double consensus_scale = 19 [default=1];
+  optional double push_tolerance = 21 [default=1e-4];
+
+  // How often to print debug messages
+  optional int32 debug_iterations = 22 [default=100];
+
+  // Scaling parameters
+  optional double min_scale = 23 [default=1e-3];
+
+  // Ignore stopping criteria, run until max iterations reached or externally
+  // stopped.
+  optional bool ignore_stopping_criteria = 24 [default=false];
+
+  // Enforce minimum time between updates
+  optional int32 consensus_rate_limit_usec = 25 [default = 0];
+  optional int32 status_rate_limit_usec = 26 [default = 100000];
+}

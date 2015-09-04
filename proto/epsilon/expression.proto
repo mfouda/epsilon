@@ -1,0 +1,120 @@
+
+syntax = "proto3";
+
+message Constant {
+  string data_location = 1;
+  double scalar = 2;
+  bool transpose = 3;
+}
+
+message Variable {
+  string variable_id = 1;
+  // TODO(mwytock): This is an implementation detail that is used when mapping
+  // linear operators to matrices. It should go in an ancillary data structure
+  // (e.g. VariableOffsetMap or similar) and be removed from here.
+  int32 offset = 2;
+}
+
+message Size {
+  repeated int32 dim = 1;
+}
+
+message Slice {
+  int32 start = 1;
+  int32 stop = 2;
+  int32 step = 3;
+}
+
+message Sign {
+  enum Type {
+    UNKNOWN = 0;
+    NEGATIVE = 1;
+    POSITIVE = 2;
+    ZERO = 3;
+  }
+  Type sign_type = 1;
+}
+
+message Curvature {
+  enum Type {
+    UNKNOWN = 0;
+    AFFINE = 1;
+    CONVEX = 2;
+    CONCAVE = 3;
+    CONSTANT = 4;
+  }
+  Type curvature_type = 1;
+
+  // For AFFINE, is this an elementwise function, e.g. A .* B
+  bool elementwise = 2;
+}
+
+message Expression {
+  enum Type {
+    // Default value
+    UNKNOWN = 0;
+
+    // Leaf nodes
+    CONSTANT = 1;
+    VARIABLE = 2;
+
+    // Linear operators
+    ADD = 3;
+    INDEX = 4;
+    MULTIPLY = 5;
+    MULTIPLY_ELEMENTWISE = 6;
+    NEGATE = 7;
+    SUM = 8;
+    TRANSPOSE = 9;
+    HSTACK = 10;
+    VSTACK = 11;
+    TRACE = 12;
+    RESHAPE = 13;
+
+    // Norms
+    NORM_2_ELEMENTWISE = 14;
+    P_NORM = 15;
+
+    // Elementwise functions
+    ABS = 16;
+    POWER = 17;
+    SQUARE_ROOT = 18;
+    MAX = 19;
+
+    // Convex functions
+    LOG_DET = 20;
+  }
+  Type expression_type = 1;
+  Size size = 2;
+  repeated Expression arg = 3;
+
+  Constant constant = 4;
+  Variable variable = 5;
+
+  // Should only exist for INDEX expressions
+  repeated Slice key = 6;
+
+  // DCP attributes
+  Sign sign = 7;
+  Curvature curvature = 8;
+
+  // Exponent for NORM_P or POWER
+  double p = 9;
+}
+
+enum Cone {
+  // s == 0
+  ZERO = 0;
+  // s >= 0
+  NON_NEGATIVE = 1;
+  // s : t >= norm2([x1,...,xn])
+  SECOND_ORDER = 2;
+  // s : t_ij >= norm2([x1_ij,...,xn_ij])
+  SECOND_ORDER_ELEMENTWISE = 3;
+  // S >= 0
+  SEMI_DEFINITE = 4;
+  EXPONENTIAL = 5;
+  // s : t >= norm1([x1,...,xn])
+  L1 = 6;
+  L_INFINITY= 7;
+}
