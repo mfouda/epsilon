@@ -1,12 +1,12 @@
-#include "distopt/operators/prox.h"
+#include "epsilon/operators/prox.h"
 
 #include <glog/logging.h>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/SparseCholesky>
 
-#include "distopt/expression/expression.h"
-#include "distopt/expression/operator.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/operators/affine.h"
 
 class ProxOperator : public VectorOperator {
  public:
@@ -74,10 +74,6 @@ class ProxOperator : public VectorOperator {
 
   // Affine addition
   Eigen::VectorXd c_;
-
-  // Regularization
-  double lambda_orig_, rho_;
-  Eigen::VectorXd r_;
 };
 
 class SumSquaresProx final : public ProxOperator {

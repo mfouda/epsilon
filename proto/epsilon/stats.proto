@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message StatSeries {
+  string name = 1;
+  repeated int32 time_usec = 2;
+  repeated double value = 3;
+}

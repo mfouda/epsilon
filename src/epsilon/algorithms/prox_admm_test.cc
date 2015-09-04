@@ -3,24 +3,23 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 
-#include "distopt/algorithms/algorithm_testutil.h"
-#include "distopt/algorithms/consensus_prox.h"
-#include "distopt/expression/expression.h"
-#include "distopt/expression/problem.h"
-#include "distopt/expression/expression_testutil.h"
-#include "distopt/parameters/local_parameter_service.h"
-#include "distopt/util/problems.h"
-#include "distopt/util/string.h"
-#include "distopt/util/vector_testutil.h"
+#include "epsilon/algorithms/algorithm_testutil.h"
+#include "epsilon/algorithms/prox_admm.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/expression/problem.h"
+#include "epsilon/expression/expression_testutil.h"
+#include "epsilon/parameters/local_parameter_service.h"
+#include "epsilon/util/string.h"
+#include "epsilon/util/vector_testutil.h"
 
-class ConsensusProxSolverTest : public testing::Test {
+class ProxADMMSolverTest : public testing::Test {
  protected:
-  ConsensusProxSolverTest() : var_id_("x") {
+  ProxADMMSolverTest() : var_id_("x") {
     params_.set_max_iterations(100);
   }
 
   void Solve() {
-    ConsensusProxSolver cprox(
+    ProxADMMSolver cprox(
         problem_, params_,
         std::unique_ptr<ParameterService>(new LocalParameterService));
     cprox.Solve();
@@ -47,7 +46,7 @@ class ConsensusProxSolverTest : public testing::Test {
       ProxFunction* f = problem_.add_prox_function();
       f->set_function(ProxFunction::SUM_SQUARES);
       f->set_alpha(1);
-      *f->mutable_arg() = expression::Add({
+      *f->add_arg() = expression::Add({
           expression::Multiply(TestConstant(Ai), x),
           expression::Negate(TestConstant(bi))});
 
@@ -71,14 +70,14 @@ class ConsensusProxSolverTest : public testing::Test {
         constrs.push_back(expression::Add(xs[i], expression::Negate(xs[i+1])));
       }
     }
-    *problem_.mutable_equality_constraint() = expression::VStack(constrs);
+    *problem_.add_equality_constraint() = expression::VStack(constrs);
   }
 
   void BuildNorm1(int n) {
       ProxFunction* f = problem_.add_prox_function();
       f->set_function(ProxFunction::NORM_1);
       f->set_alpha(1);
-      *f->mutable_arg() = TestVariable(n, 1);
+      *f->add_arg() = TestVariable(n, 1);
   }
 
   void BuildLasso(int m, int n, double lambda) {
@@ -92,7 +91,7 @@ class ConsensusProxSolverTest : public testing::Test {
         ProxFunction* f = problem_.add_prox_function();
         f->set_function(ProxFunction::SUM_SQUARES);
         f->set_alpha(1);
-        *f->mutable_arg() =
+        *f->add_arg() =
             expression::Add(
                 expression::Multiply(TestConstant(A), x0),
                 expression::Negate(TestConstant(b)));
@@ -102,10 +101,10 @@ class ConsensusProxSolverTest : public testing::Test {
         ProxFunction* f = problem_.add_prox_function();
         f->set_function(ProxFunction::NORM_1);
         f->set_alpha(lambda);
-        *f->mutable_arg() = x1;
+        *f->add_arg() = x1;
       }
 
-      *problem_.mutable_equality_constraint() = expression::Add(
+      *problem_.add_equality_constraint() = expression::Add(
           x0, expression::Negate(x1));
   }
 
@@ -119,7 +118,7 @@ class ConsensusProxSolverTest : public testing::Test {
       ProxFunction* f = problem_.add_prox_function();
       f->set_function(ProxFunction::SUM_SQUARES);
       f->set_alpha(1);
-      *f->mutable_arg() =
+      *f->add_arg() =
           expression::Add(x, expression::Negate(TestConstant(b)));
     }
 
@@ -127,10 +126,10 @@ class ConsensusProxSolverTest : public testing::Test {
       ProxFunction* f = problem_.add_prox_function();
       f->set_function(ProxFunction::NORM_1);
       f->set_alpha(lambda);
-      *f->mutable_arg() = u;
+      *f->add_arg() = u;
     }
 
-    *problem_.mutable_equality_constraint() = expression::Add(
+    *problem_.add_equality_constraint() = expression::Add(
         expression::Add(
             expression::Index(0, n-1, x),
             expression::Negate(
@@ -143,13 +142,16 @@ class ConsensusProxSolverTest : public testing::Test {
   SolverParams params_;
   ProblemStatus status_;
 
-  std::unordered_map<std::string, Eigen::VectorXd, std::hash<std::string>,
-                     std::equal_to<std::string>,
-                     Eigen::aligned_allocator<VectorXd>> vars_;
-
+  std::unordered_map<
+    std::string,
+    Eigen::VectorXd,
+    std::hash<std::string>,
+    std::equal_to<std::string>,
+    Eigen::aligned_allocator<std::pair<const std::string, Eigen::VectorXd>>>
+      vars_;
 };
 
-TEST_F(ConsensusProxSolverTest, LS_Split2) {
+TEST_F(ProxADMMSolverTest, LS_Split2) {
   Eigen::MatrixXd A;
   Eigen::VectorXd b;
   BuildLS(10, 5, 2, false, &A, &b);
@@ -159,7 +161,7 @@ TEST_F(ConsensusProxSolverTest, LS_Split2) {
   EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["x1"], 1e-2));
 }
 
-TEST_F(ConsensusProxSolverTest, LS_Split2_Consensus) {
+TEST_F(ProxADMMSolverTest, LS_Split2_Consensus) {
   Eigen::MatrixXd A;
   Eigen::VectorXd b;
   BuildLS(3, 2, 2, true, &A, &b);
@@ -170,14 +172,14 @@ TEST_F(ConsensusProxSolverTest, LS_Split2_Consensus) {
   EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["z"], 1e-2));
 }
 
-TEST_F(ConsensusProxSolverTest, Lasso) {
+TEST_F(ProxADMMSolverTest, Lasso) {
   BuildLasso(5, 10, 0.1);
   Solve();
   EXPECT_EQ(status_.state(), ProblemStatus::OPTIMAL);
   // TODO(mwytock): Verify result optimality
 }
 
-TEST_F(ConsensusProxSolverTest, TV) {
+TEST_F(ProxADMMSolverTest, TV) {
   BuildTV(10, 1);
   Solve();
   EXPECT_EQ(status_.state(), ProblemStatus::OPTIMAL);

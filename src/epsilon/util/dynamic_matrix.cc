@@ -1,5 +1,5 @@
 
-#include "distopt/util/dynamic_matrix.h"
+#include "epsilon/util/dynamic_matrix.h"
 
 void DynamicMatrix::RightMultiply(const DynamicMatrix& B) {
   VLOG(2) << "RightMultiply\nA:\n"

@@ -15,6 +15,22 @@ higher)
 ```
 brew install --devel protobuf
 ```
+Compile and run tets
+```
+make test
+```
 
 Compiling on Ubuntu
 -------------------
+
+Again, install the necessary dependencies
+```
+apt-get install libgflags-dev libglog-dev gperftools-dev
+```
+and download and compile the latest development version of protobuf from
+https://github.com/google/protobuf
+
+Compile and run tets
+```
+make test
+```

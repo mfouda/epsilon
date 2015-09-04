@@ -1,0 +1,36 @@
+// Data for linear operators
+
+syntax = "proto3";
+
+message Vector {
+  repeated double value = 1;
+  bytes value_bytes = 2;
+}
+
+// Data in CSC format
+message SparseMatrix {
+  int32 m = 1;
+  int32 n = 2;
+  repeated double pr = 3;
+  repeated int64 jc = 4;
+  repeated int64 ir = 5;
+}
+
+// Data in column order
+message DenseMatrix {
+  int32 m = 1;
+  int32 n = 2;
+  repeated double value = 3;
+  bytes value_bytes = 4;
+}
+
+message Data {
+  enum Type {
+    DENSE_MATRIX = 0;
+    SPARSE_MATRIX = 1;
+  }
+  Type data_type = 1;
+  DenseMatrix dense_matrix = 2;
+  SparseMatrix sparse_matrix = 3;
+  bytes value = 5;
+}

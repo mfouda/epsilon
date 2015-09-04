@@ -1,4 +1,4 @@
-#include "distopt/expression/operator.h"
+#include "epsilon/operators/affine.h"
 
 #include <memory>
 #include <mutex>
@@ -7,24 +7,17 @@
 
 #include <Eigen/SparseCore>
 
-#include "distopt/data.pb.h"
-#include "distopt/expression.pb.h"
-#include "distopt/expression/expression.h"
-#include "distopt/expression/linear.h"
-#include "distopt/file/file.h"
-#include "distopt/operator.pb.h"
-#include "distopt/util/string.h"
-#include "distopt/util/vector.h"
+#include "epsilon/expression.pb.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/file/file.h"
+#include "epsilon/util/string.h"
+#include "epsilon/util/vector.h"
 
 using Eigen::Map;
 using Eigen::MatrixXd;
 using Eigen::LLT;
 
 typedef Eigen::SparseMatrix<double> SparseXd;
-
-std::string OperatorKey(const Operator& op) {
-  return op.SerializeAsString();
-}
 
 
 DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
@@ -324,7 +317,7 @@ void BuildSparseAffineOperator(
       expr, DynamicMatrix::FromSparse(SparseIdentity(m)), &A_, &b_);
   AppendBlockTriplets(A_, i, 0, A_coeffs);
   if (b_.is_zero()) {
-    b->segment(i, m).array() = 0;
+    b->segment(i, m) = VectorXd::Zero(m);
   } else {
     b->segment(i, m) = b_.AsDense();
   }
@@ -343,13 +336,13 @@ void BuildAffineOperator(
   BuildAffineOperatorImpl(
       expr, DynamicMatrix::FromSparse(SparseIdentity(m)), &A_, &b_);
   if (A_.is_zero()) {
-    A->middleRows(i, m).array() = 0;
+    A->middleRows(i, m) = MatrixXd::Zero(m, n);
   } else {
     A->middleRows(i, m) = A_.AsDense();
   }
 
   if (b_.is_zero()) {
-    b->segment(i, m).array() = 0;
+    b->segment(i, m) = VectorXd::Zero(m);
   } else {
     b->segment(i, m) = b_.AsDense();
   }

@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "distopt/expression.pb.h"
+#include "epsilon/expression.pb.h"
 
 namespace expression {
 

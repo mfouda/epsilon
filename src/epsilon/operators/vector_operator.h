@@ -1,5 +1,5 @@
-#ifndef DISTOPT_OPERATORS_VECTOR_OPERATOR_H
-#define DISTOPT_OPERATORS_VECTOR_OPERATOR_H
+#ifndef EPSILON_OPERATORS_VECTOR_OPERATOR_H
+#define EPSILON_OPERATORS_VECTOR_OPERATOR_H
 
 #include <Eigen/Dense>
 
@@ -9,4 +9,4 @@ class VectorOperator {
   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& x) = 0;
 };
 
-#endif  // DISTOPT_OPERATORS_VECTOR_OPERATOR_H
+#endif  // EPSILON_OPERATORS_VECTOR_OPERATOR_H

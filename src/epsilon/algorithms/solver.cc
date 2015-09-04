@@ -1,8 +1,8 @@
 
-#include "distopt/algorithms/solver.h"
+#include "epsilon/algorithms/solver.h"
 
-#include "distopt/stats.pb.h"
-#include "distopt/util/string.h"
+#include "epsilon/stats.pb.h"
+#include "epsilon/util/string.h"
 
 class StatImpl final : public Stat {
  public:

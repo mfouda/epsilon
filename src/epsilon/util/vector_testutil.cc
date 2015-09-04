@@ -1,8 +1,8 @@
-#include "distopt/util/vector_testutil.h"
+#include "epsilon/util/vector_testutil.h"
 
 #include <glog/logging.h>
 
-#include "distopt/util/vector.h"
+#include "epsilon/util/vector.h"
 
 using Eigen::Infinity;
 

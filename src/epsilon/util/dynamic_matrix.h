@@ -1,10 +1,10 @@
-#ifndef DISTOPT_UTIL_DYNAMIC_MATRIX_H
-#define DISTOPT_UTIL_DYNAMIC_MATRIX_H
+#ifndef EPSILON_UTIL_DYNAMIC_MATRIX_H
+#define EPSILON_UTIL_DYNAMIC_MATRIX_H
 
 #include <glog/logging.h>
 
-#include "distopt/util/vector.h"
-#include "distopt/util/string.h"
+#include "epsilon/util/vector.h"
+#include "epsilon/util/string.h"
 
 // Can hold either a sparse or dense matrix
 class DynamicMatrix {
@@ -165,4 +165,4 @@ class DynamicMatrix {
   MatrixXd dense_;
 };
 
-#endif  // DISTOPT_UTIL_DYNAMIC_MATRIX_H
+#endif  // EPSILON_UTIL_DYNAMIC_MATRIX_H

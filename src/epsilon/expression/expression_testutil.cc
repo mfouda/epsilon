@@ -1,12 +1,12 @@
 
-#include "distopt/expression/expression_testutil.h"
+#include "epsilon/expression/expression_testutil.h"
 
 #include <grpc++/client_context.h>
 #include <gflags/gflags.h>
 
-#include "distopt/data.pb.h"
-#include "distopt/util/string.h"
-#include "distopt/file/file.h"
+#include "epsilon/data.pb.h"
+#include "epsilon/util/string.h"
+#include "epsilon/file/file.h"
 
 DEFINE_string(test_data_prefix, "/mem/test",
 	      "prefix for storing test data");

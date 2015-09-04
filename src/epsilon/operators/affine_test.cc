@@ -6,13 +6,12 @@
 
 #include <Eigen/Dense>
 
-#include "distopt/data.pb.h"
-#include "distopt/expression.pb.h"
-#include "distopt/expression/expression.h"
-#include "distopt/expression/expression_testutil.h"
-#include "distopt/expression/operator.h"
-#include "distopt/util/vector.h"
-#include "distopt/util/vector_testutil.h"
+#include "epsilon/expression.pb.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/expression/expression_testutil.h"
+#include "epsilon/operators/affine.h"
+#include "epsilon/util/vector.h"
+#include "epsilon/util/vector_testutil.h"
 
 class LinearExpressionOperatorTest : public testing::Test {
  protected:

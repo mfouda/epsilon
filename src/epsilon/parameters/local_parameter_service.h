@@ -1,7 +1,7 @@
-#ifndef DISTOPT_PARAMETERS_LOCAL_PARAMETER_SERVICE_H
-#define DISTOPT_PARAMETERS_LOCAL_PARAMETER_SERVICE_H
+#ifndef EPSILON_PARAMETERS_LOCAL_PARAMETER_SERVICE_H
+#define EPSILON_PARAMETERS_LOCAL_PARAMETER_SERVICE_H
 
-#include "distopt/parameters/parameter_service.h"
+#include "epsilon/parameters/parameter_service.h"
 
 class LocalParameterService final : public ParameterService {
 public:
@@ -24,4 +24,4 @@ private:
 
 };
 
-#endif  // DISTOPT_PARAMETERS_LOCAL_PARAMETER_SERVICE_H
+#endif  // EPSILON_PARAMETERS_LOCAL_PARAMETER_SERVICE_H

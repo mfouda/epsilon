@@ -11,8 +11,8 @@
 
 #include <glog/logging.h>
 
-#include "distopt/problem.pb.h"
-#include "distopt/util/time.h"
+#include "epsilon/util/time.h"
+#include "epsilon/status.pb.h"
 
 class Solution;
 class StatSeries;

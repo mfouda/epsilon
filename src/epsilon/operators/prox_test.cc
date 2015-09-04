@@ -1,11 +1,10 @@
 
 #include <gtest/gtest.h>
 
-#include "distopt/operators/prox.h"
-#include "distopt/expression/expression_testutil.h"
-#include "distopt/expression/expression.h"
-#include "distopt/util/problems.h"
-#include "distopt/util/vector_testutil.h"
+#include "epsilon/operators/prox.h"
+#include "epsilon/expression/expression_testutil.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/util/vector_testutil.h"
 
 
 void TestNormL1Weighted(
@@ -17,7 +16,7 @@ void TestNormL1Weighted(
   ProxFunction f;
   f.set_alpha(1);
   f.set_function(ProxFunction::NORM_1);
-  *f.mutable_arg() = expression::MultiplyElementwise(
+  *f.add_arg() = expression::MultiplyElementwise(
       TestConstant(Eigen::Map<const Eigen::VectorXd>(&weights[0], n)),
       TestVariable(n, 1));
 
@@ -46,7 +45,7 @@ void TestNormL1L2(const std::vector<double>& v,
   ProxFunction f;
   f.set_function(ProxFunction::NORM_1_2);
   f.set_alpha(1);
-  *f.mutable_arg() = expression::Variable(m, n, "X");
+  *f.add_arg() = expression::Variable(m, n, "X");
 
   std::unique_ptr<VectorOperator> prox(CreateProxOperator(f, lambda, m*n));
   prox->Init();
@@ -65,7 +64,7 @@ void TestSumSquares(int m, int n, double lambda) {
   ProxFunction f;
   f.set_function(ProxFunction::SUM_SQUARES);
   f.set_alpha(1);
-  *f.mutable_arg() =
+  *f.add_arg() =
       expression::Add({
           expression::Multiply(
               TestConstant(A),
@@ -92,7 +91,7 @@ void TestNegativeLogDet(int n, double lambda) {
   ProxFunction f;
   f.set_function(ProxFunction::NEGATIVE_LOG_DET);
   f.set_alpha(1);
-  *f.mutable_arg() = TestVariable(n, n);
+  *f.add_arg() = TestVariable(n, n);
 
   srand(0);
   Eigen::MatrixXd V = Eigen::MatrixXd::Random(n, n);
@@ -120,7 +119,7 @@ Eigen::VectorXd TestProx(
   ProxFunction f;
   f.set_function(function);
   f.set_alpha(1);
-  *f.mutable_arg() = arg;
+  *f.add_arg() = arg;
 
   std::unique_ptr<VectorOperator> prox(CreateProxOperator(f, lambda, n));
   prox->Init();

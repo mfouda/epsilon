@@ -1,0 +1,60 @@
+
+syntax = "proto3";
+
+message ProblemStatus {
+  enum State {
+    NOT_STARTED = 0;
+    INITIALIZING = 1;
+    RUNNING = 2;
+    OPTIMAL = 3;
+    MAX_ITERATIONS_REACHED = 4;
+    ERROR = 5;
+  }
+  State state = 1;
+  double objective_value = 2;
+  int32 num_iterations = 3;
+  int32 num_blocks = 6;
+  int32 num_workers = 7;
+  int32 num_sub_iterations = 8;
+  int32 n_internal = 10;
+
+  // TODO(mwytock): Timing/Residuals are specific to particular ADMM-like
+  // algorithms. We likely want to have a more general method for reporting
+  // values of interesting (e.g. general key/values?)
+  message Timing {
+    double total_time = 1;
+    double init_time = 2;
+    double project_linear_time = 3;
+    double project_epigraph_time = 4;
+    double project_cone_time = 5;
+    double update_dual_time = 6;
+  }
+  Timing timing = 4;
+
+  message Residuals {
+    double r_norm = 1;
+    double s_norm = 2;
+    double epsilon_primal = 3;
+    double epsilon_dual = 4;
+    double x_norm = 5;
+    double y_norm = 6;
+  }
+  Residuals residuals = 5;
+
+  message ConeResiduals {
+    double primal_residual = 1;
+    double dual_residual = 2;
+    double duality_gap = 3;
+  }
+  ConeResiduals cone_residuals = 9;
+
+  message ConsensusResiduals {
+    double r_norm_squared = 1;
+    double s_norm_squared = 2;
+    double x_norm_squared = 3;
+    double y_norm_squared = 4;
+  }
+  ConsensusResiduals consensus_residuals = 12;
+
+  double consensus_objective_value = 13;
+}

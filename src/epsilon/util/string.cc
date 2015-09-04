@@ -1,9 +1,11 @@
-#include "distopt/util/string.h"
+#include "epsilon/util/string.h"
 
 #include <string.h>
 
+#include <cstdlib>
 #include <memory>
 #include <regex>
+#include <sstream>
 #include <string>
 
 using std::string;

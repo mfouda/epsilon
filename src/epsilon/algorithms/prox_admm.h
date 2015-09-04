@@ -1,18 +1,17 @@
-#ifndef DISTOPT_ALGORITHMS_CONSENSUS_PROX_H
-#define DISTOPT_ALGORITHMS_CONSENSUS_PROX_H
+#ifndef EPSILON_ALGORITHMS_CONSENSUS_PROX_H
+#define EPSILON_ALGORITHMS_CONSENSUS_PROX_H
 
 #include <unordered_map>
 #include <unordered_set>
 
 #include <Eigen/Dense>
 
-#include "distopt/algorithms/solver.h"
-#include "distopt/operators/vector_operator.h"
-#include "distopt/parameters/parameter_service.h"
-#include "distopt/problem.pb.h"
-#include "distopt/prox.pb.h"
-#include "distopt/solver_params.pb.h"
-#include "distopt/util/vector.h"
+#include "epsilon/algorithms/solver.h"
+#include "epsilon/operators/vector_operator.h"
+#include "epsilon/parameters/parameter_service.h"
+#include "epsilon/prox.pb.h"
+#include "epsilon/solver_params.pb.h"
+#include "epsilon/util/vector.h"
 
 struct ProxOperatorInfo {
   bool linearized;
@@ -34,9 +33,9 @@ struct ConsensusVariableInfo {
   SparseXd B;
 };
 
-class ConsensusProxSolver final : public Solver {
+class ProxADMMSolver final : public Solver {
 public:
-  ConsensusProxSolver(
+  ProxADMMSolver(
       const ProxProblem& problem,
       const SolverParams& params,
       std::unique_ptr<ParameterService> parameter_service);
@@ -83,4 +82,4 @@ private:
 };
 
 
-#endif  // DISTOPT_ALGORITHMS_CONSENSUS_PROX_H
+#endif  // EPSILON_ALGORITHMS_CONSENSUS_PROX_H

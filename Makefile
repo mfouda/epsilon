@@ -1,5 +1,6 @@
-# TODO(mwytock): Need a better make system so that every source file doesnt
-# depend on every header
+# Makefile for epsilon
+#
+# Tested on: Mac OS X 10.10.5, Ubuntu 15.04
 
 # Internal directories
 src_dir = src
@@ -21,16 +22,26 @@ CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(third_party_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 
 LDLIBS += `pkg-config --libs $(LIBS)`
-LDFLAGS = -Wl,-no-as-needed
 
-# Homebrew installed gflags doesnt show up in pkg-config in OS X
+# Platform-specific configuration
 UNAME_S = $(shell uname -s)
+
+# Mac OS X
 ifeq ($(UNAME_S),Darwin)
-	LIBS = protobuf libglog libcurl libtcmalloc libprofiler
-	CXXFLAGS += -I/usr/local/include
-	LDLIBS += -L/usr/local/include -lgflags
+# Homebrew gflags doesnt show up in pkg-config
+LIBS = protobuf libglog libcurl libtcmalloc libprofiler
+CXXFLAGS += -I/usr/local/include
+LDLIBS += -L/usr/local/include -lgflags
+
+# glog and protobuf try to define same macros
+CXXFLAGS += -Wno-macro-redefined
+
+# Linux
 else
-	LIBS = protobuf libglog libcurl libtcmalloc libprofiler libgflags
+LIBS = protobuf libglog libcurl libtcmalloc libprofiler libgflags
+
+# ensure profiler gets linked
+LDFLAGS += -Wl,-no-as-needed
 endif
 
 common_cc = \
@@ -39,21 +50,15 @@ common_cc = \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
 	epsilon/expression/problem.cc \
-	epsilon/operators/prox.cc \
+	epsilon/file/file.cc \
 	epsilon/operators/affine.cc \
+	epsilon/operators/prox.cc \
 	epsilon/operators/prox_test.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/util/dynamic_matrix.cc \
-	epsilon/util/file.cc \
-	epsilon/util/init.cc \
-	epsilon/util/port.cc \
-	epsilon/util/problems.cc \
 	epsilon/util/string.cc \
-	epsilon/util/synchronization.cc \
-	epsilon/util/thread_pool.cc \
 	epsilon/util/time.cc \
-	epsilon/util/vector.cc \
-	epsilon/util/vector_test.cc \
+	epsilon/util/vector.cc
 
 common_test_cc = \
 	epsilon/algorithms/algorithm_testutil.cc \
@@ -62,9 +67,12 @@ common_test_cc = \
 	epsilon/util/vector_testutil.cc
 
 proto = \
+	epsilon/data.proto \
 	epsilon/expression.proto \
 	epsilon/prox.proto \
-	epsilon/solver_params.proto
+	epsilon/solver_params.proto \
+	epsilon/stats.proto \
+	epsilon/status.proto
 
 tests = \
 	epsilon/algorithms/prox_admm_test \
@@ -117,11 +125,10 @@ test: $(build_tests) $(proto_py)
 	@$(tools_dir)/run_tests.sh $(build_tests)
 	@python -m unittest discover $(python_dir)
 
+# NOTE(mwytock): Add -Wno-missing-field-intializers to this rule to avoid error
+# on OS X
 $(build_dir)/gtest-all.o: $(gtest_srcs)
 	$(COMPILE.cc) -I$(gtest_dir) -Wno-missing-field-initializers -c $(gtest_dir)/src/gtest-all.cc -o $@
 
-$(build_dir)/gtest.a : $(build_dir)/gtest-all.o
-	$(AR) $(ARFLAGS) $@ $^
-
-$(build_dir)/%_test: $(build_dir)/%_test.o $(common_obj) $(proto_obj) $(common_test_obj) $(build_dir)/gtest.a
+$(build_dir)/%_test: $(build_dir)/%_test.o $(common_obj) $(proto_obj) $(common_test_obj) $(build_dir)/gtest-all.o
 	$(LINK.o) $^ $(LDLIBS) -o $@

@@ -1,4 +1,4 @@
-#include "distopt/parameters/local_parameter_service.h"
+#include "epsilon/parameters/local_parameter_service.h"
 
 #include <memory>
 #include <mutex>
@@ -23,7 +23,7 @@ public:
     std::lock_guard<std::mutex> l(lock_);
     auto iter = params_.find(parameter_id);
     if (iter == params_.end())
-      return Eigen::VectorXd(0);
+      return Eigen::VectorXd::Constant(1, 0);
     return iter->second;
   }
 

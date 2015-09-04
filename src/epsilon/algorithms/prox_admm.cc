@@ -1,18 +1,15 @@
 
-#include "distopt/algorithms/consensus_prox.h"
+#include "epsilon/algorithms/prox_admm.h"
 
 #include <Eigen/SparseCholesky>
 #include <gflags/gflags.h>
 
-#include "distopt/expression/cone.h"
-#include "distopt/expression/expression.h"
-#include "distopt/expression/linear.h"
-#include "distopt/expression/operator.h"
-#include "distopt/expression/problem.h"
-#include "distopt/operators/prox.h"
-#include "distopt/operators/vector_operator.h"
-#include "distopt/util/string.h"
-#include "epsilon/sparse_ldl.h"
+#include "epsilon/expression/expression.h"
+#include "epsilon/expression/problem.h"
+#include "epsilon/operators/affine.h"
+#include "epsilon/operators/prox.h"
+#include "epsilon/operators/vector_operator.h"
+#include "epsilon/util/string.h"
 
 // TODO(mwytock): Refactor into small class
 bool RateLimitAllows(uint64_t limit, uint64_t* last) {
@@ -24,7 +21,7 @@ bool RateLimitAllows(uint64_t limit, uint64_t* last) {
   return true;
 }
 
-ConsensusProxSolver::ConsensusProxSolver(
+ProxADMMSolver::ProxADMMSolver(
     const ProxProblem& problem,
     const SolverParams& params,
     std::unique_ptr<ParameterService> parameter_service)
@@ -34,7 +31,7 @@ ConsensusProxSolver::ConsensusProxSolver(
       last_consensus_usec_(0),
       last_status_usec_(0) {}
 
-void ConsensusProxSolver::Init() {
+void ProxADMMSolver::Init() {
   VLOG(2) << problem_.DebugString();
 
   CHECK(problem_.prox_function_size() != 0);
@@ -73,7 +70,7 @@ void ConsensusProxSolver::Init() {
   Ax_ = Eigen::VectorXd::Zero(m_);
 }
 
-void ConsensusProxSolver::InitProxOperator(const ProxFunction& f_orig) {
+void ProxADMMSolver::InitProxOperator(const ProxFunction& f_orig) {
   // For now, we assume each prox function only operates on one variable but
   // this can be relaxed.
   std::vector<const Expression *> vars = GetVariables(f_orig);
@@ -128,7 +125,7 @@ void ConsensusProxSolver::InitProxOperator(const ProxFunction& f_orig) {
   prox_ops_.emplace_back(std::move(info));
 }
 
-void ConsensusProxSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
+void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   const int i = prox.i;
   const int n = prox.n;
   const SparseXd& Ai = A_.middleCols(i, n);
@@ -144,7 +141,7 @@ void ConsensusProxSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   Ax_ += Ai*x_.segment(i, n) - Ai_xi_old;
 }
 
-void ConsensusProxSolver::Solve() {
+void ProxADMMSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
@@ -190,7 +187,7 @@ void ConsensusProxSolver::Solve() {
   UpdateStatus(status_);
 }
 
-void ConsensusProxSolver::InitConsensusVariable(const ConsensusVariable& cv) {
+void ProxADMMSolver::InitConsensusVariable(const ConsensusVariable& cv) {
   ConsensusVariableInfo info;
 
   auto iter = var_map_.find(cv.variable_id());
@@ -220,7 +217,7 @@ void ConsensusProxSolver::InitConsensusVariable(const ConsensusVariable& cv) {
           << "B:\n" << MatrixDebugString(info.B);
 }
 
-void ConsensusProxSolver::UpdateConsensusVariable(
+void ProxADMMSolver::UpdateConsensusVariable(
     const ConsensusVariableInfo& cv) {
   const int i = cv.i;
   const int n = cv.n;
@@ -235,7 +232,7 @@ void ConsensusProxSolver::UpdateConsensusVariable(
   Ax_ += Ai*x_.segment(i, n) - Ai_xi_old;
 }
 
-void ConsensusProxSolver::UpdateLocalParameters() {
+void ProxADMMSolver::UpdateLocalParameters() {
   for (const auto& iter : var_map_) {
     if (consensus_vars_set_.find(iter.first) != consensus_vars_set_.end())
       continue;
@@ -249,7 +246,7 @@ void ConsensusProxSolver::UpdateLocalParameters() {
   }
 }
 
-void ConsensusProxSolver::ComputeResiduals() {
+void ProxADMMSolver::ComputeResiduals() {
   ProblemStatus::Residuals* r = status_.mutable_residuals();
 
   const double abs_tol = params_.abs_tol();
@@ -283,7 +280,7 @@ void ConsensusProxSolver::ComputeResiduals() {
   status_.set_num_iterations(iter_);
 }
 
-void ConsensusProxSolver::LogStatus() {
+void ProxADMMSolver::LogStatus() {
   const ProblemStatus::Residuals& r = status_.residuals();
   VLOG(1) << StringPrintf(
       "iter=%d residuals primal=%.2e [%.2e] dual=%.2e [%.2e]",

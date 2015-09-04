@@ -1,12 +1,10 @@
-#include "distopt/expression/problem.h"
+#include "epsilon/expression/problem.h"
 
 #include <unordered_map>
 
 #include <glog/logging.h>
 
-#include "distopt/problem.pb.h"
-#include "distopt/expression/expression.h"
-
+#include "epsilon/expression/expression.h"
 
 int VariableOffsetMap::Get(const Expression& expr) {
   CHECK_EQ(expr.expression_type(), Expression::VARIABLE);
@@ -22,17 +20,6 @@ int VariableOffsetMap::Get(const Expression& expr) {
     offset = iter->second;
   }
   return offset;
-}
-
-void AddVariableOffsets(Problem* problem) {
-  VariableOffsetMap var_offsets;
-  AddVariableOffsets(problem->mutable_objective(), &var_offsets);
-  for (Constraint& constr : *problem->mutable_constraint()) {
-    for (Expression& arg : *constr.mutable_arg()) {
-      AddVariableOffsets(&arg, &var_offsets);
-    }
-  }
-  problem->set_n(var_offsets.n());
 }
 
 void AddVariableOffsets(ProxProblem* problem) {
@@ -60,26 +47,6 @@ void AddVariableOffsets(ProxFunction* f) {
     AddVariableOffsets(f->mutable_regularization(), &var_offsets);
 }
 
-int GetConstraintDimension(const Constraint& constr) {
-  int dim = 0;
-  for (const Expression& arg : constr.arg()) {
-    dim += GetDimension(arg);
-  }
-  return dim;
-}
-
-std::vector<const Expression*> GetVariables(const Problem& problem) {
-  std::set<const Expression*, VariableIdCompare> retval;
-  GetVariables(problem.objective(), &retval);
-  for (const Constraint& constr : problem.constraint()) {
-    for (const Expression& arg : constr.arg()) {
-      GetVariables(arg, &retval);
-    }
-  }
-
-  return {retval.begin(), retval.end()};
-}
-
 std::vector<const Expression*> GetVariables(const ProxProblem& problem) {
   std::set<const Expression*, VariableIdCompare> retval;
   for (const ProxFunction& f : problem.prox_function()) {
@@ -101,24 +68,6 @@ std::vector<const Expression*> GetVariables(const ProxFunction& f) {
   GetVariables(f.affine(), &retval);
   GetVariables(f.regularization(), &retval);
   return {retval.begin(), retval.end()};
-}
-
-void GetProblemDimensions(const Problem& problem, int* m, int* n) {
-  if (n != nullptr) {
-    *n = 0;
-    for (const Expression* expr : GetVariables(problem)) {
-      *n += GetDimension(*expr);
-    }
-  }
-
-  if (m != nullptr) {
-    *m = 0;
-    for (const Constraint& constr : problem.constraint()) {
-      for (const Expression& expr : constr.arg()) {
-        *m += GetDimension(expr);
-      }
-    }
-  }
 }
 
 int GetVariableDimension(const ProxProblem& problem) {
