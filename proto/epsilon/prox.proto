@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "distopt/expression.proto";
+import "epsilon/expression.proto";
 
 // Represents a convex function of the form:
 //   alpha*f(Ax + b) + c'x
