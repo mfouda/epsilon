@@ -56,16 +56,5 @@ std::string VectorDebugString(const VectorXd& x);
 std::string MatrixDebugString(const MatrixXd& A);
 std::string SparseMatrixDebugString(const SparseXd& A);
 
-// Write path
-void WriteMatrixData(const MatrixXd& input, const std::string& location);
-
-// Read path is broken up in to two steps currently
-std::unique_ptr<const Data> ReadSplitData(const std::string& location);
-MatrixXd GetMatrixData(const Data& data);
-
-std::string metadata_file(const std::string& location);
-std::string value_file(const std::string& location);
-std::string value_transpose_file(const std::string& location);
-
 
 #endif  // UTIL_VECTOR_H

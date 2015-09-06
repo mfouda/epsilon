@@ -1,17 +1,16 @@
 
 #include "epsilon/expression/expression_testutil.h"
 
-#include <grpc++/client_context.h>
 #include <gflags/gflags.h>
 
 #include "epsilon/data.pb.h"
 #include "epsilon/util/string.h"
-#include "epsilon/file/file.h"
+#include "epsilon/util/vector_file.h"
 
 DEFINE_string(test_data_prefix, "/mem/test",
 	      "prefix for storing test data");
 
-Expression TestConstant(const MatrixXd& A) {
+Expression TestConstant(const Eigen::MatrixXd& A) {
   std::string loc = StringPrintf(
       "%s/random/%d", FLAGS_test_data_prefix.c_str(), rand());
 
@@ -34,8 +33,8 @@ Expression TestVariable(int m, int  n) {
   return expr;
 }
 
-MatrixXd RandomConstant(int m, int n, Expression* expr) {
-  MatrixXd A = MatrixXd::Random(m, n);
+Eigen::MatrixXd RandomConstant(int m, int n, Expression* expr) {
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(m, n);
   Expression expr2 = TestConstant(A);
   if (expr != nullptr) {
     *expr = expr2;
@@ -44,7 +43,7 @@ MatrixXd RandomConstant(int m, int n, Expression* expr) {
 }
 
 Expression RandomConstantOp(
-  int m, int n, const std::string& input_key, MatrixXd* A) {
+  int m, int n, const std::string& input_key, Eigen::MatrixXd* A) {
   Expression c_expr;
 
   if (A != nullptr)

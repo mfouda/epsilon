@@ -1,6 +1,8 @@
 #ifndef EXPRESSION_EXPRESSION_TESTUTIL_H
 #define EXPRESSION_EXPRESSION_TESTUTIL_H
 
+#include <Eigen/Dense>
+
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 

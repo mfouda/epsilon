@@ -58,7 +58,8 @@ common_cc = \
 	epsilon/util/dynamic_matrix.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
-	epsilon/util/vector.cc
+	epsilon/util/vector.cc \
+	epsilon/util/vector_file.cc
 
 common_test_cc = \
 	epsilon/algorithms/algorithm_testutil.cc \
@@ -91,7 +92,6 @@ common_obj = $(common_cc:%.cc=$(build_dir)/%.o)
 common_test_obj = $(common_test_cc:%.cc=$(build_dir)/%.o)
 build_tests = $(tests:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
-#build_binaries = $(binaries:%=$(build_dir)/%)
 
 # Stop make from deleting intermediate files
 .SECONDARY:
@@ -116,9 +116,6 @@ $(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)
 
 $(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
-
-$(build_dir)/%: $(build_dir)/%.o $(common_obj) $(proto_obj)
-	$(LINK.o) $^ $(LDLIBS) -o $@
 
 # Test-related rules
 test: $(build_tests) $(proto_py)

@@ -1,7 +1,4 @@
 
-#include <grpc++/channel_arguments.h>
-#include <grpc++/create_channel.h>
-
 #include "epsilon/algorithms/algorithm_testutil.h"
 #include "epsilon/expression/expression_testutil.h"
 
