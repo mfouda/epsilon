@@ -222,15 +222,16 @@ bool IsBlockScalar(const SparseXd& A) {
   // Go through first column, subtract off (potential) identity
   // matrices and then check if resulting matrix is all zeros
 
-  // TODO(mwytock): Fix this
-  // Eigen::SparseMatrix<double, Eigen::RowMajor> B = A;
-  // for (SparseXd::InnerIterator iter(A, 0); iter; ++iter) {
-  //   CHECK(iter.value() != 0);
-  //   if (iter.row() + n > m)
-  //     return false;
-  //   B.middleRows(iter.row(), n) -= iter.value()*SparseIdentity(n);
-  // }
-  //B.prune([](int, int, float val) { return val != 0; });
-  //return B.nonZeros() == 0;
+  Eigen::SparseMatrix<double, Eigen::RowMajor> B = A;
+  Eigen::SparseMatrix<double, Eigen::RowMajor> I(n, n);
+  I.setIdentity();
+  for (SparseXd::InnerIterator iter(A, 0); iter; ++iter) {
+    CHECK(iter.value() != 0);
+    if (iter.row() + n > m)
+      return false;
+    B.middleRows(iter.row(), n) -= iter.value()*I;
+  }
+  B.prune([](int, int, float val) { return val != 0; });
+  return B.nonZeros() == 0;
   return false;
 }

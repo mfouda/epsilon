@@ -9,6 +9,7 @@ proto_dir = proto
 python_dir = python
 sub_dir = epsilon
 third_party_dir = third_party
+tools_dir = tools
 gtest_dir = $(third_party_dir)/googletest/googletest
 
 CC = g++

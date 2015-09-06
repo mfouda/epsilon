@@ -8,7 +8,7 @@ Compiling on OS X
 We need a few C++ library dependencies which are available through various
 package managers, including Homebrew.
 ```
-brew install gflags glog gperftools
+brew install gflags glog gperftools parallel
 ```
 We also need the latest development version of the protobuf library (v3.0.0 or
 higher)
@@ -25,7 +25,7 @@ Compiling on Ubuntu
 
 Again, install the necessary dependencies
 ```
-apt-get install libgflags-dev libglog-dev gperftools-dev
+apt-get install libgflags-dev libglog-dev gperftools-dev parallel
 ```
 and download and compile the latest development version of protobuf from
 https://github.com/google/protobuf
