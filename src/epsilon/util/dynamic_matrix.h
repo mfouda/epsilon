@@ -1,7 +1,7 @@
 #ifndef EPSILON_UTIL_DYNAMIC_MATRIX_H
 #define EPSILON_UTIL_DYNAMIC_MATRIX_H
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
 
 #include "epsilon/util/vector.h"
 #include "epsilon/util/string.h"

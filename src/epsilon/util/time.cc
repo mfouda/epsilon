@@ -1,7 +1,9 @@
 
 #include <sys/time.h>
+#include <stdint.h>
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
+
 
 uint64_t WallTime_Usec() {
   struct timeval time;

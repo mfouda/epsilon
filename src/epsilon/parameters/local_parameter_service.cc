@@ -4,7 +4,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
 
 class LocalParameters {
 public:

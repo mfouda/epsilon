@@ -1,6 +1,6 @@
 #include "epsilon/expression/expression.h"
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
 
 namespace expression {
 
@@ -321,6 +321,7 @@ double GetScalarConstant(const Expression& expr) {
   }
 
   LOG(FATAL) << "Unsupported scalar operator: " << expr.expression_type();
+  return 0;
 }
 
 void AddVariableOffsets(

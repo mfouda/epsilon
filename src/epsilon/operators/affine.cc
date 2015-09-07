@@ -3,7 +3,7 @@
 #include <memory>
 #include <mutex>
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
 
 #include <Eigen/SparseCore>
 

@@ -1,6 +1,6 @@
 #include "epsilon/operators/prox.h"
 
-#include <glog/logging.h>
+#include "epsilon/util/logging.h"
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/SparseCholesky>

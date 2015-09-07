@@ -1,7 +1,6 @@
 #include "epsilon/util/vector_testutil.h"
 
-#include <glog/logging.h>
-
+#include "epsilon/util/logging.h"
 #include "epsilon/util/vector.h"
 
 using Eigen::Infinity;
