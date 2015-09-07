@@ -2,6 +2,10 @@
 #
 # Tested on: Mac OS X 10.10.5, Ubuntu 15.04
 
+# Settings
+OPTFLAGS = -O3
+prefix ?= /usr/local
+
 # Internal directories
 src_dir = src
 build_dir = build
@@ -14,7 +18,6 @@ gtest_dir = $(third_party_dir)/googletest/googletest
 
 CC = g++
 CXX = g++
-OPTFLAGS = -O3
 
 CXXFLAGS = `pkg-config --cflags $(LIBS)`
 CXXFLAGS += $(OPTFLAGS) -std=c++14
@@ -22,39 +25,27 @@ CXXFLAGS += -Wall -Wextra -Werror -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(third_party_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 
+LIBS = protobuf libglog
 LDLIBS += `pkg-config --libs $(LIBS)`
 
 # Platform-specific configuration
-UNAME_S = $(shell uname -s)
+SYSTEM = $(shell uname -s)
 
-# Mac OS X
-ifeq ($(UNAME_S),Darwin)
-# Homebrew gflags doesnt show up in pkg-config
-LIBS = protobuf libglog libcurl libtcmalloc libprofiler
-CXXFLAGS += -I/usr/local/include
-LDLIBS += -L/usr/local/include -lgflags
-
-# glog and protobuf try to define same macros
-CXXFLAGS += -Wno-macro-redefined
-
-# Linux
-else
-LIBS = protobuf libglog libcurl libtcmalloc libprofiler libgflags
-
-# ensure profiler gets linked
-LDFLAGS += -Wl,-no-as-needed
+ifeq ($(SYSTEM),Darwin)  # Mac OS X
+CXXFLAGS += -arch x86_64 -arch i386
+SHARED_EXT = dylib
+else  # Linux
+SHARED_EXT = so
 endif
 
 common_cc = \
 	epsilon/algorithms/prox_admm.cc \
-	epsilon/algorithms/prox_admm_test.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
 	epsilon/expression/problem.cc \
 	epsilon/file/file.cc \
 	epsilon/operators/affine.cc \
 	epsilon/operators/prox.cc \
-	epsilon/operators/prox_test.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/util/dynamic_matrix.cc \
 	epsilon/util/string.cc \
@@ -82,6 +73,8 @@ tests = \
 	epsilon/operators/affine_test \
 	epsilon/util/vector_test
 
+libs = epsilon
+
 # Google test
 gtest_srcs = $(gtest_dir)/src/*.cc $(gtest_dir)/src/*.h
 
@@ -93,9 +86,12 @@ common_obj = $(common_cc:%.cc=$(build_dir)/%.o)
 common_test_obj = $(common_test_cc:%.cc=$(build_dir)/%.o)
 build_tests = $(tests:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
+build_libs = $(libs:%=$(build_dir)/lib%.$(SHARED_EXT))
 
 # Stop make from deleting intermediate files
 .SECONDARY:
+
+all: $(build_libs)
 
 proto_py: $(proto_py)
 
@@ -103,6 +99,7 @@ clean:
 	rm -rf $(build_dir) $(python_dir)/build
 	find $(python_dir) -name '*_pb2.py*' -or -name '*.pyc' -exec rm {} \;
 
+# Build
 $(build_dir):
 	mkdir -p $(build_sub_dirs)
 
@@ -118,7 +115,16 @@ $(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)
 $(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
 
-# Test-related rules
+$(build_dir)/libepsilon.$(SHARED_EXT): $(common_obj) $(proto_obj)
+ifeq ($(SYSTEM),Darwin)
+	$(LINK.o) $^ $(LDLIBS) -dynamiclib -o $@
+else
+	$(LINK.o) $^ $(LDLIBS) -shared -o $@
+endif
+
+# Install
+
+# Test
 test: $(build_tests) $(proto_py)
 	@$(tools_dir)/run_tests.sh $(build_tests)
 	@python -m unittest discover $(python_dir)

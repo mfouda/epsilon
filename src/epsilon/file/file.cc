@@ -6,7 +6,6 @@
 #include <unordered_map>
 
 #include <glog/logging.h>
-#include <gflags/gflags.h>
 
 #include "epsilon/util/string.h"
 

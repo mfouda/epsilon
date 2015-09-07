@@ -1,7 +1,6 @@
 
 
 #include <gtest/gtest.h>
-#include <gflags/gflags.h>
 
 #include "epsilon/algorithms/algorithm_testutil.h"
 #include "epsilon/algorithms/prox_admm.h"

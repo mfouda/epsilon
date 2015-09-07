@@ -2,7 +2,6 @@
 #include "epsilon/algorithms/prox_admm.h"
 
 #include <Eigen/SparseCholesky>
-#include <gflags/gflags.h>
 
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/problem.h"

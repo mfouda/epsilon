@@ -12,6 +12,7 @@
 #include "epsilon/file/file.h"
 #include "epsilon/util/string.h"
 #include "epsilon/util/vector.h"
+#include "epsilon/util/vector_file.h"
 
 using Eigen::Map;
 using Eigen::MatrixXd;
