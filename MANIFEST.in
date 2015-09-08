@@ -1,3 +1,6 @@
-graft third_party/eigen/Eigen
+include Makefile
+
 graft proto
-recursive-include src *.h *.cc
+graft src
+graft third_party
+graft tools

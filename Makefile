@@ -4,17 +4,16 @@
 
 # Settings
 OPTFLAGS = -O3
-prefix ?= /usr/local
 
 # Internal directories
 src_dir = src
-build_dir = build
 proto_dir = proto
-sub_dir = epsilon
-eigen_dir = third_party/eigen
 tools_dir = tools
+eigen_dir = third_party/eigen
 gtest_dir = $(third_party_dir)/googletest/googletest
+build_dir = build-cc
 
+SYSTEM = $(shell uname -s)
 CC = g++
 CXX = g++
 
@@ -62,6 +61,8 @@ tests = \
 	epsilon/operators/affine_test \
 	epsilon/util/vector_test
 
+libs = epsilon
+
 # Google test
 gtest_srcs = $(gtest_dir)/src/*.cc $(gtest_dir)/src/*.h
 
@@ -72,11 +73,12 @@ common_obj = $(common_cc:%.cc=$(build_dir)/%.o)
 common_test_obj = $(common_test_cc:%.cc=$(build_dir)/%.o)
 build_tests = $(tests:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
+build_libs = $(libs:%=$(build_dir)/lib%.a)
 
 # Stop make from deleting intermediate files
 .SECONDARY:
 
-all: test
+all: $(build_libs)
 
 clean:
 	rm -rf $(build_dir)
@@ -93,6 +95,12 @@ $(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)
 
 $(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+
+$(build_dir)/libepsilon.a: $(common_obj) $(proto_obj)
+	$(AR) rcs $@ $^
+ifeq ($(SYSTEM),Darwin)
+	ranlib $@
+endif
 
 # Test
 test: $(build_tests)

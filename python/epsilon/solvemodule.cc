@@ -1,13 +1,15 @@
 #include <Python.h>
 
+#include "epsilon/algorithms/prox_admm.h"
 #include "epsilon/file/file.h"
+#include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/prox.pb.h"
 #include "epsilon/solver_params.pb.h"
 
 extern "C" {
 
 // solve(problem_str, params_str, data)
-static PyObject* solve_admm_prox(PyObject* self, PyObject* args) {
+static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
   const char* problem_str;
   const char* params_str;
   PyObject* data;
@@ -30,7 +32,7 @@ static PyObject* solve_admm_prox(PyObject* self, PyObject* args) {
     if (!key_str)
       return nullptr;
 
-    const char* value_str = PyBytes_AsString(value);
+    const char* value_str = PyString_AsString(value);
     if (!value_str)
       return nullptr;
 
@@ -41,11 +43,17 @@ static PyObject* solve_admm_prox(PyObject* self, PyObject* args) {
     }
   }
 
-  return nullptr;
+  ProxADMMSolver solver(
+      problem, params,
+      std::unique_ptr<ParameterService>(new LocalParameterService));
+  solver.Solve();
+  std::string status_str = solver.status().SerializeAsString();
+  // TODO(mwytock): Need to return a dictionary of results as well
+  return Py_BuildValue("s#", status_str.data(), status_str.size());
 }
 
 static PyMethodDef SolveMethods[] = {
-  {"solve_admm_prox", solve_admm_prox, METH_VARARGS,
+  {"prox_admm_solve", prox_admm_solve, METH_VARARGS,
    "Solve a problem with epsilon."},
   {nullptr, nullptr, 0, nullptr}
 };
