@@ -137,6 +137,7 @@ setup(
     name = "epsilon",
     version = "1.0a1",
     author = "Matt Wytock",
+    url = "https://github.com/mwytock/epsilon",
     author_email = "mwytock@gmail.com",
     packages = find_packages("python"),
     package_dir = {"epsilon": "python/epsilon"},

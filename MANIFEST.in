@@ -1,0 +1,3 @@
+graft third_party/eigen/Eigen
+graft proto
+recursive-include src *.h *.cc
