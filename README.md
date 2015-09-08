@@ -2,26 +2,27 @@
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
-Compiling on OS X
------------------
+Protocol Buffers
+----------------
 
-We also need the latest development version of the protobuf library (v3.0.0 or
-higher)
+We need the C++ library for protocol buffers with v3.0.0 or
+higher. This is available on some platforms via the package manager
 ```
 brew install --devel protobuf
 ```
-Build and install
-```
-python python/setup.py install
-```
-
-Compiling on Ubuntu
--------------------
-
-Download and compile the latest development version of protobuf from
+and on others can be built/installed from source
 https://github.com/google/protobuf
 
-Compile and run tets
+Installation
+------------
+
+Epsilon is pip-installable (currently, this still requires the protocol buffer
+dependency, see above).
 ```
-python python/setup.py install
+pip install epsilon
+```
+
+It can also be pulled from github and installed with
+```
+python setup.py install
 ```
