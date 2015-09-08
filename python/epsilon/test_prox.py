@@ -6,9 +6,9 @@ import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
 
-from distopt import cvxpy_expr
-from distopt import prox
-from distopt.prox_pb2 import ProxFunction
+from epsilon import cvxpy_expr
+from epsilon import prox
+from epsilon.prox_pb2 import ProxFunction
 
 def convert(prob):
     prob_proto, data_proto = cvxpy_expr.convert_problem(prob)

@@ -2,10 +2,10 @@
 
 from collections import defaultdict
 
-from distopt import expression_pb2
-from distopt.expression_pb2 import Expression, Curvature
-from distopt.prox_pb2 import ConsensusVariable, ProxFunction, ProxProblem
-from distopt.expression import *
+from epsilon import expression_pb2
+from epsilon.expression_pb2 import Expression, Curvature
+from epsilon.prox_pb2 import ConsensusVariable, ProxFunction, ProxProblem
+from epsilon.expression import *
 
 def is_sum_squares(expr):
     return (expr.expression_type == Expression.POWER and

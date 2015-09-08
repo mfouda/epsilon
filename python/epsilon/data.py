@@ -2,7 +2,7 @@
 import numpy
 from scipy import sparse
 
-from distopt import data_pb2
+from epsilon import data_pb2
 
 def fill_vector(value, vector):
     vector.value_bytes = value.tobytes(order="Fortran")

@@ -22,12 +22,10 @@ from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
 
-from distopt import data
-from distopt import data_pb2
-from distopt import expression_pb2
-from distopt import problem_pb2
-from distopt import matrix
-from distopt.expression_pb2 import Expression as E
+from epsilon import data
+from epsilon import expression_pb2
+from epsilon import problem_pb2
+from epsilon.expression_pb2 import Expression as E
 
 EXPRESSION_TYPES = (
     (AddExpression, E.ADD),
@@ -64,18 +62,9 @@ def convert_constant(value, proto, data_map):
         proto.scalar = value
         return
 
-    if isinstance(value, matrix.Matrix):
-        proto.data_location = value.location
-    else:
-        # For smallish data
-        assert isinstance(value, numpy.ndarray)
-        data_proto = data.dense_matrix_metadata(value)
-        assert (data_proto.dense_matrix.m*data_proto.dense_matrix.n
-                <= 10000000), "matrix too large for inlining"
-        proto.data_location = "/mem/data/" + str(abs(hash(value.tostring())))
-        if not proto.data_location in data_map:
-            data_proto.value = value.tobytes(order="Fortran")  # Column order
-            data_map[proto.data_location] = data_proto
+    assert isinstance(value, numpy.ndarray)
+    proto.data_location = "/mem/data/" + str(abs(hash(value.tostring())))
+    data_map[proto.data_location] = value.tobytes(order="Fortran")  # col order
 
 def convert_expression(expr, proto, data_map):
     """Convert cxvpy expression to protobuf form."""
@@ -138,10 +127,7 @@ def convert_problem(problem):
     convert_objective(problem.objective, proto.objective, data_map)
     for constraint in problem.constraints:
         convert_constraint(constraint, proto.constraint.add(), data_map)
-
-    data_protos = [data_pb2.InlineData(data_location=k, data=v)
-                   for k, v in data_map.iteritems()]
-    return proto, data_protos
+    return proto, data_map
 
 def convert_matrix_problem(problem):
     prob_data = problem.get_problem_data(solver=cvxpy.SCS)

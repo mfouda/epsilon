@@ -63,8 +63,8 @@ class CleanCommand(Command):
         pass
 
     def run(self):
-        cmd = "rm -rf ./build ./build-cc ./dist ./*.egg-info".split()
-        subprocess.check_call(cmd)
+        cmd = "rm -rf ./build ./build-cc ./dist ./python/*.egg-info"
+        subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
     name = "epsilon._solve",
@@ -91,7 +91,7 @@ setup(
     url = "https://github.com/mwytock/epsilon",
     author_email = "mwytock@gmail.com",
     packages = ["epsilon"],
-    package_dir = {"epsilon": "python/epsilon"},
+    package_dir = {"": "python"},
     ext_modules = [solve],
     install_requires = [
         "cvxpy==0.2.28",

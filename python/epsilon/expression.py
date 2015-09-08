@@ -1,7 +1,7 @@
 
-from distopt import expression_pb2
-from distopt import prox_pb2
-from distopt.expression_pb2 import *
+from epsilon import expression_pb2
+from epsilon import prox_pb2
+from epsilon.expression_pb2 import *
 
 def _node_contents_str(expr):
     c = ""
