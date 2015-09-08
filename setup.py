@@ -9,12 +9,12 @@ import os
 import subprocess
 import sys
 
-from distutils.command.build_ext import build_ext as _build_ext
-from distutils.command.build_py import build_py as _build_py
+from distutils.command.build_ext import build_ext
+from distutils.command.build_py import build_py
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
 from distutils import log
-from setuptools import find_packages, setup, Extension
+from setuptools import find_packages, setup, Extension, Command
 
 SOURCE_DIR = "src"
 PROTO_DIR = "proto"
@@ -74,18 +74,18 @@ def generate_proto(src_name, format, dst_dir, verbose):
 
     return dst
 
-class build_py(_build_py):
+class BuildPyCommand(build_py):
     def run(self):
         self.mkpath(self.build_lib)
         for proto in EPSILON_PROTOS:
             generate_proto(proto, PROTO_PY, self.build_lib, self.verbose)
-        _build_py.run(self)
+        build_py.run(self)
 
-class build_ext(_build_ext):
+class BuildExtCommand(build_ext):
     def run(self):
         for ext in self.extensions:
             ext.sources = self.gen_proto_sources(ext.sources, ext)
-        _build_ext.run(self)
+        build_ext.run(self)
 
     def gen_proto_sources(self, sources, ext):
         new_sources = []
@@ -104,6 +104,15 @@ class build_ext(_build_ext):
             ext.include_dirs.append(self.build_temp)
 
         return new_sources
+
+class CleanCommand(Command):
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        os.system("rm -rf ./build ./dist ./*.egg-info")
 
 solve = Extension(
     "epsilon._solve",
@@ -137,7 +146,8 @@ setup(
         "protobuf==3.0.0a3"
     ],
     cmdclass = {
-        "build_ext": build_ext,
-        "build_py": build_py,
+        "build_ext": BuildExtCommand,
+        "build_py": BuildPyCommand,
+        "clean": CleanCommand
     },
 )
