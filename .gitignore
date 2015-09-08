@@ -1,4 +1,6 @@
 build
 build-cc
 *.pyc
+*_pb2.py
+*.egg-info
 _solve.so

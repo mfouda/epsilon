@@ -13,6 +13,7 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 
 PROTO_DIR = "proto"
+PYTHON_DIR = "python"
 
 PROTOC = find_executable("protoc")
 if PROTOC is None:
@@ -22,11 +23,10 @@ PROTOC_PREFIX = os.path.dirname(os.path.dirname(PROTOC))
 
 class BuildPyCommand(build_py):
     def run(self):
-        self.generate_protos(PROTO_DIR, self.build_lib)
+        self.generate_protos(PROTO_DIR, PYTHON_DIR)
         build_py.run(self)
 
     def generate_protos(self, src_dir, dst_dir):
-        self.mkpath(dst_dir)
         for root, dirnames, filenames in os.walk(src_dir):
             for filename in fnmatch.filter(filenames, "*.proto"):
                 src_name = os.path.join(root[len(src_dir)+1:], filename)
@@ -63,7 +63,8 @@ class CleanCommand(Command):
         pass
 
     def run(self):
-        cmd = "rm -rf ./build ./build-cc ./dist ./python/*.egg-info"
+        cmd = ("rm -rf ./build ./build-cc ./dist ./python/*.egg-info " +
+               "./python/epsilon/*_pb2.py")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
@@ -91,7 +92,7 @@ setup(
     url = "https://github.com/mwytock/epsilon",
     author_email = "mwytock@gmail.com",
     packages = ["epsilon"],
-    package_dir = {"": "python"},
+    package_dir = {"": PYTHON_DIR},
     ext_modules = [solve],
     install_requires = [
         "cvxpy==0.2.28",
