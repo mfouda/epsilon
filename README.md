@@ -32,7 +32,7 @@ not yet included in apt-get) from https://github.com/google/protobuf.
 ```
 wget https://github.com/google/protobuf/releases/download/v3.0.0-beta-1/protobuf-cpp-3.0.0-beta-1.tar.gz
 tar zxvf protobuf-cpp-3.0.0-beta-1.tar.gz
-cd protobuf
+cd protobuf-cpp-3.0.0-beta-1
 ./configure
 make install
 ```
