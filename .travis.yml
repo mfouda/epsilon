@@ -7,11 +7,12 @@ services:
 
 before_install:
   - docker pull mwytock/epsilon
-  - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
+#  - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
+  - docker run -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon ls -l
 
-install:
-  - docker exec epsilon /bin/sh -c "cd /epsilon && python setup.py install"
+# install:
+#   - docker exec epsilon /bin/sh -c "cd /epsilon && python setup.py install"
 
-script:
-  - docker exec epsilon make -C /epsilon test
-  - docker exec epsilon nosetests epsilon
+# script:
+#   - docker exec epsilon make -C /epsilon test
+#   - docker exec epsilon nosetests epsilon
