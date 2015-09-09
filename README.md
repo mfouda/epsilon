@@ -5,12 +5,11 @@ operators.
 
 ## Installation
 
-The epsilon C++ code currently has some standard library dependencies which are
-not bundled as part of the python package. These must be installed before
-compiling and installing the epsilon package with `pip`.
-
 We assume that CVXPY has already been installed, see instructions at
 http://www.cvxpy.org/en/latest/install/index.html.
+
+The epsilon C++ code has library dependencies which are not bundled as part of
+the python package. These must be installed before the `epsilon` package itself.
 
 ### Installation on Mac OS X
 
