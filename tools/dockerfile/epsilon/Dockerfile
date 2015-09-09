@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
   libquadmath0 \
   libtool \
   make \
+  parallel \
   pkg-config \
   python-decorator \
   python-dev \
