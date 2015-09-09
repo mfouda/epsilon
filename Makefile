@@ -17,7 +17,6 @@ SYSTEM = $(shell uname -s)
 CC = g++
 CXX = g++
 
-CXXFLAGS = `pkg-config --cflags $(LIBS)`
 CXXFLAGS += $(OPTFLAGS) -std=c++14
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter -Wno-macro-redefined
@@ -28,8 +27,16 @@ ifeq ($(SYSTEM),Linux)
 CXXFLAGS += -fPIC
 endif
 
+# NOTE(mwytock): libgflags.pc is missing on Homebrew
+ifeq ($(SYSTEM),Darwin)
+LIBS = protobuf libglog
+LDLIBS += `pkg-config --libs $(LIBS)` -L/usr/local/lib -lgflags
+CXXFLAGS += `pkg-config --cflags $(LIBS)` -I/usr/local/include
+else
 LIBS = protobuf libglog libgflags
 LDLIBS += `pkg-config --libs $(LIBS)`
+CXXFLAGS += `pkg-config --cflags $(LIBS)`
+endif
 
 common_cc = \
 	epsilon/algorithms/prox_admm.cc \
