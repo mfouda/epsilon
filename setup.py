@@ -87,7 +87,7 @@ solve = Extension(
 
 setup(
     name = "epsilon",
-    version = "1.0a1",
+    version = "0.1.0",
     author = "Matt Wytock",
     url = "https://github.com/mwytock/epsilon",
     author_email = "mwytock@gmail.com",
