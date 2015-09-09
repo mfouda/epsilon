@@ -7,8 +7,6 @@ services:
 
 before_install:
   - docker pull mwytock/epsilon
-  - ls -lR
-  - echo $HOME/mwytock/epsilon
 
 script:
-  - docker run -v $HOME/mwytock/epsilon:/epsilon mwytock/epsilon sh -c "cd /epsilon && python setup.py install && nosetests epsilon && make test"
+  - docker run -v $PWD:/epsilon mwytock/epsilon sh -c "cd /epsilon && python setup.py install && nosetests epsilon && make test"
