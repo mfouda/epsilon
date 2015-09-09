@@ -11,5 +11,5 @@ dependencies:
 
 test:
   override:
-    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c cd /epsilon && python setup.py install
-    - docker_exec ls -l /epsilon
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py install'
+#    - docker_exec ls -l /epsilon
