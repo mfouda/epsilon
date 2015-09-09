@@ -28,8 +28,15 @@ nosetests epsilon
 Ubuntu
 ------
 First download and install the protocol buffer library (must be >3.0.0 which is
-not yet included in apt-get) from https://github.com/google/protobuf. Then
-continue by using `apt-get`
+not yet included in apt-get) from https://github.com/google/protobuf.
+```
+wget https://github.com/google/protobuf/releases/download/v3.0.0-beta-1/protobuf-cpp-3.0.0-beta-1.tar.gz
+tar zxvf protobuf-cpp-3.0.0-beta-1.tar.gz
+cd protobuf
+./configure
+make install
+```
+Then, continue by using `apt-get`
 ```
 apt-get install libglog-dev libgflags-dev
 pip install epsilon
