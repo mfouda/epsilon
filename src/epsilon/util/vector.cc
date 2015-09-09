@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include "epsilon/util/string.h"
 

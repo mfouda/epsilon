@@ -82,7 +82,7 @@ solve = Extension(
     library_dirs = [
         os.path.join(PROTOC_PREFIX, "lib"),
     ],
-    libraries = ["protobuf"],
+    libraries = ["protobuf", "glog"],
 )
 
 setup(

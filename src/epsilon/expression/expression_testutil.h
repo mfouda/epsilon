@@ -3,7 +3,7 @@
 
 #include <Eigen/Dense>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include "epsilon/expression.pb.h"

@@ -10,32 +10,25 @@
 #include "epsilon/operators/vector_operator.h"
 #include "epsilon/util/string.h"
 
-// TODO(mwytock): Refactor into small class
-bool RateLimitAllows(uint64_t limit, uint64_t* last) {
-  uint64_t now = WallTime_Usec();
-  if (now < *last + limit)
-    return false;
-
-  *last = now;
-  return true;
-}
-
 ProxADMMSolver::ProxADMMSolver(
     const ProxProblem& problem,
     const SolverParams& params,
     std::unique_ptr<ParameterService> parameter_service)
     : problem_(problem),
       params_(params),
-      parameter_service_(std::move(parameter_service)),
-      last_consensus_usec_(0),
-      last_status_usec_(0) {}
+      parameter_service_(std::move(parameter_service)) {}
 
 void ProxADMMSolver::Init() {
   VLOG(2) << problem_.DebugString();
 
   CHECK(problem_.prox_function_size() != 0);
-  CHECK_EQ(problem_.equality_constraint_size(), 1);
-  m_ = GetDimension(problem_.equality_constraint(0));
+
+  m_ = 0;
+  for (const Expression& eq_constr : problem_.equality_constraint()) {
+    m_ += GetDimension(eq_constr);
+  }
+  // TODO(mwytock): Handle this case
+  CHECK_GT(m_, 0);
 
   n_ = 0;
   AddVariableOffsets(&problem_);
@@ -45,7 +38,7 @@ void ProxADMMSolver::Init() {
   }
 
   VLOG(1) << "Consensus-Prox m = " << m_ << ", n = " << n_;
-  {
+  if (m_ > 0) {
     // Instantiate equality constraints
     DynamicMatrix A_tmp(m_, n_);
     DynamicMatrix b_tmp(m_, 1);
@@ -148,14 +141,6 @@ void ProxADMMSolver::Solve() {
     for (const ProxOperatorInfo& op_info : prox_ops_)
       ApplyProxOperator(op_info);
 
-    if (RateLimitAllows(
-            params_.consensus_rate_limit_usec(),
-            &last_consensus_usec_)) {
-      for (const ConsensusVariableInfo& var : consensus_vars_) {
-        UpdateConsensusVariable(var);
-      }
-    }
-
     u_ += Ax_ + b_;
 
     VLOG(2) << "Iteration " << iter_ << "\n"
@@ -164,12 +149,6 @@ void ProxADMMSolver::Solve() {
 
     ComputeResiduals();
     LogStatus();
-
-    if (RateLimitAllows(
-            params_.status_rate_limit_usec(),
-            &last_status_usec_)) {
-      UpdateStatus(status_);
-    }
 
     if (status_.state() == ProblemStatus::OPTIMAL &&
         !params_.ignore_stopping_criteria()) {

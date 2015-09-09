@@ -5,7 +5,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include "epsilon/util/string.h"
 
@@ -35,7 +35,7 @@ public:
 
     std::lock_guard<std::mutex> l(mem_file_lock);
     auto iter = mem_file_contents.find(name_);
-    CHECK(iter != mem_file_contents.end());
+    CHECK(iter != mem_file_contents.end()) << "File does not exist: " << name_;
 
     return iter->second.substr(pos, len);
   }

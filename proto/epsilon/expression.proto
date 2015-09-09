@@ -4,7 +4,6 @@ syntax = "proto3";
 message Constant {
   string data_location = 1;
   double scalar = 2;
-  bool transpose = 3;
 }
 
 message Variable {

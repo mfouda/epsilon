@@ -3,7 +3,7 @@
 #include <memory>
 #include <mutex>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include <Eigen/SparseCore>
 
@@ -24,8 +24,6 @@ typedef Eigen::SparseMatrix<double> SparseXd;
 DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
   if (c.data_location() == "")
     return DynamicMatrix::FromDense(VectorXd::Constant(1, c.scalar()));
-
-  CHECK(!c.transpose());  // TODO(mwytock): Remove this flag
 
   VLOG(1) << "Read: " << c.data_location();
   std::unique_ptr<const Data> d = ReadSplitData(c.data_location());

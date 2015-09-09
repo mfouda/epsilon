@@ -1,6 +1,6 @@
 #include "epsilon/util/vector_file.h"
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include "epsilon/file/file.h"
 

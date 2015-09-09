@@ -1,6 +1,9 @@
 #include <Python.h>
 
+#include <glog/logging.h>
+
 #include "epsilon/algorithms/prox_admm.h"
+#include "epsilon/expression/problem.h"
 #include "epsilon/file/file.h"
 #include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/prox.pb.h"
@@ -8,20 +11,28 @@
 
 extern "C" {
 
-// solve(problem_str, params_str, data)
+// TODO(mwytock): Need to set the appropriate exceptions when passed incorrect
+// arguments.
 static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
   const char* problem_str;
   const char* params_str;
+  int problem_str_len, params_str_len;
   PyObject* data;
-  if (!PyArg_ParseTuple(args, "ssO", &problem_str, &params_str, &data))
+
+  // solve(problem_str, params_str, data)
+  if (!PyArg_ParseTuple(
+          args, "s#s#O",
+          &problem_str, &problem_str_len,
+          &params_str, &params_str_len,
+          &data)) {
     return nullptr;
+  }
 
   ProxProblem problem;
   SolverParams params;
-
-  if (!problem.ParseFromString(problem_str))
+  if (!problem.ParseFromArray(problem_str, problem_str_len))
     return nullptr;
-  if (!params.ParseFromString(params_str))
+  if (!params.ParseFromArray(params_str, params_str_len))
     return nullptr;
 
   Py_ssize_t pos = 0;
@@ -41,6 +52,8 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
       f->Write(std::string(value_str, PyString_Size(value)));
       f->Close();
     }
+
+    // Need to Py_DECREF() key/value here?
   }
 
   ProxADMMSolver solver(
@@ -48,8 +61,28 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
       std::unique_ptr<ParameterService>(new LocalParameterService));
   solver.Solve();
   std::string status_str = solver.status().SerializeAsString();
-  // TODO(mwytock): Need to return a dictionary of results as well
-  return Py_BuildValue("s#", status_str.data(), status_str.size());
+
+  // Get results
+  PyObject* vars = PyDict_New();
+  {
+    LocalParameterService parameter_service;
+    for (const Expression* expr : GetVariables(problem)) {
+      const std::string& var_id = expr->variable().variable_id();
+      uint64_t param_id = VariableId(solver.problem_id(), var_id);
+      Eigen::VectorXd x = parameter_service.Fetch(param_id);
+
+      PyObject* val = PyString_FromStringAndSize(
+          reinterpret_cast<const char*>(x.data()),
+          x.rows()*sizeof(double));
+
+      PyDict_SetItemString(vars, var_id.c_str(), val);
+      Py_DECREF(val);
+    }
+  }
+
+  PyObject* retval = Py_BuildValue("s#O", status_str.data(), status_str.size(), vars);
+  Py_DECREF(vars);
+  return retval;
 }
 
 static PyMethodDef SolveMethods[] = {
@@ -59,6 +92,10 @@ static PyMethodDef SolveMethods[] = {
 };
 
 PyMODINIT_FUNC init_solve() {
+  // TODO(mwytock): Increase logging verbosity based on environment variable
+  google::InitGoogleLogging("_solve");
+  google::LogToStderr();
+
   (void)Py_InitModule("_solve", SolveMethods);
 }
 

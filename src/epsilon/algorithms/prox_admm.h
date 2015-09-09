@@ -75,10 +75,6 @@ private:
   std::unordered_set<std::string> consensus_vars_set_;
   std::vector<ProxOperatorInfo> prox_ops_;
   std::vector<ConsensusVariableInfo> consensus_vars_;
-
-  // Keeps tracking of consensus updates
-  uint64_t last_consensus_usec_;
-  uint64_t last_status_usec_;
 };
 
 

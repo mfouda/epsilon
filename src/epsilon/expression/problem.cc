@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include "epsilon/expression/expression.h"
 

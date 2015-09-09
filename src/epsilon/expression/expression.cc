@@ -1,6 +1,6 @@
 #include "epsilon/expression/expression.h"
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 namespace expression {
 
@@ -242,21 +242,6 @@ void GetDataLocations(const Expression& expression,
   for (const Expression& arg : expression.arg()) {
     GetDataLocations(arg, locations);
   }
-}
-
-void GetConstant(const Expression& expression, Constant* constant) {
-  bool transpose = false;
-  const Expression* e = &expression;
-  while (e->arg_size() > 0) {
-    CHECK_EQ(1, e->arg_size());
-    CHECK_EQ(Expression::TRANSPOSE, e->expression_type());
-    e = &e->arg(0);
-    transpose = !transpose;
-  }
-  CHECK_EQ(Expression::CONSTANT, e->expression_type());
-  CHECK(e->has_constant());
-  constant->CopyFrom(e->constant());
-  constant->set_transpose(transpose);
 }
 
 Size CreateSize(int m, int n) {

@@ -19,7 +19,8 @@ CXX = g++
 
 CXXFLAGS = `pkg-config --cflags $(LIBS)`
 CXXFLAGS += $(OPTFLAGS) -std=c++14
-CXXFLAGS += -Wall -Wextra -Werror -Wno-sign-compare -Wno-unused-parameter
+CXXFLAGS += -Wall -Wextra -Werror
+CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter -Wno-macro-redefined
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 

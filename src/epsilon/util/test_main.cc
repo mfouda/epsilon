@@ -1,6 +1,6 @@
 
 #include <gflags/gflags.h>
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include "epsilon/file/file.h"

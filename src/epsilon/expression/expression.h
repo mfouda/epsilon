@@ -39,9 +39,6 @@ const Expression& GetLeaf(const Expression& expression);
 void GetDataLocations(const Expression& expression,
                       std::unordered_set<std::string>* locations);
 
-// Get the constant from the expression, possibly handling transposes.
-void GetConstant(const Expression& expression, Constant* constant);
-
 Size CreateSize(int m, int n);
 const Size kScalarSize = CreateSize(1,1);
 

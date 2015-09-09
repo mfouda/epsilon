@@ -56,6 +56,8 @@ class DistributedConstant(Constant):
         shape = u.Shape(value.m, value.n)
         self._dcp_attr = u.DCPAttr(u.Sign.UNKNOWN, u.Curvature.CONSTANT, shape)
 
+def variable_id(var):
+    return "cvxpy:" + str(var.id)
 
 def convert_constant(value, proto, data_map):
     if isinstance(value, (int, long, float)):
@@ -63,8 +65,11 @@ def convert_constant(value, proto, data_map):
         return
 
     assert isinstance(value, numpy.ndarray)
-    proto.data_location = "/mem/data/" + str(abs(hash(value.tostring())))
-    data_map[proto.data_location] = value.tobytes(order="Fortran")  # col order
+    prefix = "/mem/data/" + str(abs(hash(value.tostring())))
+    data_map[data.metadata_file(prefix)] = (
+        data.dense_matrix_metadata(value).SerializeToString())
+    data_map[data.value_file(prefix)] = value.tobytes(order="Fortran")
+    proto.data_location = prefix
 
 def convert_expression(expr, proto, data_map):
     """Convert cxvpy expression to protobuf form."""
@@ -79,7 +84,7 @@ def convert_expression(expr, proto, data_map):
     if isinstance(expr, Constant):
         convert_constant(expr.value, proto.constant, data_map)
     elif isinstance(expr, Variable):
-        proto.variable.variable_id = "var:%d" % expr.id
+        proto.variable.variable_id = variable_id(expr)
     elif isinstance(expr, index):
         for i, key in enumerate(expr.key):
             key_proto = proto.key.add()

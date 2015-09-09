@@ -4,6 +4,15 @@ from scipy import sparse
 
 from epsilon import data_pb2
 
+METADATA_FILE = "metadata"
+VALUE_FILE = "value"
+
+def metadata_file(prefix):
+    return prefix + "/" + METADATA_FILE
+
+def value_file(prefix):
+    return prefix + "/" + VALUE_FILE
+
 def fill_vector(value, vector):
     vector.value_bytes = value.tobytes(order="Fortran")
 

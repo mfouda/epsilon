@@ -1,7 +1,7 @@
 #ifndef EXPRESSION_PROBLEM_H
 #define EXPRESSION_PROBLEM_H
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 #include "epsilon/prox.pb.h"
 

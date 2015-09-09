@@ -255,51 +255,7 @@ def add_local_copies(state):
             state.add_equality_constraint(add(old_var, negate(new_var)))
             rename_function_var(var_id, new_var_id, f)
 
-def split_problem(state):
-    """Split the problem for distributed solve.
-
-    Currently, use simple algorithm that solves a single prox function with a
-    consensus variable.
-    """
-    assert not state.prox_prob.HasField("equality_constraint")
-
-    fs = state.prox_prob.prox_function
-    var_function_map = defaultdict(list)
-
-    for f in state.prox_prob.prox_function:
-        f_vars = function_vars(f)
-        for var_id in f_vars:
-            var_function_map[var_id].append(f)
-
-    for i, f in enumerate(state.prox_prob.prox_function):
-        prob = ProxProblem(prox_function=[f])
-
-        for var_id, var in function_vars(f).iteritems():
-            num_instances = len(var_function_map[var_id])
-            if num_instances == 1:
-                continue
-
-            # Use the original var as the consensus var
-            consensus_var = Expression()
-            consensus_var.CopyFrom(var)
-            new_var_id = "%s:%d" % (var_id, i)
-            var.variable.variable_id = new_var_id
-
-            # Add equality constraint
-            prob.equality_constraint.CopyFrom(
-                add(var, negate(consensus_var)))
-
-            # Add consensus variable
-            prob.consensus_variable.add(
-                variable_id=var_id,
-                num_instances=num_instances)
-
-            # Rename variable
-            rename_function_var(var_id, new_var_id, prob.prox_function[0])
-
-        state.dist_prox_probs.append(prob)
-
-def convert_problem(prob, distributed=False):
+def convert_problem(prob):
     state = State()
 
     for expr in all_expressions(prob):
@@ -311,9 +267,5 @@ def convert_problem(prob, distributed=False):
 
     finalize_flexible_terms(state)
 
-    if distributed:
-        split_problem(state)
-        return state.dist_prox_probs
-    else:
-        add_local_copies(state)
-        return [state.prox_prob]
+    add_local_copies(state)
+    return state.prox_prob

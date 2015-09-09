@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <stdint.h>
 
-#include "epsilon/util/logging.h"
+#include <glog/logging.h>
 
 
 uint64_t WallTime_Usec() {
