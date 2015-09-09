@@ -7,9 +7,9 @@ dependencies:
     - docker info
     - docker pull mwytock/epsilon
     - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
-    - alias docker_exec="sudo lxc-attach -n $(docker inspect --format '{{.Id}}' epsilon)"
 
 test:
   override:
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py install'
-#    - docker_exec ls -l /epsilon
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && nosetests epsilon'
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'make -C /epsilon test'
