@@ -17,6 +17,10 @@ brew install glog
 brew install --devel protobuf
 pip install epsilon
 ```
+Run tests with nose
+```
+nosetests python/epsilon
+```
 
 Ubuntu
 ------
@@ -26,4 +30,8 @@ continue by using `apt-get`
 ```
 apt-get install libglog-dev
 pip install epsilon
-````
+```
+Run tests with nose
+```
+nosetests python/epsilon
+```
