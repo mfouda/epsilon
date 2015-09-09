@@ -21,9 +21,8 @@ pip install epsilon
 Ubuntu
 ------
 First download and install the protocol buffer library (must be >3.0.0 which is
-not yet included in apt-get) from https://github.com/google/protobuf.
-
-Then,
+not yet included in apt-get) from https://github.com/google/protobuf. Then
+continue by using `apt-get`
 ```
 apt-get install libglog-dev
 pip install epsilon
