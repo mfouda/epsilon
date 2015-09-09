@@ -10,6 +10,7 @@ run_test() {
 }
 export -f run_test
 
+export SHELL=/bin/bash
 parallel run_test ::: $*
 
 if [ $? -eq 0 ]; then

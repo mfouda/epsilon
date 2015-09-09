@@ -141,6 +141,9 @@ void ProxADMMSolver::Solve() {
     for (const ProxOperatorInfo& op_info : prox_ops_)
       ApplyProxOperator(op_info);
 
+    for (const ConsensusVariableInfo& var : consensus_vars_)
+      UpdateConsensusVariable(var);
+
     u_ += Ax_ + b_;
 
     VLOG(2) << "Iteration " << iter_ << "\n"
@@ -149,6 +152,7 @@ void ProxADMMSolver::Solve() {
 
     ComputeResiduals();
     LogStatus();
+    UpdateStatus(status_);
 
     if (status_.state() == ProblemStatus::OPTIMAL &&
         !params_.ignore_stopping_criteria()) {
