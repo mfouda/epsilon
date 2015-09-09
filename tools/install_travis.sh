@@ -2,13 +2,15 @@
 #
 # Script to run tests on Travis CI
 
+lsb_release -a
+
 # Numpy/scipy environment via conda
 wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
 chmod +x miniconda.sh
 ./miniconda.sh -b
 export PATH=/home/travis/miniconda/bin:$PATH
 conda update --yes conda
-conda install --yes python=2.7 pip pip numpy scipy
+conda install --yes python=2.7 pip atlas numpy scipy nose
 pip install cvxpy
 
 # Environment information
