@@ -7,15 +7,6 @@ services:
 
 before_install:
   - docker pull mwytock/epsilon
-  - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
-  - docker ps -a
-  - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- sh -c ls
-
-
-install:
-  - docker exec epsilon ls -l /epsilon #
-  - dockec exec epsilon sh -c "cd /epsilon && python setup.py install"
 
 script:
-  - docker exec epsilon make -C /epsilon test
-  - docker exec epsilon nosetests epsilon
+  - docker run -v $HOME/epsilon:/epsilon mwytock/epsilon sh -c "cd /epsilon && python setup.py install && nosetests epsilon && make test"
