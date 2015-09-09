@@ -51,8 +51,7 @@ class BuildExtCommand(build_ext):
         build_ext.run(self)
 
     def make(self):
-        cmd = "make -j".split()
-        subprocess.check_call(cmd)
+        subprocess.check_call("make")
 
 class CleanCommand(Command):
     user_options = []
@@ -64,7 +63,8 @@ class CleanCommand(Command):
 
     def run(self):
         cmd = ("rm -rf ./build ./build-cc ./dist ./python/*.egg-info " +
-               "./python/epsilon/*_pb2.py")
+               "./python/epsilon/*_pb2.py " +
+               "./python/epsilon/*.so")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(

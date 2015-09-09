@@ -10,7 +10,7 @@ src_dir = src
 proto_dir = proto
 tools_dir = tools
 eigen_dir = third_party/eigen
-gtest_dir = $(third_party_dir)/googletest/googletest
+gtest_dir = third_party/googletest/googletest
 build_dir = build-cc
 
 SYSTEM = $(shell uname -s)
@@ -24,7 +24,11 @@ CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter -Wno-macro-redefined
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 
-LIBS = protobuf libglog
+ifeq ($(SYSTEM),Linux)
+CXXFLAGS += -fPIC
+endif
+
+LIBS = protobuf libglog libgflags
 LDLIBS += `pkg-config --libs $(LIBS)`
 
 common_cc = \
@@ -51,6 +55,7 @@ common_test_cc = \
 proto = \
 	epsilon/data.proto \
 	epsilon/expression.proto \
+	epsilon/problem.proto \
 	epsilon/prox.proto \
 	epsilon/solver_params.proto \
 	epsilon/stats.proto \

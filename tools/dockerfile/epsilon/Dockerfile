@@ -8,28 +8,33 @@ RUN apt-get update && apt-get install -y \
   bzip2 \
   curl \
   g++ \
-  git \
   gfortran \
+  git \
   libc-dev \
   libgflags-dev \
+  libgoogle-glog-dev \
   libgtest-dev \
   libopenblas-dev \
+  libquadmath0 \
   libtool \
   make \
+  pkg-config \
+  python-decorator \
   python-dev \
-  python-numpy \
-  python-scipy \
   python-setuptools \
   unzip \
   wget \
   zip && apt-get clean
 
-# Python and cvxpy
-RUN easy_install -U pip
-RUN pip install -U cvxpy
-
 # Protobuf latest version
 RUN git clone https://github.com/google/protobuf.git
 RUN cd protobuf && ./autogen.sh && ./configure && make install
+RUN ldconfig
+
+# Python with numpy/scipy and cvxpy
+RUN easy_install -U pip
+RUN pip install -U nose
+RUN pip install -U numpy scipy
+RUN pip install -U cvxpy
 
 CMD ["bash"]
