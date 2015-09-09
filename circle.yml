@@ -4,7 +4,7 @@ machine:
 
 dependencies:
   override:
-    - git submodule init --update
+    - git submodule update --init
     - docker info
     - docker pull mwytock/epsilon
     - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
