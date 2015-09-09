@@ -9,5 +9,4 @@ before_install:
   - docker pull mwytock/epsilon
 
 script:
-  - docker run -v $HOME/epsilon:/epsilon mwytock/epsilon sh -c "cd /epsilon && ls -l"
-  - docker run -v $HOME/epsilon:/epsilon mwytock/epsilon sh -c "cd /epsilon && python setup.py install && nosetests epsilon && make test"
+  - docker run -v $HOME/mwytock/epsilon:/epsilon mwytock/epsilon sh -c "cd /epsilon && python setup.py install && nosetests epsilon && make test"
