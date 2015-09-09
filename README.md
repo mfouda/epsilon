@@ -5,27 +5,27 @@ operators.
 
 ## Installation
 
-We assume that CVXPY has already been installed, see instructions at
-http://www.cvxpy.org/en/latest/install/index.html.
-
 The epsilon C++ code has library dependencies which are not bundled as part of
 the python package. These must be installed before the `epsilon` package itself.
 
-### Installation on Mac OS X
+We assume that CVXPY has already been installed, see instructions at
+http://www.cvxpy.org/en/latest/install/index.html.
 
-Using homebrew
+### Dependencies on Mac OS X
+
+Install C++ dependencies using Homebrew (or MacPorts):
 
 ```
 brew install glog gflags
 brew install --devel protobuf
+```
+Install epsilon and run tests with nose
+```
 pip install epsilon
-```
-Run tests with nose
-```
 nosetests epsilon
 ```
 
-### Installation on Ubuntu
+### Dependencies on Ubuntu
 
 First download and install the protocol buffer library (must be >3.0.0 which is
 not yet included in apt-get) from https://github.com/google/protobuf.
@@ -36,12 +36,19 @@ cd protobuf-cpp-3.0.0-beta-1
 ./configure
 make install
 ```
-Then, continue by using `apt-get`
+The other dependencies can be installed using the distribution package manager
 ```
 apt-get install libglog-dev libgflags-dev
+```
+
+### Install Epsilon
+
+Install epsilon
+```
 pip install epsilon
 ```
-Run tests with nose
+and (optionally) run tests with nose
 ```
+pip install nose
 nosetests epsilon
 ```
