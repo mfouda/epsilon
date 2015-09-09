@@ -1,9 +1,10 @@
-# Epsilon
+# Epsilon [![Circle CI](https://circleci.com/gh/mwytock/epsilon.svg?style=svg)](https://circleci.com/gh/mwytock/epsilon)
+
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
-Installation
-============
+## Installation
+
 The epsilon C++ code currently has some standard library dependencies which are
 not bundled as part of the python package. These must be installed before
 compiling and installing the epsilon package with `pip`.
@@ -11,8 +12,8 @@ compiling and installing the epsilon package with `pip`.
 We assume that CVXPY has already been installed, see instructions at
 http://www.cvxpy.org/en/latest/install/index.html.
 
-Mac OS X
---------
+### Installation on Mac OS X
+
 Using homebrew
 
 ```
@@ -25,8 +26,8 @@ Run tests with nose
 nosetests epsilon
 ```
 
-Ubuntu
-------
+### Installation on Ubuntu
+
 First download and install the protocol buffer library (must be >3.0.0 which is
 not yet included in apt-get) from https://github.com/google/protobuf.
 ```
