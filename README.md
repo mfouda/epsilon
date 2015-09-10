@@ -53,13 +53,11 @@ nosetests epsilon
 
 Benchmark of epsilon on a suite of common problems
 ```
-problem       time  objective
--------       ----  ---------
-covsel       0.38s   3.66e+02
-lasso        3.83s   1.63e+01
-tv_smooth   17.39s   1.15e+06
-```
-This can be run with
-```
 python -m epsilon.benchmark
 ```
+
+problem    |     time |   objective
+-------    |     ---- |   ---------
+covsel     |    0.39s |    3.73e+02
+lasso      |    3.86s |    1.63e+01
+tv_smooth  |   17.36s |    1.15e+06
