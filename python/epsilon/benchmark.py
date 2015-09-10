@@ -38,11 +38,11 @@ COLUMNS = [
 ]
 
 def print_header():
-    print "".join(c.header for c in COLUMNS)
-    print "".join(c.sub_header for c in COLUMNS)
+    print " | ".join(c.header for c in COLUMNS)
+    print " | ".join(c.sub_header for c in COLUMNS)
 
 def print_problem(*args):
-    print "".join(c.fmt % args[i] for i, c in enumerate(COLUMNS))
+    print " | ".join(c.fmt % args[i] for i, c in enumerate(COLUMNS))
 
 if __name__ == "__main__":
     print_header()
