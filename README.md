@@ -57,7 +57,7 @@ python -m epsilon.benchmark
 ```
 
 problem    |     time |   objective
--------    |     ---- |   ---------
+-------    |     ----: |   ---------:
 covsel     |    0.39s |    3.73e+02
 lasso      |    3.86s |    1.63e+01
 tv_smooth  |   17.36s |    1.15e+06
