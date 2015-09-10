@@ -8,10 +8,6 @@ message Constant {
 
 message Variable {
   string variable_id = 1;
-  // TODO(mwytock): This is an implementation detail that is used when mapping
-  // linear operators to matrices. It should go in an ancillary data structure
-  // (e.g. VariableOffsetMap or similar) and be removed from here.
-  int32 offset = 2;
 }
 
 message Size {
@@ -48,72 +44,85 @@ message Curvature {
   bool elementwise = 2;
 }
 
+message Cone {
+  enum Type {
+    UNKNOWN = 0;
+    ZERO = 1;           // s == 0
+    NON_NEGATIVE = 2;   // s >= 0
+    SEMI_DEFINITE = 3;  // S >= 0
+  }
+  Type cone_type = 1;
+}
+
 message Expression {
   enum Type {
     // Default value
     UNKNOWN = 0;
 
+    // Indicator (generalized inequality)
+    INDICATOR = 1;
+
     // Leaf nodes
-    CONSTANT = 1;
-    VARIABLE = 2;
+    CONSTANT = 2;
+    VARIABLE = 3;
 
     // Linear operators
-    ADD = 3;
-    INDEX = 4;
-    MULTIPLY = 5;
-    MULTIPLY_ELEMENTWISE = 6;
-    NEGATE = 7;
-    SUM = 8;
-    TRANSPOSE = 9;
-    HSTACK = 10;
-    VSTACK = 11;
-    TRACE = 12;
-    RESHAPE = 13;
-
-    // Norms
-    NORM_2_ELEMENTWISE = 14;
-    P_NORM = 15;
+    ADD = 4;
+    INDEX = 5;
+    MULTIPLY = 6;
+    MULTIPLY_ELEMENTWISE = 7;
+    NEGATE = 8;
+    SUM = 9;
+    TRANSPOSE = 10;
+    HSTACK = 11;
+    VSTACK = 12;
+    TRACE = 13;
+    RESHAPE = 14;
 
     // Elementwise functions
-    ABS = 16;
-    POWER = 17;
-    SQUARE_ROOT = 18;
-    MAX = 19;
+    ABS = 15;
+    POWER = 16;
+    SQUARE_ROOT = 17;
+    MAX = 18;
 
-    // Convex functions
+    // Vector functions
+    NORM_P = 19;
+
+    // Matrix functions
     LOG_DET = 20;
+    NORM_PQ = 21;
   }
   Type expression_type = 1;
   Size size = 2;
   repeated Expression arg = 3;
 
-  Constant constant = 4;
-  Variable variable = 5;
-
-  // Should only exist for INDEX expressions
-  repeated Slice key = 6;
-
   // DCP attributes
-  Sign sign = 7;
-  Curvature curvature = 8;
+  Sign sign = 4;
+  Curvature curvature = 5;
 
-  // Exponent for NORM_P or POWER
+  // CONSTANT, VARIABLE
+  Constant constant = 6;
+  Variable variable = 7;
+
+  // INDEX
+  repeated Slice key = 8;
+
+  // NORM_P, NORM_P_Q and POWER
   double p = 9;
+  double q = 10;
+
+  // INDICATOR
+  Cone cone = 11;
 }
 
-enum Cone {
-  // s == 0
-  ZERO = 0;
-  // s >= 0
-  NON_NEGATIVE = 1;
-  // s : t >= norm2([x1,...,xn])
-  SECOND_ORDER = 2;
-  // s : t_ij >= norm2([x1_ij,...,xn_ij])
-  SECOND_ORDER_ELEMENTWISE = 3;
-  // S >= 0
-  SEMI_DEFINITE = 4;
-  EXPONENTIAL = 5;
-  // s : t >= norm1([x1,...,xn])
-  L1 = 6;
-  L_INFINITY= 7;
+// Arbitrary convex problem of the form
+// minimize    f(x)
+// subject to  f_i(x) <=_K 0
+message Problem {
+  // Objective should be scalar-valued, f : R^n -> R
+  Expression objective = 1;
+
+  // Constraints can be vector-valued, f_i : R^n -> R^m, and should have
+  // expression type INDICATOR
+  repeated Expression constraint = 2;
 }

@@ -42,7 +42,8 @@ common_cc = \
 	epsilon/algorithms/prox_admm.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
-	epsilon/expression/problem.cc \
+	epsilon/expression/expression_util.cc \
+	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
 	epsilon/operators/affine.cc \
 	epsilon/operators/prox.cc \
@@ -62,11 +63,8 @@ common_test_cc = \
 proto = \
 	epsilon/data.proto \
 	epsilon/expression.proto \
-	epsilon/problem.proto \
-	epsilon/prox.proto \
-	epsilon/solver_params.proto \
-	epsilon/stats.proto \
-	epsilon/status.proto
+	epsilon/solver.proto \
+	epsilon/solver_params.proto
 
 tests = \
 	epsilon/algorithms/prox_admm_test \

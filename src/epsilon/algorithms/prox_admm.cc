@@ -3,15 +3,14 @@
 
 #include <Eigen/SparseCholesky>
 
-#include "epsilon/expression/expression.h"
-#include "epsilon/expression/problem.h"
+#include "epsilon/expression/expression_util.h"
 #include "epsilon/operators/affine.h"
 #include "epsilon/operators/prox.h"
 #include "epsilon/operators/vector_operator.h"
 #include "epsilon/util/string.h"
 
 ProxADMMSolver::ProxADMMSolver(
-    const ProxProblem& problem,
+    const Problem& problem,
     const SolverParams& params,
     std::unique_ptr<ParameterService> parameter_service)
     : problem_(problem),
@@ -20,39 +19,29 @@ ProxADMMSolver::ProxADMMSolver(
 
 void ProxADMMSolver::Init() {
   VLOG(2) << problem_.DebugString();
+  var_offset_map_.Insert(problem_);
+  n_ = var_offset_map_.n();
 
-  CHECK(problem_.prox_function_size() != 0);
-
-  m_ = 0;
-  for (const Expression& eq_constr : problem_.equality_constraint()) {
-    m_ += GetDimension(eq_constr);
-  }
-  // TODO(mwytock): Handle this case
-  CHECK_GT(m_, 0);
-
-  n_ = 0;
-  AddVariableOffsets(&problem_);
-  for (const Expression* expr : GetVariables(problem_)) {
-    var_map_[expr->variable().variable_id()] = expr;
-    n_ += GetDimension(*expr);
-  }
-
-  VLOG(1) << "Consensus-Prox m = " << m_ << ", n = " << n_;
-  if (m_ > 0) {
-    // Instantiate equality constraints
+  // TODO(mwytock): Handle more general cases, 0 or >1 constraint
+  CHECK_EQ(1, problem_.constraint_size());
+  const Expression& constr = problem_.constraint(0);
+  CHECK_EQ(Expression::INDICATOR, constr.expression_type());
+  CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
+  m_ = GetDimension(GetOnlyArg(constr));
+  {
     DynamicMatrix A_tmp(m_, n_);
     DynamicMatrix b_tmp(m_, 1);
-    BuildAffineOperator(problem_.equality_constraint(0), &A_tmp, &b_tmp);
+    BuildAffineOperator(GetOnlyArg(constr), var_offset_map_, &A_tmp, &b_tmp);
     CHECK(A_tmp.is_sparse());
     A_ = A_tmp.sparse();
     b_ = b_tmp.AsDense();
   }
 
-  for (const ProxFunction& f : problem_.prox_function()) {
-    InitProxOperator(f);
-  }
-  for (const ConsensusVariable& cv : problem_.consensus_variable()) {
-    InitConsensusVariable(cv);
+  VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_;
+
+  CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
+  for (const Expression& expr : problem_.objective().arg()) {
+    InitProxOperator(expr);
   }
 
   x_ = Eigen::VectorXd::Zero(n_);
@@ -62,17 +51,14 @@ void ProxADMMSolver::Init() {
   Ax_ = Eigen::VectorXd::Zero(m_);
 }
 
-void ProxADMMSolver::InitProxOperator(const ProxFunction& f_orig) {
+void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   // For now, we assume each prox function only operates on one variable but
   // this can be relaxed.
-  std::vector<const Expression *> vars = GetVariables(f_orig);
+  VariableSet vars = GetVariables(expr);
   CHECK_EQ(1, vars.size());
-  const int i = vars[0]->variable().offset();
-  const int n = GetDimension(*vars[0]);
-
-  // Recompute variable offsets local to this function
-  ProxFunction f = f_orig;
-  AddVariableOffsets(&f);
+  const Expression& var_expr = *(*vars.begin());
+  const int i = var_offset_map_.Get(var_expr);
+  const int n = GetDimension(var_expr);
 
   ProxOperatorInfo info;
   info.i = i;
@@ -105,12 +91,12 @@ void ProxADMMSolver::InitProxOperator(const ProxFunction& f_orig) {
     }
 
     info.B *= 1/alpha_squared;
-    info.op = CreateProxOperator(f, 1/params_.rho()/alpha_squared, n);
+    info.op = CreateProxOperator(expr, 1/params_.rho()/alpha_squared);
   } else {
     info.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
     info.mu = 0.1;
-    info.op = CreateProxOperator(f, info.mu, n);
+    info.op = CreateProxOperator(expr, info.mu);
   }
 
   info.op->Init();
@@ -141,9 +127,6 @@ void ProxADMMSolver::Solve() {
     for (const ProxOperatorInfo& op_info : prox_ops_)
       ApplyProxOperator(op_info);
 
-    for (const ConsensusVariableInfo& var : consensus_vars_)
-      UpdateConsensusVariable(var);
-
     u_ += Ax_ + b_;
 
     VLOG(2) << "Iteration " << iter_ << "\n"
@@ -154,7 +137,7 @@ void ProxADMMSolver::Solve() {
     LogStatus();
     UpdateStatus(status_);
 
-    if (status_.state() == ProblemStatus::OPTIMAL &&
+    if (status_.state() == SolverStatus::OPTIMAL &&
         !params_.ignore_stopping_criteria()) {
       break;
     }
@@ -163,73 +146,13 @@ void ProxADMMSolver::Solve() {
       break;
   }
 
-  UpdateLocalParameters();
   if (iter_ == params_.max_iterations())
-      status_.set_state(ProblemStatus::MAX_ITERATIONS_REACHED);
+      status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   UpdateStatus(status_);
 }
 
-void ProxADMMSolver::InitConsensusVariable(const ConsensusVariable& cv) {
-  ConsensusVariableInfo info;
-
-  auto iter = var_map_.find(cv.variable_id());
-  CHECK(iter != var_map_.end());
-  const Expression* expr = iter->second;
-  const int i = expr->variable().offset();
-  const int n = GetDimension(*expr);
-  info.i = i;
-  info.n = n;
-  info.B = SparseXd(n, m_);
-  info.param_id = VariableId(problem_id(), expr->variable().variable_id());
-  SparseXd Ai = A_.middleCols(i, n);
-  CHECK(IsBlockScalar(Ai));
-
-  for (SparseXd::InnerIterator iter(Ai, 0); iter; ++iter) {
-    CHECK(iter.value() != 0);
-
-    const double alpha = iter.value();
-    info.B.middleCols(iter.row(), n) = -SparseIdentity(n)/alpha;
-  }
-  info.B *= 1./cv.num_instances();
-
-  consensus_vars_.push_back(info);
-  consensus_vars_set_.insert(cv.variable_id());
-  VLOG(2) << "InitConsensusVariable " << cv.variable_id() << "\n"
-          << "Ai:\n" << MatrixDebugString(Ai) << "\n"
-          << "B:\n" << MatrixDebugString(info.B);
-}
-
-void ProxADMMSolver::UpdateConsensusVariable(
-    const ConsensusVariableInfo& cv) {
-  const int i = cv.i;
-  const int n = cv.n;
-  const SparseXd& Ai = A_.middleCols(i, n);
-  Eigen::VectorXd Ai_xi_old = Ai*x_.segment(i, n);
-
-  Eigen::VectorXd delta = cv.B*(Ax_ - Ai_xi_old + b_ + u_) -
-                          x_param_prev_.segment(i, n);
-  x_param_prev_.segment(i, n) += delta;
-  x_.segment(i, n) = parameter_service_->Update(cv.param_id, delta);
-
-  Ax_ += Ai*x_.segment(i, n) - Ai_xi_old;
-}
-
-void ProxADMMSolver::UpdateLocalParameters() {
-  for (const auto& iter : var_map_) {
-    if (consensus_vars_set_.find(iter.first) != consensus_vars_set_.end())
-      continue;
-
-    const Expression& expr = *iter.second;
-    const int i = expr.variable().offset();
-    const int n = GetDimension(expr);
-    const Eigen::VectorXd delta = x_.segment(i, n) - x_param_prev_.segment(i, n);
-    parameter_service_->Update(VariableId(problem_id(), iter.first), delta);
-    x_param_prev_.segment(i, n) += delta;
-  }
-}
-
 void ProxADMMSolver::ComputeResiduals() {
-  ProblemStatus::Residuals* r = status_.mutable_residuals();
+  SolverStatus::Residuals* r = status_.mutable_residuals();
 
   const double abs_tol = params_.abs_tol();
   const double rel_tol = params_.rel_tol();
@@ -254,16 +177,16 @@ void ProxADMMSolver::ComputeResiduals() {
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {
-    status_.set_state(ProblemStatus::OPTIMAL);
+    status_.set_state(SolverStatus::OPTIMAL);
   } else {
-    status_.set_state(ProblemStatus::RUNNING);
+    status_.set_state(SolverStatus::RUNNING);
   }
 
   status_.set_num_iterations(iter_);
 }
 
 void ProxADMMSolver::LogStatus() {
-  const ProblemStatus::Residuals& r = status_.residuals();
+  const SolverStatus::Residuals& r = status_.residuals();
   VLOG(1) << StringPrintf(
       "iter=%d residuals primal=%.2e [%.2e] dual=%.2e [%.2e]",
       status_.num_iterations(),

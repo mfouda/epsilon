@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-message ProblemStatus {
+message SolverStatus {
   enum State {
     NOT_STARTED = 0;
     INITIALIZING = 1;
@@ -57,4 +57,10 @@ message ProblemStatus {
   ConsensusResiduals consensus_residuals = 12;
 
   double consensus_objective_value = 13;
+}
+
+message SolverStatSeries {
+  string name = 1;
+  repeated int32 time_usec = 2;
+  repeated double value = 3;
 }

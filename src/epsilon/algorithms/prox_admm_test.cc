@@ -32,8 +32,7 @@ class ProxADMMSolverTest : public testing::Test {
     }
   }
 
-  void BuildLS(int m, int n, int k, bool consensus,
-               Eigen::MatrixXd* A, Eigen::VectorXd* b) {
+  void BuildLS(int m, int n, int k, Eigen::MatrixXd* A, Eigen::VectorXd* b) {
     srand(0);
 
     std::vector<Expression> xs;
@@ -56,18 +55,8 @@ class ProxADMMSolverTest : public testing::Test {
 
     std::vector<Expression> constrs;
 
-    if (consensus) {
-      Expression z = expression::Variable(n, 1, "z");
-      ConsensusVariable* cv = problem_.add_consensus_variable();
-      cv->set_variable_id("z");
-      cv->set_num_instances(k);
-      for (int i = 0; i < k; i++) {
-        constrs.push_back(expression::Add(xs[i], expression::Negate(z)));
-      }
-    } else {
-      for (int i = 0; i < k - 1; i++) {
-        constrs.push_back(expression::Add(xs[i], expression::Negate(xs[i+1])));
-      }
+    for (int i = 0; i < k - 1; i++) {
+      constrs.push_back(expression::Add(xs[i], expression::Negate(xs[i+1])));
     }
     *problem_.add_equality_constraint() = expression::VStack(constrs);
   }
@@ -158,17 +147,6 @@ TEST_F(ProxADMMSolverTest, LS_Split2) {
   EXPECT_EQ(status_.state(), ProblemStatus::OPTIMAL);
   EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["x0"], 1e-2));
   EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["x1"], 1e-2));
-}
-
-TEST_F(ProxADMMSolverTest, LS_Split2_Consensus) {
-  Eigen::MatrixXd A;
-  Eigen::VectorXd b;
-  BuildLS(3, 2, 2, true, &A, &b);
-  Solve();
-  EXPECT_EQ(status_.state(), ProblemStatus::OPTIMAL);
-  EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["x0"], 1e-2));
-  EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["x1"], 1e-2));
-  EXPECT_TRUE(VectorEquals(ComputeLS(A, b), vars_["z"], 1e-2));
 }
 
 TEST_F(ProxADMMSolverTest, Lasso) {

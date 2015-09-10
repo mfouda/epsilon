@@ -12,16 +12,15 @@
 #include <glog/logging.h>
 
 #include "epsilon/util/time.h"
-#include "epsilon/status.pb.h"
+#include "epsilon/solver.pb.h"
 
 class Solution;
-class StatSeries;
 class WorkerPool;
 
 class Stat {
  public:
   virtual void AddValue(double value) = 0;
-  virtual void Fill(StatSeries* series) = 0;
+  virtual void Fill(SolverStatSeries* series) = 0;
 };
 
 class Timer {
@@ -47,11 +46,11 @@ class Solver {
   virtual void Solve() = 0;
 
   // Returns current problem status
-  ProblemStatus status();
+  SolverStatus status();
 
   // Allows callers to get notifications when status changes
   void RegisterStatusCallback(
-      std::function<void(const ProblemStatus&)> callback) {
+      std::function<void(const SolverStatus&)> callback) {
     status_callback_ = callback;
   }
 
@@ -72,7 +71,7 @@ class Solver {
 
  protected:
   // Update solution status
-  void UpdateStatus(const ProblemStatus& status);
+  void UpdateStatus(const SolverStatus& status);
 
   // True if an external stop was requested
   bool HasExternalStop();
@@ -80,13 +79,13 @@ class Solver {
  private:
   std::mutex mutex_;
   std::unordered_map<std::string, std::unique_ptr<Stat> > stat_map_;
-  ProblemStatus status_;
+  SolverStatus status_;
   Timer timer_;
 
   uint64_t problem_id_;
 
   std::function<bool()> stop_callback_;
-  std::function<void(const ProblemStatus&)> status_callback_;
+  std::function<void(const SolverStatus&)> status_callback_;
 };
 
 #endif  // ALGORITHMS_SOLVER_H

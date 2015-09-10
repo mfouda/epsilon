@@ -1,7 +1,6 @@
 
 #include "epsilon/algorithms/solver.h"
 
-#include "epsilon/stats.pb.h"
 #include "epsilon/util/string.h"
 
 class StatImpl final : public Stat {
@@ -16,7 +15,7 @@ class StatImpl final : public Stat {
     series_.add_value(value);
   }
 
-  void Fill(StatSeries* series) {
+  void Fill(SolverStatSeries* series) {
     std::lock_guard<std::mutex> l(lock_);
     *series = series_;
   }
@@ -25,7 +24,7 @@ private:
   const Timer* timer_;  // Not owned
 
   std::mutex lock_;
-  StatSeries series_;
+  SolverStatSeries series_;
 };
 
 Solver::Solver() : problem_id_(std::hash<uint64_t>()(WallTime_Usec())) {}
@@ -55,7 +54,7 @@ std::vector<Stat*> Solver::GetStats(const std::string& prefix) {
   return retval;
 }
 
-void Solver::UpdateStatus(const ProblemStatus& status) {
+void Solver::UpdateStatus(const SolverStatus& status) {
   {
     std::lock_guard<std::mutex> l(mutex_);
     status_ = status;
@@ -64,7 +63,7 @@ void Solver::UpdateStatus(const ProblemStatus& status) {
     status_callback_(status_);
 }
 
-ProblemStatus Solver::status() {
+SolverStatus Solver::status() {
   std::lock_guard<std::mutex> l(mutex_);
   return status_;
 }
