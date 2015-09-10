@@ -15,7 +15,7 @@ http://www.cvxpy.org/en/latest/install/index.html.
 
 Install dependencies using Homebrew (or MacPorts):
 
-```
+```sh
 brew install glog gflags
 brew install --devel protobuf
 ```
@@ -23,13 +23,13 @@ brew install --devel protobuf
 ### Dependencies on Ubuntu
 
 Install dependencies with the package manager
-```
+```sh
 apt-get install libglog-dev libgflags-dev
 ```
 
 The protocol buffer library must be >3.0.0 which is not yet included in
 apt-get. It can be downloaed from https://github.com/google/protobuf.
-```
+```sh
 wget https://github.com/google/protobuf/releases/download/v3.0.0-beta-1/protobuf-cpp-3.0.0-beta-1.tar.gz
 tar zxvf protobuf-cpp-3.0.0-beta-1.tar.gz
 cd protobuf-cpp-3.0.0-beta-1
@@ -40,11 +40,11 @@ make install
 ### Install Epsilon
 
 Install epsilon
-```
+```sh
 pip install epsilon
 ```
 and (optionally) run tests with nose
-```
+```sh
 pip install nose
 nosetests epsilon
 ```
@@ -52,7 +52,7 @@ nosetests epsilon
 ## Benchmark results
 
 Benchmark of epsilon on a suite of common problems
-```
+```sh
 python -m epsilon.benchmark
 ```
 
