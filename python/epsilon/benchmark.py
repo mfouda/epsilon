@@ -11,17 +11,21 @@ import epsilon
 Problem = namedtuple("Problem", ["name", "create", "kwargs"])
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
+    """Columns for a Markdown appropriate text table."""
+
     @property
     def header(self):
-        return self.header_fmt % self.name
+        header_fmt = " %" + str(self.width-2) + "s "
+        return header_fmt % self.name
 
     @property
     def sub_header(self):
-        return self.header_fmt % ("-" * len(self.name))
-
-    @property
-    def header_fmt(self):
-        return "%" + ("" if self.right else "-") + str(self.width) + "s"
+        val = "-" * (self.width-2)
+        if self.right:
+            val = " " + val + ":"
+        else:
+            val = ":" + val + " "
+        return val
 
 Column.__new__.__defaults__ = (None, None, None, False)
 
@@ -32,17 +36,17 @@ PROBLEMS = [
 ]
 
 COLUMNS = [
-    Column("problem",   10, "%-10s"),
-    Column("time",      8,  "%7.2fs", right=True),
-    Column("objective", 11, "%11.2e", right=True),
+    Column("Problem",   10, "%-10s"),
+    Column("Time",      8,  "%7.2fs", right=True),
+    Column("Objective", 11, "%11.2e", right=True),
 ]
 
 def print_header():
-    print " | ".join(c.header for c in COLUMNS)
-    print " | ".join(c.sub_header for c in COLUMNS)
+    print "|".join(c.header for c in COLUMNS)
+    print "|".join(c.sub_header for c in COLUMNS)
 
 def print_problem(*args):
-    print " | ".join(c.fmt % args[i] for i, c in enumerate(COLUMNS))
+    print "|".join(c.fmt % args[i] for i, c in enumerate(COLUMNS))
 
 if __name__ == "__main__":
     print_header()

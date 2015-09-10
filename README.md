@@ -56,8 +56,8 @@ Benchmark of epsilon on a suite of common problems
 python -m epsilon.benchmark
 ```
 
-problem    |     time |   objective
--------    |     ----: |   ---------:
-covsel     |    0.39s |    3.73e+02
-lasso      |    3.86s |    1.63e+01
-tv_smooth  |   17.36s |    1.15e+06
+  Problem |   Time | Objective
+:-------- | ------:| ---------:
+covsel    |   0.38s|   3.68e+02
+lasso     |   3.83s|   1.63e+01
+tv_smooth |  17.32s|   1.15e+06
