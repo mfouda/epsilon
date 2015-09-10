@@ -8,6 +8,30 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/operators/affine.h"
 
+// Arguments to the proximal operator, see below
+class ProxOperatorArg {
+ public:
+  int n() const { return n_; };
+  double lambda() const { return lambda_; };
+
+  const DynamicMatrix& A() const { return *A_; }
+  const DynamicMatrix& b() const { return *b_; }
+
+ private:
+  double lambda_;
+
+  // Not owned by us
+  const DynamicMatrix* A_;
+  const DynamicMatrix* b_;
+};
+
+// A general interface to a proximal operator for a function, f : R^n -> R, of
+// the form: lambda*f(Ax + b)
+//
+// Many operators require special structure in A, e.g. diagonal or identity.
+//
+// TODO(mwytock): Figure out more precisely the interface for matrix
+// variables.
 class ProxOperator : public VectorOperator {
  public:
   void Init() override {
@@ -47,7 +71,7 @@ class ProxOperator : public VectorOperator {
 
  protected:
   // To be implemented by sub classes
-  virtual void InitFunction() {}
+  virtual void InitFunction(const ProxOperatorArg& arg) {}
   virtual Eigen::VectorXd ApplyFunction(const Eigen::VectorXd& v) = 0;
 
   // // Accessors for sub classes
@@ -58,15 +82,15 @@ class ProxOperator : public VectorOperator {
   // int n() const { return n_; }
   // int arg_m() const { return GetDimension(f_.arg(0), 0); }
   // int arg_n() const { return GetDimension(f_.arg(0), 1); }
-  // const DynamicMatrix& arg_A() const { return A_; }
-  // const DynamicMatrix& arg_b() const { return b_; }
+  const DynamicMatrix& arg_A() const { return A_; }
+  const DynamicMatrix& arg_b() const { return b_; }
 
  private:
   friend std::unique_ptr<VectorOperator> CreateProxOperator(
       const Expression& expr, double lambda);
 
   Expression expr_;
-  // double lambda_;
+  double lambda_;
 
   // Affine transformation of function arg
   DynamicMatrix A_, b_;
@@ -138,26 +162,24 @@ class ProxOperator : public VectorOperator {
 //   Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> D_;
 // };
 
-// class NormL1Prox final : public ProxOperator {
-//  public:
-//   void InitFunction() override {
-//     CHECK(arg_b().is_zero());
-//     CHECK(arg_A().is_sparse());
-//     CHECK(IsDiagonal(arg_A().sparse()));
+class NormL1Prox final : public ProxOperator {
+ public:
+  void InitFunction(const ProxOperatorArg& arg) override {
+    CHECK(arg.b().is_zero());
+    CHECK(arg.A().is_sparse());
+    CHECK(IsDiagonal(arg.A().sparse()));
+    lambda_elemwise_ = arg.lambda()*arg.A().sparse().diagonal();
+  }
 
-//     lambda_elemwise_ = Eigen::VectorXd::Constant(n(), lambda());
-//     lambda_elemwise_ = lambda_elemwise_.cwiseProduct(arg_A().sparse().diagonal());
-//     VLOG(2) << "Norm1Prox lambda:\n" << VectorDebugString(lambda_elemwise_);
-//   }
+  Eigen::VectorXd ApplyFunction(const Eigen::VectorXd& v) override {
+    return (( v.array()-lambda_elemwise_.array()).max(0) -
+            (-v.array()-lambda_elemwise_.array()).max(0));
+  }
 
-//   Eigen::VectorXd ApplyFunction(const Eigen::VectorXd& v) override {
-//     return (( v.array()-lambda_elemwise_.array()).max(0) -
-//             (-v.array()-lambda_elemwise_.array()).max(0));
-//   }
-
-//  private:
-//   Eigen::VectorXd lambda_elemwise_;
-// };
+ private:
+  // Lambda applied elementwise
+  Eigen::VectorXd lambda_elemwise_;
+};
 
 // // sum of L2 norm applied to rows of matrix variable
 // class NormL1L2Prox final : public ProxOperator {
@@ -222,28 +244,61 @@ class ProxOperator : public VectorOperator {
 //   Eigen::SimplicialLDLT<SparseXd> sp_solver_;
 // };
 
+// Rules for matching proximal operators to expression trees
+struct ProxOperatorRule {
+  std::function<bool(const Expression& expr)> match;
+  std::function<std::unique_ptr<ProxOperator>()> create;
+};
+
+#define PROX_RULE(op, match_expr)                    \
+  {                                                  \
+    [] (const Expression& expr) -> bool {            \
+      return (match_expr);                           \
+    },                                               \
+    [] () -> std::unique_ptr<ProxOperator> {         \
+      return std::unique_ptr<ProxOperator>(new op);  \
+    }                                                \
+  }
+
+std::vector<ProxOperatorRule> kProxOperatorRules = {
+  PROX_RULE(NormL1Prox,
+            expr.expression_type() == Expression::NORM_P &&
+            expr.p() == 1),
+};
+
+// std::vector<ProxOperatorRule> kProxOperatorRules = {
+//   PROX_RULE(LeastSquaresProx,
+//             expr.expression_type() == Expression::POWER,
+//             expr.p() == 2 &&
+//             expr.arg(0).expression_type() == Expression::NORM_P &&
+//             expr.arg(0).p() == 2),
+//   PROX_RULE(NegativeLogDetProx,
+//             expr.expression_type() == Expression::NEGATE &&
+//             expr.arg().expression_type() == Expression::LOG_DET),
+//   PROX_RULE(NormL1Prox,
+//             expr.expression_type() == Expression::NORM_P &&
+//             expr.p() == 1),
+//   PROX_RULE(NormL2L1Prox,
+//             expr.expression_type() == Expression::NORM_PQ &&
+//             expr.p() == 2,
+//             expr.q() == 1),
+// };
+
 std::unique_ptr<VectorOperator> CreateProxOperator(
     const Expression& expr, double lambda) {
   VLOG(2) << "CreateProxOperator\n" << expr.DebugString();
 
+  // TODO(mwytock): Preprocess expression to handle affine addition
+
   std::unique_ptr<ProxOperator> op;
-  // if (f.function() == ProxFunction::NORM_1) {
-  //   op.reset(new NormL1Prox);
-  // } else if (f.function() == ProxFunction::NORM_1_2) {
-  //   op.reset(new NormL1L2Prox);
-  // } else if (f.function() == ProxFunction::SUM_SQUARES) {
-  //   op.reset(new SumSquaresProx);
-  // } else if (f.function() == ProxFunction::NEGATIVE_LOG_DET) {
-  //   op.reset(new NegativeLogDetProx);
-  // } else if (f.function() == ProxFunction::INDICATOR_ZERO) {
-  //   op.reset(new IndicatorZeroProx);
-  // } else {
-  //   LOG(FATAL) << "Prox not implemented: " << f.function();
-  // }
+  for (const ProxOperatorRule& rule : kProxOperatorRules) {
+    if (rule.match(expr)) {
+      op = rule.create();
+      break;
+    }
+  }
 
-  // op->f_ = f;
-  // op->lambda_ = lambda;
-  // op->n_ = n;
-
+  op->expr_ = expr;
+  op->lambda_ = lambda;
   return std::move(op);
 }
