@@ -2,7 +2,7 @@
 import cvxpy as cp
 import numpy as np
 
-from epsilon import solve
+import epsilon
 from epsilon import status_pb2
 
 def get_values(prob):
@@ -29,7 +29,7 @@ def test_lasso():
     f = 0.5*cp.sum_squares(A*x - b) + lam*cp.norm1(x)
     prob = cp.Problem(cp.Minimize(f))
 
-    status = solve.solve(prob)
+    status = epsilon.solve(prob)
     assert status.state == status_pb2.ProblemStatus.OPTIMAL
     values0 = get_values(prob)
 
