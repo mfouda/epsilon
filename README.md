@@ -53,7 +53,7 @@ nosetests epsilon
 
 Benchmark of epsilon on a suite of common problems
 ```
-python -m epsilon.benchmark
+python -m epsilon.problems.benchmark
 ```
 
   Problem |   Time | Objective
