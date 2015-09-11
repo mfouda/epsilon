@@ -21,8 +21,8 @@ struct ProxOperatorInfo {
 
   // Maps R^m -> R^ni for input to prox operator
   SparseXd B;
-
   double mu;
+  VariableOffsetMap var_map;
 };
 
 class ProxADMMSolver final : public Solver {

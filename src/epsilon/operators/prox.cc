@@ -53,8 +53,12 @@ bool IsEpigraphForm(const Expression& expr) {
 // Arguments to the proximal operator, lambda*f(A*x + b)
 class ProxOperatorArg {
  public:
-  ProxOperatorArg(double lambda, const Expression* f_expr)
-      : lambda_(lambda), f_expr_(f_expr) {}
+  ProxOperatorArg(
+      double lambda,
+      const Expression* f_expr,
+      const VariableOffsetMap* var_map)
+      : lambda_(lambda), f_expr_(f_expr), var_map_(var_map) {}
+
   double lambda() const { return lambda_; };
 
   // Ax+b in expression form
@@ -88,7 +92,7 @@ class ProxVectorOperator : public VectorOperator {
 
   void Init() override {
     Preprocess();
-    g_prox_->Init(ProxOperatorArg(alpha_*lambda_, g_expr_));
+    g_prox_->Init(ProxOperatorArg(alpha_*lambda_, g_expr_, &var_map_));
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
@@ -101,7 +105,7 @@ class ProxVectorOperator : public VectorOperator {
   // Original function parameters
   double lambda_;
   Expression f_expr_;
-  VariableOffsetMap var_map_;
+  const VariableOffsetMap& var_map_;
 
   // Preprocessed parameters, f(x) = alpha*g(x) + c'x
   const Expression* g_expr_;
@@ -308,7 +312,7 @@ class NegativeLogDetProx final : public ProxOperator {
     // NEGATE
     //   LOG_DET
     //     VARIABLE (X)
-    const Expression& var_expr = arg.f_expr().arg(0);
+    const Expression& var_expr = arg.f_expr().arg(0).arg(0);
     CHECK_EQ(var_expr.expression_type(), Expression::VARIABLE);
     CHECK_EQ(GetDimension(var_expr, 0),
              GetDimension(var_expr, 1));
@@ -404,8 +408,11 @@ void ProxVectorOperator::Preprocess() {
   for (const ProxOperatorRule& rule : kProxOperatorRules) {
     if (rule.match(*g_expr_)) {
       g_prox_ = rule.create();
+      break;
     }
   }
+
+  CHECK(g_prox_.get() !=nullptr) << "No rule\n" << g_expr_->DebugString();
 }
 
 std::unique_ptr<VectorOperator> CreateProxOperator(

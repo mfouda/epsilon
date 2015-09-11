@@ -63,6 +63,7 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   ProxOperatorInfo info;
   info.i = i;
   info.n = n;
+  info.var_map.Insert(expr);
 
   SparseXd Ai = A_.middleCols(i, n);
   VLOG(2) << "InitProxOperator, Ai:\n" << MatrixDebugString(Ai);
@@ -91,12 +92,14 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     }
 
     info.B *= 1/alpha_squared;
-    info.op = CreateProxOperator(expr, 1/params_.rho()/alpha_squared);
+    info.op = CreateProxOperator(
+        1/params_.rho()/alpha_squared, expr, info.var_map);
   } else {
     info.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
     info.mu = 0.1;
-    info.op = CreateProxOperator(expr, info.mu);
+    info.op = CreateProxOperator(
+        info.mu, expr, info.var_map);
   }
 
   info.op->Init();
