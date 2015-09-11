@@ -15,6 +15,7 @@ Expression Constant(double scalar);
 Expression HStack(const std::vector<Expression>& args);
 Expression Index(int i, int m, const Expression& input);
 Expression Index(int i, int m, int j, int n, const Expression& input);
+Expression Indicator(const Cone::Type& cone_type, const Expression& arg);
 Expression LogDet(const Expression &x);
 Expression Multiply(const Expression& left, const Expression& right);
 Expression MultiplyElementwise(const Expression& left, const Expression& right);

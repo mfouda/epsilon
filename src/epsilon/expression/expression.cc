@@ -193,4 +193,13 @@ Expression NormPQ(const Expression& x, int p, int q) {
   return expr;
 }
 
+Expression Indicator(const Cone::Type& cone_type, const Expression& arg) {
+  Expression expr;
+  expr.set_expression_type(Expression::INDICATOR);
+  *expr.mutable_size() = kScalarSize;
+  expr.mutable_cone()->set_cone_type(cone_type);
+  *expr.add_arg() = arg;
+  return expr;
+}
+
 }  // namespace expression

@@ -149,9 +149,22 @@ void ProxADMMSolver::Solve() {
       break;
   }
 
+  UpdateLocalParameters();
   if (iter_ == params_.max_iterations())
       status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   UpdateStatus(status_);
+}
+
+void ProxADMMSolver::UpdateLocalParameters() {
+  for (const Expression* expr : GetVariables(problem_)) {
+    const int i = var_offset_map_.Get(*expr);
+    const int n = GetDimension(*expr);
+    uint64_t param_id = VariableParameterId(
+        problem_id(), expr->variable().variable_id());
+    const Eigen::VectorXd delta = x_.segment(i, n) - x_param_prev_.segment(i, n);
+    parameter_service_->Update(param_id, delta);
+    x_param_prev_.segment(i, n) += delta;
+  }
 }
 
 void ProxADMMSolver::ComputeResiduals() {

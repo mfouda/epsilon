@@ -9,37 +9,26 @@ bool VariableIdCompare::operator() (const Expression* a, const Expression* b) {
 }
 
 VariableSet GetVariables(const Problem& problem) {
-  VariableSet vars;
+  VariableSet vars = GetVariables(problem.objective());
+  for (const Expression& constr : problem.constraint()) {
+    VariableSet sub_vars = GetVariables(constr);
+    vars.insert(sub_vars.begin(), sub_vars.end());
+  }
   return vars;
 }
 
 VariableSet GetVariables(const Expression& expr) {
   VariableSet vars;
+  if (expr.expression_type() == Expression::VARIABLE) {
+    vars.insert(&expr);
+  }
+
+  for (const Expression& arg : expr.arg()) {
+    VariableSet sub_vars = GetVariables(arg);
+    vars.insert(sub_vars.begin(), sub_vars.end());
+  }
   return vars;
 }
-
-// std::vector<const Expression*> GetVariables(const ProxProblem& problem) {
-//   std::set<const Expression*, VariableIdCompare> retval;
-//   for (const ProxFunction& f : problem.prox_function()) {
-//     for (const Expression& arg : f.arg())
-//       GetVariables(arg, &retval);
-//     GetVariables(f.affine(), &retval);
-//     GetVariables(f.regularization(), &retval);
-//   }
-//   for (const Expression& constr : problem.equality_constraint())
-//     GetVariables(constr, &retval);
-
-//   return {retval.begin(), retval.end()};
-// }
-
-// std::vector<const Expression*> GetVariables(const ProxFunction& f) {
-//   std::set<const Expression*, VariableIdCompare> retval;
-//   for (const Expression& arg : f.arg())
-//     GetVariables(arg, &retval);
-//   GetVariables(f.affine(), &retval);
-//   GetVariables(f.regularization(), &retval);
-//   return {retval.begin(), retval.end()};
-// }
 
 int GetVariableDimension(const VariableSet& var_set) {
   int n = 0;
@@ -49,7 +38,8 @@ int GetVariableDimension(const VariableSet& var_set) {
   return n;
 }
 
-uint64_t VariableId(uint64_t problem_id, const std::string& variable_id_str) {
+uint64_t VariableParameterId(
+    uint64_t problem_id, const std::string& variable_id_str) {
   return problem_id ^ std::hash<std::string>()(variable_id_str);
 }
 

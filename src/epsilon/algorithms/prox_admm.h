@@ -39,6 +39,7 @@ private:
   void ApplyProxOperator(const ProxOperatorInfo& op);
   void ComputeResiduals();
   void LogStatus();
+  void UpdateLocalParameters();
 
   // Inputs
   Problem problem_;
