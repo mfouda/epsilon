@@ -93,6 +93,7 @@ message Expression {
     // Matrix functions
     LOG_DET = 20;
     NORM_PQ = 21;
+    NORM_2_ELEMENTWISE = 22;
   }
   Type expression_type = 1;
   Size size = 2;

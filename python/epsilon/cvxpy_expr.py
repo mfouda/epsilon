@@ -36,6 +36,7 @@ EXPRESSION_TYPES = (
     (log_det, E.LOG_DET),
     (max_elemwise, E.MAX),
     (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
+    (norm2_elemwise, E.NORM_2_ELEMENTWISE),
     (pnorm, E.NORM_P),
     (power, E.POWER),
     (sum_entries, E.SUM),

@@ -13,8 +13,16 @@ from itertools import chain
 import struct
 import sys
 
-from epsilon.expression import add
+from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
+
+class CanonicalizeError(Exception):
+    def __init__(self, message, expr):
+        super(CanonicalizeError, self).__init__(message)
+        self.expr = expr
+
+    def __str__(self):
+        return super(CanonicalizeError, self).__str__() + "\n" + str(self.expr)
 
 # The prox_* functions recognize expressions with known proximal operators. The
 # expressions returned need to match those defined in
@@ -24,7 +32,8 @@ from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 # operator forms by adding a python extension for HasProximalOperator() which
 # calls into the C++ code and ensures we can evaluate a given prox.
 def prox_affine(expr):
-    if expr.curvature.curvature_type == Curvature.AFFINE:
+    if (expr.curvature.curvature_type == Curvature.AFFINE or
+        expr.curvature.curvature_type == Curvature.CONSTANT):
         yield expr
 
 def prox_least_squares(expr):
@@ -46,17 +55,37 @@ def prox_norm2(expr):
         expr.arg[0].curvature.constant_multiple):
         yield expr
 
+def prox_neg_log_det(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.LOG_DET and
+        expr.arg[0].arg[0].curvature.constant_multiple):
+        yield expr
+
 # First rule that matches takes precendence
 PROX_RULES = [prox_least_squares,
+              prox_neg_log_det,
               prox_norm1,
               prox_norm2,
               prox_affine]
 
 def transform_expr_prox(expr):
+    # Handle scalar multiply
+    if (expr.expression_type == Expression.MULTIPLY and
+        expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
+        dimension(expr.arg[0]) == 1):
+        alpha_expr = expr.arg[0]
+        f_expr = expr.arg[1]
+    else:
+        alpha_expr = None
+        f_expr = expr
+
     for prox_rule in PROX_RULES:
-        prox_exprs = list(prox_rule(expr))
+        prox_exprs = list(prox_rule(f_expr))
         if prox_exprs:
-            return prox_exprs
+            if alpha_expr:
+                return [multiply(alpha_expr, e) for e in prox_exprs]
+            else:
+                return prox_exprs
 
 def transform_expr_add(expr):
     if expr.expression_type == Expression.ADD:
@@ -70,7 +99,7 @@ def is_epigraph(expr):
 
 def epigraph_variable(expr):
     expr_str = struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-    var_id = ("epigraph:" + expr_str)
+    var_id = ("canonicalize:" + expr_str)
 
     return Expression(
         expression_type=Expression.VARIABLE,
@@ -94,7 +123,7 @@ def transform_expr_epigraph(expr):
         f_expr.arg[0].CopyFrom(t_expr)
         return f_expr, g_expr
 
-    raise CanonicalizeError("unknown epigraph transformation")
+    raise CanonicalizeError("unknown epigraph transformation", expr)
 
 def transform_expr(expr):
     prox_exprs = transform_expr_prox(expr)
@@ -115,6 +144,7 @@ def transform_expr(expr):
 
 
 def transform(input):
-    return Problem(objective=add(
-        *chain(transform_expr(input.objective),
-               *(transform_expr(constr) for constr in input.constraint))))
+    prox_exprs = list(transform_expr(input.objective))
+    for constr in input.constraint:
+        prox_exprs += list(transform_expr(constr))
+    return Problem(objective=add(*prox_exprs))
