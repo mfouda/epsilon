@@ -16,8 +16,10 @@ def _node_contents_str(expr):
             "%d:%d%s" % (k.start, k.stop, "" if k.step == 1 else ":%d" % k.step)
             for k in expr.key]) + "]"
     elif expr.expression_type in (Expression.POWER,
-                                  Expression.P_NORM):
+                                  Expression.NORM_P):
         c = "p: " + str(expr.p)
+    elif expr.expression_type == Expression.INDICATOR:
+        c = "cone: " + Cone.Type.Name(expr.cone.cone_type)
 
     return "(%s)" % c if c else ""
 

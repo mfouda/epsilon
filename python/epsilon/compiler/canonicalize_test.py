@@ -3,10 +3,11 @@ import logging
 import cvxpy as cp
 
 from epsilon import cvxpy_expr
-from epsilon.compiler import canonicalize
+from epsilon import expression_str
 from epsilon.compiler import attributes
-from epsilon.problems import problems_test
+from epsilon.compiler import canonicalize
 from epsilon.expression_pb2 import Expression
+from epsilon.problems import problems_test
 
 ATOMS = [
     cp.norm1,
@@ -17,12 +18,12 @@ ATOMS = [
 def transform(cvxpy_problem):
     input = attributes.transform(
         cvxpy_expr.convert_problem(cvxpy_problem)[0])
-    logging.debug("Input problem:\n%s", input)
-
+    logging.debug("Input:\n%s", expression_str.problem_str(input))
     return canonicalize.transform(input)
 
 def transform_problem(problem_instance):
-    transform(problem_instance.create())
+    output = transform(problem_instance.create())
+    logging.debug("Output:\n%s", expression_str.problem_str(output))
 
 def transform_atom(f):
     n = 10

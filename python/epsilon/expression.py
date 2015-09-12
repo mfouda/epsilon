@@ -51,9 +51,16 @@ def hstack(*args):
     for i, arg in enumerate(args):
         if i == 0:
             e.size.dim.extend(arg.size.dim)
+            e.curvature.curvature_type = arg.curvature.curvature_type
+            e.sign.sign_type = arg.sign.sign_type
         else:
             assert e.size.dim[0] == arg.size.dim[0]
             e.size.dim[1] += arg.size.dim[1]
+
+            if arg.curvature.curvature_type != e.curvature.curvature_type:
+                e.curvature.curvature_type = Curvature.UNKNOWN
+            if arg.sign.sign_type != e.sign.sign_type:
+                e.sign.sign_type = Sign.UNKNOWN
 
         e.arg.add().CopyFrom(arg)
 
@@ -79,22 +86,50 @@ def reshape(arg, m, n):
     return Expression(
         expression_type=Expression.RESHAPE,
         arg=[arg],
-        size=Size(dim=[m,n]))
+        size=Size(dim=[m,n]),
+        curvature=arg.curvature,
+        sign=arg.sign)
 
 def negate(arg):
+    NEGATE_CURVATURE = {
+        Curvature.AFFINE: Curvature.AFFINE,
+        Curvature.CONVEX: Curvature.CONCAVE,
+        Curvature.CONCAE: Curvature.CONVEX,
+    }
     return Expression(
         expression_type=Expression.NEGATE,
         arg=[arg],
-        size=arg.size)
+        size=arg.size,
+        curvature=Curvature(
+            curvature_type=NEGATE_CURVATURE[arg.curvature.curvature_type],
+            elementwise=arg.curvature.elementwise,
+            scalar_multiple=arg.curvature.scalar_multiple))
 
 def variable(m, n, variable_id):
     return Expression(
         expression_type=Expression.VARIABLE,
         size=Size(dim=[m, n]),
-        variable=Variable(variable_id=variable_id))
+        variable=Variable(variable_id=variable_id),
+        curvature=Curvature(
+            curvature_type=Curvature.AFFINE,
+            elementwise=True,
+            constant_multiple=True))
 
 def constant(m, n, scalar=0):
     return Expression(
         expression_type=Expression.CONSTANT,
         size=Size(dim=[m, n]),
         constant=Constant(scalar=scalar))
+
+def indicator(cone_type, *args):
+    return Expression(
+        expression_type=Expression.INDICATOR,
+        size=Size(dim=[1, 1]),
+        cone=Cone(cone_type=cone_type),
+        arg=args)
+
+def norm_pq(x, p, q):
+    return Expression(
+        expression_type=Expression.NORM_PQ,
+        size=Size(dim=[1, 2]),
+        arg=[x], p=p, q=q)

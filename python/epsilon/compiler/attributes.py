@@ -1,4 +1,8 @@
+"""Compute attributes on expression trees.
 
+These attributes are in addition to the standard DCP attributes which are
+already computed by cvxpy.
+"""
 from itertools import chain
 
 from epsilon.expression_pb2 import Curvature, Expression

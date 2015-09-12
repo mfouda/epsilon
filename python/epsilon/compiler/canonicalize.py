@@ -24,124 +24,132 @@ class CanonicalizeError(Exception):
     def __str__(self):
         return super(CanonicalizeError, self).__str__() + "\n" + str(self.expr)
 
+def epigraph(f, t):
+    """An expression for an epigraph constraint.
+
+    The constraint depends on the curvature of f:
+      - f convex,  I(f(x) <= t)
+      - f concave, I(f(x) >= t)
+      - f affine,  I(f(x) == t)
+    """
+
+    if f.curvature.curvature_type == Curvature.CONVEX:
+        return indicator(Cone.NON_NEGATIVE, t, f)
+    elif f.curvature.curvature_type == Curvature.CONCAVE:
+        return indicator(Cone.NON_NEGATIVE, negate(t), negate(f))
+    elif f.curvature.curvature_type == Curvature.AFFINE:
+        return indicator(Cone.ZERO, t, f)
+    else:
+        raise CanonicalizeError("Unknown curvature", f)
+
+def epigraph_variable(expr):
+    expr_str = struct.pack("q", hash(expr.SerializeToString())).encode("hex")
+    return variable(1, 1, "canonicalize:" + expr_str)
+
+def transform_epigraph(f_expr, g_expr):
+    t_expr = epigraph_variable(g_expr)
+    epi_g_expr = epigraph(g_expr, t_expr)
+    g_expr.CopyFrom(t_expr)
+
+    yield f_expr
+    for prox_expr in transform_expr(epi_g_expr):
+        yield prox_expr
+
 # The prox_* functions recognize expressions with known proximal operators. The
 # expressions returned need to match those defined in
 # src/epsilon/operators/prox.cc
-#
-# TODO(mwytock): Add a test to verify tight coupling between python/C++ proximal
-# operator forms by adding a python extension for HasProximalOperator() which
-# calls into the C++ code and ensures we can evaluate a given prox.
+def prox_scalar_multiply(expr):
+    if (expr.expression_type == Expression.MULTIPLY and
+        expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
+        dimension(expr.arg[0]) == 1):
+        for prox_expr in transform_expr(expr.arg[1]):
+            if prox_expr.expression_type == Expression.INDICATOR:
+                yield prox_expr
+            else:
+                yield multiply(expr.arg[0], prox_expr)
+
+def prox_add(expr):
+    if expr.expression_type == Expression.ADD:
+        for arg in expr.arg:
+            for prox_expr in transform_expr(arg):
+                yield prox_expr
+
 def prox_affine(expr):
     if (expr.curvature.curvature_type == Curvature.AFFINE or
         expr.curvature.curvature_type == Curvature.CONSTANT):
         yield expr
 
+def prox_affine_constraint(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        all(arg.curvature.curvature_type == Curvature.AFFINE or
+            arg.curvature.curvature_type == Curvature.CONSTANT
+            for arg in expr.arg)):
+        yield expr
+
 def prox_least_squares(expr):
     if (expr.expression_type == Expression.POWER and
         expr.arg[0].expression_type == Expression.NORM_P and
-        expr.p == 2 and expr.arg[0].p == 2 and
-        expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE):
-        yield expr
+        expr.p == 2 and expr.arg[0].p == 2):
+        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+            yield expr
+        else:
+            raise NotImplementedError()
+
+def prox_norm12(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
+
+        # Rewrite this as l1/l2 norm using reshape() and hstack()
+        m = dimension(expr.arg[0].arg[0])
+        arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
+        expr = norm_pq(arg, 1, 2)
+
+        if arg.curvature.constant_multiple:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
 
 def prox_norm1(expr):
-    if (expr.expression_type == Expression.NORM_P and
-        expr.p == 1 and
-        expr.arg[0].curvature.elementwise):
-        yield expr
+    if (expr.expression_type == Expression.NORM_P and expr.p == 1):
+        if expr.arg[0].curvature.elementwise:
+            yield expr
+        else:
+            raise NotImplementedError()
 
 def prox_norm2(expr):
-    if (expr.expression_type == Expression.NORM_P and
-        expr.p == 2 and
-        expr.arg[0].curvature.constant_multiple):
-        yield expr
+    if (expr.expression_type == Expression.NORM_P and expr.p == 2):
+        if expr.arg[0].curvature.constant_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
 
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
-        expr.arg[0].expression_type == Expression.LOG_DET and
-        expr.arg[0].arg[0].curvature.constant_multiple):
-        yield expr
+        expr.arg[0].expression_type == Expression.LOG_DET):
+        if expr.arg[0].arg[0].curvature.constant_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
 
 # First rule that matches takes precendence
-PROX_RULES = [prox_least_squares,
+PROX_RULES = [prox_add,
+              prox_scalar_multiply,
+              prox_least_squares,
               prox_neg_log_det,
+              prox_norm12,
               prox_norm1,
               prox_norm2,
-              prox_affine]
-
-def transform_expr_prox(expr):
-    # Handle scalar multiply
-    if (expr.expression_type == Expression.MULTIPLY and
-        expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
-        dimension(expr.arg[0]) == 1):
-        alpha_expr = expr.arg[0]
-        f_expr = expr.arg[1]
-    else:
-        alpha_expr = None
-        f_expr = expr
-
-    for prox_rule in PROX_RULES:
-        prox_exprs = list(prox_rule(f_expr))
-        if prox_exprs:
-            if alpha_expr:
-                return [multiply(alpha_expr, e) for e in prox_exprs]
-            else:
-                return prox_exprs
-
-def transform_expr_add(expr):
-    if expr.expression_type == Expression.ADD:
-        return expr.arg
-
-def is_epigraph(expr):
-    return (expr.expression_type == Expression.INDICATOR and
-            expr.cone.cone_type == Cone.NON_ZERO and
-            len(expr.arg) == 2 and
-            expr.arg[0].expression_type == Expression.VARIABLE)
-
-def epigraph_variable(expr):
-    expr_str = struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-    var_id = ("canonicalize:" + expr_str)
-
-    return Expression(
-        expression_type=Expression.VARIABLE,
-        size=expr.size,
-        variable=Variable(variable_id=var_id))
-
-def transform_expr_epigraph(expr):
-    # Epigraph form, I(f(g(x)) <= s) => I(f(t) <= s) + I(g(x) <= t)
-    if is_epigraph(expr) and len(expr.arg[1].arg) == 1:
-        f_expr = expr
-        t_expr = epigraph_variable(expr.arg[1].arg[0])
-        g_expr = epigraph(expr.arg[1].arg[0], t_expr)
-        f.expr.arg[1].arg[0].CopyFrom(t_expr)
-        return f_expr, g_expr
-
-    # Standard form, f(g(x)) => f(t) + I(g(x) <= t)
-    if len(expr.arg) == 1:
-        f_expr = expr
-        t_expr = epigraph_variable(expr.arg[0])
-        g_expr = epigraph(expr.arg[0], t_expr)
-        f_expr.arg[0].CopyFrom(t_expr)
-        return f_expr, g_expr
-
-    raise CanonicalizeError("unknown epigraph transformation", expr)
+              prox_affine,
+              prox_affine_constraint]
 
 def transform_expr(expr):
-    prox_exprs = transform_expr_prox(expr)
-    if prox_exprs:
-        for prox_expr in prox_exprs:
-            yield prox_expr
-        return
+    for prox_rule in PROX_RULES:
+        prox_exprs = list(prox_rule(expr))
+        if prox_exprs:
+            return prox_exprs
 
-    sub_exprs = transform_expr_add(expr)
-    if sub_exprs:
-        for prox_expr in chain(*(transform_expr(e) for e in sub_exprs)):
-            yield prox_expr
-        return
-
-    f_expr, g_expr = transform_expr_epigraph(expr)
-    for prox_expr in chain(transform_expr(f_expr), transform_expr(g_expr)):
-        yield prox_expr
-
+    raise CanonicalizeError("No prox rule", expr)
 
 def transform(input):
     prox_exprs = list(transform_expr(input.objective))
