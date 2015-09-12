@@ -40,8 +40,10 @@ message Curvature {
   }
   Type curvature_type = 1;
 
-  // For AFFINE, is this an elementwise function, e.g. A .* B
+  // Elementwise function, e.g. A .* X
   bool elementwise = 2;
+  // Constant multiple, e.g. alpha * X
+  bool constant_multiple = 3;
 }
 
 message Cone {

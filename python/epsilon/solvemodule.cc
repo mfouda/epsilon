@@ -3,10 +3,10 @@
 #include <glog/logging.h>
 
 #include "epsilon/algorithms/prox_admm.h"
-#include "epsilon/expression/problem.h"
+#include "epsilon/expression.pb.h"
+#include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
 #include "epsilon/parameters/local_parameter_service.h"
-#include "epsilon/prox.pb.h"
 #include "epsilon/solver_params.pb.h"
 
 extern "C" {
@@ -28,7 +28,7 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
     return nullptr;
   }
 
-  ProxProblem problem;
+  Problem problem;
   SolverParams params;
   if (!problem.ParseFromArray(problem_str, problem_str_len))
     return nullptr;
@@ -68,7 +68,7 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
     LocalParameterService parameter_service;
     for (const Expression* expr : GetVariables(problem)) {
       const std::string& var_id = expr->variable().variable_id();
-      uint64_t param_id = VariableId(solver.problem_id(), var_id);
+      uint64_t param_id = VariableParameterId(solver.problem_id(), var_id);
       Eigen::VectorXd x = parameter_service.Fetch(param_id);
 
       PyObject* val = PyString_FromStringAndSize(
@@ -91,10 +91,14 @@ static PyMethodDef SolveMethods[] = {
   {nullptr, nullptr, 0, nullptr}
 };
 
+static bool initialized = false;
 PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
-  google::InitGoogleLogging("_solve");
-  google::LogToStderr();
+  if (!initialized) {
+    google::InitGoogleLogging("_solve");
+    google::LogToStderr();
+    initialized = true;
+  }
 
   (void)Py_InitModule("_solve", SolveMethods);
 }

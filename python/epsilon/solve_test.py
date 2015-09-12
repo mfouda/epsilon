@@ -4,36 +4,17 @@ import numpy as np
 
 import epsilon
 from epsilon import status_pb2
+from epsilon.problems import problems_test
 
-def get_values(prob):
-    values = {}
-    for var in prob.variables():
-        values[var.id] = var.value
-    return values
+def solve_problem(problem):
+    problem.solve(solver=cp.SCS)
+    obj0 = problem.objective.value
 
-def assert_values_equal(a, b, tol=1e-2):
-    assert a.keys() == b.keys()
-    for var_id in a.keys():
-        np.testing.assert_allclose(a[var_id], b[var_id], atol=tol)
+    epsilon.solve(problem)
+    obj1 = problem.objective.value
 
-def test_lasso():
-    m = 5
-    n = 10
+    np.testing.assert_allclose(obj0, obj1, rtol=1e-2, atol=1e-4)
 
-    np.random.seed(0)
-    A = np.random.randn(m,n)
-    b = np.random.randn(m,1)
-    x = cp.Variable(n,1)
-    lam = 1
-
-    f = 0.5*cp.sum_squares(A*x - b) + lam*cp.norm1(x)
-    prob = cp.Problem(cp.Minimize(f))
-
-    status = epsilon.solve(prob)
-    assert status.state == status_pb2.ProblemStatus.OPTIMAL
-    values0 = get_values(prob)
-
-    prob.solve()
-    values1 = get_values(prob)
-
-    assert_values_equal(values0, values1)
+def test_solve():
+    for problem in problems_test.get_test_problems():
+        yield solve_problem, problem

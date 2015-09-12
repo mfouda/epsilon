@@ -1,1 +1,2 @@
-from solve import *
+#from solve import solve
+#from compiler import compile

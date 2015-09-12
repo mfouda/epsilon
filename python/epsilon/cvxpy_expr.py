@@ -24,7 +24,6 @@ from cvxpy.expressions.variables.variable import Variable
 
 from epsilon import data
 from epsilon import expression_pb2
-from epsilon import problem_pb2
 from epsilon.expression_pb2 import Expression as E
 
 EXPRESSION_TYPES = (
@@ -37,8 +36,7 @@ EXPRESSION_TYPES = (
     (log_det, E.LOG_DET),
     (max_elemwise, E.MAX),
     (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
-    (norm2_elemwise, E.NORM_2_ELEMENTWISE),
-    (pnorm, E.P_NORM),
+    (pnorm, E.NORM_P),
     (power, E.POWER),
     (sum_entries, E.SUM),
     (trace, E.TRACE),
@@ -127,7 +125,7 @@ def convert_constraint(constraint, proto, data_map):
         raise RuntimeError("Unknown constraint: %s" % type(constraint))
 
 def convert_problem(problem):
-    proto = problem_pb2.Problem()
+    proto = expression_pb2.Problem()
     data_map = {}
     convert_objective(problem.objective, proto.objective, data_map)
     for constraint in problem.constraints:

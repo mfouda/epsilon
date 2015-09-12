@@ -14,18 +14,9 @@ PROBLEMS = [
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
 ]
 
-def solve_problem(problem):
-    cvxpy_prob = problem.create()
+def get_problems():
+    return PROBLEMS
 
-    cvxpy_prob.solve(solver=cp.SCS)
-    obj0 = cvxpy_prob.objective.value
-
-    epsilon.solve(cvxpy_prob)
-    obj1 = cvxpy_prob.objective.value
-
-    np.testing.assert_allclose(obj0, obj1, rtol=1e-2, atol=1e-4)
-
-
-def test_problems():
-    for problem in PROBLEMS:
-        yield solve_problem, problem
+def test_generate_problems():
+    for problem in get_test_problems():
+        pass

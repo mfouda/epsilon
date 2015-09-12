@@ -223,51 +223,6 @@ void BuildAffineOperatorImpl(
           << " done";
 }
 
-// void BuildSparseAffineOperator(
-//     const Expression& expr,
-//     int n,
-//     int i,
-//     std::vector<Eigen::Triplet<double>>* A_coeffs,
-//     VectorXd* b) {
-//   const int m = GetDimension(expr);
-//   DynamicMatrix A_ = DynamicMatrix::Zero(m, n);
-//   DynamicMatrix b_ = DynamicMatrix::Zero(m, 1);
-
-//   BuildAffineOperatorImpl(
-//       expr, DynamicMatrix::FromSparse(SparseIdentity(m)), &A_, &b_);
-//   AppendBlockTriplets(A_, i, 0, A_coeffs);
-//   if (b_.is_zero()) {
-//     b->segment(i, m) = VectorXd::Zero(m);
-//   } else {
-//     b->segment(i, m) = b_.AsDense();
-//   }
-// }
-
-// void BuildAffineOperator(
-//     const Expression& expr,
-//     int n,
-//     int i,
-//     MatrixXd* A,
-//     VectorXd* b) {
-//   const int m = GetDimension(expr);
-//   DynamicMatrix A_ = DynamicMatrix::Zero(m, n);
-//   DynamicMatrix b_ = DynamicMatrix::Zero(m, 1);
-
-//   BuildAffineOperatorImpl(
-//       expr, DynamicMatrix::FromSparse(SparseIdentity(m)), &A_, &b_);
-//   if (A_.is_zero()) {
-//     A->middleRows(i, m) = MatrixXd::Zero(m, n);
-//   } else {
-//     A->middleRows(i, m) = A_.AsDense();
-//   }
-
-//   if (b_.is_zero()) {
-//     b->segment(i, m) = VectorXd::Zero(m);
-//   } else {
-//     b->segment(i, m) = b_.AsDense();
-//   }
-// }
-
 void BuildAffineOperator(
     const Expression& expr,
     const VariableOffsetMap& offsets,

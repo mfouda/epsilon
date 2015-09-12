@@ -8,7 +8,7 @@ import sys
 from distutils import log
 from distutils.dep_util import newer
 from distutils.spawn import find_executable
-from setuptools import setup, Extension, Command
+from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 
@@ -62,8 +62,13 @@ class CleanCommand(Command):
         pass
 
     def run(self):
-        cmd = ("rm -rf ./build ./build-cc ./dist ./python/*.egg-info " +
+        cmd = ("rm -rf " +
+               "./build " +
+               "./build-cc " +
+               "./dist " +
+               "./python/*.egg-info " +
                "./python/epsilon/*_pb2.py " +
+               "./python/epsilon/*.pyc " +
                "./python/epsilon/*.so")
         subprocess.check_call(cmd, shell=True)
 
@@ -91,7 +96,7 @@ setup(
     author = "Matt Wytock",
     url = "https://github.com/mwytock/epsilon",
     author_email = "mwytock@gmail.com",
-    packages = ["epsilon"],
+    packages = find_packages(PYTHON_DIR),
     package_dir = {"": PYTHON_DIR},
     ext_modules = [solve],
     install_requires = [
