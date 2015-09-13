@@ -1,2 +1,2 @@
-#from solve import solve
-#from compiler import compile
+from solve import solve
+# from compiler import compile

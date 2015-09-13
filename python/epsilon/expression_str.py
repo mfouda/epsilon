@@ -39,7 +39,5 @@ def expr_str(expr, pre=""):
 def problem_str(problem):
     s = "Objective:\n" + expr_str(problem.objective)
     for constr in problem.constraint:
-        s += "\nConstraint:\n"
-        for arg in constr.arg:
-            s += expr_str(arg) + "\n"
+        s += "\nConstraint:\n" + expr_str(constr)
     return s

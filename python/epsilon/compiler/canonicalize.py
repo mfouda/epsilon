@@ -13,16 +13,12 @@ from itertools import chain
 import struct
 import sys
 
+from epsilon.compiler import compiler_error
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 
-class CanonicalizeError(Exception):
-    def __init__(self, message, expr):
-        super(CanonicalizeError, self).__init__(message)
-        self.expr = expr
-
-    def __str__(self):
-        return super(CanonicalizeError, self).__str__() + "\n" + str(self.expr)
+class CanonicalizeError(compiler_error.CompilerError):
+    pass
 
 def epigraph(f, t):
     """An expression for an epigraph constraint.
@@ -104,7 +100,7 @@ def prox_norm12(expr):
         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
         expr = norm_pq(arg, 1, 2)
 
-        if arg.curvature.constant_multiple:
+        if arg.curvature.scalar_multiple:
             yield expr
         else:
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
@@ -119,7 +115,7 @@ def prox_norm1(expr):
 
 def prox_norm2(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 2):
-        if expr.arg[0].curvature.constant_multiple:
+        if expr.arg[0].curvature.scalar_multiple:
             yield expr
         else:
             raise NotImplementedError()
@@ -127,7 +123,7 @@ def prox_norm2(expr):
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
         expr.arg[0].expression_type == Expression.LOG_DET):
-        if expr.arg[0].arg[0].curvature.constant_multiple:
+        if expr.arg[0].arg[0].curvature.scalar_multiple:
             yield expr
         else:
             raise NotImplementedError()

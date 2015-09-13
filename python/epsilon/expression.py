@@ -94,7 +94,7 @@ def negate(arg):
     NEGATE_CURVATURE = {
         Curvature.AFFINE: Curvature.AFFINE,
         Curvature.CONVEX: Curvature.CONCAVE,
-        Curvature.CONCAE: Curvature.CONVEX,
+        Curvature.CONCAVE: Curvature.CONVEX,
     }
     return Expression(
         expression_type=Expression.NEGATE,
@@ -113,7 +113,7 @@ def variable(m, n, variable_id):
         curvature=Curvature(
             curvature_type=Curvature.AFFINE,
             elementwise=True,
-            constant_multiple=True))
+            scalar_multiple=True))
 
 def constant(m, n, scalar=0):
     return Expression(
@@ -133,3 +133,6 @@ def norm_pq(x, p, q):
         expression_type=Expression.NORM_PQ,
         size=Size(dim=[1, 2]),
         arg=[x], p=p, q=q)
+
+def equality_constraint(a, b):
+    return indicator(Cone.ZERO, add(a, negate(b)))

@@ -5,8 +5,6 @@ import numpy.linalg as LA
 import scipy.sparse as sp
 
 def create(m, n):
-    m = int(m)
-    n = int(n)
     if n < 100:
         p = 1
     else:

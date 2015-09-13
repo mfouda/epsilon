@@ -17,6 +17,9 @@ PROBLEMS = [
 def get_problems():
     return PROBLEMS
 
+def generate_problem(problem):
+    problem.create()
+
 def test_generate_problems():
-    for problem in get_test_problems():
-        pass
+    for problem in get_problems():
+        yield generate_problem, problem

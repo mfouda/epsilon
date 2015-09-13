@@ -23,7 +23,7 @@ def is_elementwise(expr):
 
     return False
 
-def is_constant_multiple(expr):
+def is_scalar_multiple(expr):
     if expr.expression_type == Expression.VARIABLE:
         return True
 
@@ -34,7 +34,7 @@ def add_attributes(expr):
     for arg in expr.arg:
         add_attributes(arg)
     expr.curvature.elementwise = is_elementwise(expr)
-    expr.curvature.constant_multiple = is_constant_multiple(expr)
+    expr.curvature.scalar_multiple = is_scalar_multiple(expr)
 
 def transform(problem):
     for expr in chain([problem.objective], problem.constraint):

@@ -40,10 +40,13 @@ message Curvature {
   }
   Type curvature_type = 1;
 
+  // Special classes of affine functions which have implementations for
+  // composing proximal operators.
+
   // Elementwise function, e.g. A .* X
   bool elementwise = 2;
-  // Constant multiple, e.g. alpha * X
-  bool constant_multiple = 3;
+  // Scalar multiple, e.g. alpha * X
+  bool scalar_multiple = 3;
 }
 
 message Cone {
