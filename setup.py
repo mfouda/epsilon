@@ -98,6 +98,7 @@ setup(
     author_email = "mwytock@gmail.com",
     packages = find_packages(PYTHON_DIR),
     package_dir = {"": PYTHON_DIR},
+    package_data = {"": ["problems/baby.jpg"]},
     ext_modules = [solve],
     install_requires = [
         "cvxpy==0.2.28",
