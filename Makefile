@@ -19,7 +19,7 @@ CXX = g++
 
 CXXFLAGS += $(OPTFLAGS) -std=c++14
 CXXFLAGS += -Wall -Wextra -Werror
-CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter -Wno-macro-redefined
+CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 
@@ -31,6 +31,7 @@ endif
 ifeq ($(SYSTEM),Darwin)
 LIBS = protobuf libglog
 LDLIBS += `pkg-config --libs $(LIBS)` -L/usr/local/lib -lgflags
+CXXFLAGS += -Wno-macro-redefined
 CXXFLAGS += `pkg-config --cflags $(LIBS)` -I/usr/local/include
 else
 LIBS = protobuf libglog libgflags

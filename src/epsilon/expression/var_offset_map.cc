@@ -8,13 +8,9 @@ void VariableOffsetMap::Insert(const Expression& expr) {
   if (expr.expression_type() == Expression::VARIABLE) {
     const std::string& var_id = expr.variable().variable_id();
     auto iter = offsets_.find(var_id);
-    int offset;
     if (iter == offsets_.end()) {
-      offset = n_;
       offsets_.insert(make_pair(var_id, n_));
       n_ += GetDimension(expr);
-    } else {
-      offset = iter->second;
     }
   }
 
