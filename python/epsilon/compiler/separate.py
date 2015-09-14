@@ -1,4 +1,4 @@
-"""Split problems so that objective terms are separable."""
+"""Make sure objective terms are separable."""
 
 from collections import defaultdict
 
@@ -6,7 +6,7 @@ from epsilon.compiler import compiler_error
 from epsilon.expression_pb2 import Expression
 from epsilon.expression import *
 
-class SplitError(compiler_error.CompilerError):
+class SeparateError(compiler_error.CompilerError):
     pass
 
 def rename_var(old_id, new_id, expr):
@@ -21,7 +21,7 @@ def transform(problem):
     """If two prox functions refer to the same variable, add a copy."""
 
     if problem.objective.expression_type != Expression.ADD:
-        raise SplitError("Objective root expression is not add", problem)
+        raise SeparateError("Objective root expression is not add", problem)
 
     var_function_map = defaultdict(list)
     orig_vars = {}
@@ -35,7 +35,7 @@ def transform(problem):
         # Enumerate the functions backwards so that the last prox function keeps
         # the original variable id.
         for i, f in enumerate(fs[-2::-1]):
-            new_var_id = "split:%s:%d" % (var_id, i)
+            new_var_id = "separate:%s:%d" % (var_id, i)
             old_var = orig_vars[var_id]
             new_var = Expression()
             new_var.CopyFrom(old_var)

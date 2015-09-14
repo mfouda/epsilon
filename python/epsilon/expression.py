@@ -134,5 +134,11 @@ def norm_pq(x, p, q):
         size=Size(dim=[1, 2]),
         arg=[x], p=p, q=q)
 
+def power(x, p):
+    return Expression(
+        expression_type=Expression.POWER,
+        size=x.size,
+        arg=[x], p=p)
+
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
