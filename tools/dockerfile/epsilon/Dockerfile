@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
   pkg-config \
   python-decorator \
   python-dev \
+  python-pil \
   python-setuptools \
   unzip \
   wget \
