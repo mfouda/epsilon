@@ -1,6 +1,7 @@
 
 import logging
 import cvxpy as cp
+import numpy as np
 
 from epsilon import cvxpy_expr
 from epsilon import expression_str
@@ -40,3 +41,12 @@ def test_atoms():
 def test_problems():
     for problem in problems_test.get_problems():
         yield transform_problem, problem
+
+def test_composite_epigraph():
+    n = 5
+    c = np.arange(n)
+    x = cp.Variable(n)
+    f = cp.exp(cp.norm2(x) + cp.norm1(x) + c.T*x) + cp.norm2(x)
+    problem = transform(cp.Problem(cp.Minimize(f)))
+    print expression_str.problem_str(problem)
+    assert False

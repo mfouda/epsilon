@@ -72,31 +72,33 @@ message Expression {
     VARIABLE = 3;
 
     // Linear operators
-    ADD = 4;
-    INDEX = 5;
-    MULTIPLY = 6;
-    MULTIPLY_ELEMENTWISE = 7;
-    NEGATE = 8;
-    SUM = 9;
-    TRANSPOSE = 10;
-    HSTACK = 11;
-    VSTACK = 12;
-    TRACE = 13;
-    RESHAPE = 14;
+    ADD = 10;
+    INDEX = 11;
+    MULTIPLY = 12;
+    MULTIPLY_ELEMENTWISE = 13;
+    NEGATE = 14;
+    SUM = 15;
+    TRANSPOSE = 16;
+    HSTACK = 17;
+    VSTACK = 18;
+    TRACE = 19;
+    RESHAPE = 20;
 
     // Elementwise functions
-    ABS = 15;
-    POWER = 16;
-    SQUARE_ROOT = 17;
-    MAX = 18;
+    ABS = 50;
+    POWER = 51;
+    SQUARE_ROOT = 52;
+    MAX = 53;
+    LOG = 54;
+    EXP = 55;
 
     // Vector functions
-    NORM_P = 19;
+    NORM_P = 100;
 
     // Matrix functions
-    LOG_DET = 20;
-    NORM_PQ = 21;
-    NORM_2_ELEMENTWISE = 22;
+    LOG_DET = 200;
+    NORM_PQ = 201;
+    NORM_2_ELEMENTWISE = 202;
   }
   Type expression_type = 1;
   Size size = 2;

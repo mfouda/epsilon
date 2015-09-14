@@ -15,10 +15,17 @@ import sys
 
 from epsilon.compiler import compiler_error
 from epsilon.expression import *
+from epsilon.expression_str import expr_str
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 
 class CanonicalizeError(compiler_error.CompilerError):
     pass
+
+def is_epigraph(expr):
+    return (expr.expression_type == Expression.INDICATOR and
+            expr.cone.cone_type == Cone.NON_NEGATIVE and
+            len(expr.arg) == 2 and
+            expr.arg[0].expression_type == Expression.VARIABLE)
 
 def epigraph(f, t):
     """An expression for an epigraph constraint.
@@ -54,7 +61,9 @@ def transform_epigraph(f_expr, g_expr):
 # The prox_* functions recognize expressions with known proximal operators. The
 # expressions returned need to match those defined in
 # src/epsilon/operators/prox.cc
-def prox_scalar_multiply(expr):
+
+# General rules for dealing with additional and scalar multiplication
+def prox_multiply_scalar(expr):
     if (expr.expression_type == Expression.MULTIPLY and
         expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
         dimension(expr.arg[0]) == 1):
@@ -70,18 +79,23 @@ def prox_add(expr):
             for prox_expr in transform_expr(arg):
                 yield prox_expr
 
-def prox_affine(expr):
-    if (expr.curvature.curvature_type == Curvature.AFFINE or
-        expr.curvature.curvature_type == Curvature.CONSTANT):
-        yield expr
+# Rules for functions on scalars (apply elementwise to vectors), f(a .* x)
+def prox_norm1(expr):
+    if (expr.expression_type == Expression.NORM_P and expr.p == 1):
+        if expr.arg[0].curvature.elementwise:
+            yield expr
+        else:
+            raise NotImplementedError()
 
-def prox_affine_constraint(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        all(arg.curvature.curvature_type == Curvature.AFFINE or
-            arg.curvature.curvature_type == Curvature.CONSTANT
-            for arg in expr.arg)):
-        yield expr
+def prox_exp(expr):
+    if expr.expression_type == Expression.EXP:
+        if expr.arg[0].curvature.elementwise:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
 
+# Rules for functions on vectors composed with linear operator, f(Ax)
 def prox_least_squares(expr):
     if (expr.expression_type == Expression.POWER and
         expr.arg[0].expression_type == Expression.NORM_P and
@@ -91,6 +105,27 @@ def prox_least_squares(expr):
         else:
             raise NotImplementedError()
 
+def prox_affine_constraint(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        all(arg.curvature.curvature_type == Curvature.AFFINE or
+            arg.curvature.curvature_type == Curvature.CONSTANT
+            for arg in expr.arg)):
+        yield expr
+
+# Rules for functions on vectors, f(alpha*x)
+def prox_affine(expr):
+    if (expr.curvature.curvature_type == Curvature.AFFINE or
+        expr.curvature.curvature_type == Curvature.CONSTANT):
+        yield expr
+
+def prox_norm2(expr):
+    if (expr.expression_type == Expression.NORM_P and expr.p == 2):
+        if expr.arg[0].curvature.scalar_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
+
+# Matrix rules, f(alpha*X)
 def prox_norm12(expr):
     if (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
@@ -106,20 +141,6 @@ def prox_norm12(expr):
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
-def prox_norm1(expr):
-    if (expr.expression_type == Expression.NORM_P and expr.p == 1):
-        if expr.arg[0].curvature.elementwise:
-            yield expr
-        else:
-            raise NotImplementedError()
-
-def prox_norm2(expr):
-    if (expr.expression_type == Expression.NORM_P and expr.p == 2):
-        if expr.arg[0].curvature.scalar_multiple:
-            yield expr
-        else:
-            raise NotImplementedError()
-
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
         expr.arg[0].expression_type == Expression.LOG_DET):
@@ -128,16 +149,35 @@ def prox_neg_log_det(expr):
         else:
             raise NotImplementedError()
 
-# First rule that matches takes precendence
-PROX_RULES = [prox_add,
-              prox_scalar_multiply,
-              prox_least_squares,
-              prox_neg_log_det,
-              prox_norm12,
-              prox_norm1,
-              prox_norm2,
-              prox_affine,
-              prox_affine_constraint]
+def prox_epigraph(expr):
+    if is_epigraph(expr):
+        t_expr, f_expr = expr.arg
+
+        # The basic algorithm is to canonicalize the f(x) expression into f_1(x)
+        # + ... f_n(x) using the transform_expr(). For each f_i there are two
+        # cases to consider:
+        #
+        # 1) If f_i is an indicator function, we emit it
+        # 2) Otherwise, we emit a new epigraph constraint I(f_i(x) <= t_i) and
+        # keep track of t_i
+        #
+        # Finally, we emit I(t_1 + ... + t_n == t)
+        #
+        # NOTE(mwytock): This makes the assumption that we have a proximal
+        # operator for I(f_i(x) <= t) if we have one for f_i(x)
+        ti_exprs = []
+        for fi_expr in transform_expr(f_expr):
+            if fi_expr.expression_type == Expression.INDICATOR:
+                yield fi_expr
+            else:
+                ti_expr = epigraph_variable(fi_expr)
+                ti_exprs.append(ti_expr)
+                yield epigraph(fi_expr, ti_expr)
+
+        yield equality_constraint(add(*ti_exprs), t_expr)
+
+# NOTE(mwtyock): first rule that matches takes precendence
+PROX_RULES = [f for name, f in locals().items() if name.startswith("prox_")]
 
 def transform_expr(expr):
     for prox_rule in PROX_RULES:
