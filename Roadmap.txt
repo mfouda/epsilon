@@ -1,0 +1,41 @@
+TODO:
+    Elementwise:
+        - square (prox and epi)
+        - absolute value, i.e., l1, (epi)
+        - hinge (prox and epi)
+        - logistic (prox and epi)
+        - negative log (prox and epi)
+        - assymetric l1 (prox and epi)
+        - inverse positive (prox and epi)
+        - exponential (prox and epi)
+        - non-negative (prox)
+        - box (prox)
+        - negative entropy (prox and epi)
+        - kl divergence (prox and epi)
+        - huber (prox and epi)
+        - deadzone (prox and epi)
+        - max elemwise (prox and epi)
+
+    Vector:
+        - max absolute, l_inf (prox and epi)
+        - least sqaures (prox and epi)
+        - linear equality (prox)
+
+    Matrix:
+        - Negative log det (prox and epi)
+        - Matrix fractional (prox and epi)
+        - Semidefinite (prox)
+        - lambda max (prox and epi)
+        - nuclear norm (prox and epi)
+        - matrix 2 norm (prox and epi)
+
+
+DONE:
+    Elementwise:
+        - absolute value (prox)
+
+    Vector:
+        - l2 (prox and epi)
+
+
+
