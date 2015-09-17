@@ -213,7 +213,8 @@ void BuildAffineOperatorImpl(
     }
   } else {
     // Unary linear operator
-    CHECK_EQ(1, expr.arg_size());
+    CHECK_EQ(1, expr.arg_size())
+        << "More than one argument: " << expr.DebugString();
     L.RightMultiply(LinearFunctionMatrix(expr));
     BuildAffineOperatorImpl(expr.arg(0), offset_map, L, A, b);
   }

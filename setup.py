@@ -78,6 +78,7 @@ solve = Extension(
     language = "c++",
     extra_compile_args = ["-std=c++14"],
     extra_objects = ["build-cc/libepsilon.a"],
+    depends = ["build-cc/libepsilon.a"],
     include_dirs = [
         os.path.join(PROTOC_PREFIX, "include"),
         "build-cc",

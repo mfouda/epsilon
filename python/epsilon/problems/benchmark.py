@@ -3,11 +3,11 @@
 from collections import namedtuple
 import time
 
-from epsilon.problems.problem_instance import ProblemInstance
+from epsilon import solve
 from epsilon.problems import covsel
 from epsilon.problems import lasso
 from epsilon.problems import tv_smooth
-import epsilon
+from epsilon.problems.problem_instance import ProblemInstance
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
     """Columns for a Markdown appropriate text table."""
@@ -52,7 +52,7 @@ def run_benchmarks(problems):
         cvxpy_prob = problem.create()
 
         t0 = time.time()
-        epsilon.solve(cvxpy_prob)
+        solve.solve(cvxpy_prob)
         t1 = time.time()
 
         yield problem.name, t1-t0, cvxpy_prob.objective.value

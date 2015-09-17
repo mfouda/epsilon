@@ -48,5 +48,3 @@ def test_composite_epigraph():
     x = cp.Variable(n)
     f = cp.exp(cp.norm2(x) + cp.norm1(x) + c.T*x) + cp.norm2(x)
     problem = transform(cp.Problem(cp.Minimize(f)))
-    print expression_str.problem_str(problem)
-    assert False

@@ -1,4 +1,5 @@
 
+import logging
 import numpy
 
 from epsilon.compiler import compiler
