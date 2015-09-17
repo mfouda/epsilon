@@ -1,7 +1,7 @@
 from epsilon.compiler import attributes
 from epsilon.compiler import canonicalize
 from epsilon.compiler import recombine
-from epsilon.compiler import split
+from epsilon.compiler import separate
 
 TRANSFORMS = [
     attributes.transform,
