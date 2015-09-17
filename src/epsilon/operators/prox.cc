@@ -385,14 +385,20 @@ std::vector<ProxOperatorRule> kProxOperatorRules = {
 // NOTE(mwytock): We assume the input expression has already undergone
 // processing and thus we dont need to handle fully general expressions here.
 void ProxVectorOperator::Preprocess() {
+  const int n  = var_map_.n();
+  
   // Add affine term
   g_expr_ = &f_expr_;
   if (g_expr_->expression_type() == Expression::ADD) {
     CHECK_EQ(2, f_expr_.arg_size());
     g_expr_ = &f_expr_.arg(0);
-    // Extract c
+
+    DynamicMatrix A = DynamicMatrix::Zero(1, n);
+    DynamicMatrix b = DynamicMatrix::Zero(1, 1);
+    BuildAffineOperator(f_expr_.arg(1), var_map_, &A, &b);
+    c_ = ToVector(A.AsDense());    
   } else {
-    c_ = Eigen::VectorXd::Zero(var_map_.n());
+    c_ = Eigen::VectorXd::Zero(n);
   }
 
   // Multiply scalar constant

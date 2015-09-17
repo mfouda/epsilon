@@ -52,6 +52,8 @@ void ProxADMMSolver::Init() {
 }
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
+  VLOG(2) << "InitProxOperator:\n" << expr.DebugString();
+  
   // For now, we assume each prox function only operates on one variable but
   // this can be relaxed.
   VariableSet vars = GetVariables(expr);
@@ -107,6 +109,8 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
 }
 
 void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
+  VLOG(2) << "ApplyProxOperator";
+  
   const int i = prox.i;
   const int n = prox.n;
   const SparseXd& Ai = A_.middleCols(i, n);

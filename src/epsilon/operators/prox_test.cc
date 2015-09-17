@@ -181,3 +181,4 @@ TEST_F(NormL1L2Test, Basic) {
       TestVector({0, 0.39, 0, 0.79, 0, 1.19}),
       1e-2));
 }
+

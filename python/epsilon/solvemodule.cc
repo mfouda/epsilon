@@ -1,5 +1,7 @@
 #include <Python.h>
 
+#include <stdlib.h>
+
 #include <glog/logging.h>
 
 #include "epsilon/algorithms/prox_admm.h"
@@ -95,6 +97,9 @@ static bool initialized = false;
 PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
   if (!initialized) {
+    const char* v = getenv("EPSILON_VLOG");
+    if (v != nullptr) 
+      FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
     initialized = true;
