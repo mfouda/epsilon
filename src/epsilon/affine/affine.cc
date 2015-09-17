@@ -233,3 +233,17 @@ void BuildAffineOperator(
   BuildAffineOperatorImpl(
       expr, offsets, DynamicMatrix::FromSparse(SparseIdentity(m)), A, b);
 }
+
+SparseXd GetSparseAffineOperator(
+    const Expression& expr,
+    const VariableOffsetMap& var_map) {
+  const int m = GetDimension(expr);
+  const int n = var_map.n();
+  DynamicMatrix A = DynamicMatrix::Zero(m, n);
+  DynamicMatrix b = DynamicMatrix::FromDense(Eigen::VectorXd::Zero(m));
+  BuildAffineOperator(expr, var_map, &A, &b);
+
+  CHECK(b.is_zero());
+  CHECK(A.is_sparse());
+  return A.sparse();
+}

@@ -9,27 +9,15 @@
 class Data;
 class Expression;
 
-// TODO(mwytock): Remove the above versions
-// void BuildSparseAffineOperator(
-//     const Expression& expr,
-//     int n,
-//     int offset,
-//     std::vector<Eigen::Triplet<double>>* A_coeffs,
-//     Eigen::VectorXd* B);
-
-// // Simplfied version of above
-// void BuildAffineOperator(
-//     const Expression& expr,
-//     int n,
-//     int offset,
-//     Eigen::MatrixXd* A,
-//     Eigen::VectorXd* b);
-
 void BuildAffineOperator(
     const Expression& expr,
     const VariableOffsetMap& offsets,
     DynamicMatrix* A,
     DynamicMatrix* b);
 
+// Utility functions of the above, sparse A and b = 0
+SparseXd GetSparseAffineOperator(
+    const Expression& expr,
+    const VariableOffsetMap& var_map);
 
 #endif  // EPSILON_OPERATORS_AFFINE_H

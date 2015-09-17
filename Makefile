@@ -48,6 +48,11 @@ common_cc = \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
 	epsilon/parameters/local_parameter_service.cc \
+	epsilon/prox/least_squares.cc \
+	epsilon/prox/negative_log_det.cc \
+	epsilon/prox/norm_l1.cc \
+	epsilon/prox/norm_l1_l2.cc \
+	epsilon/prox/norm_l2.cc \
 	epsilon/prox/prox.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
