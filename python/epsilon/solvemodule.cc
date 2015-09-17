@@ -11,6 +11,7 @@
 #include "epsilon/file/file.h"
 #include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/solver_params.pb.h"
+#include "epsilon/prox/prox.h"
 
 // TODO(mwytock): Does failure handling need to be made threadsafe? Seems like
 // making these threadlocal would do
@@ -129,7 +130,8 @@ PyMODINIT_FUNC init_solve() {
   if (m == nullptr)
     return;
 
-  SolveError = PyErr_NewException("solve.error", nullptr, nullptr);
+  SolveError = PyErr_NewException(
+      const_cast<char*>("solve.error"), nullptr, nullptr);
   Py_INCREF(SolveError);
   PyModule_AddObject(m, "error", SolveError);
 }

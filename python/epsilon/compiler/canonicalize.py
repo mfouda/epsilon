@@ -119,14 +119,14 @@ def prox_exp(expr):
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO and
-        all(arg.curvature.curvature_type == Curvature.AFFINE
+        all(arg.curvature.curvature_type == Curvature.AFFINE or
             arg.curvature.curvature_type == Curvature.CONSTANT
             for arg in expr.arg)):
         expr.proximal_operator.name = "EqualityConstraintProx"
         yield expr
 
 def prox_affine(expr):
-    if (expr.curvature.curvature_type == Curvature.CONSTANT
+    if (expr.curvature.curvature_type == Curvature.CONSTANT or
         expr.curvature.curvature_type == Curvature.AFFINE):
         expr.proximal_operator.name = "AffineProx"
         yield expr

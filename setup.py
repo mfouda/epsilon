@@ -2,6 +2,7 @@
 
 import fnmatch
 import os
+import platform
 import subprocess
 import sys
 
@@ -90,6 +91,11 @@ solve = Extension(
     ],
     libraries = ["protobuf", "glog"],
 )
+
+# NOTE(mwytock): Make sure the linker doesn't prune functions that are
+# indirectly used via registration (e.g. proximal operator library).
+if platform.system() == "Darwin":
+    solve.extra_link_args += ["-all_load"]
 
 setup(
     name = "epsilon",

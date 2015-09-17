@@ -11,10 +11,6 @@ from epsilon.problems import lasso
 from epsilon.problems import tv_smooth
 from epsilon.problems.problem_instance import ProblemInstance
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--scs", action="store_true")
-args = parser.parse_args()
-
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
     """Columns for a Markdown appropriate text table."""
 
@@ -72,4 +68,9 @@ def print_benchmarks(problems):
         print_result(*result)
 
 if __name__ == "__main__":
-    print_benchmarks(PROBLEMS)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scs", action="store_true")
+    args = parser.parse_args()
+else:
+    args = argparse.Namespace()
+    args.scs = False

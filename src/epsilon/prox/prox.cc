@@ -91,6 +91,7 @@ void ProxVectorOperator::Preprocess() {
   }
 
   // Get prox function and arg
+  CHECK(kProxOperatorMap != nullptr) << "No registered operators";
   auto iter = kProxOperatorMap->find(g_expr_->proximal_operator().name());
   if (iter == kProxOperatorMap->end()) {
     LOG(FATAL) << "No proximal operator for "
