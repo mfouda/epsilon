@@ -355,6 +355,7 @@ struct ProxOperatorRule {
     }                                                   \
   }
 
+// TODO(mwytock): Instead of these rules, add attributes to the expression tree
 std::vector<ProxOperatorRule> kProxOperatorRules = {
   PROX_RULE(LeastSquaresProx,
             expr.expression_type() == Expression::POWER &&
@@ -378,7 +379,6 @@ std::vector<ProxOperatorRule> kProxOperatorRules = {
   PROX_RULE(NormL2Prox,
             expr.expression_type() == Expression::NORM_P &&
             expr.p() == 2),
-
 };
 
 // Preprocess f(x) to extract f(x) = alpha*g(Ax + b) + c'x.
