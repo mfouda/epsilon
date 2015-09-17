@@ -95,6 +95,7 @@ def negate(arg):
         Curvature.AFFINE: Curvature.AFFINE,
         Curvature.CONVEX: Curvature.CONCAVE,
         Curvature.CONCAVE: Curvature.CONVEX,
+        Curvature.UNKNOWN: Curvature.UNKNOWN,
     }
     return Expression(
         expression_type=Expression.NEGATE,
