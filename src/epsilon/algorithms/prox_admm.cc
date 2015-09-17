@@ -3,6 +3,7 @@
 
 #include <Eigen/SparseCholesky>
 
+#include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/operators/affine.h"
 #include "epsilon/operators/prox.h"
@@ -27,11 +28,23 @@ void ProxADMMSolver::Init() {
   const Expression& constr = problem_.constraint(0);
   CHECK_EQ(Expression::INDICATOR, constr.expression_type());
   CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
-  m_ = GetDimension(GetOnlyArg(constr));
+
+  // TODO(mwytock): This transform should be handled in a final pass by the
+  // compiler.
+  Expression expr;
+  if (constr.arg_size() == 1) {
+    expr = GetOnlyArg(constr);
+  } else if (constr.arg_size() == 2) {
+    expr = expression::Add(constr.arg(0), expression::Negate(constr.arg(1)));
+  } else {
+    LOG(FATAL) << "Constraint has more than 2 args\n" << constr.DebugString();
+  }
+
+  m_ = GetDimension(expr);
   {
     DynamicMatrix A_tmp(m_, n_);
     DynamicMatrix b_tmp(m_, 1);
-    BuildAffineOperator(GetOnlyArg(constr), var_offset_map_, &A_tmp, &b_tmp);
+    BuildAffineOperator(expr, var_offset_map_, &A_tmp, &b_tmp);
     CHECK(A_tmp.is_sparse());
     A_ = A_tmp.sparse();
     b_ = b_tmp.AsDense();
@@ -53,10 +66,15 @@ void ProxADMMSolver::Init() {
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   VLOG(2) << "InitProxOperator:\n" << expr.DebugString();
-  
+
   // For now, we assume each prox function only operates on one variable but
   // this can be relaxed.
   VariableSet vars = GetVariables(expr);
+
+  // TODO(mwytock): Should be pruned before getting here
+  if (vars.size() == 0)
+    return;
+
   CHECK_EQ(1, vars.size());
   const Expression& var_expr = *(*vars.begin());
   const int i = var_offset_map_.Get(var_expr);
@@ -110,7 +128,7 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
 
 void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   VLOG(2) << "ApplyProxOperator";
-  
+
   const int i = prox.i;
   const int n = prox.n;
   const SparseXd& Ai = A_.middleCols(i, n);

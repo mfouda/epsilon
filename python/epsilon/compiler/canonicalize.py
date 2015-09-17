@@ -47,7 +47,8 @@ def epigraph(f, t):
 
 def epigraph_variable(expr):
     expr_str = struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-    return variable(1, 1, "canonicalize:" + expr_str)
+    m, n = expr.size.dim
+    return variable(m, n, "canonicalize:" + expr_str)
 
 def transform_epigraph(f_expr, g_expr):
     t_expr = epigraph_variable(g_expr)
