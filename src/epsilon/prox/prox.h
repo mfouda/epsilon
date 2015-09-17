@@ -43,8 +43,25 @@ class ProxOperator {
   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) = 0;
 };
 
+extern std::unordered_map<
+  std::string,
+  std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
+
 template<class T>
-bool RegisterProxOperator(const std::string& id);
+bool RegisterProxOperator(const std::string& id) {
+  if (kProxOperatorMap == nullptr) {
+    kProxOperatorMap = new std::unordered_map<
+      std::string,
+      std::function<std::unique_ptr<ProxOperator>()>>();
+  }
+
+  kProxOperatorMap->insert(std::make_pair(
+      id, [] {
+        return std::unique_ptr<T>(new T);
+      }));
+  return true;
+}
+
 #define REGISTER_PROX_OPERATOR(T) bool registered_##T = RegisterProxOperator<T>(#T)
 
 
