@@ -17,27 +17,26 @@ def transform_problem(problem_instance):
             cvxpy_expr.convert_problem(problem_instance.create())[0]))
     logging.debug("Input:\n%s", expression_str.problem_str(input))
 
-    output = recombine.transform(problem_instance.create())
+    output = recombine.transform(input)
     logging.debug("Output:\n%s", expression_str.problem_str(output))
 
-# def test_problems():
-#     for problem in problems_test.get_problems():
-#         yield transform_problem, problem
+def test_problems():
+    for problem in problems_test.get_problems():
+        yield transform_problem, problem
 
 
 x = variable(1, 1, "x")
-
 def test_merge_single_affine():
     prob = recombine.merge_affine(Problem(objective=add(x)))
     assert prob.objective.expression_type == Expression.ADD
     assert len(prob.objective.arg) == 1
-    assert prob.objective.expression_type == Expression.VARIABLE
+    assert prob.objective.arg[0].expression_type == Expression.VARIABLE
 
 def test_merge_single_non_affine():
     prob = recombine.merge_affine(Problem(objective=add(power(x, 2))))
     assert prob.objective.expression_type == Expression.ADD
     assert len(prob.objective.arg) == 1
-    assert prob.objective.expression_type == Expression.NORM_P
+    assert prob.objective.arg[0].expression_type == Expression.POWER
 
 def test_merge_mixed_pair():
     prob = recombine.merge_affine(

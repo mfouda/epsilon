@@ -3,7 +3,7 @@
 from collections import defaultdict
 
 from epsilon.compiler import compiler_error
-from epsilon.expression_pb2 import Expression, Curvature
+from epsilon.expression_pb2 import Expression, Curvature, Problem
 from epsilon.expression import *
 
 class RecombineError(compiler_error.CompilerError):
@@ -27,11 +27,12 @@ def merge_affine(problem):
 
     final = []
     for f, f_vars in affine:
-        g = max(non_affine, key=lambda g, g_vars: len(f_vars.intersection(g_vars)))
+        g, g_vars = max(
+            non_affine, key=lambda (g, g_vars): len(f_vars.intersection(g_vars)))
         g.CopyFrom(add(g, f))
 
-    return expression_pb2.Problem(
-        objective=add(*non_affine),
+    return Problem(
+        objective=add(*(f for f, _ in non_affine)),
         constraint=problem.constraint)
 
 
