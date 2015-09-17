@@ -201,6 +201,7 @@ class LeastSquaresProx final : public ProxOperator {
   Eigen::LLT<Eigen::MatrixXd> solver_;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> D_;
 };
+REGISTER_PROX_OPERATOR(LeastSquaresProx);
 
 
 // lam*||a .* x||_1
@@ -245,6 +246,7 @@ class NormL2Prox final : public ProxOperator {
 private:
   double lambda_;
 };
+REGISTER_PROX_OPERATOR(NormL1Prox);
 
 // I(||x||_2 <= t)
 class NormL2Epigraph final : public ProxOperator {
@@ -278,6 +280,7 @@ public:
 private:
   SparseXd A_, B_;
 };
+REGISTER_PROX_OPERATOR(NormL2Epigraph);
 
 // lam*||X||_{1,2}
 class NormL1L2Prox final : public ProxOperator {
@@ -304,6 +307,7 @@ private:
   double lambda_;
   int m_, n_;
 };
+REGISTER_PROX_OPERATOR(NormL1L2Prox);
 
 // -lam*log|X|
 class NegativeLogDetProx final : public ProxOperator {
@@ -338,16 +342,24 @@ private:
   double lambda_;
   int n_;
 };
+REGISTER_PROX_OPERATOR(NegativeLogDetProx);
 
-std::unordered_map<
+static std::unordered_map<
   std::string,
-  std::function<std::unique_ptr<ProxOperator>()>> kProxOperatorMap;
+  std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
 
 template<class T>
 bool RegisterProxOperator(const std::string& id) {
-  kProxOperatorMap[id] = [] {
-    return std::unique_ptr<T>(new T);
-  };
+  if (kProxOperatorMap == nullptr) {
+    kProxOperatorMap = new std::unordered_map<
+      std::string,
+      std::function<std::unique_ptr<ProxOperator>()>>();
+  }
+
+  kProxOperatorMap->insert(std::make_pair(
+      id, [] {
+        return std::unique_ptr<T>(new T);
+      }));
   return true;
 }
 
@@ -381,8 +393,8 @@ void ProxVectorOperator::Preprocess() {
   }
 
   // Get prox function and arg
-  auto iter = kProxOperatorMap.find(g_expr_->proximal_operator().name());
-  if (iter == kProxOperatorMap.end()) {
+  auto iter = kProxOperatorMap->find(g_expr_->proximal_operator().name());
+  if (iter == kProxOperatorMap->end()) {
     LOG(FATAL) << "No proximal operator for "
                << g_expr_->proximal_operator().name() << "\n"
                << g_expr_->DebugString();

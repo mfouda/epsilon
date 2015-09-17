@@ -72,10 +72,7 @@ def prox_multiply_scalar(expr):
             if prox_expr.expression_type == Expression.INDICATOR:
                 yield prox_expr
             else:
-                mul_expr = multiply(expr.arg[0], prox_expr)
-                mul_expr.proximal_operator.name = (
-                    prox_expr.proximal_operator.name)
-                yield mul_expr
+                yield multiply(expr.arg[0], prox_expr)
 
 def prox_add(expr):
     if expr.expression_type == Expression.ADD:

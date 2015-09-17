@@ -42,6 +42,7 @@ class LeastSquaresTest : public ProxOperatorTest {
                     TestConstant(A_),
                     expression::Variable(n, 1, "x")),
                 expression::Negate(TestConstant(b_))), 2), 2);
+    f_expr_.mutable_proximal_operator()->set_name("LeastSquaresProx");
   }
 
   Eigen::VectorXd ComputeLS(const Eigen::VectorXd& v) {
@@ -62,6 +63,7 @@ class NormL1Test : public ProxOperatorTest {
  protected:
   void CreateExpression(int n) {
     f_expr_ = expression::NormP(expression::Variable(n, 1, "x"), 1);
+    f_expr_.mutable_proximal_operator()->set_name("NormL1Prox");
   }
 
   void CreateWeightedExpression(const std::vector<double>& weights) {
@@ -70,6 +72,7 @@ class NormL1Test : public ProxOperatorTest {
         expression::MultiplyElementwise(
             TestConstant(Eigen::Map<const Eigen::VectorXd>(&weights[0], n)),
             expression::Variable(n, 1, "x")), 1);
+    f_expr_.mutable_proximal_operator()->set_name("NormL1Prox");
   }
 };
 
@@ -77,6 +80,7 @@ class NormL1L2Test : public ProxOperatorTest {
  protected:
   void CreateExpression(int m, int n) {
     f_expr_ = expression::NormPQ(expression::Variable(m, n, "X"), 1, 2);
+    f_expr_.mutable_proximal_operator()->set_name("NormL1L2Prox");
   }
 };
 
@@ -86,6 +90,7 @@ class NegativeLogDetTest : public ProxOperatorTest {
     f_expr_ = expression::Negate(
         expression::LogDet(
             expression::Variable(n, n, "X")));
+    f_expr_.mutable_proximal_operator()->set_name("NegativeLogDetProx");
   }
 };
 

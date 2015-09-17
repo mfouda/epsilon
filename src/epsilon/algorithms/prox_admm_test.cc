@@ -49,6 +49,7 @@ class ProxADMMSolverTest : public testing::Test {
               expression::Add(
                   expression::Multiply(TestConstant(Ai), x),
                   expression::Negate(TestConstant(bi))), 2), 2);
+      f.mutable_proximal_operator()->set_name("LeastSquaresProx");
 
       *A = Stack(*A, Ai);
       *b = Stack(*b, bi);
@@ -74,16 +75,19 @@ class ProxADMMSolverTest : public testing::Test {
     Expression x0 = expression::Variable(n, 1, "x0");
     Expression x1 = expression::Variable(n, 1, "x1");
 
-    *problem_.mutable_objective() = expression::Add(
+    Expression f =
         expression::Power(
             expression::NormP(
                 expression::Add(
                     expression::Multiply(TestConstant(A), x0),
-                    expression::Negate(TestConstant(b))), 2), 2),
-        expression::Multiply(
-            expression::Constant(lambda),
-            expression::NormP(x1, 1)));
+                    expression::Negate(TestConstant(b))), 2), 2);
+    f.mutable_proximal_operator()->set_name("LeastSquaresProx");
 
+    Expression g = expression::NormP(x1, 1);
+    g.mutable_proximal_operator()->set_name("NormL1Prox");
+
+    *problem_.mutable_objective() = expression::Add(
+        f, expression::Multiply(expression::Constant(lambda), g));
     *problem_.add_constraint() = expression::Indicator(
         Cone::ZERO,
         expression::Add(x0, expression::Negate(x1)));
@@ -96,16 +100,18 @@ class ProxADMMSolverTest : public testing::Test {
     Expression x = expression::Variable(n, 1, "x");
     Expression u = expression::Variable(n-1, 1, "u");
 
-    *problem_.mutable_objective() = expression::Add(
-        expression::Power(
-            expression::NormP(
+    Expression f = expression::Power(
+        expression::NormP(
                 expression::Add(
                     x,
-                    expression::Negate(TestConstant(b))), 2), 2),
-        expression::Multiply(
-            expression::Constant(lambda),
-            expression::NormP(u, 1)));
+                    expression::Negate(TestConstant(b))), 2), 2);
+    f.mutable_proximal_operator()->set_name("LeastSquaresProx");
 
+    Expression g = expression::NormP(u, 1);
+    g.mutable_proximal_operator()->set_name("NormL1Prox");
+
+    *problem_.mutable_objective() = expression::Add(
+        f, expression::Multiply(expression::Constant(lambda), g));
     *problem_.add_constraint() = expression::Indicator(
         Cone::ZERO,
         expression::Add(
