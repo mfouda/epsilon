@@ -3,7 +3,7 @@
 
 #include <glog/logging.h>
 
-#include "epsilon/util/vector.h"
+#include "epsilon/vector/vector_util.h"
 #include "epsilon/util/string.h"
 
 // Can hold either a sparse or dense matrix

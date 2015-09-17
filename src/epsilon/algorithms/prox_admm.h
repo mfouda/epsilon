@@ -9,10 +9,10 @@
 #include "epsilon/algorithms/solver.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/operators/vector_operator.h"
+#include "epsilon/vector/vector_operator.h"
 #include "epsilon/parameters/parameter_service.h"
 #include "epsilon/solver_params.pb.h"
-#include "epsilon/util/vector.h"
+#include "epsilon/vector/vector_util.h"
 
 struct ProxOperatorInfo {
   bool linearized;

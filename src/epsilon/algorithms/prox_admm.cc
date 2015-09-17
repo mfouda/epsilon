@@ -5,9 +5,9 @@
 
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/operators/affine.h"
-#include "epsilon/operators/prox.h"
-#include "epsilon/operators/vector_operator.h"
+#include "epsilon/affine/affine.h"
+#include "epsilon/prox/prox.h"
+#include "epsilon/vector/vector_operator.h"
 #include "epsilon/util/string.h"
 
 ProxADMMSolver::ProxADMMSolver(

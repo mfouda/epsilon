@@ -1,4 +1,4 @@
-#include "epsilon/util/vector_file.h"
+#include "epsilon/vector/vector_file.h"
 
 #include <glog/logging.h>
 

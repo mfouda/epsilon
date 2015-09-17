@@ -10,9 +10,9 @@
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/expression/expression_testutil.h"
-#include "epsilon/operators/affine.h"
-#include "epsilon/util/vector.h"
-#include "epsilon/util/vector_testutil.h"
+#include "epsilon/affine/affine.h"
+#include "epsilon/vector/vector_util.h"
+#include "epsilon/vector/vector_testutil.h"
 
 
 void TestBuildAffineOperator(

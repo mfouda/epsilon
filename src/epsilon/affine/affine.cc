@@ -1,4 +1,4 @@
-#include "epsilon/operators/affine.h"
+#include "epsilon/affine/affine.h"
 
 #include <memory>
 #include <mutex>
@@ -11,8 +11,8 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
 #include "epsilon/util/string.h"
-#include "epsilon/util/vector.h"
-#include "epsilon/util/vector_file.h"
+#include "epsilon/vector/vector_util.h"
+#include "epsilon/vector/vector_file.h"
 
 using Eigen::Map;
 using Eigen::MatrixXd;

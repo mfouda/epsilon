@@ -11,7 +11,7 @@
 // TODO(mwytock): Handle vector elementwise functions more automatically?
 // TODO(mwytock): Handle b term more automatically?
 
-#include "epsilon/operators/prox.h"
+#include "epsilon/prox/prox.h"
 
 #include <glog/logging.h>
 #include <Eigen/Dense>
@@ -19,7 +19,7 @@
 #include <Eigen/SparseCholesky>
 
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/operators/affine.h"
+#include "epsilon/affine/affine.h"
 
 // TODO(mwytock): Utility functions that should likely go elsewhere
 SparseXd GetSparseOperator(
@@ -339,51 +339,9 @@ private:
   int n_;
 };
 
-// Rules for matching proximal operators to expression trees
-struct ProxOperatorRule {
-  std::function<bool(const Expression& expr)> match;
-  std::function<std::unique_ptr<ProxOperator>()> create;
-};
-
-#define PROX_RULE(op, match_expr)                       \
-  {                                                     \
-    [] (const Expression& expr) -> bool {               \
-      return (match_expr);                              \
-    },                                                  \
-    [] () -> std::unique_ptr<ProxOperator> {            \
-      return std::unique_ptr<ProxOperator>(new op);     \
-    }                                                   \
-  }
-
-// TODO(mwytock): Instead of these rules, add attributes to the expression tree
-std::vector<ProxOperatorRule> kProxOperatorRules = {
-  PROX_RULE(LeastSquaresProx,
-            expr.expression_type() == Expression::POWER &&
-            expr.p() == 2 &&
-            expr.arg(0).expression_type() == Expression::NORM_P &&
-            expr.arg(0).p() == 2),
-  PROX_RULE(NegativeLogDetProx,
-            expr.expression_type() == Expression::NEGATE &&
-            expr.arg(0).expression_type() == Expression::LOG_DET),
-  PROX_RULE(NormL1Prox,
-            expr.expression_type() == Expression::NORM_P &&
-            expr.p() == 1),
-  PROX_RULE(NormL1L2Prox,
-            expr.expression_type() == Expression::NORM_PQ &&
-            expr.p() == 1 &&
-            expr.q() == 2),
-  PROX_RULE(NormL2Epigraph,
-            IsEpigraphForm(expr) &&
-            expr.arg(1).expression_type() == Expression::NORM_P &&
-            expr.arg(1).p() == 2),
-  PROX_RULE(NormL2Prox,
-            expr.expression_type() == Expression::NORM_P &&
-            expr.p() == 2),
-};
-
 std::unordered_map<
   std::string,
-  std::function<std::unique_ptr<ProxOperator>()> kProxOperatorMap;
+  std::function<std::unique_ptr<ProxOperator>()>> kProxOperatorMap;
 
 template<class T>
 bool RegisterProxOperator(const std::string& id) {

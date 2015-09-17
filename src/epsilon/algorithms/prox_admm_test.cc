@@ -9,7 +9,7 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/util/string.h"
-#include "epsilon/util/vector_testutil.h"
+#include "epsilon/vector/vector_testutil.h"
 
 class ProxADMMSolverTest : public testing::Test {
  protected:

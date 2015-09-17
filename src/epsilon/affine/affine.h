@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/util/dynamic_matrix.h"
+#include "epsilon/vector/dynamic_matrix.h"
 
 class Data;
 class Expression;

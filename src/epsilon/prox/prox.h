@@ -6,7 +6,7 @@
 
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/operators/vector_operator.h"
+#include "epsilon/vector/vector_operator.h"
 
 std::unique_ptr<VectorOperator> CreateProxOperator(
     double lambda,

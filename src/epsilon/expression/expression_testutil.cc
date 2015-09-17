@@ -5,7 +5,7 @@
 
 #include "epsilon/data.pb.h"
 #include "epsilon/util/string.h"
-#include "epsilon/util/vector_file.h"
+#include "epsilon/vector/vector_file.h"
 
 DEFINE_string(test_data_prefix, "/mem/test",
 	      "prefix for storing test data");

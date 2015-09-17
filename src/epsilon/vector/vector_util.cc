@@ -1,4 +1,4 @@
-#include "epsilon/util/vector.h"
+#include "epsilon/vector/vector_util.h"
 
 #include <fstream>
 

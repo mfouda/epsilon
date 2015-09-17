@@ -49,10 +49,10 @@ common_cc = \
 	epsilon/file/file.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/prox.cc \
-	epsilon/util/dynamic_matrix.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
-	epsilon/vector/vector.cc \
+	epsilon/vector/dynamic_matrix.cc \
+	epsilon/vector/vector_util.cc \
 	epsilon/vector/vector_file.cc
 
 common_test_cc = \

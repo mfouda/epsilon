@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-#include "epsilon/util/vector.h"
+#include "epsilon/vector/vector_util.h"
 
 TEST(IsBlockScalar, Identity) {
   EXPECT_TRUE(IsBlockScalar(SparseIdentity(3)));
