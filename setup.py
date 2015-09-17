@@ -78,7 +78,6 @@ solve = Extension(
     sources = ["python/epsilon/solvemodule.cc"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
-    extra_objects = ["build-cc/libepsilon.a"],
     depends = ["build-cc/libepsilon.a"],
     include_dirs = [
         os.path.join(PROTOC_PREFIX, "include"),
@@ -95,7 +94,11 @@ solve = Extension(
 # NOTE(mwytock): Make sure the linker doesn't prune functions that are
 # indirectly used via registration (e.g. proximal operator library).
 if platform.system() == "Darwin":
-    solve.extra_link_args += ["-all_load"]
+    solve.extra_link_args += [
+        "-all_load", "build-cc/libepsilon.a"]
+else:
+    solve.extra_link_args += [
+        "-Wl,--whole-archive", "build-cc/libepsilon.a", "-Wl,--no-whole-archive"]
 
 setup(
     name = "epsilon",
