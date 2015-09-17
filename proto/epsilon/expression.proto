@@ -59,6 +59,10 @@ message Cone {
   Type cone_type = 1;
 }
 
+message ProximalOperator {
+  string name = 1;
+}
+
 message Expression {
   enum Type {
     // Default value
@@ -121,6 +125,8 @@ message Expression {
 
   // INDICATOR
   Cone cone = 11;
+
+  ProximalOperator proximal_operator = 12;
 }
 
 // Arbitrary convex problem of the form

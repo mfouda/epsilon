@@ -381,6 +381,18 @@ std::vector<ProxOperatorRule> kProxOperatorRules = {
             expr.p() == 2),
 };
 
+std::unordered_map<
+  std::string,
+  std::function<std::unique_ptr<ProxOperator>()> kProxOperatorMap;
+
+template<class T>
+bool RegisterProxOperator(const std::string& id) {
+  kProxOperatorMap[id] = [] {
+    return std::unique_ptr<T>(new T);
+  };
+  return true;
+}
+
 // Preprocess f(x) to extract f(x) = alpha*g(Ax + b) + c'x.
 // NOTE(mwytock): We assume the input expression has already undergone
 // processing and thus we dont need to handle fully general expressions here.
@@ -411,14 +423,13 @@ void ProxVectorOperator::Preprocess() {
   }
 
   // Get prox function and arg
-  for (const ProxOperatorRule& rule : kProxOperatorRules) {
-    if (rule.match(*g_expr_)) {
-      g_prox_ = rule.create();
-      break;
-    }
+  auto iter = kProxOperatorMap.find(g_expr_->proximal_operator().name());
+  if (iter == kProxOperatorMap.end()) {
+    LOG(FATAL) << "No proximal operator for "
+               << g_expr_->proximal_operator().name() << "\n"
+               << g_expr_->DebugString();
   }
-
-  CHECK(g_prox_.get() != nullptr) << "No rule\n" << g_expr_->DebugString();
+  g_prox_ = iter->second();
 }
 
 std::unique_ptr<VectorOperator> CreateProxOperator(

@@ -72,7 +72,10 @@ def prox_multiply_scalar(expr):
             if prox_expr.expression_type == Expression.INDICATOR:
                 yield prox_expr
             else:
-                yield multiply(expr.arg[0], prox_expr)
+                mul_expr = multiply(expr.arg[0], prox_expr)
+                mul_expr.proximal_operator.name = (
+                    prox_expr.proximal_operator.name)
+                yield mul_expr
 
 def prox_add(expr):
     if expr.expression_type == Expression.ADD:
@@ -80,51 +83,56 @@ def prox_add(expr):
             for prox_expr in transform_expr(arg):
                 yield prox_expr
 
-# Rules for functions on scalars (apply elementwise to vectors), f(a .* x)
+# Rules for known proximal operators
+def prox_least_squares(expr):
+    if (expr.expression_type == Expression.POWER and
+        expr.arg[0].expression_type == Expression.NORM_P and
+        expr.p == 2 and expr.arg[0].p == 2):
+        expr.proximal_operator.name = "LeastSquaresProx"
+        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+            yield expr
+        else:
+            raise NotImplementedError()
+
 def prox_norm1(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 1):
+        expr.proximal_operator.name = "NormL1Prox"
         if expr.arg[0].curvature.elementwise:
+            yield expr
+        else:
+            raise NotImplementedError()
+
+def prox_norm2(expr):
+    if (expr.expression_type == Expression.NORM_P and expr.p == 2):
+        expr.proximal_operator.name = "NormL2Prox"
+        if expr.arg[0].curvature.scalar_multiple:
             yield expr
         else:
             raise NotImplementedError()
 
 def prox_exp(expr):
     if expr.expression_type == Expression.EXP:
+        expr.proximal_operator.name = "ExpProx"
         if expr.arg[0].curvature.elementwise:
             yield expr
         else:
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
-# Rules for functions on vectors composed with linear operator, f(Ax)
-def prox_least_squares(expr):
-    if (expr.expression_type == Expression.POWER and
-        expr.arg[0].expression_type == Expression.NORM_P and
-        expr.p == 2 and expr.arg[0].p == 2):
-        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
-            yield expr
-        else:
-            raise NotImplementedError()
-
-def prox_affine_constraint(expr):
+def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
-        all(arg.curvature.curvature_type == Curvature.AFFINE or
+        expr.cone.cone_type == Cone.ZERO and
+        all(arg.curvature.curvature_type == Curvature.AFFINE
             arg.curvature.curvature_type == Curvature.CONSTANT
             for arg in expr.arg)):
+        expr.proximal_operator.name = "EqualityConstraintProx"
         yield expr
 
-# Rules for functions on vectors, f(alpha*x)
 def prox_affine(expr):
-    if (expr.curvature.curvature_type == Curvature.AFFINE or
-        expr.curvature.curvature_type == Curvature.CONSTANT):
+    if (expr.curvature.curvature_type == Curvature.CONSTANT
+        expr.curvature.curvature_type == Curvature.AFFINE):
+        expr.proximal_operator.name = "AffineProx"
         yield expr
-
-def prox_norm2(expr):
-    if (expr.expression_type == Expression.NORM_P and expr.p == 2):
-        if expr.arg[0].curvature.scalar_multiple:
-            yield expr
-        else:
-            raise NotImplementedError()
 
 # Matrix rules, f(alpha*X)
 def prox_norm12(expr):
@@ -136,6 +144,7 @@ def prox_norm12(expr):
         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
         expr = norm_pq(arg, 1, 2)
 
+        expr.proximal_operator.name = "NormL1L2Prox"
         if arg.curvature.scalar_multiple:
             yield expr
         else:
@@ -145,6 +154,8 @@ def prox_norm12(expr):
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
         expr.arg[0].expression_type == Expression.LOG_DET):
+
+        expr.proximal_operator.name = "NegativeLogDetProx"
         if expr.arg[0].arg[0].curvature.scalar_multiple:
             yield expr
         else:

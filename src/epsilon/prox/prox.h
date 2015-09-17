@@ -13,5 +13,8 @@ std::unique_ptr<VectorOperator> CreateProxOperator(
     const Expression& f_expr,
     const VariableOffsetMap& var_map);
 
+template<class T>
+bool RegisterProxOperator(const std::string& id);
+#define REGISTER_PROX_OPERATOR(T) bool registered_##T = RegisterProxOperator<T>(#T)
 
 #endif  // EPSILON_OPERATORS_PROX_H

@@ -40,26 +40,26 @@ CXXFLAGS += `pkg-config --cflags $(LIBS)`
 endif
 
 common_cc = \
+	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
 	epsilon/expression/expression_util.cc \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
-	epsilon/operators/affine.cc \
-	epsilon/operators/prox.cc \
 	epsilon/parameters/local_parameter_service.cc \
+	epsilon/prox/prox.cc \
 	epsilon/util/dynamic_matrix.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
-	epsilon/util/vector.cc \
-	epsilon/util/vector_file.cc
+	epsilon/vector/vector.cc \
+	epsilon/vector/vector_file.cc
 
 common_test_cc = \
 	epsilon/algorithms/algorithm_testutil.cc \
 	epsilon/expression/expression_testutil.cc \
 	epsilon/util/test_main.cc \
-	epsilon/util/vector_testutil.cc
+	epsilon/vector/vector_testutil.cc
 
 proto = \
 	epsilon/data.proto \
@@ -68,10 +68,10 @@ proto = \
 	epsilon/solver_params.proto
 
 tests = \
+	epsilon/affine/affine_test \
 	epsilon/algorithms/prox_admm_test \
-	epsilon/operators/prox_test \
-	epsilon/operators/affine_test \
-	epsilon/util/vector_test
+	epsilon/prox/prox_test \
+	epsilon/vector/vector_test
 
 libs = epsilon
 
