@@ -51,7 +51,7 @@ nosetests epsilon
 
 ## Benchmark results
 
-Benchmark of epsilon on a suite of common problems
+### Epsilon
 ```
 python -m epsilon.problems.benchmark
 ```
@@ -61,3 +61,14 @@ python -m epsilon.problems.benchmark
 covsel    |   0.38s|   3.68e+02
 lasso     |   3.83s|   1.63e+01
 tv_smooth |  17.32s|   1.15e+06
+
+### SCS
+```
+python -m epsilon.problems.benchmark --scs
+```
+
+  Problem |   Time | Objective
+:-------- | ------:| ---------:
+covsel    |  25.56s|   3.71e+02
+lasso     |  20.04s|   1.63e+01
+tv_smooth | 402.10s|   1.80e+06

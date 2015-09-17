@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
+import argparse
+import cvxpy as cp
 import time
 
 from epsilon import solve
@@ -8,6 +10,10 @@ from epsilon.problems import covsel
 from epsilon.problems import lasso
 from epsilon.problems import tv_smooth
 from epsilon.problems.problem_instance import ProblemInstance
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--scs", action="store_true")
+args = parser.parse_args()
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
     """Columns for a Markdown appropriate text table."""
@@ -52,7 +58,10 @@ def run_benchmarks(problems):
         cvxpy_prob = problem.create()
 
         t0 = time.time()
-        solve.solve(cvxpy_prob)
+        if args.scs:
+            cvxpy_prob.solve(solver=cp.SCS)
+        else:
+            solve.solve(cvxpy_prob)
         t1 = time.time()
 
         yield problem.name, t1-t0, cvxpy_prob.objective.value
