@@ -31,10 +31,24 @@ def add(*args):
     for i in range(len(args),1):
         assert args[0].size == args[i].size
 
+    argc = [arg.curvature.curvature_type for arg in args]
+    C = Curvature
+    if all(c == C.CONSTANT for c in argc):
+        curvature = Curvature.CONSTANT
+    elif all(c == C.AFFINE or c == C.CONSTANT for c in argc):
+        curvature = Curvature.AFFINE
+    elif all(c == C.CONSTANT or c == C.AFFINE or c == C.CONVEX for c in argc):
+        curvature = Curvature.CONVEX
+    elif all(c == C.CONSTANT or c == C.AFFINE or c == C.CONCAVE for c in argc):
+        curvature = Curvature.CONCAVE
+    else:
+        curvature = Curvature.UNKNOWN
+
     return Expression(
         expression_type=Expression.ADD,
         arg=args,
-        size=args[0].size)
+        size=args[0].size,
+        curvature=Curvature(curvature_type=curvature))
 
 def multiply(*args):
     assert len(args) == 2
@@ -92,10 +106,11 @@ def reshape(arg, m, n):
 
 def negate(arg):
     NEGATE_CURVATURE = {
+        Curvature.UNKNOWN: Curvature.UNKNOWN,
         Curvature.AFFINE: Curvature.AFFINE,
         Curvature.CONVEX: Curvature.CONCAVE,
         Curvature.CONCAVE: Curvature.CONVEX,
-        Curvature.UNKNOWN: Curvature.UNKNOWN,
+        Curvature.CONSTANT: Curvature.CONSTANT,
     }
     return Expression(
         expression_type=Expression.NEGATE,
@@ -143,3 +158,6 @@ def power(x, p):
 
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
+
+def leq_constraint(a, b):
+    return indicator(Cone.NON_NEGATIVE, add(negate(a), b))

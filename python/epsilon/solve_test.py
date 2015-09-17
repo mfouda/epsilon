@@ -1,4 +1,6 @@
 
+import logging
+
 import cvxpy as cp
 import numpy as np
 
@@ -11,7 +13,7 @@ def solve_problem(problem_instance):
     problem.solve(solver=cp.SCS)
     obj0 = problem.objective.value
 
-    print problem_instance.name
+    logging.debug(problem_instance.name)
     solve.solve(problem)
     obj1 = problem.objective.value
 

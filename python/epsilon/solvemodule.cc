@@ -1,5 +1,6 @@
 #include <Python.h>
 
+#include <setjmp.h>
 #include <stdlib.h>
 
 #include <glog/logging.h>
@@ -10,6 +11,11 @@
 #include "epsilon/file/file.h"
 #include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/solver_params.pb.h"
+
+// TODO(mwytock): Does failure handling need to be made threadsafe? Seems like
+// making these threadlocal would do
+static jmp_buf failure_buf;
+static PyObject* SolveError;
 
 extern "C" {
 
@@ -37,6 +43,8 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
   if (!params.ParseFromArray(params_str, params_str_len))
     return nullptr;
 
+  // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
+  // to Py_DECREF() them.
   Py_ssize_t pos = 0;
   PyObject* key;
   PyObject* value;
@@ -54,37 +62,47 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
       f->Write(std::string(value_str, PyString_Size(value)));
       f->Close();
     }
-
-    // Need to Py_DECREF() key/value here?
   }
 
   ProxADMMSolver solver(
       problem, params,
       std::unique_ptr<ParameterService>(new LocalParameterService));
-  solver.Solve();
-  std::string status_str = solver.status().SerializeAsString();
 
-  // Get results
-  PyObject* vars = PyDict_New();
-  {
-    LocalParameterService parameter_service;
-    for (const Expression* expr : GetVariables(problem)) {
-      const std::string& var_id = expr->variable().variable_id();
-      uint64_t param_id = VariableParameterId(solver.problem_id(), var_id);
-      Eigen::VectorXd x = parameter_service.Fetch(param_id);
+  if (!setjmp(failure_buf)) {
+    // Standard execution path
+    solver.Solve();
+    std::string status_str = solver.status().SerializeAsString();
 
-      PyObject* val = PyString_FromStringAndSize(
-          reinterpret_cast<const char*>(x.data()),
-          x.rows()*sizeof(double));
+    // Get results
+    PyObject* vars = PyDict_New();
+    {
+      LocalParameterService parameter_service;
+      for (const Expression* expr : GetVariables(problem)) {
+        const std::string& var_id = expr->variable().variable_id();
+        uint64_t param_id = VariableParameterId(solver.problem_id(), var_id);
+        Eigen::VectorXd x = parameter_service.Fetch(param_id);
 
-      PyDict_SetItemString(vars, var_id.c_str(), val);
-      Py_DECREF(val);
+        PyObject* val = PyString_FromStringAndSize(
+            reinterpret_cast<const char*>(x.data()),
+            x.rows()*sizeof(double));
+
+        PyDict_SetItemString(vars, var_id.c_str(), val);
+        Py_DECREF(val);
+      }
     }
+
+    PyObject* retval = Py_BuildValue("s#O", status_str.data(), status_str.size(), vars);
+    Py_DECREF(vars);
+    return retval;
   }
 
-  PyObject* retval = Py_BuildValue("s#O", status_str.data(), status_str.size(), vars);
-  Py_DECREF(vars);
-  return retval;
+  PyErr_SetString(SolveError, "CHECK failed");
+  return nullptr;
+}
+
+void handle_failure() {
+  // TODO(mwytock): Dump stack trace here
+  longjmp(failure_buf, 1);
 }
 
 static PyMethodDef SolveMethods[] = {
@@ -98,14 +116,22 @@ PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
   if (!initialized) {
     const char* v = getenv("EPSILON_VLOG");
-    if (v != nullptr) 
+    if (v != nullptr)
       FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
+    google::InstallFailureFunction(&handle_failure);
+
     initialized = true;
   }
 
-  (void)Py_InitModule("_solve", SolveMethods);
+  PyObject* m = Py_InitModule("_solve", SolveMethods);
+  if (m == nullptr)
+    return;
+
+  SolveError = PyErr_NewException("solve.error", nullptr, nullptr);
+  Py_INCREF(SolveError);
+  PyModule_AddObject(m, "error", SolveError);
 }
 
 }  // extern "C"

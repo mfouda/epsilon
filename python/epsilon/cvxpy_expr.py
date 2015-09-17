@@ -26,6 +26,7 @@ from cvxpy.expressions.variables.variable import Variable
 
 from epsilon import data
 from epsilon import expression_pb2
+from epsilon import expression
 from epsilon.expression_pb2 import Expression as E
 
 EXPRESSION_TYPES = (
@@ -118,14 +119,21 @@ def convert_objective(objective, proto, data_map):
     # TODO(mwytock): Handle Maximize()
     convert_expression(objective.args[0], proto, data_map)
 
-def convert_constraint(constraint, proto, data_map):
-    proto.constraint_id = "constraint:%d" % constraint.constr_id
+def convert_constraint(constraint, expr_proto, data_map):
+    lhs_expr, rhs_expr = constraint.args
+
+    # TODO(mwytock): Change convert_expression() to just return Expression()
+    lhs_expr_proto = expression_pb2.Expression()
+    rhs_expr_proto = expression_pb2.Expression()
+    convert_expression(lhs_expr, lhs_expr_proto, data_map)
+    convert_expression(rhs_expr, rhs_expr_proto, data_map)
+
     if isinstance(constraint, EqConstraint):
-        proto.cone = expression_pb2.ZERO
-        convert_expression(constraint._expr, proto.arg.add(), data_map)
+        expr_proto.CopyFrom(expression.equality_constraint(
+            lhs_expr_proto, rhs_expr_proto))
     elif isinstance(constraint, LeqConstraint):
-        proto.cone = expression_pb2.NON_NEGATIVE
-        convert_expression(constraint._expr, proto.arg.add(), data_map)
+        expr_proto.CopyFrom(expression.leq_constraint(
+            lhs_expr_proto, rhs_expr_proto))
     else:
         raise RuntimeError("Unknown constraint: %s" % type(constraint))
 

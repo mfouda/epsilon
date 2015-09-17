@@ -386,7 +386,7 @@ std::vector<ProxOperatorRule> kProxOperatorRules = {
 // processing and thus we dont need to handle fully general expressions here.
 void ProxVectorOperator::Preprocess() {
   const int n  = var_map_.n();
-  
+
   // Add affine term
   g_expr_ = &f_expr_;
   if (g_expr_->expression_type() == Expression::ADD) {
@@ -396,7 +396,7 @@ void ProxVectorOperator::Preprocess() {
     DynamicMatrix A = DynamicMatrix::Zero(1, n);
     DynamicMatrix b = DynamicMatrix::Zero(1, 1);
     BuildAffineOperator(f_expr_.arg(1), var_map_, &A, &b);
-    c_ = ToVector(A.AsDense());    
+    c_ = ToVector(A.AsDense());
   } else {
     c_ = Eigen::VectorXd::Zero(n);
   }
@@ -418,7 +418,7 @@ void ProxVectorOperator::Preprocess() {
     }
   }
 
-  CHECK(g_prox_.get() !=nullptr) << "No rule\n" << g_expr_->DebugString();
+  CHECK(g_prox_.get() != nullptr) << "No rule\n" << g_expr_->DebugString();
 }
 
 std::unique_ptr<VectorOperator> CreateProxOperator(
