@@ -89,7 +89,8 @@ def prox_least_squares(expr):
         if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
             yield expr
         else:
-            raise NotImplementedError()
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
 
 def prox_norm1(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 1):
@@ -97,7 +98,8 @@ def prox_norm1(expr):
         if expr.arg[0].curvature.elementwise:
             yield expr
         else:
-            raise NotImplementedError()
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
 
 def prox_norm2(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 2):
@@ -105,7 +107,8 @@ def prox_norm2(expr):
         if expr.arg[0].curvature.scalar_multiple:
             yield expr
         else:
-            raise NotImplementedError()
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
 
 def prox_exp(expr):
     if expr.expression_type == Expression.EXP:

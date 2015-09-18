@@ -5,9 +5,12 @@ import numpy as np
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
 from epsilon.problems import lasso
+from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
 from epsilon.problems.problem_instance import ProblemInstance
 
+# Gives wrong answer:
+# ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),

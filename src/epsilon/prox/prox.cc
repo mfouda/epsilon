@@ -99,6 +99,9 @@ void ProxVectorOperator::Preprocess() {
                << g_expr_->DebugString();
   }
   g_prox_ = iter->second();
+
+  VLOG(2) << "Preprocess, alpha = " << alpha_
+          << ", c = " << VectorDebugString(c_);
 }
 
 std::unique_ptr<VectorOperator> CreateProxOperator(
