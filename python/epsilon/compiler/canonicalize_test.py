@@ -8,7 +8,6 @@ from epsilon import expression_str
 from epsilon.compiler import attributes
 from epsilon.compiler import canonicalize
 from epsilon.expression_pb2 import Expression
-from epsilon.problems import problems_test
 
 ATOMS = [
     cp.norm1,
@@ -22,10 +21,6 @@ def transform(cvxpy_problem):
     logging.debug("Input:\n%s", expression_str.problem_str(input))
     return canonicalize.transform(input)
 
-def transform_problem(problem_instance):
-    output = transform(problem_instance.create())
-    logging.debug("Output:\n%s", expression_str.problem_str(output))
-
 def transform_atom(f):
     n = 10
     problem = transform(cp.Problem(cp.Minimize(f(cp.Variable(n)))))
@@ -37,10 +32,6 @@ def transform_atom(f):
 def test_atoms():
     for atom in ATOMS:
         yield transform_atom, atom
-
-def test_problems():
-    for problem in problems_test.get_problems():
-        yield transform_problem, problem
 
 def test_composite_epigraph():
     n = 5
