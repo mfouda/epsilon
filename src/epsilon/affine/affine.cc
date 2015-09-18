@@ -34,12 +34,6 @@ DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
   return L;
 }
 
-void AppendBlockTriplets(
-    const DynamicMatrix& input, int i, int j,
-    std::vector<Eigen::Triplet<double>>* coeffs) {
-  AppendBlockTriplets(input.AsDense(), i, j, coeffs);
-}
-
 DynamicMatrix ScalarMatrix(int n, double val) {
   std::vector<Eigen::Triplet<double> > coeffs;
   coeffs.reserve(n);

@@ -56,29 +56,6 @@ SparseXd SparseIdentity(int n) {
   return A;
 }
 
-void AppendBlockTriplets(
-    const MatrixXd& A, int i_offset, int j_offset,
-    std::vector<Eigen::Triplet<double> >* coeffs) {
-  for (int j = 0; j < A.cols(); j++) {
-    for (int i = 0; i < A.rows(); i++) {
-      if (A(i,j) != 0)
-        coeffs->push_back(Eigen::Triplet<double>(i_offset+i, j_offset+j, A(i,j)));
-    }
-  }
-}
-
-void AppendBlockTriplets(
-    const SparseXd& A, int i_offset, int j_offset,
-    std::vector<Eigen::Triplet<double> >* coeffs) {
-  for (int k = 0; k < A.outerSize(); k++) {
-    for (SparseXd::InnerIterator iter(A, k); iter; ++iter) {
-      coeffs->push_back(
-          Eigen::Triplet<double>(i_offset+iter.row(), j_offset+iter.col(),
-                                 iter.value()));
-    }
-  }
-}
-
 VectorXd RowNorm(const SparseXd& A) {
   return static_cast<VectorXd>(A.cwiseProduct(A)*VectorXd::Ones(A.cols()))
       .array().sqrt();

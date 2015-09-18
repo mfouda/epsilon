@@ -29,12 +29,6 @@ bool IsDiagonal(const SparseXd& A);
 // True if A = [ aI; 0; bI; ...]
 bool IsBlockScalar(const SparseXd& A);
 
-// Extract the coefficients for an sparse or dense matrix
-void AppendBlockTriplets(const SparseXd& A, int i, int j,
-                         std::vector<Eigen::Triplet<double> >* coeffs);
-void AppendBlockTriplets(const MatrixXd& A, int i, int j,
-                         std::vector<Eigen::Triplet<double> >* coeffs);
-
 // Row and column norms of sparse matrices
 VectorXd RowNorm(const SparseXd& A);
 VectorXd ColNorm(const SparseXd& A);
