@@ -20,20 +20,40 @@ static PyObject* SolveError;
 
 extern "C" {
 
-// TODO(mwytock): Need to set the appropriate exceptions when passed incorrect
-// arguments.
-static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
+void WriteConstants(PyObject* data) {
+  // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
+  // to Py_DECREF() them.
+  Py_ssize_t pos = 0;
+  PyObject* key;
+  PyObject* value;
+  while (PyDict_Next(data, &pos, &key, &value)) {
+    const char* key_str = PyString_AsString(key);
+    const char* value_str = PyString_AsString(value);
+    CHECK(key_str);
+    CHECK(value_str);
+
+    {
+      std::unique_ptr<file::File> f = file::Open(key_str, file::kWriteMode);
+      f->Write(std::string(value_str, PyString_Size(value)));
+      f->Close();
+    }
+  }
+}
+
+static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
   const char* problem_str;
   const char* params_str;
   int problem_str_len, params_str_len;
   PyObject* data;
 
-  // solve(problem_str, params_str, data)
+  // prox_admm_solve(problem_str, params_str, data)
   if (!PyArg_ParseTuple(
           args, "s#s#O",
           &problem_str, &problem_str_len,
           &params_str, &params_str_len,
           &data)) {
+    // TODO(mwytock): Need to set the appropriate exceptions when passed
+    // incorrect arguments.
     return nullptr;
   }
 
@@ -44,27 +64,7 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
   if (!params.ParseFromArray(params_str, params_str_len))
     return nullptr;
 
-  // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
-  // to Py_DECREF() them.
-  Py_ssize_t pos = 0;
-  PyObject* key;
-  PyObject* value;
-  while (PyDict_Next(data, &pos, &key, &value)) {
-    const char* key_str = PyString_AsString(key);
-    if (!key_str)
-      return nullptr;
-
-    const char* value_str = PyString_AsString(value);
-    if (!value_str)
-      return nullptr;
-
-    {
-      std::unique_ptr<file::File> f = file::Open(key_str, file::kWriteMode);
-      f->Write(std::string(value_str, PyString_Size(value)));
-      f->Close();
-    }
-  }
-
+  WriteConstants(data);
   ProxADMMSolver solver(
       problem, params,
       std::unique_ptr<ParameterService>(new LocalParameterService));
@@ -101,14 +101,63 @@ static PyObject* prox_admm_solve(PyObject* self, PyObject* args) {
   return nullptr;
 }
 
-void handle_failure() {
+static PyObject* Prox(PyObject* self, PyObject* args) {
+  const char* f_expr_str;
+  const char* v_str;
+  int f_expr_str_len, v_str_len;
+  double lambda;
+  PyObject* data;
+
+  // prox(prox_name, expr_str, v_str, lambda)
+  if (!PyArg_ParseTuple(
+          args, "s#Os#d",
+          &f_expr_str, &f_expr_str_len,
+          &data,
+          &v_str, &v_str_len,
+          &lambda)) {
+    // TODO(mwytock): Need to set the appropriate exceptions when passed
+    // incorrect arguments.
+    return nullptr;
+  }
+
+  Expression f_expr;
+  if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
+    return nullptr;
+
+  VariableOffsetMap var_map;
+  var_map.Insert(f_expr);
+
+  WriteConstants(data);
+  std::unique_ptr<VectorOperator> op = CreateProxOperator(
+      lambda, f_expr, var_map);
+
+  if (!setjmp(failure_buf)) {
+    op->Init();
+    Eigen::VectorXd x = op->Apply(
+        Eigen::Map<const Eigen::VectorXd>(
+            reinterpret_cast<const double*>(v_str),
+            v_str_len / sizeof(double)));
+
+    PyObject* retval = Py_BuildValue(
+        "s#", reinterpret_cast<const char*>(x.data()), x.rows()*sizeof(double));
+    return retval;
+  }
+
+  PyErr_SetString(SolveError, "CHECK failed");
+  return nullptr;
+}
+
+
+void HandleFailure() {
   // TODO(mwytock): Dump stack trace here
   longjmp(failure_buf, 1);
 }
 
 static PyMethodDef SolveMethods[] = {
-  {"prox_admm_solve", prox_admm_solve, METH_VARARGS,
+  {"prox_admm_solve", ProxADMMSolve, METH_VARARGS,
    "Solve a problem with epsilon."},
+  {"prox", Prox, METH_VARARGS,
+   "Test a proximal operator."},
   {nullptr, nullptr, 0, nullptr}
 };
 
@@ -121,7 +170,7 @@ PyMODINIT_FUNC init_solve() {
       FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    google::InstallFailureFunction(&handle_failure);
+    google::InstallFailureFunction(&HandleFailure);
 
     initialized = true;
   }
@@ -131,7 +180,7 @@ PyMODINIT_FUNC init_solve() {
     return;
 
   SolveError = PyErr_NewException(
-      const_cast<char*>("solve.error"), nullptr, nullptr);
+      const_cast<char*>("_solve.error"), nullptr, nullptr);
   Py_INCREF(SolveError);
   PyModule_AddObject(m, "error", SolveError);
 }

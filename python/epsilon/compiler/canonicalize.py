@@ -122,7 +122,7 @@ def prox_equality_constraint(expr):
         all(arg.curvature.curvature_type == Curvature.AFFINE or
             arg.curvature.curvature_type == Curvature.CONSTANT
             for arg in expr.arg)):
-        expr.proximal_operator.name = "EqualityConstraintProx"
+        expr.proximal_operator.name = "LinearEqualityProx"
         yield expr
 
 def prox_affine(expr):

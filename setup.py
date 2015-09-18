@@ -91,8 +91,9 @@ solve = Extension(
     libraries = ["protobuf", "glog"],
 )
 
-# NOTE(mwytock): Make sure the linker doesn't prune functions that are
-# indirectly used via registration (e.g. proximal operator library).
+# NOTE(mwytock): Need to pull in all symbols from libepsilon.a because these
+# include things that are used indirectly via registration (e.g. the proximal
+# operator library)
 if platform.system() == "Darwin":
     solve.extra_link_args += [
         "-all_load", "build-cc/libepsilon.a"]

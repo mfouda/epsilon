@@ -9,6 +9,7 @@ from epsilon import solve
 from epsilon.problems import covsel
 from epsilon.problems import lasso
 from epsilon.problems import tv_smooth
+from epsilon.problems import basis_pursuit
 from epsilon.problems.problem_instance import ProblemInstance
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
@@ -31,6 +32,7 @@ class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
 Column.__new__.__defaults__ = (None, None, None, False)
 
 PROBLEMS = [
+    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
@@ -51,6 +53,9 @@ def print_result(*args):
 
 def run_benchmarks(problems):
     for problem in problems:
+        if args.problem and problem.name != args.problem:
+            continue
+
         cvxpy_prob = problem.create()
 
         t0 = time.time()
@@ -70,7 +75,10 @@ def print_benchmarks(problems):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scs", action="store_true")
+    parser.add_argument("--problem")
     args = parser.parse_args()
+    print_benchmarks(PROBLEMS)
 else:
     args = argparse.Namespace()
     args.scs = False
+    args.problem = ""
