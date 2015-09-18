@@ -81,6 +81,12 @@ def prox_add(expr):
                 yield prox_expr
 
 # Rules for known proximal operators
+def prox_affine(expr):
+    if (expr.curvature.curvature_type == Curvature.CONSTANT or
+        expr.curvature.curvature_type == Curvature.AFFINE):
+        expr.proximal_operator.name = "AffineProx"
+        yield expr
+
 def prox_least_squares(expr):
     if (expr.expression_type == Expression.POWER and
         expr.arg[0].expression_type == Expression.NORM_P and
@@ -119,6 +125,35 @@ def prox_exp(expr):
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
+def prox_huber(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.HUBER):
+        expr.proximal_operator.name = "HuberProx"
+        if expr.arg[0].arg[0].curvature.elementwise:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
+                yield prox_expr
+
+def prox_logistic(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.ADD and
+        len(expr.arg[0].arg) == 2):
+
+        if expr.arg[0].arg[0].expression_type == Expression.CONSTANT:
+            arg = expr.arg[0].arg[1].arg[0]
+        elif expr.arg[0].arg[1].expression_type == Expression.CONSTANT:
+            arg = expr.arg[0].arg[0].arg[0]
+        else:
+            return
+
+        expr.proximal_operator.name = "LogisticProx"
+        if arg.curvature.elementwise:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, arg):
+                yield prox_expr
+
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO and
@@ -128,11 +163,7 @@ def prox_equality_constraint(expr):
         expr.proximal_operator.name = "LinearEqualityProx"
         yield expr
 
-def prox_affine(expr):
-    if (expr.curvature.curvature_type == Curvature.CONSTANT or
-        expr.curvature.curvature_type == Curvature.AFFINE):
-        expr.proximal_operator.name = "AffineProx"
-        yield expr
+
 
 # Matrix rules, f(alpha*X)
 def prox_norm12(expr):

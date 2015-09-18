@@ -95,6 +95,7 @@ message Expression {
     MAX = 53;
     LOG = 54;
     EXP = 55;
+    HUBER = 56;
 
     // Vector functions
     NORM_P = 100;
