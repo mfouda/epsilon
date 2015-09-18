@@ -9,6 +9,7 @@ from epsilon.problems import huber
 from epsilon.problems import lasso
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
+from epsilon.problems import ls_mae
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
 
@@ -28,6 +29,10 @@ from epsilon.problems.problem_instance import ProblemInstance
 # TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
 # support more than one equality constraint
 # ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
+#
+# TODO(mwytock): Need to support proximal operators on more than one  variable
+# ProblemInstance("ls_mae", ls_mae.create, dict(m=10, n=5))
+
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -36,6 +41,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
 ]
+
 
 def get_problems():
     return PROBLEMS
