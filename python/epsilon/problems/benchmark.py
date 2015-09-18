@@ -17,7 +17,8 @@ class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
 
     @property
     def header(self):
-        header_fmt = " %" + str(self.width-2) + "s "
+        align = "" if self.right else "-"
+        header_fmt = " %" + align + str(self.width-2) + "s "
         return header_fmt % self.name
 
     @property
@@ -39,7 +40,7 @@ PROBLEMS = [
 ]
 
 COLUMNS = [
-    Column("Problem",   10, "%-10s"),
+    Column("Problem",   15, "%-15s"),
     Column("Time",      8,  "%7.2fs", right=True),
     Column("Objective", 11, "%11.2e", right=True),
 ]

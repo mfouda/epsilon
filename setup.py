@@ -112,7 +112,7 @@ setup(
     package_data = {"": ["problems/baby.jpg"]},
     ext_modules = [solve],
     install_requires = [
-        "cvxpy==0.2.28",
+        "cvxpy==0.3.0",
         "protobuf==3.0.0a3"
     ],
     cmdclass = {

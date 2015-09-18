@@ -10,8 +10,8 @@ class LeastSquaresProx final : public ProxOperator {
  protected:
   void Init(const ProxOperatorArg& arg) override {
     // Expression tree:
-    // POWER (p: 2)
-    //   NORM_P (p: 2)
+    // SUM
+    //   POWER (p: 2)
     //     AFFINE (x)
 
     // Get affine function

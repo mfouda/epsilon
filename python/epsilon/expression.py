@@ -147,7 +147,7 @@ def indicator(cone_type, *args):
 def norm_pq(x, p, q):
     return Expression(
         expression_type=Expression.NORM_PQ,
-        size=Size(dim=[1, 2]),
+        size=Size(dim=[1, 1]),
         arg=[x], p=p, q=q)
 
 def power(x, p):
@@ -155,6 +155,12 @@ def power(x, p):
         expression_type=Expression.POWER,
         size=x.size,
         arg=[x], p=p)
+
+def sum_entries(x):
+    return Expression(
+        expression_type=Expression.SUM,
+        size=Size(dim=[1, 1]),
+        arg=[x])
 
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))

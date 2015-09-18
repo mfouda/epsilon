@@ -99,6 +99,7 @@ message Expression {
 
     // Vector functions
     NORM_P = 100;
+    QUAD_OVER_LIN = 101;
 
     // Matrix functions
     LOG_DET = 200;

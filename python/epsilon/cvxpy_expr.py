@@ -20,6 +20,7 @@ from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.atoms.elementwise.power import power
 from cvxpy.atoms.log_det import log_det
 from cvxpy.atoms.pnorm import pnorm
+from cvxpy.atoms.quad_over_lin import quad_over_lin
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.expressions.constants.constant import Constant
@@ -46,6 +47,7 @@ EXPRESSION_TYPES = (
     (norm2_elemwise, E.NORM_2_ELEMENTWISE),
     (pnorm, E.NORM_P),
     (power, E.POWER),
+    (quad_over_lin, E.QUAD_OVER_LIN),
     (sum_entries, E.SUM),
     (trace, E.TRACE),
     (transpose, E.TRANSPOSE),

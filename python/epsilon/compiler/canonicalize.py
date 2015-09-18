@@ -87,11 +87,28 @@ def prox_affine(expr):
         expr.proximal_operator.name = "AffineProx"
         yield expr
 
-def prox_least_squares(expr):
+def prox_least_squares_quad_over_lin(expr):
+    if (expr.expression_type == Expression.QUAD_OVER_LIN and
+        expr.arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[1].constant.scalar == 1):
+
+        expr = sum_entries(power(expr.arg[0], 2))
+        expr.proximal_operator.name = "LeastSquaresProx"
+
+        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
+
+def prox_least_squares_square_pnorm(expr):
     if (expr.expression_type == Expression.POWER and
         expr.arg[0].expression_type == Expression.NORM_P and
         expr.p == 2 and expr.arg[0].p == 2):
+
+        expr = sum_entries(power(expr.arg[0].arg[0], 2))
         expr.proximal_operator.name = "LeastSquaresProx"
+
         if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
             yield expr
         else:
