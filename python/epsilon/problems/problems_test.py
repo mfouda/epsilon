@@ -4,13 +4,21 @@ import numpy as np
 
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
+from epsilon.problems import group_lasso
 from epsilon.problems import lasso
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
+
 from epsilon.problems.problem_instance import ProblemInstance
 
-# Gives wrong answer:
+# TODO(mwytock): gives wrong answer, maybe has to do with linearized ADMM?
 # ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
+#
+# TODO(mwytock): Need to extend prox_admm.cc to accept more than equality
+# constraint. Also, we should be smart about index(variable) nodes.
+# ProblemInstance(
+#    "group_lasso", group_lasso.create, dict(m=15, ni_max=5, K=10))
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),

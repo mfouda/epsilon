@@ -1,4 +1,10 @@
-"""Make sure objective terms are separable."""
+"""Make sure objective terms are separable.
+
+TODO(mwytock): Here we should deal better with nodes like
+(4, 1)    	        INDEX (key: [0:4, 0:1])
+(23, 1)   	          VARIABLE (variable_id: cvxpy:0)
+by just introducing a variable of size 4 and an equality constraint
+"""
 
 from collections import defaultdict
 

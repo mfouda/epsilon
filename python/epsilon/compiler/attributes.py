@@ -27,6 +27,11 @@ def is_scalar_multiple(expr):
     if expr.expression_type == Expression.VARIABLE:
         return True
 
+    if expr.expression_type == Expression.INDEX:
+        return all(arg.curvature.scalar_multiple or
+                   arg.curvature.curvature_type == Curvature.CONSTANT
+                   for arg in expr.arg)
+
     return False
 
 def add_attributes(expr):
