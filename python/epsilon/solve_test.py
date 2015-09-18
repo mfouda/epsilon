@@ -24,9 +24,6 @@ REL_TOL = {
     "ls_mae": 1e-3,
 }
 
-# TODO(mwytock): gives wrong answer, likely has to do with linearized ADMM?
-# ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-#
 # TODO(mwytock): Need to extend prox_admm.cc to accept more than equality
 # constraint. Also, we should be smart about index(variable) nodes.
 # ProblemInstance(
@@ -38,6 +35,9 @@ REL_TOL = {
 # TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
 # support more than one equality constraint
 # ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
+#
+# TODO(mwytock): gives wrong answer, likely has to do with linearized ADMM?
+# ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
