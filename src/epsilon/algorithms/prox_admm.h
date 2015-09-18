@@ -15,13 +15,21 @@
 #include "epsilon/vector/vector_util.h"
 
 struct ProxOperatorInfo {
-  bool linearized;
-  int i, n;
   std::unique_ptr<VectorOperator> op;
 
-  // Maps R^m -> R^ni for input to prox operator
+  // Holds the block of the constraint matrix
+  SparseXd Ai;
+
+  // Maps R^m -> R^ni for input to prox operator.
   SparseXd B;
+
+  // Maps R^n -> R^ni for output of prox operator
+  SparseXd V;
+
+  // For linearization
+  bool linearized;
   double mu;
+
   VariableOffsetMap var_map;
 };
 
@@ -61,7 +69,7 @@ private:
   Eigen::VectorXd b_;
 
   // Precomputed
-  VariableOffsetMap var_offset_map_;
+  VariableOffsetMap var_map_;
   std::vector<ProxOperatorInfo> prox_ops_;
 };
 

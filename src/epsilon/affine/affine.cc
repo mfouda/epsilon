@@ -148,7 +148,7 @@ void BuildAffineOperatorImpl(
   if (expr.expression_type() == Expression::CONSTANT) {
     b->Add(ReadConstant(L, expr.constant()));
   } else if (expr.expression_type() == Expression::VARIABLE) {
-    A->Add(L, 0, offset_map.Get(expr));
+    A->Add(L, 0, offset_map.Get(expr.variable().variable_id()));
   } else if (expr.expression_type() == Expression::ADD) {
     for (const Expression& arg : expr.arg())
       BuildAffineOperatorImpl(arg, offset_map, L, A, b);
@@ -277,4 +277,19 @@ SparseXd GetSparseAffineOperator(
   CHECK(b.is_zero());
   CHECK(A.is_sparse());
   return A.sparse();
+}
+
+SparseXd GetProjection(
+    const VariableOffsetMap& a, const VariableOffsetMap& b) {
+  std::vector<Eigen::Triplet<double> > coeffs;
+  for (auto iter : b.offsets()) {
+    const int i = iter.second;
+    const int j = a.Get(iter.first);
+    for (int k = 0; k < a.Size(iter.first); k++) {
+      coeffs.push_back(Eigen::Triplet<double>(i+k, j+k, 1));
+    }
+  }
+  SparseXd P(b.n(), a.n());
+  P.setFromTriplets(coeffs.begin(), coeffs.end());
+  return P;
 }

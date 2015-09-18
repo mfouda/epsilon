@@ -34,5 +34,8 @@ SparseXd GetSparseAffineOperator(
     const Expression& expr,
     const VariableOffsetMap& var_map);
 
+// Get orthogonal projection matrix so that P*x reorders x variables from the
+// offsets in a to those in b.
+SparseXd GetProjection(const VariableOffsetMap& a, const VariableOffsetMap& b);
 
 #endif  // EPSILON_OPERATORS_AFFINE_H

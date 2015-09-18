@@ -125,3 +125,30 @@ TEST(BuildAffineOperator, VStack) {
           expression::Variable(m, n, "y")}),
       A, Eigen::VectorXd::Zero(m*n*2));
 }
+
+TEST(GetProjection, Basic) {
+  VariableOffsetMap a;
+  Expression x = expression::Variable(4, 1, "x");
+  Expression y = expression::Variable(3, 1, "y");
+  a.Insert(x);
+  a.Insert(y);
+
+  {
+    VariableOffsetMap b;
+    b.Insert(x);
+    SparseXd P = GetProjection(a, b);
+    Eigen::MatrixXd expected_P = Eigen::MatrixXd::Zero(4, 7);
+    expected_P.block(0, 0, 4, 4) += Eigen::MatrixXd::Identity(4, 4);
+    EXPECT_TRUE(MatrixEquals(expected_P, P));
+  }
+
+  {
+    VariableOffsetMap b;
+    b.Insert(y);
+    SparseXd P = GetProjection(a, b);
+    Eigen::MatrixXd expected_P = Eigen::MatrixXd::Zero(3, 7);
+    expected_P.block(0, 4, 3, 3) += Eigen::MatrixXd::Identity(3, 3);
+    EXPECT_TRUE(MatrixEquals(expected_P, P));
+  }
+
+}

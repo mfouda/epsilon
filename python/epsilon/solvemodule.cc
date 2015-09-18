@@ -138,6 +138,8 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
             reinterpret_cast<const double*>(v_str),
             v_str_len / sizeof(double)));
 
+    // TODO(mwytock): Use VariableOffsetMap to map parameters to indices and
+    // return a dictionary here
     PyObject* retval = Py_BuildValue(
         "s#", reinterpret_cast<const char*>(x.data()), x.rows()*sizeof(double));
     return retval;

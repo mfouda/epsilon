@@ -20,8 +20,8 @@ ProxADMMSolver::ProxADMMSolver(
 
 void ProxADMMSolver::Init() {
   VLOG(2) << problem_.DebugString();
-  var_offset_map_.Insert(problem_);
-  n_ = var_offset_map_.n();
+  var_map_.Insert(problem_);
+  n_ = var_map_.n();
 
   // TODO(mwytock): Handle more general cases, 0 or >1 constraint
   CHECK_EQ(1, problem_.constraint_size());
@@ -44,7 +44,7 @@ void ProxADMMSolver::Init() {
   {
     DynamicMatrix A_tmp(m_, n_);
     DynamicMatrix b_tmp(m_, 1);
-    BuildAffineOperator(expr, var_offset_map_, &A_tmp, &b_tmp);
+    BuildAffineOperator(expr, var_map_, &A_tmp, &b_tmp);
     CHECK(A_tmp.is_sparse());
     A_ = A_tmp.sparse();
     b_ = b_tmp.AsDense();
@@ -75,22 +75,16 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   if (vars.size() == 0)
     return;
 
-  CHECK_EQ(1, vars.size());
-  const Expression& var_expr = *(*vars.begin());
-  const int i = var_offset_map_.Get(var_expr);
-  const int n = GetDimension(var_expr);
+  ProxOperatorInfo prox;
+  prox.var_map.Insert(expr);
+  prox.V = GetProjection(var_map_, prox.var_map);
+  prox.Ai = A_*prox.V.transpose();
+  const int n = prox.var_map.n();
 
-  ProxOperatorInfo info;
-  info.i = i;
-  info.n = n;
-  info.var_map.Insert(expr);
-
-  SparseXd Ai = A_.middleCols(i, n);
-  VLOG(2) << "InitProxOperator, Ai:\n" << MatrixDebugString(Ai);
-
-  if (IsBlockScalar(Ai)) {
-    info.B = SparseXd(n, m_);
-    info.linearized = false;
+  VLOG(2) << "InitProxOperator, Ai:\n" << MatrixDebugString(prox.Ai);
+  if (IsBlockScalar(prox.Ai)) {
+    prox.B = SparseXd(n, m_);
+    prox.linearized = false;
 
     // Case in which variable shows up in the equality contraint only through
     // scalar multiplication. We can combine multiple terms through the
@@ -103,45 +97,45 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     double alpha_squared = 0;
     // Iterate through first column in order to find the blocks where this
     // variable shows up in the constraints
-    for (SparseXd::InnerIterator iter(Ai, 0); iter; ++iter) {
+    for (SparseXd::InnerIterator iter(prox.Ai, 0); iter; ++iter) {
       CHECK(iter.value() != 0);
 
       const double alpha_i = iter.value();
       alpha_squared += alpha_i*alpha_i;
-      info.B.middleCols(iter.row(), n) = -alpha_i*SparseIdentity(n);
+      prox.B.middleCols(iter.row(), n) = -alpha_i*SparseIdentity(n);
     }
 
-    info.B *= 1/alpha_squared;
-    info.op = CreateProxOperator(
-        1/params_.rho()/alpha_squared, expr, info.var_map);
+    prox.B *= 1/alpha_squared;
+    prox.op = CreateProxOperator(
+        1/params_.rho()/alpha_squared, expr, prox.var_map);
   } else {
-    info.linearized = true;
+    prox.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
-    info.mu = 0.1;
-    info.op = CreateProxOperator(
-        info.mu, expr, info.var_map);
+    prox.mu = 0.1;
+    prox.op = CreateProxOperator(prox.mu, expr, prox.var_map);
   }
 
-  info.op->Init();
-  prox_ops_.emplace_back(std::move(info));
+  prox.op->Init();
+  prox_ops_.emplace_back(std::move(prox));
 }
 
 void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   VLOG(2) << "ApplyProxOperator";
 
-  const int i = prox.i;
-  const int n = prox.n;
-  const SparseXd& Ai = A_.middleCols(i, n);
-  Eigen::VectorXd Ai_xi_old = Ai*x_.segment(i, n);
+  const SparseXd& Ai = prox.Ai;
+  const SparseXd& B = prox.B;
+  const double mu = prox.mu;
 
+  Eigen::VectorXd xi_old = prox.V*x_;
+  Eigen::VectorXd xi;
   if (!prox.linearized) {
-    x_.segment(i, n) = prox.op->Apply(prox.B*(Ax_ - Ai_xi_old + b_ + u_));
+    xi = prox.op->Apply(B*(Ax_ - Ai*xi_old + b_ + u_));
   } else {
-    x_.segment(i, n) = prox.op->Apply(
-        x_.segment(i, n) - prox.mu*params_.rho()*Ai.transpose()*(Ax_ + u_));
+    xi = prox.op->Apply(xi_old - mu*params_.rho()*Ai.transpose()*(Ax_ + u_));
   }
 
-  Ax_ += Ai*x_.segment(i, n) - Ai_xi_old;
+  x_ += prox.V.transpose()*(xi - xi_old);
+  Ax_ += Ai*(xi - xi_old);
 }
 
 void ProxADMMSolver::Solve() {
@@ -179,7 +173,7 @@ void ProxADMMSolver::Solve() {
 
 void ProxADMMSolver::UpdateLocalParameters() {
   for (const Expression* expr : GetVariables(problem_)) {
-    const int i = var_offset_map_.Get(*expr);
+    const int i = var_map_.Get(expr->variable().variable_id());
     const int n = GetDimension(*expr);
     uint64_t param_id = VariableParameterId(
         problem_id(), expr->variable().variable_id());
@@ -198,10 +192,7 @@ void ProxADMMSolver::ComputeResiduals() {
 
   double max_Axi_norm = b_.norm();
   for (const ProxOperatorInfo& prox : prox_ops_) {
-    const int i = prox.i;
-    const int n = prox.n;
-    const SparseXd& Ai = A_.middleCols(i, n);
-    double Axi_norm = (Ai*x_.segment(i, n)).norm();
+    double Axi_norm = (prox.Ai*prox.V*x_).norm();
     if (Axi_norm > max_Axi_norm)
       max_Axi_norm = Axi_norm;
   }

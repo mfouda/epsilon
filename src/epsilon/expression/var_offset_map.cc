@@ -9,8 +9,10 @@ void VariableOffsetMap::Insert(const Expression& expr) {
     const std::string& var_id = expr.variable().variable_id();
     auto iter = offsets_.find(var_id);
     if (iter == offsets_.end()) {
+      int size = GetDimension(expr);
       offsets_.insert(make_pair(var_id, n_));
-      n_ += GetDimension(expr);
+      sizes_.insert(make_pair(var_id, size));
+      n_ += size;
     }
   }
 
@@ -24,10 +26,14 @@ void VariableOffsetMap::Insert(const Problem& problem) {
     Insert(constr);
 }
 
-int VariableOffsetMap::Get(const Expression& expr) const {
-  CHECK_EQ(expr.expression_type(), Expression::VARIABLE);
-  const std::string& var_id = expr.variable().variable_id();
+int VariableOffsetMap::Get(const std::string& var_id) const {
   auto iter = offsets_.find(var_id);
   CHECK(iter != offsets_.end());
+  return iter->second;
+}
+
+int VariableOffsetMap::Size(const std::string& var_id) const {
+  auto iter = sizes_.find(var_id);
+  CHECK(iter != sizes_.end());
   return iter->second;
 }
