@@ -171,18 +171,6 @@ def prox_logistic(expr):
             for prox_expr in transform_epigraph(expr, arg):
                 yield prox_expr
 
-def prox_equality_constraint(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.ZERO and
-        all(arg.curvature.curvature_type == Curvature.AFFINE or
-            arg.curvature.curvature_type == Curvature.CONSTANT
-            for arg in expr.arg)):
-        expr.proximal_operator.name = "LinearEqualityProx"
-        yield expr
-
-
-
-# Matrix rules, f(alpha*X)
 def prox_norm12(expr):
     if (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
@@ -208,6 +196,25 @@ def prox_neg_log_det(expr):
             yield expr
         else:
             raise NotImplementedError()
+
+# Rules for epigraph forms
+def prox_equality_constraint(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.ZERO):
+
+        expr.proximal_operator.name = "LinearEqualityProx"
+        if all(arg.curvature.curvature_type == Curvature.AFFINE or
+               arg.curvature.curvature_type == Curvature.CONSTANT
+               for arg in expr.arg):
+            yield expr
+
+def prox_non_negative(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.NON_NEGATIVE):
+
+        expr.proximal_operator.name = "NonNegativeProx"
+        if all(arg.curvature.scalar_multiple for arg in expr.arg):
+            yield expr
 
 def prox_epigraph(expr):
     if is_epigraph(expr):
