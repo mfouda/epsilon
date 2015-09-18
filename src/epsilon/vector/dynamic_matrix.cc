@@ -7,6 +7,17 @@ void DynamicMatrix::RightMultiply(const DynamicMatrix& B) {
           << "\nB:\n"
           << B.DebugString();
 
+  // Handle multiplying by a scalar represented in a 1x1 matrix
+  if (B.rows() == 1 && B.cols() == 1) {
+    double alpha = B.is_sparse_ ? B.sparse_.coeff(0,0) : B.dense_.coeff(0,0);
+    if (is_sparse_)
+      sparse_ *= alpha;
+    else
+      dense_ *= alpha;
+
+    return;
+  }
+
   CHECK_EQ(cols(), B.rows());
   if (is_sparse_ && B.is_sparse_) {
     sparse_ = sparse_*B.sparse_;

@@ -51,6 +51,7 @@ common_cc = \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear_equality.cc \
 	epsilon/prox/negative_log_det.cc \
+	epsilon/prox/non_negative.cc \
 	epsilon/prox/norm_l1.cc \
 	epsilon/prox/norm_l1_l2.cc \
 	epsilon/prox/norm_l2.cc \

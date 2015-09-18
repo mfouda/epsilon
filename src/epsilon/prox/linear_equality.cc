@@ -18,11 +18,10 @@ public:
     BuildAffineOperator(arg.f_expr().arg(0), arg.var_map(), &A, &b);
 
     CHECK(!A.is_sparse()) << "Sparse A not implemented";
-    CHECK(!b.is_sparse()) << "Sparse b not implemented";
     CHECK(m <= n) << "m <= n not implemented";
 
     A_ = A.dense();
-    b_ = -b.dense();
+    b_ = -b.AsDense();
     AAT_solver_.compute(A_*A_.transpose());
     CHECK_EQ(AAT_solver_.info(), Eigen::Success);
   }

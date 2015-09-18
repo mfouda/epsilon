@@ -234,6 +234,43 @@ void BuildAffineOperator(
       expr, offsets, DynamicMatrix::FromSparse(SparseIdentity(m)), A, b);
 }
 
+void GetDiagonalAffineOperator(
+    const Expression& expr,
+    const VariableOffsetMap& var_map,
+    Eigen::VectorXd* a,
+    Eigen::VectorXd* b_out) {
+  const int m = GetDimension(expr);
+  const int n = var_map.n();
+  CHECK_EQ(m, n);
+
+  DynamicMatrix A = DynamicMatrix::Zero(m, n);
+  DynamicMatrix b = DynamicMatrix::FromDense(Eigen::VectorXd::Zero(m));
+  BuildAffineOperator(expr, var_map, &A, &b);
+
+  CHECK(A.is_sparse() && IsDiagonal(A.sparse()));
+  *a = A.sparse().diagonal();
+  *b_out = b.AsDense();
+}
+
+void GetScalarAffineOperator(
+    const Expression& expr,
+    const VariableOffsetMap& var_map,
+    double* alpha,
+    Eigen::VectorXd* b_out) {
+
+  const int m = GetDimension(expr);
+  const int n = var_map.n();
+  CHECK_EQ(m, n) << "\n" << expr.DebugString();
+
+  DynamicMatrix A = DynamicMatrix::Zero(m, n);
+  DynamicMatrix b = DynamicMatrix::FromDense(Eigen::VectorXd::Zero(m));
+  BuildAffineOperator(expr, var_map, &A, &b);
+
+  CHECK(A.is_sparse() && IsBlockScalar(A.sparse()));
+  *alpha = A.sparse().coeff(0, 0);
+  *b_out = b.AsDense();
+}
+
 SparseXd GetSparseAffineOperator(
     const Expression& expr,
     const VariableOffsetMap& var_map) {

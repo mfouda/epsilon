@@ -28,8 +28,17 @@ def expr_vars(expr):
 
 def add(*args):
     assert len(args) > 0
-    for i in range(len(args),1):
-        assert args[0].size == args[i].size
+
+    size = args[0].size
+    for i in range(1, len(args)):
+        if args[i].size == size:
+            continue
+
+        if size.dim[0]*size.dim[1] == 1:
+            size = args[i].size
+            continue
+
+        assert False, "adding incompatible sizes"
 
     argc = [arg.curvature.curvature_type for arg in args]
     C = Curvature
@@ -47,7 +56,7 @@ def add(*args):
     return Expression(
         expression_type=Expression.ADD,
         arg=args,
-        size=args[0].size,
+        size=size,
         curvature=Curvature(curvature_type=curvature))
 
 def multiply(*args):

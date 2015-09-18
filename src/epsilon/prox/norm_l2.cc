@@ -36,6 +36,7 @@ public:
     //   VARIABLE (t)
     //   NORM_P (p: 2)
     //     VARIABLE (x)
+
     A_ = GetSparseAffineOperator(arg.f_expr().arg(0), arg.var_map());
     B_ = GetSparseAffineOperator(arg.f_expr().arg(1).arg(0), arg.var_map());
   }

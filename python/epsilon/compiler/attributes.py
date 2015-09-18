@@ -5,6 +5,7 @@ already computed by cvxpy.
 """
 from itertools import chain
 
+from epsilon.expression import dimension
 from epsilon.expression_pb2 import Curvature, Expression
 
 def is_elementwise(expr):
@@ -22,6 +23,11 @@ def is_scalar_multiple(expr):
     if expr.expression_type in (
             Expression.VARIABLE,
             Expression.CONSTANT):
+        return True
+
+    if (expr.expression_type == Expression.MULTIPLY and
+        dimension(expr.arg[0]) == 1 and
+        expr.arg[1].curvature.scalar_multiple):
         return True
 
     if expr.expression_type in (
