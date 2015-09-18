@@ -6,8 +6,9 @@ from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
 from epsilon.problems import group_lasso
 from epsilon.problems import huber
-from epsilon.problems import logreg_l1
 from epsilon.problems import lasso
+from epsilon.problems import logreg_l1
+from epsilon.problems import lp
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
 
@@ -33,6 +34,10 @@ PROBLEMS = [
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
+]
+
+PROBLEMS = [
+    ProblemInstance("lp", lp.create, dict(m=10, n=20))
 ]
 
 def get_problems():
