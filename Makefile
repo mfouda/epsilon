@@ -126,7 +126,7 @@ ifeq ($(SYSTEM),Darwin)
 	ranlib $@
 endif
 
-$(build_dir)/%: $(build_dir)/%.o $(common_obj) $(proto_obj)
+$(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(common_obj) $(proto_obj)
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
 # Test

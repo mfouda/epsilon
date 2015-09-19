@@ -62,6 +62,7 @@ void ProxADMMSolver::Init() {
   x_prev_ = Eigen::VectorXd::Zero(n_);
   x_param_prev_ = Eigen::VectorXd::Zero(n_);
   Ax_ = Eigen::VectorXd::Zero(m_);
+  Ai_xi_norm_.resize(prox_ops_.size());
 }
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
@@ -116,9 +117,14 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   }
 
   prox.op->Init();
+  prox.i = prox_ops_.size();
   prox_ops_.emplace_back(std::move(prox));
 }
 
+// TODO(mwytock): This involves a lot of matrix-vector products with Ai and V
+// which are typically scalar identity matrices (by definition, in the case of
+// applying the proximal operator directly). Find a way to optimize this better
+// with more intelligence in the initialization phase.
 void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   VLOG(2) << "ApplyProxOperator";
 
@@ -128,14 +134,18 @@ void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
 
   Eigen::VectorXd xi_old = prox.V*x_;
   Eigen::VectorXd xi;
+  Eigen::VectorXd Ai_xi_old = Ai*xi_old;
+
   if (!prox.linearized) {
-    xi = prox.op->Apply(B*(Ax_ - Ai*xi_old + b_ + u_));
+    xi = prox.op->Apply(B*(Ax_ - Ai_xi_old + b_ + u_));
   } else {
     xi = prox.op->Apply(xi_old - mu*params_.rho()*Ai.transpose()*(Ax_ + u_));
   }
 
+  Eigen::VectorXd Ai_xi = Ai*xi;
+  Ai_xi_norm_[prox.i] = Ai_xi.norm();
   x_ += prox.V.transpose()*(xi - xi_old);
-  Ax_ += Ai*(xi - xi_old);
+  Ax_ += Ai_xi - Ai_xi_old;
 }
 
 void ProxADMMSolver::Solve() {
@@ -190,18 +200,14 @@ void ProxADMMSolver::ComputeResiduals() {
   const double rel_tol = params_.rel_tol();
   const double rho = params_.rho();
 
-  double max_Axi_norm = b_.norm();
-  for (const ProxOperatorInfo& prox : prox_ops_) {
-    double Axi_norm = (prox.Ai*prox.V*x_).norm();
-    if (Axi_norm > max_Axi_norm)
-      max_Axi_norm = Axi_norm;
-  }
+  double max_Ai_xi_norm = *std::max_element(
+      Ai_xi_norm_.begin(), Ai_xi_norm_.end());
 
   // TODO(mwytock): Revisit this a bit more carefully, especially computation of
   // s_norm and epsilon_primal
   r->set_r_norm((Ax_ + b_).norm());
   r->set_s_norm((x_ - x_prev_).norm());
-  r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Axi_norm);
+  r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
   r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(A_.transpose()*u_).norm());
 
   if (r->r_norm() <= r->epsilon_primal() &&

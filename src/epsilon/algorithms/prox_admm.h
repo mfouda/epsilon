@@ -15,6 +15,7 @@
 #include "epsilon/vector/vector_util.h"
 
 struct ProxOperatorInfo {
+  int i;
   std::unique_ptr<VectorOperator> op;
 
   // Holds the block of the constraint matrix
@@ -63,6 +64,7 @@ private:
   int iter_;
   Eigen::VectorXd x_, x_prev_, x_param_prev_, u_, Ax_;
   SolverStatus status_;
+  std::vector<double> Ai_xi_norm_;
 
   // Equality constraints
   SparseXd A_;
