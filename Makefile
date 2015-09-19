@@ -56,6 +56,7 @@ common_cc = \
 	epsilon/prox/norm_l1_l2.cc \
 	epsilon/prox/norm_l2.cc \
 	epsilon/prox/prox.cc \
+	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
 	epsilon/vector/dynamic_matrix.cc \
@@ -80,6 +81,9 @@ tests = \
 	epsilon/prox/prox_test \
 	epsilon/vector/vector_test
 
+binaries = \
+	epsilon/benchmark
+
 libs = epsilon
 
 # Google test
@@ -91,13 +95,14 @@ proto_obj = $(proto:%.proto=$(build_dir)/%.pb.o)
 common_obj = $(common_cc:%.cc=$(build_dir)/%.o)
 common_test_obj = $(common_test_cc:%.cc=$(build_dir)/%.o)
 build_tests = $(tests:%=$(build_dir)/%)
+build_binaries = $(binaries:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
 build_libs = $(libs:%=$(build_dir)/lib%.a)
 
 # Stop make from deleting intermediate files
 .SECONDARY:
 
-all: $(build_libs)
+all: $(build_libs) $(build_binaries)
 
 clean:
 	rm -rf $(build_dir)
@@ -120,6 +125,9 @@ $(build_dir)/libepsilon.a: $(common_obj) $(proto_obj)
 ifeq ($(SYSTEM),Darwin)
 	ranlib $@
 endif
+
+$(build_dir)/%: $(build_dir)/%.o $(common_obj) $(proto_obj)
+	$(LINK.o) $^ $(LDLIBS) -o $@
 
 # Test
 test: $(build_tests)
