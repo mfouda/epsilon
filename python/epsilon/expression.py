@@ -4,14 +4,6 @@ from epsilon.expression_pb2 import *
 
 # Accessors
 
-def scalar_constant(expr):
-    if len(expr.arg) == 0:
-        assert expr.expression_type == Expression.CONSTANT
-        assert dimension(expr) == 1
-        return expr.constant.scalar
-
-    assert False, "not implemented"
-
 def dimension(expr):
     return expr.size.dim[0]*expr.size.dim[1]
 

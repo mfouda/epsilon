@@ -8,11 +8,11 @@ by just introducing a variable of size 4 and an equality constraint
 
 from collections import defaultdict
 
-from epsilon.compiler import compiler_error
+from epsilon import error
 from epsilon.expression_pb2 import Expression
 from epsilon.expression import *
 
-class SeparateError(compiler_error.CompilerError):
+class SeparateError(error.ProblemError):
     pass
 
 def rename_var(old_id, new_id, expr):
