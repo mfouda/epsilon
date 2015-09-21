@@ -48,6 +48,11 @@ PROBLEMS = [
     ProblemInstance("ls_mae", ls_mae.create, dict(m=10, n=5))
 ]
 
+PROBLEMS = [
+    ProblemInstance(
+        "group_lasso", group_lasso.create, dict(m=15, ni_max=5, K=10))
+]
+
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 

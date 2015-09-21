@@ -23,5 +23,4 @@ def compile(problem):
     for transform in TRANSFORMS:
         problem = transform(problem)
         logging.debug("Intermediate:\n%s", problem_str(problem))
-    logging.debug("Compiler output:\n%s", problem_str(problem))
     return problem
