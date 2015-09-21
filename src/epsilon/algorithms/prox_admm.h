@@ -44,6 +44,8 @@ public:
 
 private:
   void Init();
+  void InitVariables();
+  void InitConstraints();
   void InitProxOperator(const Expression& expr);
   void ApplyProxOperator(const ProxOperatorInfo& op);
   void ComputeResiduals();

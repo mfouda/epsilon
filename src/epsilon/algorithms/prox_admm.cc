@@ -18,38 +18,37 @@ ProxADMMSolver::ProxADMMSolver(
       params_(params),
       parameter_service_(std::move(parameter_service)) {}
 
-void ProxADMMSolver::Init() {
-  VLOG(2) << problem_.DebugString();
+void ProxADMMSolver::InitVariables() {
   var_map_.Insert(problem_);
   n_ = var_map_.n();
+}
 
-  // TODO(mwytock): Handle more general cases, 0 or >1 constraint
-  CHECK_EQ(1, problem_.constraint_size());
-  const Expression& constr = problem_.constraint(0);
-  CHECK_EQ(Expression::INDICATOR, constr.expression_type());
-  CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
+void ProxADMMSolver::InitConstraints() {
+  std::vector<Eigen::Triplet<double> > A_coeffs;
+  m_ = 0;
+  for (const Expression& constr : problem_.constraint()) {
+    CHECK_EQ(Expression::INDICATOR, constr.expression_type());
+    CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
+    CHECK_EQ(1, constr.arg_size());
 
-  // TODO(mwytock): This transform should be handled in a final pass by the
-  // compiler.
-  Expression expr;
-  if (constr.arg_size() == 1) {
-    expr = GetOnlyArg(constr);
-  } else if (constr.arg_size() == 2) {
-    expr = expression::Add(constr.arg(0), expression::Negate(constr.arg(1)));
-  } else {
-    LOG(FATAL) << "Constraint has more than 2 args\n" << constr.DebugString();
+    const Expression& arg = constr.arg(0);
+    const int mi = GetDimension(arg);
+    DynamicMatrix A(mi, n_);
+    DynamicMatrix b(mi, 1);
+    BuildAffineOperator(arg, var_map_, &A, &b);
+    CHECK(A.is_sparse());
+    AppendBlockTriplets(A.sparse(), m_, 0, &A_coeffs);
+    b_ = Stack(b_, b.AsDense());
+    m_ += mi;
   }
+  A_ = SparseXd(m_, n_);
+  A_.setFromTriplets(A_coeffs.begin(), A_coeffs.end());
+}
 
-  m_ = GetDimension(expr);
-  {
-    DynamicMatrix A_tmp(m_, n_);
-    DynamicMatrix b_tmp(m_, 1);
-    BuildAffineOperator(expr, var_map_, &A_tmp, &b_tmp);
-    CHECK(A_tmp.is_sparse());
-    A_ = A_tmp.sparse();
-    b_ = b_tmp.AsDense();
-  }
-
+void ProxADMMSolver::Init() {
+  VLOG(2) << problem_.DebugString();
+  InitVariables();
+  InitConstraints();
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_;
 
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());

@@ -212,3 +212,15 @@ bool IsBlockScalar(const SparseXd& A) {
   return B.nonZeros() == 0;
   return false;
 }
+
+void AppendBlockTriplets(
+    const SparseXd& A, int i_offset, int j_offset,
+    std::vector<Eigen::Triplet<double> >* coeffs) {
+  for (int k = 0; k < A.outerSize(); k++) {
+    for (SparseXd::InnerIterator iter(A, k); iter; ++iter) {
+      coeffs->push_back(
+          Eigen::Triplet<double>(i_offset+iter.row(), j_offset+iter.col(),
+                                 iter.value()));
+    }
+  }
+}

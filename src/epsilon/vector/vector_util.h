@@ -50,5 +50,8 @@ std::string VectorDebugString(const VectorXd& x);
 std::string MatrixDebugString(const MatrixXd& A);
 std::string SparseMatrixDebugString(const SparseXd& A);
 
+void AppendBlockTriplets(const SparseXd& A, int i, int j,
+                         std::vector<Eigen::Triplet<double> >* coeffs);
+
 
 #endif  // UTIL_VECTOR_H
