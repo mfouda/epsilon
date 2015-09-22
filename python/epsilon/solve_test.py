@@ -14,6 +14,7 @@ from epsilon.problems import lasso
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
 from epsilon.problems import ls_mae
+from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
 from epsilon.problems.problem_instance import ProblemInstance
@@ -25,6 +26,9 @@ REL_TOL = {
     "group_lasso": 1e-3
 }
 
+# TODO(mwytock): Need L1/Linf proximal operator
+# ProblemInstance("quantile", quantile.create, dict(m=20, n=10, k=3))
+#
 # TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
 # support more than one equality constraint
 # ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))

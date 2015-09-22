@@ -23,7 +23,8 @@ def add(*args):
 
     size = args[0].size
     for i in range(1, len(args)):
-        if args[i].size == size:
+        if (args[i].size == size or
+            dimension(args[i]) == 1):
             continue
 
         if size.dim[0]*size.dim[1] == 1:
@@ -181,3 +182,6 @@ def equality_constraint(a, b):
 
 def leq_constraint(a, b):
     return indicator(Cone.NON_NEGATIVE, b, a)
+
+def non_negative(x):
+    return indicator(Cone.NON_NEGATIVE, x)

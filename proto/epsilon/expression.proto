@@ -92,10 +92,9 @@ message Expression {
     ABS = 50;
     POWER = 51;
     SQUARE_ROOT = 52;
-    MAX = 53;
-    LOG = 54;
-    EXP = 55;
-    HUBER = 56;
+    LOG = 53;
+    EXP = 54;
+    HUBER = 55;
 
     // Vector functions
     NORM_P = 100;
@@ -105,6 +104,7 @@ message Expression {
     LOG_DET = 200;
     NORM_PQ = 201;
     NORM_2_ELEMENTWISE = 202;
+    MAX_ELEMENTWISE = 203;
   }
   Type expression_type = 1;
   Size size = 2;

@@ -42,7 +42,7 @@ EXPRESSION_TYPES = (
     (index, E.INDEX),
     (log, E.LOG),
     (log_det, E.LOG_DET),
-    (max_elemwise, E.MAX),
+    (max_elemwise, E.MAX_ELEMENTWISE),
     (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
     (norm2_elemwise, E.NORM_2_ELEMENTWISE),
     (pnorm, E.NORM_P),

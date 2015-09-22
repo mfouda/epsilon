@@ -212,6 +212,22 @@ def prox_norm12(expr):
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
+def prox_norm1inf(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE):
+
+        # Rewrite this as l1/linf norm using reshape() and hstack()
+        m = dimension(expr.arg[0].arg[0])
+        arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
+        expr = norm_pq(arg, 1, float('inf'))
+
+        expr.proximal_operator.name = "NormL1LinfProx"
+        if arg.curvature.scalar_multiple:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
+
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
         expr.arg[0].expression_type == Expression.LOG_DET):
@@ -249,6 +265,18 @@ def prox_non_negative(expr):
         expr.proximal_operator.name = "NonNegativeProx"
         if all(arg.curvature.scalar_multiple for arg in expr.arg):
             yield expr
+        elif all(arg.curvature.curvature_type == Curvature.AFFINE or
+                 arg.curvature.curvature_type == Curvature.CONSTANT
+                 for arg in expr.arg):
+
+            add_expr = add(expr.arg[0], *(negate(arg) for arg in expr.arg[1:]))
+            m, n = add_expr.size.dim
+            y = variable(m, n, "canonicalize:non_negative:" + fp_expr(add_expr))
+
+            exprs = [non_negative(y), equality_constraint(y, add_expr)]
+            for expr in exprs:
+                for prox_expr in transform_expr(expr):
+                    yield prox_expr
 
 def prox_epigraph(expr):
     if is_epigraph(expr):
