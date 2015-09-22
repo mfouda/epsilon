@@ -67,11 +67,8 @@ void ProxADMMSolver::Init() {
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   VLOG(2) << "InitProxOperator:\n" << expr.DebugString();
 
-  // For now, we assume each prox function only operates on one variable but
-  // this can be relaxed.
-  VariableSet vars = GetVariables(expr);
-
   // TODO(mwytock): Should be pruned before getting here
+  VariableSet vars = GetVariables(expr);
   if (vars.size() == 0)
     return;
 
@@ -81,7 +78,7 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   prox.Ai = A_*prox.V.transpose();
   const int n = prox.var_map.n();
 
-  VLOG(2) << "InitProxOperator, Ai:\n" << MatrixDebugString(prox.Ai);
+  VLOG(2) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(prox.Ai);
   if (IsBlockScalar(prox.Ai)) {
     prox.B = SparseXd(n, m_);
     prox.linearized = false;
@@ -145,6 +142,9 @@ void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
   Ai_xi_norm_[prox.i] = Ai_xi.norm();
   x_ += prox.V.transpose()*(xi - xi_old);
   Ax_ += Ai_xi - Ai_xi_old;
+
+  VLOG(2) << "xi_old: " << VectorDebugString(xi_old);
+  VLOG(2) << "xi: " << VectorDebugString(xi);
 }
 
 void ProxADMMSolver::Solve() {

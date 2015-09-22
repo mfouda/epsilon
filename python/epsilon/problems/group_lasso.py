@@ -4,12 +4,12 @@ import numpy as np
 import numpy.linalg as LA
 import scipy.sparse as sp
 
-def create(m, ni_max, K):
+def create(m, ni, K):
     np.random.seed(0)
 
-    part = np.random.randint(0, ni_max, K)
+    part = np.random.randint(1, ni, K)
     n = np.sum(part)
-    p = 0.1
+    p = 0.2
 
     # Each part is pa[i]:pb[i]
     pb = np.cumsum(part)

@@ -18,7 +18,7 @@ class NormL2Prox final : public ProxOperator {
     if (v_norm >= lambda_) {
       return (1 - lambda_/v_norm)*v;
     } else {
-      return v;
+      return Eigen::VectorXd::Zero(v.rows());
     }
   }
 
