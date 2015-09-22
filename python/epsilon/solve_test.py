@@ -13,7 +13,7 @@ from epsilon.problems import huber
 from epsilon.problems import lasso
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
-from epsilon.problems import ls_mae
+from epsilon.problems import least_abs_dev
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_smooth
@@ -43,7 +43,7 @@ PROBLEMS = [
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
-    ProblemInstance("ls_mae", ls_mae.create, dict(m=10, n=5)),
+    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
 ]
 

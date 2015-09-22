@@ -56,19 +56,29 @@ nosetests epsilon
 python -m epsilon.problems.benchmark
 ```
 
-  Problem |   Time | Objective
-:-------- | ------:| ---------:
-covsel    |   0.38s|   3.68e+02
-lasso     |   3.83s|   1.63e+01
-tv_smooth |  17.32s|   1.15e+06
+ Problem       |   Time | Objective
+:------------- | ------:| ---------:
+basis_pursuit  |   1.41s|   1.44e+02
+covsel         |   0.38s|   3.63e+02
+group_lasso    |   5.03s|   1.61e+02
+huber          |  57.05s|   2.18e+03
+lasso          |   3.70s|   1.71e+01
+lp             |   0.40s|   7.77e+02
+least_abs_dev  |  35.68s|   7.18e+03
+tv_smooth      |  15.85s|   1.15e+06
 
 ### SCS
 ```
 python -m epsilon.problems.benchmark --scs
 ```
 
-  Problem |   Time | Objective
-:-------- | ------:| ---------:
-covsel    |  25.56s|   3.71e+02
-lasso     |  20.04s|   1.63e+01
-tv_smooth | 402.10s|   1.80e+06
+ Problem       |   Time | Objective
+:------------- | ------:| ---------:
+basis_pursuit  |  16.99s|   1.45e+02
+covsel         |  23.50s|   3.62e+02
+group_lasso    |  23.31s|   1.61e+02
+huber          |   3.39s|   2.18e+03
+lasso          |  22.02s|   1.63e+01
+lp             |   5.47s|   7.75e+02
+least_abs_dev  |   3.81s|   7.10e+03
+tv_smooth      | 372.86s|   1.69e+06
