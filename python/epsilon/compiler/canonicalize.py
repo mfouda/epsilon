@@ -198,6 +198,17 @@ def prox_neg_log_det(expr):
             raise NotImplementedError()
 
 # Rules for epigraph forms
+def prox_norm2_epigraph(expr):
+    if (is_epigraph(expr) and
+        expr.arg[1].expression_type == Expression.NORM_P and
+        expr.arg[1].p == 2):
+
+        expr.proximal_operator.name = "NormL2Epigraph"
+        if expr.arg[1].arg[0].curvature.scalar_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
+
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO):

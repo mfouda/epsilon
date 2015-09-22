@@ -78,6 +78,21 @@ def _test_norm2_simple(i, n):
     x1 = prox(cp.Problem(cp.Minimize(f)), v)
     np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
 
+def _test_norm2_epigraph(i, n):
+    np.random.seed(i)
+    v = np.random.randn(n)
+    s = np.random.randn()
+
+    x = cp.Variable(n)
+    t = cp.Variable(1)
+    c = [cp.norm2(x) <= t]
+    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                                cp.sum_squares(t - s))), c).solve()
+
+    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
+    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
+    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
+
 def test_linear_equality():
     for i in xrange(NUM_TRIALS):
         yield _test_linear_equality_simple, i, 5, 10
@@ -95,3 +110,7 @@ def test_norm2():
         yield _test_norm2_simple, i, 1
     for i in xrange(NUM_TRIALS):
         yield _test_norm2_simple, i, 10
+
+def test_norm2_epigraph():
+    for i in xrange(NUM_TRIALS):
+        yield _test_norm2_epigraph, i, 10
