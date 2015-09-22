@@ -111,6 +111,8 @@ def convert_expression(expr, proto, data_map):
                 key_proto.step = 1
     elif isinstance(expr, (power, pnorm)):
         proto.p = expr.p
+    elif isinstance(expr, huber):
+        proto.M = expr.M.value
 
     for expr_cls, expr_type in EXPRESSION_TYPES:
         if isinstance(expr, expr_cls):

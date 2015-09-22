@@ -114,21 +114,24 @@ message Expression {
   Sign sign = 4;
   Curvature curvature = 5;
 
+  ProximalOperator proximal_operator = 6;
+
   // CONSTANT, VARIABLE
-  Constant constant = 6;
-  Variable variable = 7;
+  Constant constant = 7;
+  Variable variable = 8;
 
   // INDEX
-  repeated Slice key = 8;
+  repeated Slice key = 9;
 
   // NORM_P, NORM_P_Q and POWER
-  double p = 9;
-  double q = 10;
+  double p = 10;
+  double q = 11;
 
   // INDICATOR
-  Cone cone = 11;
+  Cone cone = 12;
 
-  ProximalOperator proximal_operator = 12;
+  // HUBER
+  double M = 13;
 }
 
 // Arbitrary convex problem of the form

@@ -25,9 +25,6 @@ REL_TOL = {
     "group_lasso": 1e-3
 }
 
-# TODO(mwytock): Huber prox (or cone reduction) not implemented
-# ProblemInstance("huber", huber.create, dict(m=20, n=10))
-#
 # TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
 # support more than one equality constraint
 # ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
@@ -39,6 +36,7 @@ PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+    ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("ls_mae", ls_mae.create, dict(m=10, n=5)),

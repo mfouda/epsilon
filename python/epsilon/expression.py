@@ -136,7 +136,8 @@ def constant(m, n, scalar=0):
     return Expression(
         expression_type=Expression.CONSTANT,
         size=Size(dim=[m, n]),
-        constant=Constant(scalar=scalar))
+        constant=Constant(scalar=scalar),
+        curvature=Curvature(curvature_type=Curvature.CONSTANT))
 
 def indicator(cone_type, *args):
     return Expression(
@@ -151,11 +152,23 @@ def norm_pq(x, p, q):
         size=Size(dim=[1, 1]),
         arg=[x], p=p, q=q)
 
+def norm_p(x, p):
+    return Expression(
+        expression_type=Expression.NORM_P,
+        size=Size(dim=[1, 1]),
+        arg=[x], p=p)
+
 def power(x, p):
     return Expression(
         expression_type=Expression.POWER,
         size=x.size,
         arg=[x], p=p)
+
+def abs_val(x):
+    return Expression(
+        expression_type=Expression.ABS,
+        size=x.size,
+        arg=[x])
 
 def sum_entries(x):
     return Expression(

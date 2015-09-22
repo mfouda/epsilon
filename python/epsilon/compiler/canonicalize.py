@@ -45,10 +45,12 @@ def epigraph(f, t):
     else:
         raise CanonicalizeError("Unknown curvature", f)
 
+def fp_expr(expr):
+    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
+
 def epigraph_variable(expr):
-    expr_str = struct.pack("q", hash(expr.SerializeToString())).encode("hex")
     m, n = expr.size.dim
-    return variable(m, n, "canonicalize:" + expr_str)
+    return variable(m, n, "canonicalize:" + fp_expr(expr))
 
 def transform_epigraph(f_expr, g_expr):
     t_expr = epigraph_variable(g_expr)
@@ -98,7 +100,7 @@ def prox_least_squares_quad_over_lin(expr):
         if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
             yield expr
         else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
                 yield prox_expr
 
 def prox_least_squares_square_pnorm(expr):
@@ -112,7 +114,19 @@ def prox_least_squares_square_pnorm(expr):
         if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
             yield expr
         else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
+                yield prox_expr
+
+def prox_least_squares(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.POWER and
+        expr.arg[0].p == 2):
+
+        expr.proximal_operator.name = "LeastSquaresProx"
+        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
                 yield prox_expr
 
 def prox_norm1(expr):
@@ -145,11 +159,22 @@ def prox_exp(expr):
 def prox_huber(expr):
     if (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.HUBER):
-        expr.proximal_operator.name = "HuberProx"
-        if expr.arg[0].arg[0].curvature.elementwise:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
+
+        # Represent huber function as
+        # minimize   n^2 + 2M|s|
+        # subject to s + n = x
+        arg = expr.arg[0].arg[0]
+        m, n = arg.size.dim
+        square_var = variable(m, n, "canonicalize:huber_square:" + fp_expr(arg))
+        abs_var = variable(m, n, "canonicalize:huber_abs:" + fp_expr(arg))
+
+        exprs = [
+            equality_constraint(add(square_var, abs_var), arg),
+            sum_entries(power(square_var, 2)),
+            multiply(constant(1, 1, 2*expr.arg[0].M), norm_p(abs_var, 1))]
+
+        for expr in exprs:
+            for prox_expr in transform_expr(expr):
                 yield prox_expr
 
 def prox_logistic(expr):
