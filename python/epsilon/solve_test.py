@@ -22,7 +22,7 @@ from epsilon.problems.problem_instance import ProblemInstance
 # These problems need a higher relative accuracy for some reason
 REL_TOL = {
     "basis_pursuit": 1e-3,
-    "ls_mae": 1e-3,
+    "least_abs_dev": 1e-3,
     "group_lasso": 1e-3
 }
 
