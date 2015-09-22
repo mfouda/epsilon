@@ -206,8 +206,6 @@ def prox_norm2_epigraph(expr):
         expr.proximal_operator.name = "NormL2Epigraph"
         if expr.arg[1].arg[0].curvature.scalar_multiple:
             yield expr
-        else:
-            raise NotImplementedError()
 
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
