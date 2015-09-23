@@ -15,6 +15,8 @@ class VariableOffsetMap {
 
   int Get(const std::string& var_id) const;
   int Size(const std::string& var_id) const;
+  bool Contains(const std::string& var_id) const;
+
   int n() const { return n_; }
   std::unordered_map<std::string, int> offsets() const { return offsets_; }
 

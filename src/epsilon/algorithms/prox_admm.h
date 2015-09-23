@@ -8,18 +8,20 @@
 
 #include "epsilon/algorithms/solver.h"
 #include "epsilon/expression.pb.h"
+#include "epsilon/expression/expression_util.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/vector/vector_operator.h"
 #include "epsilon/parameters/parameter_service.h"
 #include "epsilon/solver_params.pb.h"
+#include "epsilon/vector/dynamic_matrix.h"
+#include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-struct ProxOperatorInfo {
+struct OperatorInfo {
   int i;
   std::unique_ptr<VectorOperator> op;
 
   // Holds the block of the constraint matrix
-  SparseXd Ai;
+  DynamicMatrix Ai;
 
   // Maps R^m -> R^ni for input to prox operator.
   SparseXd B;
@@ -30,8 +32,6 @@ struct ProxOperatorInfo {
   // For linearization
   bool linearized;
   double mu;
-
-  VariableOffsetMap var_map;
 };
 
 class ProxADMMSolver final : public Solver {
@@ -47,7 +47,9 @@ private:
   void InitVariables();
   void InitConstraints();
   void InitProxOperator(const Expression& expr);
-  void ApplyProxOperator(const ProxOperatorInfo& op);
+  void InitLeastSquares(const Expression& expr);
+
+  void ApplyOperator(const OperatorInfo& op);
   void ComputeResiduals();
   void LogStatus();
   void UpdateLocalParameters();
@@ -59,7 +61,7 @@ private:
   // Stores parameter
   std::unique_ptr<ParameterService> parameter_service_;
 
-  // Problem size and number of prox functions
+  // Problem size
   int m_, n_;
 
   // Iteration variables
@@ -69,12 +71,13 @@ private:
   std::vector<double> Ai_xi_norm_;
 
   // Equality constraints
-  SparseXd A_;
   Eigen::VectorXd b_;
 
   // Precomputed
+  VariableSet vars_in_prox_;
   VariableOffsetMap var_map_;
-  std::vector<ProxOperatorInfo> prox_ops_;
+  Expression constr_expr_;
+  std::vector<OperatorInfo> ops_;
 };
 
 

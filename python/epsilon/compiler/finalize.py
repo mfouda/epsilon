@@ -2,24 +2,23 @@
 
 from epsilon.expression import *
 
-def final_indicator(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.ZERO
-        and len(expr.arg) > 1):
-        add_expr = add(expr.arg[0], *(negate(arg) for arg in expr.arg[1:]))
-        expr.ClearField("arg")
-        expr.arg.add().CopyFrom(add_expr)
+def linear_equality_to_constraint(problem):
+    """Move all linear equalities to constraints.
 
-FINAL_RULES = [f for name, f in locals().items() if name.startswith("final_")]
-def transform_expr(expr):
-    for arg in expr.arg:
-        transform_expr(arg)
+    TODO(mwytock): This can likely go away if we rationalize constraints vs
+    indicator functions, i.e. by unifying separate/recombine/linearize
+    phases."""
 
-    for rule in FINAL_RULES:
-        rule(expr)
+    obj_terms = []
+    for f in problem.objective.arg:
+        if (f.expression_type == Expression.INDICATOR and
+            f.cone.cone_type == Cone.ZERO):
+            problem.constraint.add().CopyFrom(f)
+        else:
+            obj_terms.append(f)
 
-def transform(input):
-    transform_expr(input.objective)
-    for constr in input.constraint:
-        transform_expr(constr)
-    return input
+    problem.objective.CopyFrom(add(*obj_terms))
+
+def transform(problem):
+    linear_equality_to_constraint(problem)
+    return problem

@@ -16,27 +16,26 @@ def is_elementwise(expr):
             Expression.MULTIPLY_ELEMENTWISE,
             Expression.ADD):
         return all(arg.curvature.elementwise for arg in expr.arg)
+    return False
+
+def is_scalar_expression(expr):
+    if (expr.expression_type in (
+            Expression.VARIABLE,
+            Expression.CONSTANT,
+            Expression.INDEX,
+            Expression.ADD,
+            Expression.NEGATE)):
+        return True
+
+    if (expr.expression_type == Expression.MULTIPLY and
+        dimension(expr.arg[0]) == 1):
+        return True
 
     return False
 
 def is_scalar_multiple(expr):
-    if expr.expression_type in (
-            Expression.VARIABLE,
-            Expression.CONSTANT):
-        return True
-
-    if (expr.expression_type == Expression.MULTIPLY and
-        dimension(expr.arg[0]) == 1 and
-        expr.arg[1].curvature.scalar_multiple):
-        return True
-
-    if expr.expression_type in (
-            Expression.INDEX,
-            Expression.ADD,
-            Expression.NEGATE):
-        return all(arg.curvature.scalar_multiple for arg in expr.arg)
-
-    return False
+    return (is_scalar_expression(expr) and
+            all(arg.curvature.scalar_multiple for arg in expr.arg))
 
 def add_attributes(expr):
     """Add expression attributes helpful for translation."""

@@ -58,7 +58,7 @@ class DynamicMatrix {
     *y = Apply(x);
   }
 
-  VectorXd Apply(const VectorXd& x) {
+  VectorXd Apply(const VectorXd& x) const {
     if (is_sparse()) {
       CHECK_EQ(sparse_.cols(), x.rows());
       return sparse_ * x;
@@ -68,12 +68,14 @@ class DynamicMatrix {
     return dense_ * x;
   }
 
-  void ApplyTranspose(const VectorXd& x, VectorXd* y) {
+  VectorXd ApplyTranspose(const VectorXd& x) const {
     if (is_sparse()) {
-      *y = sparse_.transpose() * x;
-    } else {
-      *y = dense_.transpose() * x;
+      CHECK_EQ(sparse_.rows(), x.rows());
+      return sparse_.transpose() * x;
     }
+
+    CHECK_EQ(dense_.rows(), x.rows());
+    return dense_.transpose() * x;
   }
 
   MatrixXd AsDense() const {
@@ -103,8 +105,8 @@ class DynamicMatrix {
   DynamicMatrix GetColumns(int j, int n);
   DynamicMatrix GetRows(int i, int m);
 
-  int rows() const { return is_sparse_ ? sparse_.rows() : dense_.rows(); }
-  int cols() const { return is_sparse_ ? sparse_.cols() : dense_.cols(); }
+  long rows() const { return is_sparse_ ? sparse_.rows() : dense_.rows(); }
+  long cols() const { return is_sparse_ ? sparse_.cols() : dense_.cols(); }
 
   bool is_sparse() const {
     return is_sparse_;

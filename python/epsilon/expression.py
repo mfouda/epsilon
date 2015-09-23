@@ -1,5 +1,7 @@
 """Functional form of the expression operators."""
 
+import struct
+
 from epsilon.expression_pb2 import *
 
 # Accessors
@@ -15,6 +17,9 @@ def expr_vars(expr):
         for arg in expr.arg:
             retval.update(expr_vars(arg))
     return retval
+
+def fp_expr(expr):
+    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
 
 # Constructors
 

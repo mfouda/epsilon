@@ -10,6 +10,25 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/util/string.h"
 
+class DenseLeastSquaresOperator final : public VectorOperator {
+ public:
+  DenseLeastSquaresOperator(const Eigen::MatrixXd& A) : A_(A) {}
+
+  void Init() override {
+    CHECK(A_.rows() >= A_.cols());
+    ATA_solver_.compute(A_.transpose()*A_);
+    CHECK_EQ(ATA_solver_.info(), Eigen::Success);
+  }
+
+  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+    return ATA_solver_.solve(A_.transpose()*v);
+  }
+
+ private:
+  Eigen::MatrixXd A_;
+  Eigen::LLT<Eigen::MatrixXd> ATA_solver_;
+};
+
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
     const SolverParams& params,
@@ -24,25 +43,23 @@ void ProxADMMSolver::InitVariables() {
 }
 
 void ProxADMMSolver::InitConstraints() {
-  std::vector<Eigen::Triplet<double> > A_coeffs;
-  m_ = 0;
+  std::vector<Expression> args;
   for (const Expression& constr : problem_.constraint()) {
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
-
-    const Expression& arg = constr.arg(0);
-    const int mi = GetDimension(arg);
-    DynamicMatrix A(mi, n_);
-    DynamicMatrix b(mi, 1);
-    BuildAffineOperator(arg, var_map_, &A, &b);
-    CHECK(A.is_sparse());
-    AppendBlockTriplets(A.sparse(), m_, 0, &A_coeffs);
-    b_ = Stack(b_, b.AsDense());
-    m_ += mi;
+    args.push_back(constr.arg(0));
   }
-  A_ = SparseXd(m_, n_);
-  A_.setFromTriplets(A_coeffs.begin(), A_coeffs.end());
+
+  // Get just the constant term
+  constr_expr_ = expression::VStack(args);
+  m_ = GetDimension(constr_expr_);
+  DynamicMatrix b(m_, 1);
+  VariableOffsetMap empty_var_map;
+  BuildAffineOperator(constr_expr_, empty_var_map, nullptr, &b);
+  b_ = b.AsDense();
+
+  VLOG(2) << "b: " << VectorDebugString(b_);
 }
 
 void ProxADMMSolver::Init() {
@@ -56,12 +73,40 @@ void ProxADMMSolver::Init() {
     InitProxOperator(expr);
   }
 
+  VariableSet vars = GetVariables(problem_);
+  for (const Expression* expr : vars) {
+    if (vars_in_prox_.find(expr) == vars_in_prox_.end())
+      InitLeastSquares(*expr);
+  }
+
   x_ = Eigen::VectorXd::Zero(n_);
   u_ = Eigen::VectorXd::Zero(m_);
   x_prev_ = Eigen::VectorXd::Zero(n_);
   x_param_prev_ = Eigen::VectorXd::Zero(n_);
   Ax_ = Eigen::VectorXd::Zero(m_);
-  Ai_xi_norm_.resize(prox_ops_.size());
+  Ai_xi_norm_.resize(ops_.size());
+}
+
+void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
+  VLOG(2) << "InitLeastSquares:\n" << var_expr.DebugString();
+
+  VariableOffsetMap var_map;
+  var_map.Insert(var_expr);
+  OperatorInfo info;
+
+  // Build Ai matrix, force dense
+  info.Ai = DynamicMatrix::FromDense(Eigen::MatrixXd::Zero(m_, var_map.n()));
+  BuildAffineOperator(constr_expr_, var_map, &info.Ai, nullptr);
+  CHECK(!info.Ai.is_sparse());
+  info.op = std::unique_ptr<VectorOperator>(
+      new DenseLeastSquaresOperator(info.Ai.dense()));
+
+  info.linearized = false;
+  info.B = -SparseIdentity(m_);
+  info.V = GetProjection(var_map_, var_map);
+  info.op->Init();
+  info.i = ops_.size();
+  ops_.emplace_back(std::move(info));
 }
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
@@ -72,16 +117,21 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   if (vars.size() == 0)
     return;
 
-  ProxOperatorInfo prox;
-  prox.var_map.Insert(expr);
-  prox.V = GetProjection(var_map_, prox.var_map);
-  prox.Ai = A_*prox.V.transpose();
-  const int n = prox.var_map.n();
+  VariableOffsetMap var_map;
+  OperatorInfo info;
+  var_map.Insert(expr);
+  const int n = var_map.n();
 
-  VLOG(2) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(prox.Ai);
-  if (IsBlockScalar(prox.Ai)) {
-    prox.B = SparseXd(n, m_);
-    prox.linearized = false;
+  info.V = GetProjection(var_map_, var_map);
+  info.Ai = DynamicMatrix::Zero(m_, n);
+  BuildAffineOperator(constr_expr_, var_map, &info.Ai, nullptr);
+  CHECK(info.Ai.is_sparse());
+  const SparseXd& Ai = info.Ai.sparse();
+
+  VLOG(2) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(Ai);
+  if (IsBlockScalar(Ai)) {
+    info.B = SparseXd(n, m_);
+    info.linearized = false;
 
     // Case in which variable shows up in the equality contraint only through
     // scalar multiplication. We can combine multiple terms through the
@@ -94,53 +144,54 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     double alpha_squared = 0;
     // Iterate through first column in order to find the blocks where this
     // variable shows up in the constraints
-    for (SparseXd::InnerIterator iter(prox.Ai, 0); iter; ++iter) {
+    for (SparseXd::InnerIterator iter(Ai, 0); iter; ++iter) {
       CHECK(iter.value() != 0);
 
       const double alpha_i = iter.value();
       alpha_squared += alpha_i*alpha_i;
-      prox.B.middleCols(iter.row(), n) = -alpha_i*SparseIdentity(n);
+      info.B.middleCols(iter.row(), n) = -alpha_i*SparseIdentity(n);
     }
 
-    prox.B *= 1/alpha_squared;
-    prox.op = CreateProxOperator(
-        1/params_.rho()/alpha_squared, expr, prox.var_map);
+    info.B *= 1/alpha_squared;
+    info.op = CreateProxOperator(
+        1/params_.rho()/alpha_squared, expr, var_map);
   } else {
-    prox.linearized = true;
+    info.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
-    prox.mu = 0.1;
-    prox.op = CreateProxOperator(prox.mu, expr, prox.var_map);
+    info.mu = 0.1;
+    info.op = CreateProxOperator(info.mu, expr, var_map);
   }
 
-  prox.op->Init();
-  prox.i = prox_ops_.size();
-  prox_ops_.emplace_back(std::move(prox));
+  info.op->Init();
+  info.i = ops_.size();
+  ops_.emplace_back(std::move(info));
+  vars_in_prox_.insert(vars.begin(), vars.end());
 }
 
 // TODO(mwytock): This involves a lot of matrix-vector products with Ai and V
 // which are typically scalar identity matrices (by definition, in the case of
 // applying the proximal operator directly). Find a way to optimize this better
 // with more intelligence in the initialization phase.
-void ProxADMMSolver::ApplyProxOperator(const ProxOperatorInfo& prox) {
-  VLOG(2) << "ApplyProxOperator";
+void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
+  VLOG(2) << "ApplyOperator";
 
-  const SparseXd& Ai = prox.Ai;
-  const SparseXd& B = prox.B;
-  const double mu = prox.mu;
+  const DynamicMatrix& Ai = info.Ai;
+  const SparseXd& B = info.B;
+  const double mu = info.mu;
 
-  Eigen::VectorXd xi_old = prox.V*x_;
+  Eigen::VectorXd xi_old = info.V*x_;
   Eigen::VectorXd xi;
-  Eigen::VectorXd Ai_xi_old = Ai*xi_old;
+  Eigen::VectorXd Ai_xi_old = Ai.Apply(xi_old);
 
-  if (!prox.linearized) {
-    xi = prox.op->Apply(B*(Ax_ - Ai_xi_old + b_ + u_));
+  if (!info.linearized) {
+    xi = info.op->Apply(B*(Ax_ - Ai_xi_old + b_ + u_));
   } else {
-    xi = prox.op->Apply(xi_old - mu*params_.rho()*Ai.transpose()*(Ax_ + u_));
+    xi = info.op->Apply(xi_old - mu*params_.rho()*Ai.ApplyTranspose((Ax_ + u_)));
   }
 
-  Eigen::VectorXd Ai_xi = Ai*xi;
-  Ai_xi_norm_[prox.i] = Ai_xi.norm();
-  x_ += prox.V.transpose()*(xi - xi_old);
+  Eigen::VectorXd Ai_xi = Ai.Apply(xi);
+  Ai_xi_norm_[info.i] = Ai_xi.norm();
+  x_ += info.V.transpose()*(xi - xi_old);
   Ax_ += Ai_xi - Ai_xi_old;
 
   VLOG(2) << "xi_old: " << VectorDebugString(xi_old);
@@ -152,11 +203,10 @@ void ProxADMMSolver::Solve() {
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
     x_prev_ = x_;
-    for (const ProxOperatorInfo& op_info : prox_ops_)
-      ApplyProxOperator(op_info);
+    for (const OperatorInfo& info : ops_)
+      ApplyOperator(info);
 
     u_ += Ax_ + b_;
-
     VLOG(2) << "Iteration " << iter_ << "\n"
             << "x: " << VectorDebugString(x_) << "\n"
             << "u: " << VectorDebugString(u_);
@@ -202,12 +252,16 @@ void ProxADMMSolver::ComputeResiduals() {
   double max_Ai_xi_norm = *std::max_element(
       Ai_xi_norm_.begin(), Ai_xi_norm_.end());
 
+  double ATu_norm_squared = 0.0;
+  for (const OperatorInfo& info : ops_)
+    ATu_norm_squared += info.Ai.ApplyTranspose(u_).squaredNorm();
+
   // TODO(mwytock): Revisit this a bit more carefully, especially computation of
   // s_norm and epsilon_primal
   r->set_r_norm((Ax_ + b_).norm());
   r->set_s_norm((x_ - x_prev_).norm());
   r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
-  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(A_.transpose()*u_).norm());
+  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(sqrt(ATu_norm_squared)));
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {

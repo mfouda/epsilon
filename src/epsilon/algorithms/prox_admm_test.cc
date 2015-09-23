@@ -122,6 +122,28 @@ class ProxADMMSolverTest : public testing::Test {
             expression::Negate(u)));
   }
 
+  void BuildLeastAbsDeviations(int m, int n) {
+    srand(0);
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(m, n);
+    Eigen::VectorXd b = Eigen::VectorXd::Random(m);
+
+    Expression y = expression::Variable(m, 1, "y");
+    Expression x = expression::Variable(n, 1, "x");
+
+    Expression f = expression::NormP(y, 1);
+    f.mutable_proximal_operator()->set_name("NormL1Prox");
+
+    *problem_.mutable_objective() = expression::Add({f});
+    *problem_.add_constraint() = expression::Indicator(
+        Cone::ZERO,
+        expression::Add(
+            expression::Add(
+                expression::Multiply(TestConstant(A), x),
+                expression::Negate(TestConstant(b))),
+            expression::Negate(y)));
+  }
+
   std::string var_id_;
   Problem problem_;
   SolverParams params_;
@@ -155,6 +177,14 @@ TEST_F(ProxADMMSolverTest, Lasso) {
 
 TEST_F(ProxADMMSolverTest, TV) {
   BuildTV(10, 1);
+  Solve();
+  EXPECT_EQ(status_.state(), SolverStatus::OPTIMAL);
+  // TODO(mwytock): Verify result optimality
+}
+
+TEST_F(ProxADMMSolverTest, LeastAbsDeviations) {
+  BuildLeastAbsDeviations(3, 2);
+  params_.set_max_iterations(100);
   Solve();
   EXPECT_EQ(status_.state(), SolverStatus::OPTIMAL);
   // TODO(mwytock): Verify result optimality

@@ -37,11 +37,11 @@ def epigraph(f, t):
     """
 
     if f.curvature.curvature_type == Curvature.CONVEX:
-        return indicator(Cone.NON_NEGATIVE, t, f)
+        return leq_constraint(f, t)
     elif f.curvature.curvature_type == Curvature.CONCAVE:
-        return indicator(Cone.NON_NEGATIVE, negate(t), negate(f))
+        return leq_constraint(negate(f), negate(t))
     elif f.curvature.curvature_type == Curvature.AFFINE:
-        return indicator(Cone.ZERO, t, f)
+        return equality_constraint(f, t);
     else:
         raise CanonicalizeError("Unknown curvature", f)
 

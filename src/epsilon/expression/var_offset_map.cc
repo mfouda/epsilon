@@ -32,6 +32,11 @@ int VariableOffsetMap::Get(const std::string& var_id) const {
   return iter->second;
 }
 
+bool VariableOffsetMap::Contains(const std::string& var_id) const {
+  auto iter = offsets_.find(var_id);
+  return iter != offsets_.end();
+}
+
 int VariableOffsetMap::Size(const std::string& var_id) const {
   auto iter = sizes_.find(var_id);
   CHECK(iter != sizes_.end());
