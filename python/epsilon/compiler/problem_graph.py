@@ -17,7 +17,7 @@ from epsilon.expression_pb2 import Expression, Problem, Cone
 
 def is_equality_indicator(f):
     return (f.expr.expression_type == Expression.INDICATOR and
-            f.expr.expression_type == Cone.ZERO)
+            f.expr.cone.cone_type == Cone.ZERO)
 
 class Function(object):
     """Function node."""
