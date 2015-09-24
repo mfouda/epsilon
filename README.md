@@ -55,17 +55,16 @@ nosetests epsilon
 ```
 python -m epsilon.problems.benchmark
 ```
-
  Problem       |   Time | Objective
 :------------- | ------:| ---------:
-basis_pursuit  |   1.41s|   1.44e+02
-covsel         |   0.38s|   3.63e+02
-group_lasso    |   5.03s|   1.61e+02
-huber          |  57.05s|   2.18e+03
-lasso          |   3.70s|   1.71e+01
-lp             |   0.40s|   7.77e+02
-least_abs_dev  |  35.68s|   7.18e+03
-tv_smooth      |  15.85s|   1.15e+06
+basis_pursuit  |   1.46s|   1.44e+02
+covsel         |   0.46s|   3.63e+02
+group_lasso    |   9.63s|   1.66e+02
+huber          |   0.48s|   2.18e+03
+lasso          |   3.83s|   1.71e+01
+lp             |   0.35s|   7.77e+02
+least_abs_dev  |   0.38s|   7.10e+03
+tv_smooth      |  19.16s|   1.15e+06
 
 ### SCS
 ```
