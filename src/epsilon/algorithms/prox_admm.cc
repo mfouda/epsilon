@@ -42,6 +42,10 @@ void ProxADMMSolver::InitVariables() {
   n_ = var_map_.n();
 }
 
+// TODO(mwytock): Dealing with constraints in the fashion: w/ vstack() and
+// multiple calls to BuildAffineOperator() can be highly inefficient. We need a
+// better mechanism, likely built on a more flexible BuildAffineOperator()
+// implementation.
 void ProxADMMSolver::InitConstraints() {
   std::vector<Expression> args;
   for (const Expression& constr : problem_.constraint()) {
