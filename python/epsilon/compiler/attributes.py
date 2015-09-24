@@ -2,6 +2,9 @@
 
 These attributes are in addition to the standard DCP attributes which are
 already computed by cvxpy.
+
+TODO(mwytock): These routines should be smarter and able to distinguish between
+x + y vs. x + x.
 """
 from itertools import chain
 
@@ -12,9 +15,8 @@ def is_elementwise(expr):
     if expr.curvature.scalar_multiple:
         return True
 
-    if expr.expression_type in (
-            Expression.MULTIPLY_ELEMENTWISE,
-            Expression.ADD):
+    if (expr.expression_type ==
+        Expression.MULTIPLY_ELEMENTWISE):
         return all(arg.curvature.elementwise for arg in expr.arg)
     return False
 
@@ -23,7 +25,6 @@ def is_scalar_expression(expr):
             Expression.VARIABLE,
             Expression.CONSTANT,
             Expression.INDEX,
-            Expression.ADD,
             Expression.NEGATE)):
         return True
 

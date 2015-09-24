@@ -23,7 +23,8 @@ from epsilon.problems.problem_instance import ProblemInstance
 REL_TOL = {
     "basis_pursuit": 1e-3,
     "least_abs_dev": 1e-3,
-    "group_lasso": 1e-3
+    "group_lasso": 1e-3,
+    "tv_1d": 1e-3
 }
 
 # TODO(mwytock): Need L1/Linf proximal operator
@@ -32,9 +33,6 @@ REL_TOL = {
 # TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
 # support more than one equality constraint
 # ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
-#
-# TODO(mwytock): gives wrong answer, likely has to do with linearized ADMM?
-# ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -42,14 +40,11 @@ PROBLEMS = [
     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
-    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
+    ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
 ]
-
-# PROBLEMS = [
-#     ProblemInstance("tv_1d", tv_1d.create, dict(n=10))
-# ]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

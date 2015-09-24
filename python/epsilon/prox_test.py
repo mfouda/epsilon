@@ -54,12 +54,11 @@ def _test_non_negative_simple(i, n):
 
 def _test_non_negative_scaled(i, n):
     np.random.seed(i)
-    b = np.random.randn(n)
     v = np.random.randn(n)
     alpha = np.random.randn()
 
     x = cp.Variable(n)
-    c = [alpha*x + b >= 0]
+    c = [alpha*x  >= 0]
     cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
 
     x0 = np.asarray(x.value).ravel()
@@ -101,7 +100,7 @@ def test_linear_equality():
 
 def test_non_negative():
     for i in xrange(NUM_TRIALS):
-        yield _test_non_negative_simple, i, 10
+         yield _test_non_negative_simple, i, 10
     for i in xrange(NUM_TRIALS):
         yield _test_non_negative_scaled, i, 10
 

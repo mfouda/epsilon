@@ -161,6 +161,8 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     info.op = CreateProxOperator(
         1/params_.rho()/alpha_squared, expr, var_map);
   } else {
+    VLOG(2) << "Using linearized ADMM";
+
     info.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
     info.mu = 0.1;

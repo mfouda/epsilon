@@ -102,14 +102,9 @@ def convert_expression(expr, proto, data_map):
         for i, key in enumerate(expr.key):
             key_proto = proto.key.add()
 
-            if key.start:
-                key_proto.start = convert_index(key.start, expr.size[i])
-
-            if key.stop:
-                key_proto.stop = convert_index(key.stop, expr.size[i])
-            else:
-                key_proto.stop = expr.size[i]
-
+            size = expr.args[0].size[i]
+            key_proto.start = convert_index(key.start, size) if key.start else 0
+            key_proto.stop = convert_index(key.stop, size) if key.stop else size
             if key.step:
                 key_proto.step = key.step
             else:
