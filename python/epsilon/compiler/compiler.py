@@ -2,20 +2,13 @@ import logging
 
 from epsilon.compiler import attributes
 from epsilon.compiler import canonicalize
-from epsilon.compiler import finalize
-from epsilon.compiler import linearize
-from epsilon.compiler import recombine
-from epsilon.compiler import separate
+from epsilon.compiler import combine
 from epsilon.expression_str import problem_str
-
 
 TRANSFORMS = [
     attributes.transform,
     canonicalize.transform,
-    linearize.transform,
-    recombine.transform,
-    separate.transform,
-    finalize.transform,
+    combine.transform,
 ]
 
 def compile(problem):

@@ -47,13 +47,13 @@ Column.__new__.__defaults__ = (None, None, None, False)
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
-    ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
-    ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
-    ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
-    ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
-    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
-    ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
+    # ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
+    # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
+    # ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
+    # ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
+    # ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
+    # ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
+    # ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
 ]
 
 COLUMNS = [

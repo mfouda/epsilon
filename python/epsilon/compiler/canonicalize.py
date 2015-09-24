@@ -13,12 +13,12 @@ from itertools import chain
 import struct
 import sys
 
-from epsilon.compiler import compiler_error
+from epsilon import error
 from epsilon.expression import *
-from epsilon.expression_str import expr_str
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
+from epsilon.expression_str import expr_str
 
-class CanonicalizeError(compiler_error.CompilerError):
+class CanonicalizeError(error.ExpressionError):
     pass
 
 def is_epigraph(expr):
