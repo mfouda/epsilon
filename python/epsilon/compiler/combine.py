@@ -30,7 +30,7 @@ def is_prox_friendly_constraint(graph, f):
 
     return True
 
-def max_overlap(graph, f):
+def max_overlap_function(graph, f):
     """Return the objective term with maximum overlap in variables."""
 
     def variables(g):
@@ -47,21 +47,24 @@ def separate_var(f_var):
     return Expression(
         expression_type=Expression.VARIABLE,
         variable=Variable(variable_id=variable_id),
-        size=f_var.var_expr.size)
+        size=f_var.instances[0].size)
 
 def combine_affine_functions(graph):
     """Combine affine functions with other objective terms."""
-    for function in graph.functions:
-        if not is_affine(function):
+    for f in graph.functions:
+        if not is_affine(f):
             continue
 
-        other = max_overlap(graph, function)
-        if not other:
+        g = max_overlap_function(graph, f)
+        if not g:
             continue
 
-        graph.remove_function(other)
-        graph.remove_function(affine)
-        graph.add_function(Function(add(other, affine), constraint=True))
+        graph.remove_function(f)
+        graph.remove_function(g)
+
+        # NOTE(mwytock): The non-affine function must go
+        # first. Fixing/maintaining this should likely go in a normalize step.
+        graph.add_function(Function(add(g.expr, f.expr), constraint=False))
 
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
@@ -85,7 +88,7 @@ def separate_objective_terms(graph):
         for f_var in f_vars[1:]:
             new_var_expr = separate_var(f_var)
             graph.add_function(
-                Function(equality_constraint(f_var.var_expr, new_var_expr),
+                Function(equality_constraint(f_var.instances[0], new_var_expr),
                          constraint=True))
 
             graph.remove_edge(f_var)

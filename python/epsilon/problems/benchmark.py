@@ -52,7 +52,7 @@ PROBLEMS = [
     # ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
     # ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     # ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
-    # ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
+    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     # ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
 ]
 
