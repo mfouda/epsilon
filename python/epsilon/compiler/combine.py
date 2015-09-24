@@ -12,14 +12,26 @@ from epsilon.expression_pb2 import Expression
 def is_affine(f):
     return f.expr.curvature.curvature_type == Curvature.AFFINE
 
-def is_sparse_equality_constraint(f):
-    # TODO(mwytock): Walk the tree check for constant terms
+def has_constant(expr):
+    if expr.expression_type == Expression.CONSTANT:
+        return True
+
+    for arg in expr.arg:
+        if has_constant(arg):
+            return True
+
     return False
 
+def is_sparse_equality_constraint(f):
+    if not is_equality_indicator(f):
+        return False
+    return not has_constant(f.expr)
+
 def is_prox_friendly_constraint(graph, f):
-    """Returns true if f represents a prox-friendly equality constraint,
-    i.e. one that can be treated as a constraint without interfering with the
-    proximal operators for the other objective terms."""
+    """Returns true if f represents a prox-friendly equality constraint.
+
+    In other words, one that can be treated as a constraint without interfering
+    with the proximal operators for the other objective terms."""
     if not is_equality_indicator(f):
         return False
 

@@ -3,6 +3,7 @@
 from collections import namedtuple
 import argparse
 import errno
+import logging
 import os
 import time
 
@@ -47,13 +48,13 @@ Column.__new__.__defaults__ = (None, None, None, False)
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
-    # ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-    # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
-    # ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
-    # ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
-    # ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
+    ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
+    ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
+    ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
+    ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
+    ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
-    # ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
+    ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
 ]
 
 COLUMNS = [
@@ -137,7 +138,11 @@ if __name__ == "__main__":
     parser.add_argument("--scs", action="store_true")
     parser.add_argument("--write")
     parser.add_argument("--problem")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     if args.write:
         write_benchmarks(PROBLEMS, args.write)
