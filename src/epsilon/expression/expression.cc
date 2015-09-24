@@ -202,4 +202,13 @@ Expression Indicator(const Cone::Type& cone_type, const Expression& arg) {
   return expr;
 }
 
+Expression Reshape(const Expression& x, int m, int n) {
+  Expression expr;
+  expr.set_expression_type(Expression::RESHAPE);
+  CHECK_EQ(m*n, GetDimension(x));
+  *expr.mutable_size() = CreateSize(m, n);
+  *expr.add_arg() = x;
+  return expr;
+}
+
 }  // namespace expression

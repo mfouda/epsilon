@@ -23,6 +23,7 @@ Expression Negate(const Expression& x);
 Expression NormP(const Expression& x, int p);
 Expression NormPQ(const Expression& x, int p, int q);
 Expression Power(const Expression& x, int p);
+Expression Reshape(const Expression& x, int m, int n);
 Expression Sum(const Expression& x);
 Expression VStack(const std::vector<Expression>& args);
 Expression Variable(int m, int n, const std::string& var_id);

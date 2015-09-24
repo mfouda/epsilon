@@ -1,6 +1,11 @@
 
 from epsilon.expression_pb2 import *
 
+def key_str(expr):
+    return "[" + ", " .join([
+        "%d:%d%s" % (k.start, k.stop, "" if k.step == 1 else ":%d" % k.step)
+        for k in expr.key]) + "]"
+
 def _node_contents_str(expr):
     c = []
 
@@ -12,9 +17,7 @@ def _node_contents_str(expr):
     elif expr.expression_type == Expression.VARIABLE:
         c += ["variable_id: " + expr.variable.variable_id]
     elif expr.expression_type == Expression.INDEX:
-        c += ["key: [" + ", " .join([
-            "%d:%d%s" % (k.start, k.stop, "" if k.step == 1 else ":%d" % k.step)
-            for k in expr.key]) + "]"]
+        c += ["key: " + key_str(expr)]
     elif expr.expression_type in (Expression.POWER,
                                   Expression.NORM_P):
         c += ["p: " + str(expr.p)]

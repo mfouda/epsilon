@@ -47,6 +47,10 @@ PROBLEMS = [
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
 ]
 
+# PROBLEMS = [
+#     ProblemInstance("tv_1d", tv_1d.create, dict(n=10))
+# ]
+
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 

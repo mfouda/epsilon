@@ -52,7 +52,8 @@ void ProxADMMSolver::InitConstraints() {
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
-    args.push_back(constr.arg(0));
+    args.push_back(
+        expression::Reshape(constr.arg(0), GetDimension(constr.arg(0)), 1));
   }
 
   // Get just the constant term

@@ -79,6 +79,11 @@ def convert_constant(value, proto, data_map):
     data_map[data.value_file(prefix)] = value.tobytes(order="Fortran")
     proto.data_location = prefix
 
+def convert_index(index, size):
+    if index < 0:
+        return size + index
+    return index
+
 def convert_expression(expr, proto, data_map):
     """Convert cxvpy expression to protobuf form."""
     proto.size.dim.extend(expr.size)
@@ -98,10 +103,10 @@ def convert_expression(expr, proto, data_map):
             key_proto = proto.key.add()
 
             if key.start:
-                key_proto.start = key.start
+                key_proto.start = convert_index(key.start, expr.size[i])
 
             if key.stop:
-                key_proto.stop = key.stop
+                key_proto.stop = convert_index(key.stop, expr.size[i])
             else:
                 key_proto.stop = expr.size[i]
 

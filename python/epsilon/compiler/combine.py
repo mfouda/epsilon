@@ -3,6 +3,7 @@
 from collections import defaultdict
 from collections import namedtuple
 
+from epsilon import expression_str
 from epsilon.compiler import attributes
 from epsilon.compiler import validate
 from epsilon.compiler.problem_graph import *
@@ -54,8 +55,6 @@ def max_overlap_function(graph, f):
     return max((g for g in graph.functions if g != f), key=overlap)
 
 def separate_var(f_var):
-    variable_id = "separate:%s:%s" % (
-        f_var.variable, fp_expr(f_var.function.expr))
     return Expression(
         expression_type=Expression.VARIABLE,
         variable=Variable(variable_id=variable_id),
@@ -98,14 +97,55 @@ def separate_objective_terms(graph):
 
         # Skip first one, rename the rest
         for f_var in f_vars[1:]:
-            new_var_expr = separate_var(f_var)
+            old_var = f_var.instances[0]
+            m, n = old_var.size.dim
+            new_var = variable(m, n, ("separate:" +
+                                      f_var.variable + ":" +
+                                      fp_expr(f_var.function.expr)))
+
             graph.add_function(
-                Function(equality_constraint(f_var.instances[0], new_var_expr),
+                Function(equality_constraint(old_var, new_var),
                          constraint=True))
 
             graph.remove_edge(f_var)
-            f_var.replace_variable(new_var_expr)
+            f_var.replace_variable(new_var)
             graph.add_edge(f_var)
+
+
+def find_index_var_instances(expr):
+    if (expr.expression_type == Expression.INDEX and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        var_id = ("index:" +
+                  expr.arg[0].variable.variable_id +
+                  expression_str.key_str(expr))
+        return {var_id: [expr]}
+
+    retval = defaultdict(list)
+    for arg in expr.arg:
+        for var_id, instances in find_index_var_instances(arg).iteritems():
+            retval[var_id] += instances
+
+    return retval
+
+def replace_index_vars(problem):
+    index_vars = find_index_var_instances(problem.objective)
+    for constr in problem.constraint:
+        for var_id, instances in find_index_var_instances(constr).iteritems():
+            index_vars[var_id] += instances
+
+    for var_id, instances in index_vars.iteritems():
+        old_var = instances[0]
+        m, n = old_var.size.dim
+        new_var = variable(m, n, var_id)
+        problem.constraint.add().CopyFrom(equality_constraint(new_var, old_var))
+        for instance in instances:
+            instance.CopyFrom(new_var)
+
+    return problem
+
+PROBLEM_TRANSFORMS = [
+    replace_index_vars
+]
 
 GRAPH_TRANSFORMS = [
     combine_affine_functions,
@@ -114,6 +154,9 @@ GRAPH_TRANSFORMS = [
 ]
 
 def transform(problem):
+    for f in PROBLEM_TRANSFORMS:
+        problem = f(problem)
+
     graph = ProblemGraph(problem)
     for f in GRAPH_TRANSFORMS:
         f(graph)
