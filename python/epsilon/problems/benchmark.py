@@ -55,6 +55,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
+    ProblemInstance("tv_1d", tv_1d.create, dict(n=1000)),
 ]
 
 COLUMNS = [
