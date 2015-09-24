@@ -48,3 +48,21 @@ def transform(problem):
     for expr in chain([problem.objective], problem.constraint):
         add_attributes(expr)
     return problem
+
+
+def compute_variable_curvature(expr):
+    """Compute curvature attributes on per variable basis."""
+
+    if expr.expression_type == Expression.VARIABLE:
+        return {expr.variable.variable_id: Curvature(scalar_multiple=True)}
+
+    retval = {}
+    default = Curvature(scalar_multiple=is_scalar_expression(expr))
+
+    for arg in expr.arg:
+        for var_id, c in compute_variable_curvature(arg).iteritems():
+            d = retval.get(var_id, default)
+            retval[var_id] = Curvature(
+                scalar_multiple=c.scalar_multiple and d.scalar_multiple)
+
+    return retval

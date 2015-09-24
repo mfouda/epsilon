@@ -19,7 +19,6 @@ def solve(prob, params=solver_params_pb2.SolverParams()):
     prob_proto, data_map = cvxpy_expr.convert_problem(prob)
     prob_proto = compiler.compile(prob_proto)
 
-    assert False
     status_str, values = _solve.prox_admm_solve(
         prob_proto.SerializeToString(),
         params.SerializeToString(),

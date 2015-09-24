@@ -3,19 +3,14 @@
 from collections import defaultdict
 from collections import namedtuple
 
-from epsilon.compiler import validate
 from epsilon.compiler import attributes
-from epsilon.compiler.problem_graph import Function, ProblemGraph
+from epsilon.compiler import validate
+from epsilon.compiler.problem_graph import *
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression
 
 def is_affine(f):
     return f.expr.curvature.curvature_type == Curvature.AFFINE
-
-def is_equality_indicator(f):
-    return (not f.constraint and
-            f.expr.expression_type == Expression.INDICATOR and
-            f.expr.expression_type == Cone.ZERO)
 
 def is_sparse_equality_constraint(f):
     # TODO(mwytock): Walk the tree check for constant terms
@@ -30,7 +25,7 @@ def is_prox_friendly_constraint(graph, f):
 
     for f_var in graph.edges_by_function[f]:
         edges = graph.edges_by_variable[f_var.variable]
-        if len(edges) > 1 and not f_var.affine_curvature.scalar_multiple:
+        if len(edges) > 1 and not f_var.curvature.scalar_multiple:
             return False
 
     return True

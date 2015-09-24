@@ -11,8 +11,13 @@ mutations.
 from collections import defaultdict
 
 from epsilon import expression
+from epsilon.compiler import attributes
 from epsilon.compiler import validate
-from epsilon.expression_pb2 import Expression, Problem
+from epsilon.expression_pb2 import Expression, Problem, Cone
+
+def is_equality_indicator(f):
+    return (f.expr.expression_type == Expression.INDICATOR and
+            f.expr.expression_type == Cone.ZERO)
 
 class Function(object):
     """Function node."""
@@ -22,11 +27,10 @@ class Function(object):
 
 class FunctionVariable(object):
     """Edge connecting a variable and function."""
-    def __init__(self, function, variable, instances, curvature):
+    def __init__(self, function, variable, instances):
         self.function = function
         self.variable = variable
         self.instances = instances
-        self.curvature = curvature
 
     @property
     def var_expr(self):
@@ -80,9 +84,14 @@ class ProblemGraph(object):
         del self.edges_by_function[f]
 
     def add_function(self, f):
-
         for variable, instances in find_var_instances(f.expr).iteritems():
             self.add_edge(FunctionVariable(f, variable, instances))
+
+        # Add curvature attributes for equality indicator functions
+        if is_equality_indicator(f):
+            var_curvature = attributes.compute_variable_curvature(f.expr.arg[0])
+            for f_var in self.edges_by_function[f]:
+                f_var.curvature = var_curvature[f_var.variable]
 
     # Accessors for nodes
     @property
