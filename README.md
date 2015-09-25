@@ -3,7 +3,7 @@
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
-## Installation
+## Development instructions
 
 The epsilon C++ code has library dependencies which are not bundled as part of
 the python package. These must be installed before the epsilon package itself.
@@ -11,7 +11,7 @@ the python package. These must be installed before the epsilon package itself.
 We assume that CVXPY has already been installed, see instructions at
 http://www.cvxpy.org/en/latest/install/index.html.
 
-### Dependencies on Mac OS X
+### C++ dependencies on Mac OS X
 
 Install dependencies using Homebrew (or MacPorts):
 
@@ -20,7 +20,7 @@ brew install glog gflags
 brew install --devel protobuf
 ```
 
-### Dependencies on Ubuntu
+### C++ dependencies on Ubuntu
 
 Install dependencies with the package manager
 ```
@@ -49,7 +49,7 @@ pip install -U cvxpy
 
 First, get the sub modules
 ```
-git submodule update
+git submodule update --init
 ```
 Compile the C++ code and run tests
 ```
