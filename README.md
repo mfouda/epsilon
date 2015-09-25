@@ -3,13 +3,12 @@
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
-## Development instructions
+## Development Instructions
 
-The epsilon C++ code has library dependencies which are not bundled as part of
-the python package. These must be installed before the epsilon package itself.
-
-We assume that CVXPY has already been installed, see instructions at
-http://www.cvxpy.org/en/latest/install/index.html.
+These instructions are for setting up the development environment with the
+required C++ and numerical python envirnoment (cvxpy, numpy, scipy). For
+end-users the package should be pip-installable, with binaries provided
+for common environments.
 
 ### C++ dependencies on Mac OS X
 
