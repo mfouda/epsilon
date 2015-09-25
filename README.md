@@ -60,7 +60,7 @@ Now build the C++ Python extension and set up the local development environment
 python setup.py build
 python setup.py develop --user
 ```
-Run tests
+Run python tests
 ```
 pip install nose
 nosetests epsilon
