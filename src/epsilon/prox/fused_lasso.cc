@@ -36,3 +36,4 @@ private:
   double lambda_;
   int n_;
 };
+REGISTER_PROX_OPERATOR(FusedLassoProx);

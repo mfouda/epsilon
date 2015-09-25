@@ -39,16 +39,18 @@ def prox(cvxpy_prob, v, lam=1):
     problem = canonicalize.transform(attributes.transform(problem))
     validate.check_sum_of_prox(problem)
 
-    # Get the first non constant objective term
+    non_const = []
     for f_expr in problem.objective.arg:
         if f_expr.curvature.curvature_type != Curvature.CONSTANT:
-            break
-    else:
-        raise ProblemError("No non constant objective terms", problem)
+            non_const.append(f_expr)
+
+    # Get the first non constant objective term
+    if len(non_const) != 1:
+        raise ProblemError("prox does not have single f", problem)
 
     if problem.constraint:
-        raise ProblemError("Problem has constraints", problem)
+        raise ProblemError("prox has constraints", problem)
 
     x_bytes = _solve.prox(
-        f_expr.SerializeToString(), data_map, v.tobytes(order="F"), lam)
+        non_const[0].SerializeToString(), data_map, v.tobytes(order="F"), lam)
     return numpy.fromstring(x_bytes, dtype=numpy.double)
