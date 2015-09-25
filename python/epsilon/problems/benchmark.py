@@ -23,7 +23,7 @@ from epsilon.problems import logreg_l1
 from epsilon.problems import lp
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
-from epsilon.problems import tv_smooth
+from epsilon.problems import tv_denoise
 from epsilon.problems.problem_instance import ProblemInstance
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
@@ -52,10 +52,10 @@ PROBLEMS = [
     ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
-    ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
-    ProblemInstance("tv_smooth", tv_smooth.create, dict(n=400, lam=1)),
+    ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=1000)),
+    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]
 
 COLUMNS = [

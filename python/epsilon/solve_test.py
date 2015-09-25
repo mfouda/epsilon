@@ -16,7 +16,7 @@ from epsilon.problems import lp
 from epsilon.problems import least_abs_dev
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
-from epsilon.problems import tv_smooth
+from epsilon.problems import tv_denoise
 from epsilon.problems.problem_instance import ProblemInstance
 
 # These problems need a higher relative accuracy for some reason
@@ -43,7 +43,7 @@ PROBLEMS = [
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-    ProblemInstance("tv_smooth", tv_smooth.create, dict(n=10, lam=1)),
+    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
 def solve_problem(problem_instance):

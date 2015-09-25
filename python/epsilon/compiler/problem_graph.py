@@ -41,6 +41,10 @@ def find_var_instances(expr):
     if expr.expression_type == Expression.VARIABLE:
         return {expr.variable.variable_id: [expr]}
 
+    if (expr.expression_type == Expression.INDEX and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        return {expr.arg[0].variable.variable_id: [expr]}
+
     retval = defaultdict(list)
     for arg in expr.arg:
         for var_id, instances in find_var_instances(arg).iteritems():
