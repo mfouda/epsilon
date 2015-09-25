@@ -82,4 +82,4 @@ lasso          |  22.02s|   1.63e+01
 lp             |   5.47s|   7.75e+02
 least_abs_dev  |   3.81s|   7.10e+03
 tv_1d          |   0.61s|   2.95e+04
-tv_denoise      | 372.86s|   1.69e+06
+tv_denoise     | 372.86s|   1.69e+06
