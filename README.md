@@ -81,7 +81,7 @@ huber          |   0.49s|   2.18e+03
 lasso          |   3.93s|   1.71e+01
 least_abs_dev  |   0.39s|   7.10e+03
 lp             |   0.33s|   7.77e+02
-tv_1d          |  13.96s|   1.86e+04
+tv_1d          |   0.47s|   2.29e+05
 tv_denoise     |  19.56s|   1.15e+06
 
 ### SCS
@@ -98,5 +98,5 @@ huber          |   3.39s|   2.18e+03
 lasso          |  22.02s|   1.63e+01
 least_abs_dev  |   3.81s|   7.10e+03
 lp             |   5.47s|   7.75e+02
-tv_1d          |   0.61s|   2.95e+04
+tv_1d          |  47.28s|   3.51e+05
 tv_denoise     | 372.86s|   1.69e+06
