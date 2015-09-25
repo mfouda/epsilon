@@ -13,15 +13,19 @@ eigen_dir = third_party/eigen
 gtest_dir = third_party/googletest/googletest
 build_dir = build-cc
 
-SYSTEM = $(shell uname -s)
-CC = g++
-CXX = g++
-
+CFLAGS += $(OPTFLAGS)
 CXXFLAGS += $(OPTFLAGS) -std=c++14
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
 CXXFLAGS += -I$(gtest_dir)/include
+
+# Third-party library, glmgen
+glmgen_dir = third_party/glmgen/c_lib/glmgen
+glmgen_CFLAGS = -I$(glmgen_dir)/include
+
+# System-specific configuration
+SYSTEM = $(shell uname -s)
 
 ifeq ($(SYSTEM),Linux)
 CXXFLAGS += -fPIC
@@ -48,6 +52,7 @@ common_cc = \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
 	epsilon/parameters/local_parameter_service.cc \
+	epsilon/prox/fused_lasso.cc \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear_equality.cc \
 	epsilon/prox/negative_log_det.cc \
@@ -62,6 +67,9 @@ common_cc = \
 	epsilon/vector/dynamic_matrix.cc \
 	epsilon/vector/vector_util.cc \
 	epsilon/vector/vector_file.cc
+
+third_party_obj = \
+	$(glmgen_dir)/src/tf/tf_dp.o
 
 common_test_cc = \
 	epsilon/algorithms/algorithm_testutil.cc \
@@ -99,6 +107,10 @@ build_binaries = $(binaries:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
 build_libs = $(libs:%=$(build_dir)/lib%.a)
 
+# Third party
+build_sub_dirs += $(addprefix $(build_dir)/, $(dir $(third_party_obj)))
+common_obj += $(third_party_obj:%=$(build_dir)/%)
+
 # Stop make from deleting intermediate files
 .SECONDARY:
 
@@ -107,7 +119,7 @@ all: $(build_libs) $(build_binaries)
 clean:
 	rm -rf $(build_dir)
 
-# Build
+# Build rules
 $(build_dir):
 	mkdir -p $(build_sub_dirs)
 
@@ -120,6 +132,11 @@ $(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)
 $(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
 
+# Third party build rules
+$(build_dir)/$(glmgen_dir)/%.o: $(glmgen_dir)/%.c | $(build_dir)
+	$(COMPILE.c) $(glmgen_CFLAGS) $(OUTPUT_OPTION) $<
+
+# Targets
 $(build_dir)/libepsilon.a: $(common_obj) $(proto_obj)
 	$(AR) rcs $@ $^
 ifeq ($(SYSTEM),Darwin)
@@ -127,9 +144,9 @@ ifeq ($(SYSTEM),Darwin)
 endif
 
 $(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(common_obj) $(proto_obj)
-	$(LINK.o) $^ $(LDLIBS) -o $@
+	$(LINK.cc) $^ $(LDLIBS) -o $@
 
-# Test
+# Tests
 test: $(build_tests)
 	@$(tools_dir)/run_tests.sh $(build_tests)
 
@@ -139,4 +156,4 @@ $(build_dir)/gtest-all.o: $(gtest_srcs)
 	$(COMPILE.cc) -I$(gtest_dir) -Wno-missing-field-initializers -c $(gtest_dir)/src/gtest-all.cc -o $@
 
 $(build_dir)/%_test: $(build_dir)/%_test.o $(common_obj) $(proto_obj) $(common_test_obj) $(build_dir)/gtest-all.o
-	$(LINK.o) $^ $(LDLIBS) -o $@
+	$(LINK.cc) $^ $(LDLIBS) -o $@
