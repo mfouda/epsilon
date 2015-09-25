@@ -154,8 +154,8 @@ GRAPH_TRANSFORMS = [
 ]
 
 def transform(problem):
-    for f in PROBLEM_TRANSFORMS:
-        problem = f(problem)
+    # for f in PROBLEM_TRANSFORMS:
+    #     problem = f(problem)
 
     graph = ProblemGraph(problem)
     for f in GRAPH_TRANSFORMS:

@@ -58,7 +58,9 @@ def compute_variable_curvature(expr):
         return {expr.variable.variable_id: Curvature(scalar_multiple=True)}
 
     retval = {}
-    default = Curvature(scalar_multiple=is_scalar_expression(expr))
+    default = Curvature(scalar_multiple=(
+        is_scalar_expression(expr) or
+        expr.expression_type == Expression.ADD))
 
     for arg in expr.arg:
         for var_id, c in compute_variable_curvature(arg).iteritems():
