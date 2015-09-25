@@ -98,6 +98,7 @@ def prox_affine(expr):
 @priority(1)
 def prox_fused_lasso(expr):
     # TODO(mwytock): Make this more flexible? Support weighted form?
+    # TODO(mwytock): Rewrite this using a new expression type for TV(x)
     if (expr.expression_type == Expression.NORM_P and expr.p == 1 and
         expr.arg[0].expression_type == Expression.ADD and
         expr.arg[0].arg[0].expression_type == Expression.INDEX and
@@ -117,24 +118,28 @@ def prox_fused_lasso(expr):
 
 @priority(1)
 def prox_least_squares(expr):
-    if ((expr.expression_type == Expression.QUAD_OVER_LIN and
-         expr.arg[1].expression_type == Expression.CONSTANT and
-         expr.arg[1].constant.scalar == 1) or
-        (expr.expression_type == Expression.POWER and
-         expr.arg[0].expression_type == Expression.NORM_P and
-         expr.p == 2 and expr.arg[0].p == 2) or
-        (expr.expression_type == Expression.SUM and
-         expr.arg[0].expression_type == Expression.POWER and
-         expr.arg[0].p == 2)):
+    if (expr.expression_type == Expression.QUAD_OVER_LIN and
+        expr.arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[1].constant.scalar == 1):
+        arg = expr.arg[0]
+    elif ((expr.expression_type == Expression.POWER and
+           expr.arg[0].expression_type == Expression.NORM_P and
+           expr.p == 2 and expr.arg[0].p == 2) or
+          (expr.expression_type == Expression.SUM and
+           expr.arg[0].expression_type == Expression.POWER and
+           expr.arg[0].p == 2)):
+        arg = expr.arg[0].arg[0]
 
-        expr = sum_entries(power(expr.arg[0], 2))
-        expr.proximal_operator.name = "LeastSquaresProx"
+    else:
+        return
 
-        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
-                yield prox_expr
+    expr = sum_entries(power(arg, 2))
+    expr.proximal_operator.name = "LeastSquaresProx"
+    if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+        yield expr
+    else:
+        for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
+            yield prox_expr
 
 def prox_norm1(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 1):
