@@ -57,14 +57,15 @@ python -m epsilon.problems.benchmark
 ```
  Problem       |   Time | Objective
 :------------- | ------:| ---------:
-basis_pursuit  |   1.46s|   1.44e+02
+basis_pursuit  |   1.47s|   1.44e+02
 covsel         |   0.46s|   3.63e+02
-group_lasso    |   9.63s|   1.66e+02
-huber          |   0.48s|   2.18e+03
-lasso          |   3.83s|   1.71e+01
-lp             |   0.35s|   7.77e+02
-least_abs_dev  |   0.38s|   7.10e+03
-tv_smooth      |  19.16s|   1.15e+06
+group_lasso    |  10.33s|   1.66e+02
+huber          |   0.49s|   2.18e+03
+lasso          |   3.93s|   1.71e+01
+least_abs_dev  |   0.39s|   7.10e+03
+lp             |   0.33s|   7.77e+02
+tv_1d          |  13.96s|   1.86e+04
+tv_denoise     |  19.56s|   1.15e+06
 
 ### SCS
 ```
@@ -80,4 +81,5 @@ huber          |   3.39s|   2.18e+03
 lasso          |  22.02s|   1.63e+01
 lp             |   5.47s|   7.75e+02
 least_abs_dev  |   3.81s|   7.10e+03
+tv_1d          |   0.61s|   2.95e+04
 tv_smooth      | 372.86s|   1.69e+06

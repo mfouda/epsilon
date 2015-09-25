@@ -54,7 +54,7 @@ PROBLEMS = [
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
-    ProblemInstance("tv_1d", tv_1d.create, dict(n=1000)),
+    ProblemInstance("tv_1d", tv_1d.create, dict(n=10000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]
 
