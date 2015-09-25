@@ -28,6 +28,7 @@ glmgen_CFLAGS = -I$(glmgen_dir)/include
 SYSTEM = $(shell uname -s)
 
 ifeq ($(SYSTEM),Linux)
+CFLAGS += -fPIC
 CXXFLAGS += -fPIC
 endif
 
