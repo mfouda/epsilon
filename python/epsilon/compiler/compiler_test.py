@@ -6,7 +6,7 @@ from epsilon.compiler import compiler
 from epsilon.compiler import validate
 from epsilon.problems import basis_pursuit
 from epsilon.problems import least_abs_dev
-from epsilon.problems import tv_smooth
+from epsilon.problems import tv_denoise
 from epsilon.expression_pb2 import Expression
 
 def prox_op(expr):
@@ -33,9 +33,9 @@ def test_least_abs_deviations():
     assert_items_equal(prox_ops(problem), ["NormL1Prox"])
     assert_equal(1, len(problem.constraint))
 
-def test_tv_smooth():
+def test_tv_denoise():
     problem = compiler.compile(cvxpy_expr.convert_problem(
-        tv_smooth.create(n=10, lam=1))[0])
+        tv_denoise.create(n=10, lam=1))[0])
     assert_items_equal(
         prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"])
     assert_equal(1, len(problem.constraint))
