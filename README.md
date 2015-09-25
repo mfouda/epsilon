@@ -37,13 +37,31 @@ cd protobuf-cpp-3.0.0-beta-1
 make install
 ```
 
-### Install Epsilon
+### NumPy, SciPy and CVXPY dependencies
 
-Install epsilon
+Make sure to have the most recent version of numpy, scipy and cvxpy packages
 ```
-pip install epsilon
+pip install -U numpy scipy
+pip install -U cvxpy
 ```
-and (optionally) run tests with nose
+
+### Build Epsilon and run tests
+
+First, get the sub modules
+```
+git submodule update
+```
+Compile the C++ code and run tests
+```
+make -j test
+```
+
+Now build the C++ Python extension and set up the local development environment
+```
+python setup.py build
+python setup.py develop --user
+```
+Run tests
 ```
 pip install nose
 nosetests epsilon
