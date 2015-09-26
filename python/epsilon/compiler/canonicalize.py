@@ -65,6 +65,12 @@ def transform_epigraph(f_expr, g_expr):
 # expressions returned need to match those defined in
 # src/epsilon/operators/prox.cc
 
+def priority(pri_val):
+    def priority_decorator(f):
+        f.priority = pri_val
+        return f
+    return priority_decorator
+
 # General rules for dealing with additional and scalar multiplication
 def prox_multiply_scalar(expr):
     if (expr.expression_type == Expression.MULTIPLY and
@@ -89,45 +95,51 @@ def prox_affine(expr):
         expr.proximal_operator.name = "AffineProx"
         yield expr
 
-def prox_least_squares_quad_over_lin(expr):
+@priority(1)
+def prox_fused_lasso(expr):
+    # TODO(mwytock): Make this more flexible? Support weighted form?
+    # TODO(mwytock): Rewrite this using a new expression type for TV(x)
+    if (expr.expression_type == Expression.NORM_P and expr.p == 1 and
+        expr.arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].expression_type == Expression.INDEX and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.INDEX and
+        expr.arg[0].arg[1].arg[0].arg[0].expression_type ==
+        Expression.VARIABLE):
+
+        var_id0 = expr.arg[0].arg[0].arg[0].variable.variable_id
+        var_id1 = expr.arg[0].arg[1].arg[0].arg[0].variable.variable_id
+        if var_id0 != var_id1:
+            return
+
+        expr.proximal_operator.name = "FusedLassoProx"
+        yield expr
+
+@priority(1)
+def prox_least_squares(expr):
     if (expr.expression_type == Expression.QUAD_OVER_LIN and
         expr.arg[1].expression_type == Expression.CONSTANT and
         expr.arg[1].constant.scalar == 1):
+        arg = expr.arg[0]
+    elif ((expr.expression_type == Expression.POWER and
+           expr.arg[0].expression_type == Expression.NORM_P and
+           expr.p == 2 and expr.arg[0].p == 2) or
+          (expr.expression_type == Expression.SUM and
+           expr.arg[0].expression_type == Expression.POWER and
+           expr.arg[0].p == 2)):
+        arg = expr.arg[0].arg[0]
 
-        expr = sum_entries(power(expr.arg[0], 2))
-        expr.proximal_operator.name = "LeastSquaresProx"
+    else:
+        return
 
-        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
-                yield prox_expr
-
-def prox_least_squares_square_pnorm(expr):
-    if (expr.expression_type == Expression.POWER and
-        expr.arg[0].expression_type == Expression.NORM_P and
-        expr.p == 2 and expr.arg[0].p == 2):
-
-        expr = sum_entries(power(expr.arg[0].arg[0], 2))
-        expr.proximal_operator.name = "LeastSquaresProx"
-
-        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
-                yield prox_expr
-
-def prox_least_squares(expr):
-    if (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.POWER and
-        expr.arg[0].p == 2):
-
-        expr.proximal_operator.name = "LeastSquaresProx"
-        if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
-                yield prox_expr
+    expr = sum_entries(power(arg, 2))
+    expr.proximal_operator.name = "LeastSquaresProx"
+    if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
+        yield expr
+    else:
+        for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
+            yield prox_expr
 
 def prox_norm1(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 1):
@@ -314,8 +326,9 @@ def prox_epigraph(expr):
 
         yield equality_constraint(add(*ti_exprs), t_expr)
 
-# NOTE(mwtyock): first rule that matches takes precendence
+# Get prox rules sort in decreasing priority order (default priority is 0)
 PROX_RULES = [f for name, f in locals().items() if name.startswith("prox_")]
+PROX_RULES.sort(key=lambda f: -getattr(f, "priority", 0))
 
 def transform_expr(expr):
     for prox_rule in PROX_RULES:

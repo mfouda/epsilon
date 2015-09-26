@@ -27,28 +27,62 @@ class Function(object):
 
 class FunctionVariable(object):
     """Edge connecting a variable and function."""
-    def __init__(self, function, variable, instances):
+    def __init__(self, function, variable, instance):
         self.function = function
         self.variable = variable
-        self.instances = instances
+        self.instances = [instance]
+        self.instances_with_linops = [instance]
 
-    def replace_variable(self, new_var_expr):
-        self.variable = new_var_expr.variable.variable_id
-        for instance in self.instances:
-            instance.CopyFrom(new_var_expr)
+    def combine(self, other):
+        assert self.function == other.function
+        assert self.variable == other.variable
+        self.instances += other.instances
+        self.instances_with_linops += other.instances_with_linops
 
-def find_var_instances(expr):
+    def replace_variable(self, new_var_id):
+        for instance in self.instances_with_linops[1:]:
+            if instance != self.instances_with_linops[0]:
+                all_linops_equal = False
+                break
+        else:
+            all_linops_equal = True
+
+        if all_linops_equal:
+            to_replace = self.instances_with_linops
+        else:
+            to_replace = self.instances
+
+        old_var = Expression()
+        old_var.CopyFrom(to_replace[0])
+        m, n = old_var.size.dim
+
+        new_var = expression.variable(m, n, new_var_id)
+        for instance in to_replace:
+            instance.CopyFrom(new_var)
+
+        return old_var, new_var
+
+def find_var_instances(f, expr):
     if expr.expression_type == Expression.VARIABLE:
-        return {expr.variable.variable_id: [expr]}
+        var = expr.variable.variable_id
+        return {var: FunctionVariable(f, var, expr)}
 
+    # TODO(mwytock): Generalize this to any kind of lin op and arbitrary chains.
     if (expr.expression_type == Expression.INDEX and
         expr.arg[0].expression_type == Expression.VARIABLE):
-        return {expr.arg[0].variable.variable_id: [expr]}
+        retval = find_var_instances(f, expr.arg[0])
+        for var_id, f_var in retval.iteritems():
+            assert len(f_var.instances_with_linops) == 1
+            f_var.instances_with_linops = [expr]
+        return retval
 
-    retval = defaultdict(list)
+    retval = {}
     for arg in expr.arg:
-        for var_id, instances in find_var_instances(arg).iteritems():
-            retval[var_id] += instances
+        for var_id, f_var in find_var_instances(f, arg).iteritems():
+            if var_id in retval:
+                retval[var_id].combine(f_var)
+            else:
+                retval[var_id] = f_var
 
     return retval
 
@@ -83,8 +117,8 @@ class ProblemGraph(object):
         del self.edges_by_function[f]
 
     def add_function(self, f):
-        for variable, instances in find_var_instances(f.expr).iteritems():
-            self.add_edge(FunctionVariable(f, variable, instances))
+        for f_var in find_var_instances(f, f.expr).itervalues():
+            self.add_edge(f_var)
 
         # Add curvature attributes for equality indicator functions
         if is_equality_indicator(f):

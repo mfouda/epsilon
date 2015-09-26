@@ -6,6 +6,7 @@ from epsilon.compiler import compiler
 from epsilon.compiler import validate
 from epsilon.problems import basis_pursuit
 from epsilon.problems import least_abs_dev
+from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
 from epsilon.expression_pb2 import Expression
 
@@ -38,4 +39,11 @@ def test_tv_denoise():
         tv_denoise.create(n=10, lam=1))[0])
     assert_items_equal(
         prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"])
+    assert_equal(1, len(problem.constraint))
+
+def test_tv_1d():
+    problem = compiler.compile(cvxpy_expr.convert_problem(
+        tv_1d.create(n=10))[0])
+    assert_items_equal(
+        prox_ops(problem), ["LeastSquaresProx", "FusedLassoProx"])
     assert_equal(1, len(problem.constraint))

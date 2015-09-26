@@ -98,13 +98,14 @@ def separate_objective_terms(graph):
 
         # Skip first one, rename the rest
         for f_var in f_vars[1:]:
-            new_var_expr = separate_var(f_var)
-            graph.add_function(
-                Function(equality_constraint(f_var.instances[0], new_var_expr),
-                         constraint=True))
-
             graph.remove_edge(f_var)
-            f_var.replace_variable(new_var_expr)
+
+            new_var_id = "separate:%s:%s" % (
+                f_var.variable, fp_expr(f_var.function.expr))
+            old_var, new_var = f_var.replace_variable(new_var_id)
+            graph.add_function(Function(equality_constraint(old_var, new_var),
+                                        constraint=True))
+
             graph.add_edge(f_var)
 
 GRAPH_TRANSFORMS = [

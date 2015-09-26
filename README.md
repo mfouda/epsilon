@@ -3,15 +3,14 @@
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
-## Installation
+## Development Instructions
 
-The epsilon C++ code has library dependencies which are not bundled as part of
-the python package. These must be installed before the epsilon package itself.
+These instructions are for setting up the development environment with the
+required C++ and numerical python envirnoment (cvxpy, numpy, scipy). For
+end-users the package should be pip-installable, with binaries provided
+for common environments.
 
-We assume that CVXPY has already been installed, see instructions at
-http://www.cvxpy.org/en/latest/install/index.html.
-
-### Dependencies on Mac OS X
+### C++ dependencies on Mac OS X
 
 Install dependencies using Homebrew (or MacPorts):
 
@@ -20,7 +19,7 @@ brew install glog gflags
 brew install --devel protobuf
 ```
 
-### Dependencies on Ubuntu
+### C++ dependencies on Ubuntu
 
 Install dependencies with the package manager
 ```
@@ -37,13 +36,31 @@ cd protobuf-cpp-3.0.0-beta-1
 make install
 ```
 
-### Install Epsilon
+### NumPy, SciPy and CVXPY dependencies
 
-Install epsilon
+Make sure to have the most recent version of numpy, scipy and cvxpy packages
 ```
-pip install epsilon
+pip install -U numpy scipy
+pip install -U cvxpy
 ```
-and (optionally) run tests with nose
+
+### Build Epsilon and run tests
+
+First, get the sub modules
+```
+git submodule update --init
+```
+Compile the C++ code and run tests
+```
+make -j test
+```
+
+Now build the C++ Python extension and set up the local development environment
+```
+python setup.py build
+python setup.py develop --user
+```
+Run python tests
 ```
 pip install nose
 nosetests epsilon
@@ -64,7 +81,7 @@ huber          |   0.49s|   2.18e+03
 lasso          |   3.93s|   1.71e+01
 least_abs_dev  |   0.39s|   7.10e+03
 lp             |   0.33s|   7.77e+02
-tv_1d          |  13.96s|   1.86e+04
+tv_1d          |   0.47s|   2.29e+05
 tv_denoise     |  19.56s|   1.15e+06
 
 ### SCS
@@ -81,5 +98,5 @@ huber          |   3.39s|   2.18e+03
 lasso          |  22.02s|   1.63e+01
 least_abs_dev  |   3.81s|   7.10e+03
 lp             |   5.47s|   7.75e+02
-tv_1d          |   0.61s|   2.95e+04
+tv_1d          |  47.28s|   3.51e+05
 tv_denoise     | 372.86s|   1.69e+06
