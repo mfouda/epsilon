@@ -248,6 +248,15 @@ def prox_norm2_epigraph(expr):
         if expr.arg[1].arg[0].curvature.scalar_multiple:
             yield expr
 
+def prox_norm1_epigraph(expr):
+    if (is_epigraph(expr) and
+        expr.arg[1].expression_type == Expression.NORM_P and
+        expr.arg[1].p == 1):
+
+        expr.proximal_operator.name = "NormL1Epigraph"
+        if expr.arg[1].arg[0].curvature.scalar_multiple:
+            yield expr
+
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO):
