@@ -92,6 +92,21 @@ def _test_norm2_epigraph(i, n):
     xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
     np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
 
+def _test_norm1_epigraph(i, n):
+    np.random.seed(i)
+    v = np.random.randn(n)
+    s = np.random.randn()
+
+    x = cp.Variable(n)
+    t = cp.Variable(1)
+    c = [cp.norm(x, 1) <= t]
+    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                                cp.sum_squares(t - s))), c).solve()
+
+    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
+    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
+    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
+
 def _test_fused_lasso(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
@@ -126,6 +141,10 @@ def test_norm2():
 def test_norm2_epigraph():
     for i in xrange(NUM_TRIALS):
         yield _test_norm2_epigraph, i, 10
+
+def test_norm1_epigraph():
+    for i in xrange(NUM_TRIALS):
+        yield _test_norm1_epigraph, i, 10
 
 def test_fused_lasso():
     for i in xrange(NUM_TRIALS):
