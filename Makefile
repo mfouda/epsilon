@@ -61,7 +61,9 @@ common_cc = \
 	epsilon/prox/norm_l1.cc \
 	epsilon/prox/norm_l1_l2.cc \
 	epsilon/prox/norm_l2.cc \
+	epsilon/prox/logistic.cc \
 	epsilon/prox/prox.cc \
+	epsilon/prox/newton.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

@@ -120,6 +120,33 @@ def _test_fused_lasso(i, n):
     x1 = prox(cp.Problem(cp.Minimize(f)), v)
     np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
 
+def _test_logistic_prox(i, n):
+    np.random.seed(i)
+    v = np.random.randn(n)
+
+    x = cp.Variable(n)
+    f = sum([cp.log_sum_exp(cp.vstack(0, x[i])) for i in range(n)])
+    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
+
+    x0 = np.asarray(x.value).ravel()
+    x1 = prox(cp.Problem(cp.Minimize(f)), v)
+    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+
+def _test_logistic_epigraph(i, n):
+    np.random.seed(i)
+    v = np.random.randn(n)
+    s = np.random.randn()
+
+    x = cp.Variable(n)
+    t = cp.Variable(1)
+    c = [sum([cp.log_sum_exp(cp.vstack(0, x[i])) for i in range(n)]) <= t]
+    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                                cp.sum_squares(t - s))), c).solve()
+
+    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
+    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
+    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
+
 def test_linear_equality():
     for i in xrange(NUM_TRIALS):
         yield _test_linear_equality_simple, i, 5, 10
@@ -149,3 +176,11 @@ def test_norm1_epigraph():
 def test_fused_lasso():
     for i in xrange(NUM_TRIALS):
         yield _test_fused_lasso, i, 10
+
+def test_logistic_prox():
+    for i in xrange(1):
+        yield _test_logistic_prox, i, 10
+
+def test_logistic_epigraph():
+    for i in xrange(1):
+        yield _test_logistic_epigraph, i, 10
