@@ -9,11 +9,12 @@ from epsilon import solver_params_pb2
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
 from epsilon.problems import group_lasso
+from epsilon.problems import hinge_l1
 from epsilon.problems import huber
 from epsilon.problems import lasso
+from epsilon.problems import least_abs_dev
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
-from epsilon.problems import least_abs_dev
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
@@ -44,6 +45,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
+
+PROBLEMS = [
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
+]
+
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

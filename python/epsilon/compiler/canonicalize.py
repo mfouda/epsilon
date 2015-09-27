@@ -202,6 +202,16 @@ def prox_huber(expr):
             for prox_expr in transform_expr(expr):
                 yield prox_expr
 
+def prox_max_elemwise(expr):
+    """Replace max{..., ...} with epigraph constraints"""
+    if expr.expression_type == Expression.MAX_ELEMENTWISE:
+        t = epigraph_variable(expr)
+        for arg in expr.arg:
+            for prox_expr in transform_expr(epigraph(arg, t)):
+                yield prox_expr
+        for prox_expr in transform_expr(t):
+            yield prox_expr
+
 def prox_norm12(expr):
     if (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
@@ -218,21 +228,22 @@ def prox_norm12(expr):
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
-def prox_norm1inf(expr):
-    if (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE):
+# TODO(mwytock): Remove or implement
+# def prox_norm1inf(expr):
+#     if (expr.expression_type == Expression.SUM and
+#         expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE):
 
-        # Rewrite this as l1/linf norm using reshape() and hstack()
-        m = dimension(expr.arg[0].arg[0])
-        arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
-        expr = norm_pq(arg, 1, float('inf'))
+#         # Rewrite this as l1/linf norm using reshape() and hstack()
+#         m = dimension(expr.arg[0].arg[0])
+#         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
+#         expr = norm_pq(arg, 1, float('inf'))
 
-        expr.proximal_operator.name = "NormL1LinfProx"
-        if arg.curvature.scalar_multiple:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0]):
-                yield prox_expr
+#         expr.proximal_operator.name = "NormL1LinfProx"
+#         if arg.curvature.scalar_multiple:
+#             yield expr
+#         else:
+#             for prox_expr in transform_epigraph(expr, expr.arg[0]):
+#                 yield prox_expr
 
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and

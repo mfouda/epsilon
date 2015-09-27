@@ -25,4 +25,4 @@ def logistic_loss(x):
     return sum(cp.log_sum_exp(cp.vstack(0, -x[i])) for i in xrange(x.size[0]))
 
 def hinge_loss(x):
-    return cp.max_elemwise(0, 1 - x)
+    return cp.sum_entries(cp.max_elemwise(0, 1-x))
