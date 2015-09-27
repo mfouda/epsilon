@@ -18,7 +18,7 @@ public:
 
   Eigen::VectorXd residual
     (const Eigen::VectorXd &x, double t, double lam, const Eigen::VectorXd &v, double s);
-  Eigen::VectorXd EpiByNewton(const Eigen::VectorXd &v, double s);
+  Eigen::VectorXd EpiByNewton(const Eigen::VectorXd &sv);
   Eigen::VectorXd solve_arrowhead_system
     (const Eigen::VectorXd &d, const Eigen::VectorXd &z, double alpha,
      const Eigen::VectorXd &b);

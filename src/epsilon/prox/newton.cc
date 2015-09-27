@@ -58,11 +58,13 @@ Eigen::VectorXd NewtonEpigraph::residual
   return r;
 }
 
-Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &v, double s) {
-  int n = v.rows();
+Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &sv) {
+  int n = sv.rows()-1;
   double eps = std::max(1e-12, 1e-10/n);
   
   // init
+  double s = sv(0);
+  Eigen::VectorXd v = sv.tail(n);
   Eigen::VectorXd x = v;
   double t = s;
   double lam = 1;
@@ -92,6 +94,8 @@ Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &v, double s) 
       Eigen::VectorXd nx = x - theta*step.head(n);
       double nt = t - theta*step(n);
       double nlam = lam - theta*step(n+1);
+      if(nlam < 0)
+              nlam = 0;
       double nx_res = residual(nx, nt, nlam, v, s).norm();
       if(nx_res <= (1-beta*theta)*nx_res) {
         x = nx;
@@ -106,7 +110,10 @@ Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &v, double s) 
     if(x_res < eps)
       break;
   }
-  return x;
+  Eigen::VectorXd tx(n+1);
+  tx(0) = t;
+  tx.tail(n) = x;
+  return tx;
 }
 
 // solve Ax=b, where A = [diag(d), z; z', alpha], and d_i>0 forall i

@@ -6,41 +6,41 @@
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
-class Logistic {
+class NegLog {
 public:
   static double f(const Eigen::VectorXd &x) {
     int n = x.rows();
     double sum = 0;
     for(int i=0; i<n; i++)
-      sum += std::log(1+std::exp(x(i)));
-    return sum;
+      sum += std::log(x(i));
+    return -sum;
   }
   static Eigen::VectorXd gradf(const Eigen::VectorXd &x) {
     int n = x.rows();
     Eigen::VectorXd g(n);
     for(int i=0; i<n; i++)
-      g(i) = std::exp(x(i)) / (1+std::exp(x(i)));
+      g(i) = -1 / (x(i));
     return g;
   }
   static Eigen::VectorXd hessf(const Eigen::VectorXd &x) {
     int n = x.rows();
     Eigen::VectorXd h(n);
     for(int i=0; i<n; i++)
-      h(i) = std::exp(x(i)) / pow(1+std::exp(x(i)), 2);
+      h(i) = 1 / (x(i)*x(i));
     return h;
   }
 };
 
-// lam*||x||_2
-class LogisticProx final : public NewtonProx{
+// \sum_i log(xi)
+class NegLogProx final : public NewtonProx{
   double f(const Eigen::VectorXd &x) override {
-    return Logistic::f(x);
+    return NegLog::f(x);
   }
   Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return Logistic::gradf(x);
+    return NegLog::gradf(x);
   }
   Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return Logistic::hessf(x);
+    return NegLog::hessf(x);
   }
   void Init(const ProxOperatorArg& arg) override {
     // Expression tree:
@@ -55,21 +55,21 @@ class LogisticProx final : public NewtonProx{
 private:
   double lambda_;
 };
-REGISTER_PROX_OPERATOR(LogisticProx);
+REGISTER_PROX_OPERATOR(NegLogProx);
 
-// I(||x||_2 <= t)
-class LogisticEpigraph final : public NewtonEpigraph{
+// I(-\sum_i log(xi) <= t)
+class NegLogEpigraph final : public NewtonEpigraph{
   double f(const Eigen::VectorXd &x) override {
-    return Logistic::f(x);
+    return NegLog::f(x);
   }
   Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return Logistic::gradf(x);
+    return NegLog::gradf(x);
   }
   Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return Logistic::hessf(x);
+    return NegLog::hessf(x);
   }
   Eigen::VectorXd Apply(const Eigen::VectorXd& sv) override {
     return EpiByNewton(sv);
   }
 };
-REGISTER_PROX_OPERATOR(LogisticEpigraph);
+REGISTER_PROX_OPERATOR(NegLogEpigraph);
