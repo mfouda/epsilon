@@ -6,12 +6,14 @@ import numpy
 from cvxpy import utilities as u
 from cvxpy.atoms.affine.add_expr import AddExpression
 from cvxpy.atoms.affine.binary_operators import MulExpression
+from cvxpy.atoms.affine.hstack import hstack
 from cvxpy.atoms.affine.index import index
 from cvxpy.atoms.affine.mul_elemwise import mul_elemwise
 from cvxpy.atoms.affine.sum_entries import sum_entries
 from cvxpy.atoms.affine.trace import trace
 from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
+from cvxpy.atoms.affine.vstack import vstack
 from cvxpy.atoms.elementwise.exp import exp
 from cvxpy.atoms.elementwise.huber import huber
 from cvxpy.atoms.elementwise.log import log
@@ -19,6 +21,7 @@ from cvxpy.atoms.elementwise.max_elemwise import max_elemwise
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.atoms.elementwise.power import power
 from cvxpy.atoms.log_det import log_det
+from cvxpy.atoms.log_sum_exp import log_sum_exp
 from cvxpy.atoms.pnorm import pnorm
 from cvxpy.atoms.quad_over_lin import quad_over_lin
 from cvxpy.constraints.eq_constraint import EqConstraint
@@ -38,10 +41,12 @@ EXPRESSION_TYPES = (
     (NegExpression, E.NEGATE),
     (Variable, E.VARIABLE),
     (exp, E.EXP),
+    (hstack, E.HSTACK),
     (huber, E.HUBER),
     (index, E.INDEX),
     (log, E.LOG),
     (log_det, E.LOG_DET),
+    (log_sum_exp, E.LOG_SUM_EXP),
     (max_elemwise, E.MAX_ELEMENTWISE),
     (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
     (norm2_elemwise, E.NORM_2_ELEMENTWISE),
@@ -51,6 +56,7 @@ EXPRESSION_TYPES = (
     (sum_entries, E.SUM),
     (trace, E.TRACE),
     (transpose, E.TRANSPOSE),
+    (vstack, E.VSTACK),
 )
 
 import inspect

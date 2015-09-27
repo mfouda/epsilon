@@ -141,6 +141,19 @@ def prox_least_squares(expr):
         for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
             yield prox_expr
 
+def prox_logistic(expr):
+    if (expr.expression_type == Expression.LOG_SUM_EXP and
+        expr.arg[0].expression_type == Expression.VSTACK and
+        len(expr.arg[0].arg) == 2 and
+        expr.arg[0].arg[0].expression_type == Expression.CONSTANT):
+
+        expr.proximal_operator.name = "LogisticProx"
+        if expr.arg[0].arg[1].curvature.elementwise:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[1]):
+                yield prox_expr
+
 def prox_norm1(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 1):
         expr.proximal_operator.name = "NormL1Prox"
@@ -187,25 +200,6 @@ def prox_huber(expr):
 
         for expr in exprs:
             for prox_expr in transform_expr(expr):
-                yield prox_expr
-
-def prox_logistic(expr):
-    if (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.ADD and
-        len(expr.arg[0].arg) == 2):
-
-        if expr.arg[0].arg[0].expression_type == Expression.CONSTANT:
-            arg = expr.arg[0].arg[1].arg[0]
-        elif expr.arg[0].arg[1].expression_type == Expression.CONSTANT:
-            arg = expr.arg[0].arg[0].arg[0]
-        else:
-            return
-
-        expr.proximal_operator.name = "LogisticProx"
-        if arg.curvature.elementwise:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, arg):
                 yield prox_expr
 
 def prox_norm12(expr):

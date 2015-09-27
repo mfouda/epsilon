@@ -19,5 +19,6 @@ def create(m, n):
 
     lam = 0.1*np.sqrt(n)
     x = cp.Variable(n)
-    f = cp.sum_entries(1 + cp.exp(cp.mul_elemwise(-b, A*x))) + lam*cp.norm(x,1)
+    f = (cp.log_sum_exp(cp.vstack(0, cp.mul_elemwise(-b, A*x))) +
+         lam*cp.norm(x,1))
     return cp.Problem(cp.Minimize(f))
