@@ -58,6 +58,10 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
+]
+
 COLUMNS = [
     Column("Problem",   15, "%-15s"),
     Column("Time",      8,  "%7.2fs", right=True),

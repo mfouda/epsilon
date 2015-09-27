@@ -305,6 +305,17 @@ def prox_negative_entropy_epigraph(expr):
         if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
             yield expr
 
+def prox_logistic_epigraph(expr):
+    if (is_epigraph(expr) and
+        expr.arg[1].expression_type == Expression.LOG_SUM_EXP and
+        expr.arg[1].arg[0].expression_type == Expression.VSTACK and
+        len(expr.arg[1].arg[0].arg) == 2 and
+        expr.arg[1].arg[0].arg[0].expression_type == Expression.CONSTANT):
+
+        expr.proximal_operator.name = "LogisticEpigraph"
+        if expr.arg[1].arg[0].arg[1].curvature.elementwise:
+            yield expr
+
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO):

@@ -4,6 +4,7 @@ import numpy
 
 from epsilon import _solve
 from epsilon import cvxpy_expr
+from epsilon import expression_str
 from epsilon import solver_params_pb2
 from epsilon import solver_pb2
 from epsilon.compiler import attributes
@@ -36,6 +37,7 @@ def prox(cvxpy_prob, v, lam=1):
     """Evaluate a single proximal operator."""
 
     problem, data_map = cvxpy_expr.convert_problem(cvxpy_prob)
+    logging.debug("Input:\n%s", expression_str.problem_str(problem))
     problem = canonicalize.transform(attributes.transform(problem))
     validate.check_sum_of_prox(problem)
 

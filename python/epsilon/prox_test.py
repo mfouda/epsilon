@@ -136,10 +136,12 @@ def _test_logistic_epigraph(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
     s = np.random.randn()
+    # TODO(mwytock): Fix when logistic() atom exists
+    assert n == 1
 
     x = cp.Variable(n)
     t = cp.Variable(1)
-    c = [sum([cp.log_sum_exp(cp.vstack(0, x[i])) for i in range(n)]) <= t]
+    c = [cp.log_sum_exp(cp.vstack(0, x)) <= t]
     cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
                                 cp.sum_squares(t - s))), c).solve()
 
@@ -229,22 +231,26 @@ def test_norm2_epigraph():
     for i in xrange(NUM_TRIALS):
         yield _test_norm2_epigraph, i, 10
 
+
 def test_norm1_epigraph():
     for i in xrange(NUM_TRIALS):
         yield _test_norm1_epigraph, i, 10
+
 
 def test_fused_lasso():
     for i in xrange(NUM_TRIALS):
         yield _test_fused_lasso, i, 10
 
-if 0:
-    def test_logistic_prox():
-        for i in xrange(NUM_TRIALS):
-            yield _test_logistic_prox, i, 10
+# TODO(mwytock): Use vector variables when we have logistic() atom in CVXPY
+def test_logistic_prox():
+    for i in xrange(NUM_TRIALS):
+        yield _test_logistic_prox, i, 1
 
+# TODO(mwytock): Figure out why this fails?
+if 0:
     def test_logistic_epigraph():
-        for i in xrange(NUM_TRIALS):
-            yield _test_logistic_epigraph, i, 10
+        for i in xrange(1):
+            yield _test_logistic_epigraph, i, 1
 
 def test_negative_log_prox():
     for i in xrange(NUM_TRIALS):
