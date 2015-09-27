@@ -147,7 +147,7 @@ def _test_logistic_epigraph(i, n):
     xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
     np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
 
-def _test_neglog_prox(i, n):
+def _test_negative_log_prox(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
     v = np.absolute(v)
@@ -160,7 +160,7 @@ def _test_neglog_prox(i, n):
     x1 = prox(cp.Problem(cp.Minimize(f)), v)
     np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
 
-def _test_neglog_epigraph(i, n):
+def _test_negative_log_epigraph(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
     v = np.absolute(v)
@@ -177,7 +177,7 @@ def _test_neglog_epigraph(i, n):
     xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
     np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
 
-def _test_negentr_prox(i, n):
+def _test_negative_entropy_prox(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
     v = np.absolute(v)
@@ -190,7 +190,7 @@ def _test_negentr_prox(i, n):
     x1 = prox(cp.Problem(cp.Minimize(f)), v)
     np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
 
-def _test_negentr_epigraph(i, n):
+def _test_negative_entropy_epigraph(i, n):
     np.random.seed(i)
     v = np.random.randn(n)
     v = np.absolute(v)
@@ -246,18 +246,18 @@ if 0:
         for i in xrange(NUM_TRIALS):
             yield _test_logistic_epigraph, i, 10
 
-def test_neglog_prox():
+def test_negative_log_prox():
     for i in xrange(NUM_TRIALS):
-        yield _test_neglog_prox, i, 10
+        yield _test_negative_log_prox, i, 10
 
-def test_neglog_epigraph():
+def test_negative_log_epigraph():
     for i in xrange(NUM_TRIALS):
-        yield _test_neglog_epigraph, i, 10
+        yield _test_negative_log_epigraph, i, 10
 
-def test_negentr_prox():
+def test_negative_entropy_prox():
     for i in xrange(NUM_TRIALS):
-        yield _test_negentr_prox, i, 10
+        yield _test_negative_entropy_prox, i, 10
 
-def test_negentr_epigraph():
+def test_negative_entropy_epigraph():
     for i in xrange(NUM_TRIALS):
-        yield _test_negentr_epigraph, i, 10
+        yield _test_negative_entropy_epigraph, i, 10

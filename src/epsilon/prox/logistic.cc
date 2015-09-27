@@ -32,7 +32,7 @@ public:
 };
 
 // lam*||x||_2
-class LogisticProx final : public NewtonProx{
+class LogisticProx final : public NewtonProx {
   double f(const Eigen::VectorXd &x) override {
     return Logistic::f(x);
   }
@@ -58,7 +58,7 @@ private:
 REGISTER_PROX_OPERATOR(LogisticProx);
 
 // I(||x||_2 <= t)
-class LogisticEpigraph final : public NewtonEpigraph{
+class LogisticEpigraph final : public NewtonEpigraph {
   double f(const Eigen::VectorXd &x) override {
     return Logistic::f(x);
   }
