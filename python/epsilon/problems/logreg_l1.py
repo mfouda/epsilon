@@ -19,6 +19,10 @@ def create(m, n):
 
     lam = 0.1*np.sqrt(n)
     x = cp.Variable(n)
-    f = (cp.log_sum_exp(cp.vstack(0, cp.mul_elemwise(-b, A*x))) +
-         lam*cp.norm(x,1))
-    return cp.Problem(cp.Minimize(f))
+
+    # TODO(mwytock): This is nasty, need to make this easier to write in CVXPY
+    # in a way that the problem description doesnt scale with the number of
+    # examples!
+    bA = sp.diags([-b.ravel()], [0])*A
+    fi = [cp.log_sum_exp(cp.vstack(0, -bA[i,:]*x)) for i in range(m)]
+    return cp.Problem(cp.Minimize(sum(fi)))
