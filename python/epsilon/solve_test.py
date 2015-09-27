@@ -22,10 +22,10 @@ from epsilon.problems.problem_instance import ProblemInstance
 # These problems need a higher relative accuracy for some reason
 REL_TOL = {
     "basis_pursuit": 1e-3,
-    "least_abs_dev": 1e-3,
     "group_lasso": 1e-3,
-    "tv_1d": 1e-3,
+    "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
+    "tv_1d": 1e-3,
 }
 
 # TODO(mwytock): Need L1/Linf proximal operator
@@ -39,15 +39,11 @@ PROBLEMS = [
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
-
-# This fails currently w/ wrong answer, seems to hit iteration limit
-# PROBLEMS = [
-#    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
-# ]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()
