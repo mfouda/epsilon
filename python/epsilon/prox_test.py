@@ -231,11 +231,9 @@ def test_norm2_epigraph():
     for i in xrange(NUM_TRIALS):
         yield _test_norm2_epigraph, i, 10
 
-
 def test_norm1_epigraph():
     for i in xrange(NUM_TRIALS):
         yield _test_norm1_epigraph, i, 10
-
 
 def test_fused_lasso():
     for i in xrange(NUM_TRIALS):
