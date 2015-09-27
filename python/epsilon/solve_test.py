@@ -30,9 +30,6 @@ REL_TOL = {
 # TODO(mwytock): Need L1/Linf proximal operator
 # ProblemInstance("quantile", quantile.create, dict(m=20, n=10, k=3))
 #
-# TODO(mwytock): Logistic prox (or cone reduction) not implemented. Also need to
-# support more than one equality constraint
-# ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -45,6 +42,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
+
+# TODO(mwytock): Add to list when we have logistic prox
+# PROBLEMS = [
+#     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
+# ]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()
