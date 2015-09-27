@@ -57,11 +57,15 @@ common_cc = \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear_equality.cc \
 	epsilon/prox/negative_log_det.cc \
+	epsilon/prox/negative_log.cc \
 	epsilon/prox/non_negative.cc \
 	epsilon/prox/norm_l1.cc \
 	epsilon/prox/norm_l1_l2.cc \
 	epsilon/prox/norm_l2.cc \
+	epsilon/prox/logistic.cc \
+	epsilon/prox/negative_entropy.cc \
 	epsilon/prox/prox.cc \
+	epsilon/prox/newton.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

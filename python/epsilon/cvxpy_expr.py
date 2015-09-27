@@ -15,6 +15,7 @@ from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
 from cvxpy.atoms.affine.vstack import vstack
 from cvxpy.atoms.elementwise.exp import exp
+from cvxpy.atoms.elementwise.entr import entr
 from cvxpy.atoms.elementwise.huber import huber
 from cvxpy.atoms.elementwise.log import log
 from cvxpy.atoms.elementwise.max_elemwise import max_elemwise
@@ -41,6 +42,7 @@ EXPRESSION_TYPES = (
     (NegExpression, E.NEGATE),
     (Variable, E.VARIABLE),
     (exp, E.EXP),
+    (entr, E.ENTR),
     (hstack, E.HSTACK),
     (huber, E.HUBER),
     (index, E.INDEX),

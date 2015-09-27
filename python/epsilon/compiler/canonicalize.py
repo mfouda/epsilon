@@ -244,6 +244,28 @@ def prox_neg_log_det(expr):
         else:
             raise NotImplementedError()
 
+def prox_negative_log(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.SUM and
+        expr.arg[0].arg[0].expression_type == Expression.LOG):
+
+        expr.proximal_operator.name = "NegativeLogProx"
+        if expr.arg[0].arg[0].arg[0].curvature.scalar_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
+
+def prox_negative_entropy(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.SUM and
+        expr.arg[0].arg[0].expression_type == Expression.ENTR):
+
+        expr.proximal_operator.name = "NegativeEntropyProx"
+        if expr.arg[0].arg[0].arg[0].curvature.scalar_multiple:
+            yield expr
+        else:
+            raise NotImplementedError()
+
 # Rules for epigraph forms
 def prox_norm2_epigraph(expr):
     if (is_epigraph(expr) and
@@ -261,6 +283,26 @@ def prox_norm1_epigraph(expr):
 
         expr.proximal_operator.name = "NormL1Epigraph"
         if expr.arg[1].arg[0].curvature.scalar_multiple:
+            yield expr
+
+def prox_negative_log_epigraph(expr):
+    if (is_epigraph(expr) and
+        expr.arg[1].expression_type == Expression.NEGATE and
+        expr.arg[1].arg[0].expression_type == Expression.SUM and
+        expr.arg[1].arg[0].arg[0].expression_type == Expression.LOG):
+
+        expr.proximal_operator.name = "NegativeLogEpigraph"
+        if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
+            yield expr
+
+def prox_negative_entropy_epigraph(expr):
+    if (is_epigraph(expr) and
+        expr.arg[1].expression_type == Expression.NEGATE and
+        expr.arg[1].arg[0].expression_type == Expression.SUM and
+        expr.arg[1].arg[0].arg[0].expression_type == Expression.ENTR):
+
+        expr.proximal_operator.name = "NegativeEntropyEpigraph"
+        if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
             yield expr
 
 def prox_equality_constraint(expr):
