@@ -9,11 +9,12 @@ from epsilon import solver_params_pb2
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
 from epsilon.problems import group_lasso
+from epsilon.problems import hinge_l1
 from epsilon.problems import huber
 from epsilon.problems import lasso
+from epsilon.problems import least_abs_dev
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
-from epsilon.problems import least_abs_dev
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
@@ -26,6 +27,7 @@ REL_TOL = {
     "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
     "tv_1d": 1e-3,
+    "hinge_l1": 1e-3,
 }
 
 # TODO(mwytock): Need L1/Linf proximal operator
@@ -36,6 +38,7 @@ PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),

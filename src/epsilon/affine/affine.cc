@@ -22,14 +22,17 @@ typedef Eigen::SparseMatrix<double> SparseXd;
 
 
 DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
-  if (c.data_location() == "")
-    return DynamicMatrix::FromDense(VectorXd::Constant(1, c.scalar()));
+  DynamicMatrix A;
+  if (c.data_location() == "") {
+    A = DynamicMatrix::FromDense(VectorXd::Constant(L.cols(), c.scalar()));
+  } else {
+    VLOG(1) << "Read: " << c.data_location();
+    std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
+    VLOG(1) << "Read done: " << c.data_location();
+    A = DynamicMatrix::FromDense(GetMatrixData(*d));
+    A.ToVector();
+  }
 
-  VLOG(1) << "Read: " << c.data_location();
-  std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
-  VLOG(1) << "Read done: " << c.data_location();
-  DynamicMatrix A = DynamicMatrix::FromDense(GetMatrixData(*d));
-  A.ToVector();
   L.RightMultiply(A);
   return L;
 }

@@ -19,10 +19,3 @@ def create_dense(m, n):
     b = np.sign(A*x0 + np.sqrt(0.1)*np.random.randn(m,1))
 
     return A, b
-
-# TODO(mwytock): Make it so expression tree doesnt scale with m
-def logistic_loss(x):
-    return sum(cp.log_sum_exp(cp.vstack(0, -x[i])) for i in xrange(x.size[0]))
-
-def hinge_loss(x):
-    return cp.max_elemwise(0, 1 - x)

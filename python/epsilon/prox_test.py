@@ -38,9 +38,11 @@ def test_prox():
 
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + prox.objective),
                    prox.constraints).solve(solver=cp.SCS)
-        x0 = np.asarray(x.value).ravel()
-        x1 = solve.prox(cp.Problem(cp.Minimize(prox.objective), prox.constraints), v)
-        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-2)
+        expected = {var: var.value for var in (x,)}
+
+        solve.prox(
+            cp.Problem(cp.Minimize(prox.objective), prox.constraints), {x: v})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-2)
 
     for prox in PROX_TESTS:
         for i in xrange(NUM_TRIALS):
@@ -51,18 +53,19 @@ def test_epigraph():
         np.random.seed(i)
 
         v = np.random.randn(n)
-        s = np.random.randn()
+        s = np.random.randn(1)
 
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) +
                                0.5*cp.sum_squares(t - s) +
                                prox.objective),
                    prox.constraints).solve()
+        expected = {var: var.value for var in (x,t)}
 
-        tx0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-        tx1 = solve.prox(
+        solve.prox(
             cp.Problem(cp.Minimize(prox.objective), prox.constraints),
-            np.hstack((s, v)))
-        np.testing.assert_allclose(tx0, tx1, rtol=1e-2, atol=1e-4)
+            {x: v, t: s})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
 
     for prox in EPIGRAPH_TESTS:
         for i in xrange(NUM_TRIALS):
@@ -70,7 +73,7 @@ def test_epigraph():
 
 # TODO(mwytock): Convert test_logistic_prox/epigraph to vectors when logistic
 # atom is fixed
-def test_logistic_prox():
+def test_prox_logistic():
     def run(i):
         np.random.seed(i)
 
@@ -78,29 +81,30 @@ def test_logistic_prox():
         x = cp.Variable(1)
         f = cp.log_sum_exp(cp.vstack(0, x))
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
+        expected = {var: var.value for var in (x,)}
 
-        x0 = np.asarray(x.value).ravel()
-        x1 = solve.prox(cp.Problem(cp.Minimize(f)), v)
-        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+        solve.prox(cp.Problem(cp.Minimize(f)), {x: v})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
 
     for i in xrange(NUM_TRIALS):
         yield run, i
 
-def test_logistic_epigraph():
+def test_epigraph_logistic():
     def run(i):
         np.random.seed(i)
         v = np.random.randn(1)
-        s = np.random.randn()
+        s = np.random.randn(1)
 
         x = cp.Variable(1)
         t = cp.Variable(1)
         c = [cp.log_sum_exp(cp.vstack(0, x)) <= t]
         cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
                                     cp.sum_squares(t - s))), c).solve()
+        expected = {var: var.value for var in (x,t)}
 
-        tx0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-        tx1 = solve.prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-        np.testing.assert_allclose(tx0, tx1, rtol=1e-2, atol=1e-4)
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, t: s})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
 
     for i in xrange(NUM_TRIALS):
         yield run, i
@@ -116,9 +120,10 @@ def test_linear_equality():
 
         c = [A*x == b]
         cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v))), c).solve()
-        x0 = np.asarray(x.value).ravel()
-        x1 = solve.prox(cp.Problem(cp.Minimize(0), c), v)
-        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+        expected = {var: var.value for var in (x,)}
+
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
 
     for i in xrange(NUM_TRIALS):
         yield run, i
@@ -138,10 +143,39 @@ def test_linear_equality_graph():
             cp.Minimize(0.5*(cp.sum_squares(x - v) +
                              cp.sum_squares(y - u))),
             c).solve()
+        expected = {var: var.value for var in (x,y)}
 
-        xy0 = np.asarray(np.vstack((x.value, y.value))).ravel()
-        xy1 = solve.prox(cp.Problem(cp.Minimize(0), c), np.hstack((v, u)))
-        np.testing.assert_allclose(xy0, xy1, rtol=1e-2, atol=1e-4)
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i
+
+def test_linear_equality_multivariate():
+    """I(z - (y - (1 - Ax)) == 0)"""
+    m = 5
+    def run(i):
+        np.random.seed(i)
+
+        A = np.random.randn(m, n)
+        v = np.random.randn(n)
+        u = np.random.randn(m)
+        w = np.random.randn(m)
+
+        y = cp.Variable(m)
+        z = cp.Variable(m)
+        c = [z - (y - (1 - A*x)) == 0]
+        cp.Problem(
+            cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                             cp.sum_squares(y - u) +
+                             cp.sum_squares(z - w))), c).solve()
+        expected = {var: var.value for var in (x, y, z)}
+
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u, z: w})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(z.value, expected[z], rtol=1e-2, atol=1e-4)
 
     for i in xrange(NUM_TRIALS):
         yield run, i
@@ -154,12 +188,12 @@ def test_non_negative_scaled():
         alpha = np.random.randn()
 
         x = cp.Variable(n)
-        c = [alpha*x  >= 0]
+        c = [alpha*x >= 0]
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
+        expected = {var: var.value for var in (x,)}
 
-        x0 = np.asarray(x.value).ravel()
-        x1 = solve.prox(cp.Problem(cp.Minimize(0), c), v)
-        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
 
-    for i in xrange(NUM_TRIALS):
+    for i in xrange(1):
         yield run, i
