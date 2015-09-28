@@ -80,7 +80,11 @@ void DynamicMatrix::ToMatrix(int m, int n) {
   CHECK_EQ(rows(), m*n);
 
   if (is_sparse_) {
-    LOG(FATAL) << "Not implemented";
+    // Convert to dense
+    dense_ = Eigen::Map<Eigen::MatrixXd>(
+        static_cast<Eigen::MatrixXd>(sparse_).data(), m, n);
+    sparse_ = SparseXd(0, 0);
+    is_sparse_ = false;
   } else {
     dense_ = Eigen::Map<Eigen::MatrixXd>(dense_.data(), m, n);
   }

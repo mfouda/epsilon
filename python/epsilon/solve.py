@@ -33,7 +33,7 @@ def solve(prob, params=solver_params_pb2.SolverParams()):
 
     return solver_pb2.SolverStatus.FromString(status_str)
 
-def prox(cvxpy_prob, v, lam=1):
+def prox(cvxpy_prob, v_map, lam=1):
     """Evaluate a single proximal operator."""
 
     problem, data_map = cvxpy_expr.convert_problem(cvxpy_prob)
@@ -53,6 +53,12 @@ def prox(cvxpy_prob, v, lam=1):
     if problem.constraint:
         raise ProblemError("prox has constraints", problem)
 
-    x_bytes = _solve.prox(
-        non_const[0].SerializeToString(), data_map, v.tobytes(order="F"), lam)
-    return numpy.fromstring(x_bytes, dtype=numpy.double)
+    v_bytes_map = {cvxpy_expr.variable_id(var): val.tobytes(order="F") for
+                   var, val in v_map.iteritems()}
+    values = _solve.prox(
+        non_const[0].SerializeToString(), lam, data_map, v_bytes_map)
+    for var in cvxpy_prob.variables():
+        var_id = cvxpy_expr.variable_id(var)
+        assert var_id in values
+        x = numpy.fromstring(values[var_id], dtype=numpy.double)
+        var.value = x.reshape(var.size[1], var.size[0]).transpose()
