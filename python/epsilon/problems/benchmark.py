@@ -16,6 +16,7 @@ from epsilon.expression_pb2 import Expression
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
 from epsilon.problems import group_lasso
+from epsilon.problems import hinge_l1
 from epsilon.problems import huber
 from epsilon.problems import lasso
 from epsilon.problems import least_abs_dev
@@ -50,16 +51,13 @@ PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10))
 ]
 
 COLUMNS = [

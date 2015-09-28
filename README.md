@@ -77,6 +77,7 @@ python -m epsilon.problems.benchmark
 basis_pursuit  |   1.47s|   1.44e+02
 covsel         |   0.46s|   3.63e+02
 group_lasso    |  10.33s|   1.66e+02
+hinge_l1       |  12.17s|   1.64e+03
 huber          |   0.49s|   2.18e+03
 lasso          |   3.93s|   1.71e+01
 least_abs_dev  |   0.39s|   7.10e+03
@@ -94,6 +95,7 @@ python -m epsilon.problems.benchmark --scs
 basis_pursuit  |  16.99s|   1.45e+02
 covsel         |  23.50s|   3.62e+02
 group_lasso    |  23.31s|   1.61e+02
+hinge_l1       |  52.62s|   1.50e+03
 huber          |   3.39s|   2.18e+03
 lasso          |  22.02s|   1.63e+01
 least_abs_dev  |   3.81s|   7.10e+03
