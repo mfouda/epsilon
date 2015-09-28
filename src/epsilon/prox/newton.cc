@@ -41,8 +41,11 @@ Eigen::VectorXd NewtonProx::ProxByNewton(const Eigen::VectorXd &v, double lam) {
       theta *= gamma;
     }
 
-    if(x_res < eps){
+    if(x_res < eps) {
+      VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
       break;
+    } else if(iter == MAX_ITER-1) {
+      VLOG(1) << "Newton Method won't converge for epigraph.\n";
     }
   }
   return x;
@@ -97,7 +100,7 @@ Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &sv) {
       if(nlam < 0)
               nlam = 0;
       double nx_res = residual(nx, nt, nlam, v, s).norm();
-      if(nx_res <= (1-beta*theta)*nx_res) {
+      if(nx_res <= (1-beta*theta)*x_res) {
         x = nx;
         t = nt;
         lam = nlam;
@@ -105,10 +108,17 @@ Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &sv) {
         break;
       }
       theta *= gamma;
+      if(theta < eps)
+              VLOG(1) << "Line search reach max iter, x_res=" << x_res << "\n";
     }
 
-    if(x_res < eps)
+    if(x_res < eps) {
+      VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
       break;
+    } else if(iter == MAX_ITER-1) {
+      VLOG(1) << "Newton Method won't converge for epigraph.\n"
+        << "sv = " << sv << '\n';
+    }
   }
   Eigen::VectorXd tx(n+1);
   tx(0) = t;

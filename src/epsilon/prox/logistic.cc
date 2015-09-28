@@ -11,8 +11,9 @@ public:
   static double f(const Eigen::VectorXd &x) {
     int n = x.rows();
     double sum = 0;
-    for(int i=0; i<n; i++)
+    for(int i=0; i<n; i++){
       sum += std::log(1+std::exp(x(i)));
+    }
     return sum;
   }
   static Eigen::VectorXd gradf(const Eigen::VectorXd &x) {
@@ -26,7 +27,7 @@ public:
     int n = x.rows();
     Eigen::VectorXd h(n);
     for(int i=0; i<n; i++)
-      h(i) = std::exp(x(i)) / pow(1+std::exp(x(i)), 2);
+      h(i) = std::exp(x(i)) / std::pow(1+std::exp(x(i)), 2);
     return h;
   }
 };
