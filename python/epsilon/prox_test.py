@@ -20,6 +20,7 @@ PROX_TESTS = [
     Prox("NormL1Prox", cp.norm1(x), []),
     Prox("NormL2Prox", cp.norm2(x), []),
     Prox("FusedLassoProx", cp.tv(x), []),
+    # TODO(mwytock): Need project feasible methods
     # Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
     # Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
 ]

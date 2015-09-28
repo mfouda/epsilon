@@ -1,3 +1,6 @@
+
+#include <float.h>
+
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
@@ -6,9 +9,9 @@
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
-class NegativeEntropy {
+class NegativeEntropy final : public SmoothFunction {
 public:
-  static double f(const Eigen::VectorXd &x) {
+  double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     double sum = 0;
     for(int i=0; i<n; i++){
@@ -18,61 +21,36 @@ public:
     }
     return sum;
   }
-  static Eigen::VectorXd gradf(const Eigen::VectorXd &x) {
+  Eigen::VectorXd gradf(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     Eigen::VectorXd g(n);
     for(int i=0; i<n; i++)
       g(i) = 1+log(x(i));
     return g;
   }
-  static Eigen::VectorXd hessf(const Eigen::VectorXd &x) {
+  Eigen::VectorXd hessf(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     Eigen::VectorXd h(n);
     for(int i=0; i<n; i++)
       h(i) = 1/x(i);
     return h;
   }
+
+  Eigen::VectorXd proj_feasible(const Eigen::VectorXd& x) const override {
+    return x.cwiseMax(DBL_MIN);
+  }
 };
 
 // \sum_i xi log xi
-class NegativeEntropyProx final : public NewtonProx{
-  double f(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::f(x);
-  }
-  Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::gradf(x);
-  }
-  Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::hessf(x);
-  }
-  void Init(const ProxOperatorArg& arg) override {
-    // Expression tree:
-    // TODO
-    //   VARIABLE (x)
-    lambda_ = arg.lambda();
-  }
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    return ProxByNewton(v, lambda_);
-  }
-
-private:
-  double lambda_;
+class NegativeEntropyProx final : public NewtonProx {
+public:
+  NegativeEntropyProx() : NewtonProx(std::make_unique<NegativeEntropy>()) {}
 };
 REGISTER_PROX_OPERATOR(NegativeEntropyProx);
 
 // I(\sum_i xi log xi <= t)
 class NegativeEntropyEpigraph final : public NewtonEpigraph{
-  double f(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::f(x);
-  }
-  Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::gradf(x);
-  }
-  Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return NegativeEntropy::hessf(x);
-  }
-  Eigen::VectorXd Apply(const Eigen::VectorXd& sv) override {
-    return EpiByNewton(sv);
-  }
+public:
+  NegativeEntropyEpigraph() : NewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
 };
 REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);
