@@ -1,265 +1,165 @@
 
+from collections import namedtuple
+
 import numpy as np
 import cvxpy as cp
 
-from epsilon.solve import prox
+from epsilon import solve
 
 NUM_TRIALS = 10
 
-def _test_linear_equality_simple(i, m, n):
-    np.random.seed(i)
-    A = np.random.randn(m,n)
-    b = A.dot(np.random.randn(n))
-    v = np.random.randn(n)
+m = 5
+n = 10
+x = cp.Variable(n)
+t = cp.Variable(1)
 
-    x = cp.Variable(n)
-    c = [A*x == b]
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
+Prox = namedtuple("Prox", ["name", "objective", "constraints"])
 
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(0), c), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+PROX_TESTS = [
+    Prox("NonNegativeProx", 0, [x >= 0]),
+    Prox("NormL1Prox", cp.norm1(x), []),
+    Prox("NormL2Prox", cp.norm2(x), []),
+    Prox("FusedLassoProx", cp.tv(x), []),
+    # Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
+    # Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
+]
 
-def _test_linear_equality_graph(i, m, n):
-    np.random.seed(i)
+EPIGRAPH_TESTS = [
+    Prox("NormL1Epigraph", 0, [cp.norm1(x) <= t]),
+    Prox("NormL2Epigraph", 0, [cp.norm2(x) <= t]),
+    # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
+    # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
+]
 
-    A = np.random.randn(m,n)
-    v = np.random.randn(n)
-    u = np.random.randn(m)
+def test_prox():
+    def run(prox, i):
+        np.random.seed(i)
+        v = np.random.randn(n)
 
-    x = cp.Variable(n)
-    y = cp.Variable(m)
-    c = [A*x == y]
-    cp.Problem(
-        cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                         cp.sum_squares(y - u))),
-        c).solve()
-    x0 = np.asarray(x.value).ravel()
-    y0 = np.asarray(y.value).ravel()
+        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + prox.objective),
+                   prox.constraints).solve()
+        x0 = np.asarray(x.value).ravel()
+        x1 = solve.prox(cp.Problem(cp.Minimize(prox.objective), prox.constraints), v)
+        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
 
-    xy = prox(cp.Problem(cp.Minimize(0), c), np.hstack((v, u)))
-    np.testing.assert_allclose(np.hstack((x0, y0)), xy, rtol=1e-2, atol=1e-4)
+    for prox in PROX_TESTS:
+        for i in xrange(NUM_TRIALS):
+            yield run, prox, i
 
-def _test_non_negative_simple(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
+def test_epigraph():
+    def run(prox, i):
+        np.random.seed(i)
 
-    x = cp.Variable(n)
-    c = [x >= 0]
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
+        v = np.random.randn(n)
+        s = np.random.randn()
 
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(0), c), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) +
+                               0.5*cp.sum_squares(t - s) +
+                               prox.objective),
+                   prox.constraints).solve()
 
-def _test_non_negative_scaled(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    alpha = np.random.randn()
+        tx0 = np.asarray(np.vstack((t.value, x.value))).ravel()
+        tx1 = solve.prox(
+            cp.Problem(cp.Minimize(prox.objective), prox.constraints),
+            np.hstack((s, v)))
+        np.testing.assert_allclose(tx0, tx1, rtol=1e-2, atol=1e-4)
 
-    x = cp.Variable(n)
-    c = [alpha*x  >= 0]
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
+    for prox in EPIGRAPH_TESTS:
+        for i in xrange(NUM_TRIALS):
+            yield run, prox, i
 
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(0), c), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_norm2_simple(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-
-    x = cp.Variable(n)
-    f = cp.norm2(x)
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(f)), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_norm2_epigraph(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    s = np.random.randn()
-
-    x = cp.Variable(n)
-    t = cp.Variable(1)
-    c = [cp.norm2(x) <= t]
-    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                cp.sum_squares(t - s))), c).solve()
-
-    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
-
-def _test_norm1_epigraph(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    s = np.random.randn()
-
-    x = cp.Variable(n)
-    t = cp.Variable(1)
-    c = [cp.norm(x, 1) <= t]
-    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                cp.sum_squares(t - s))), c).solve()
-
-    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
-
-def _test_fused_lasso(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    lam = np.abs(np.random.randn())
-
-    x = cp.Variable(n)
-    f = lam*cp.tv(x)
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(f)), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_logistic_prox(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-
-    x = cp.Variable(n)
-    f = sum([cp.log_sum_exp(cp.vstack(0, x[i])) for i in range(n)])
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(f)), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_logistic_epigraph(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    s = np.random.randn()
-    # TODO(mwytock): Fix when logistic() atom exists
-    assert n == 1
-
-    x = cp.Variable(n)
-    t = cp.Variable(1)
-    c = [cp.log_sum_exp(cp.vstack(0, x)) <= t]
-    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                cp.sum_squares(t - s))), c).solve()
-
-    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
-
-def _test_negative_log_prox(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    v = np.absolute(v)
-
-    x = cp.Variable(n)
-    f = -cp.sum_entries(cp.log(x))
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(f)), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_negative_log_epigraph(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    v = np.absolute(v)
-    #FIXME do we need s = np.random.randn()?
-    s = -cp.sum_entries(cp.log(v)).value
-
-    x = cp.Variable(n)
-    t = cp.Variable(1)
-    c = [-cp.sum_entries(cp.log(x)) <= t]
-    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                cp.sum_squares(t - s))), c).solve()
-
-    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
-
-def _test_negative_entropy_prox(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    v = np.absolute(v)
-
-    x = cp.Variable(n)
-    f = -cp.sum_entries(cp.entr(x))
-    cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-
-    x0 = np.asarray(x.value).ravel()
-    x1 = prox(cp.Problem(cp.Minimize(f)), v)
-    np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
-
-def _test_negative_entropy_epigraph(i, n):
-    np.random.seed(i)
-    v = np.random.randn(n)
-    v = np.absolute(v)
-    #FIXME do we need s = np.random.randn()?
-    s = -cp.sum_entries(cp.entr(v)).value
-
-    x = cp.Variable(n)
-    t = cp.Variable(1)
-    c = [-cp.sum_entries(cp.entr(x)) <= t]
-    cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                cp.sum_squares(t - s))), c).solve()
-
-    xt0 = np.asarray(np.vstack((t.value, x.value))).ravel()
-    xt1 = prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
-    np.testing.assert_allclose(xt0, xt1, rtol=1e-2, atol=1e-4)
-
-def test_linear_equality():
-    for i in xrange(NUM_TRIALS):
-        yield _test_linear_equality_simple, i, 5, 10
-    for i in xrange(NUM_TRIALS):
-        yield _test_linear_equality_graph, i, 5, 10
-
-def test_non_negative():
-    for i in xrange(NUM_TRIALS):
-         yield _test_non_negative_simple, i, 10
-    for i in xrange(NUM_TRIALS):
-        yield _test_non_negative_scaled, i, 10
-
-def test_norm2():
-    for i in xrange(NUM_TRIALS):
-        yield _test_norm2_simple, i, 1
-    for i in xrange(NUM_TRIALS):
-        yield _test_norm2_simple, i, 10
-
-def test_norm2_epigraph():
-    for i in xrange(NUM_TRIALS):
-        yield _test_norm2_epigraph, i, 10
-
-def test_norm1_epigraph():
-    for i in xrange(NUM_TRIALS):
-        yield _test_norm1_epigraph, i, 10
-
-def test_fused_lasso():
-    for i in xrange(NUM_TRIALS):
-        yield _test_fused_lasso, i, 10
-
-# TODO(mwytock): Use vector variables when we have logistic() atom in CVXPY
+# TODO(mwytock): Convert test_logistic_prox/epigraph to vectors when logistic
+# atom is fixed
 def test_logistic_prox():
+    def run(i):
+        np.random.seed(i)
+
+        v = np.random.randn(1)
+        x = cp.Variable(1)
+        f = cp.log_sum_exp(cp.vstack(0, x))
+        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
+
+        x0 = np.asarray(x.value).ravel()
+        x1 = solve.prox(cp.Problem(cp.Minimize(f)), v)
+        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+
     for i in xrange(NUM_TRIALS):
-        yield _test_logistic_prox, i, 1
+        yield run, i
 
 def test_logistic_epigraph():
-    for i in xrange(NUM_TRIALS):
-        yield _test_logistic_epigraph, i, 1
+    def run(i):
+        np.random.seed(i)
+        v = np.random.randn(1)
+        s = np.random.randn()
 
-def test_negative_log_prox():
-    for i in xrange(NUM_TRIALS):
-        yield _test_negative_log_prox, i, 10
+        x = cp.Variable(1)
+        t = cp.Variable(1)
+        c = [cp.log_sum_exp(cp.vstack(0, x)) <= t]
+        cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                                    cp.sum_squares(t - s))), c).solve()
 
-def test_negative_log_epigraph():
-    for i in xrange(NUM_TRIALS):
-        yield _test_negative_log_epigraph, i, 10
+        tx0 = np.asarray(np.vstack((t.value, x.value))).ravel()
+        tx1 = solve.prox(cp.Problem(cp.Minimize(0), c), np.hstack((s, v)))
+        np.testing.assert_allclose(tx0, tx1, rtol=1e-2, atol=1e-4)
 
-def test_negative_entropy_prox():
     for i in xrange(NUM_TRIALS):
-        yield _test_negative_entropy_prox, i, 10
+        yield run, i
 
-def test_negative_entropy_epigraph():
+def test_linear_equality():
+    """I(Ax == b)"""
+    m = 5
+    def run(i):
+        np.random.seed(i)
+        A = np.random.randn(m, n)
+        b = A.dot(np.random.randn(n))
+        v = np.random.randn(n)
+
+        c = [A*x == b]
+        cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v))), c).solve()
+        x0 = np.asarray(x.value).ravel()
+        x1 = solve.prox(cp.Problem(cp.Minimize(0), c), v)
+        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+
     for i in xrange(NUM_TRIALS):
-        yield _test_negative_entropy_epigraph, i, 10
+        yield run, i
+
+def test_linear_equality_graph():
+    """I(Ax == y)"""
+    m = 5
+    def run(i):
+        A = np.random.randn(m,n)
+        v = np.random.randn(n)
+        u = np.random.randn(m)
+
+        x = cp.Variable(n)
+        y = cp.Variable(m)
+        c = [A*x == y]
+        cp.Problem(
+            cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                             cp.sum_squares(y - u))),
+            c).solve()
+
+        xy0 = np.asarray(np.vstack((x.value, y.value))).ravel()
+        xy1 = solve.prox(cp.Problem(cp.Minimize(0), c), np.hstack((v, u)))
+        np.testing.assert_allclose(xy0, xy1, rtol=1e-2, atol=1e-4)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i
+
+def test_non_negative_scaled():
+    """I(alpha*x >= 0)"""
+    def run(i):
+        np.random.seed(i)
+        v = np.random.randn(n)
+        alpha = np.random.randn()
+
+        x = cp.Variable(n)
+        c = [alpha*x  >= 0]
+        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
+
+        x0 = np.asarray(x.value).ravel()
+        x1 = solve.prox(cp.Problem(cp.Minimize(0), c), v)
+        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i
