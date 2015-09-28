@@ -244,9 +244,8 @@ def test_logistic_prox():
     for i in xrange(NUM_TRIALS):
         yield _test_logistic_prox, i, 1
 
-# TODO(mwytock): Figure out why this fails?
 def test_logistic_epigraph():
-    for i in xrange(1):
+    for i in xrange(NUM_TRIALS):
         yield _test_logistic_epigraph, i, 1
 
 def test_negative_log_prox():

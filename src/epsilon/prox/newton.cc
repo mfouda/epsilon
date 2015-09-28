@@ -22,7 +22,7 @@ Eigen::VectorXd NewtonProx::ProxByNewton(const Eigen::VectorXd &v, double lam) {
   for(; iter < MAX_ITER; iter++) {
     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * hessf(x);
     Eigen::VectorXd gx = residual(x, v, lam);
-    
+
     Eigen::VectorXd dx = (gx.array() / hx.array()).matrix();
 
     // line search
@@ -35,7 +35,7 @@ Eigen::VectorXd NewtonProx::ProxByNewton(const Eigen::VectorXd &v, double lam) {
       double nx_res = residual(nx, v, lam).norm();
       if(nx_res <= (1-beta*theta)*x_res) {
         x = nx;
-        x_res = nx_res; 
+        x_res = nx_res;
         break;
       }
       theta *= gamma;
@@ -64,10 +64,15 @@ Eigen::VectorXd NewtonEpigraph::residual
 Eigen::VectorXd NewtonEpigraph::EpiByNewton(const Eigen::VectorXd &sv) {
   int n = sv.rows()-1;
   double eps = std::max(1e-12, 1e-10/n);
-  
-  // init
+
   double s = sv(0);
   Eigen::VectorXd v = sv.tail(n);
+
+  // easy case
+  if (f(v) <= s)
+    return sv;
+
+  // init
   Eigen::VectorXd x = v;
   double t = s;
   double lam = 1;
