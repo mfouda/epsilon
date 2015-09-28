@@ -26,7 +26,8 @@ REL_TOL = {
     "group_lasso": 1e-3,
     "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
-    "tv_1d": 1e-3
+    "tv_1d": 1e-3,
+    "hinge_l1": 1e-3,
 }
 
 # TODO(mwytock): Need L1/Linf proximal operator
@@ -37,6 +38,7 @@ PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
@@ -45,11 +47,6 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
-
-PROBLEMS = [
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
-]
-
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

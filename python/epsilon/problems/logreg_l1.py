@@ -14,5 +14,5 @@ def create(m, n):
 
     x = cp.Variable(n)
     y_p = sp.diags([b.ravel()], [0])*A*x
-    f = logistic_loss(y_p) + lam*cp.norm1(x)
+    f = logistic(y_p) + lam*cp.norm1(x)
     return cp.Problem(cp.Minimize(f))

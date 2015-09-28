@@ -93,6 +93,12 @@ def prox_add(expr):
                 yield prox_expr
 
 # Rules for known proximal operators
+def prox_affine(expr):
+    if (expr.curvature.curvature_type == Curvature.CONSTANT or
+        expr.curvature.curvature_type == Curvature.AFFINE):
+        expr.proximal_operator.name = "AffineProx"
+        yield expr
+
 def prox_fused_lasso(expr):
     # TODO(mwytock): Make this more flexible? Support weighted form?
     # TODO(mwytock): Rewrite this using a new expression type for TV(x)
@@ -258,15 +264,11 @@ def prox_max_elementwise(expr):
         for prox_expr in transform_expr(leq_constraint(arg, t)):
             yield prox_expr
 
-def prox_affine(expr):
+def prox_linear_epigraph(expr):
     if not expr.expression_type in LINEAR_EXPRESSION_TYPES:
         return
 
     expr.proximal_operator.name = "AffineProx"
-    if (expr.curvature.curvature_type == Curvature.CONSTANT or
-        expr.curvature.curvature_type == Curvature.AFFINE):
-        yield expr
-
     new_args = []
     for arg in expr.arg:
         for prox_expr in transform_expr(arg):
