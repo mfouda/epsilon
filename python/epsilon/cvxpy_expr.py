@@ -158,19 +158,3 @@ def convert_problem(problem):
     for constraint in problem.constraints:
         convert_constraint(constraint, proto.constraint.add(), data_map)
     return proto, data_map
-
-def convert_matrix_problem(problem):
-    prob_data = problem.get_problem_data(solver=cvxpy.SCS)
-
-    proto = data_pb2.MatrixProblem()
-    data.fill_sparse_matrix(prob_data["A"], proto.A)
-    data.fill_vector(prob_data["b"], proto.b)
-    data.fill_vector(prob_data["c"], proto.c)
-
-    dims = prob_data["dims"]
-    proto.cone_constraints.equality = dims["f"]
-    proto.cone_constraints.inequality = dims["l"]
-    proto.cone_constraints.second_order_cone.extend(dims["q"])
-    proto.cone_constraints.semi_definite.extend(dims["s"])
-
-    return proto
