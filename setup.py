@@ -68,9 +68,11 @@ class CleanCommand(Command):
                "./build-cc " +
                "./dist " +
                "./python/*.egg-info " +
-               "./python/epsilon/*_pb2.py " +
                "./python/epsilon/*.pyc " +
-               "./python/epsilon/*.so")
+               "./python/epsilon/*.so" +
+               "./python/epsilon/*_pb2.py " +
+               "./python/epsilon/compiler/*.pyc " +
+               "./python/epsilon/problems/*.pyc")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
