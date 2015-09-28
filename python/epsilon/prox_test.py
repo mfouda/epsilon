@@ -8,7 +8,6 @@ from epsilon import solve
 
 NUM_TRIALS = 10
 
-m = 5
 n = 10
 x = cp.Variable(n)
 t = cp.Variable(1)
@@ -20,14 +19,14 @@ PROX_TESTS = [
     Prox("NormL1Prox", cp.norm1(x), []),
     Prox("NormL2Prox", cp.norm2(x), []),
     Prox("FusedLassoProx", cp.tv(x), []),
-    # TODO(mwytock): Need project feasible methods
-    # Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
-    # Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
+    Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
+    Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
 ]
 
 EPIGRAPH_TESTS = [
     Prox("NormL1Epigraph", 0, [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", 0, [cp.norm2(x) <= t]),
+    # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
 ]
@@ -38,10 +37,10 @@ def test_prox():
         v = np.random.randn(n)
 
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + prox.objective),
-                   prox.constraints).solve()
+                   prox.constraints).solve(solver=cp.SCS)
         x0 = np.asarray(x.value).ravel()
         x1 = solve.prox(cp.Problem(cp.Minimize(prox.objective), prox.constraints), v)
-        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(x0, x1, rtol=1e-2, atol=1e-2)
 
     for prox in PROX_TESTS:
         for i in xrange(NUM_TRIALS):

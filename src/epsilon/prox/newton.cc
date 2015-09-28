@@ -16,15 +16,15 @@ Eigen::VectorXd NewtonProx::Apply(const Eigen::VectorXd &v) {
   double eps = std::max(1e-12, 1e-10/n);
 
   // init
-  Eigen::VectorXd x = v;
+  Eigen::VectorXd x = f_->proj_feasible(v);
 
   int iter = 0;
   int MAX_ITER = 100;
   for(; iter < MAX_ITER; iter++) {
     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lambda_ * f_->hessf(x);
     Eigen::VectorXd gx = residual(x, v, lambda_);
-
     Eigen::VectorXd dx = (gx.array() / hx.array()).matrix();
+    VLOG(2) << "Iter " << iter << " gx: " << VectorDebugString(gx);
 
     // line search
     double beta = 0.001;
@@ -74,7 +74,7 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
     return sv;
 
   // init
-  Eigen::VectorXd x = v;
+  Eigen::VectorXd x = f_->proj_feasible(v);
   double t = s;
   double lam = 1;
 
@@ -83,6 +83,10 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
   for(; iter < MAX_ITER; iter++) {
     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * f_->hessf(x);
     Eigen::VectorXd g = residual(x, t, lam, v, s);
+    VLOG(2) << "Iter " << iter << "\n"
+            << " x: " << VectorDebugString(x) << "\n"
+            << " g: " << VectorDebugString(g) << "\n"
+            << " hx: " << VectorDebugString(hx);
 
     // construct arrowhead hessian matrix
     Eigen::VectorXd d(n+1);

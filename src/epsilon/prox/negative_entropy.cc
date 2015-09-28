@@ -37,7 +37,7 @@ public:
   }
 
   Eigen::VectorXd proj_feasible(const Eigen::VectorXd& x) const override {
-    return x.cwiseMax(DBL_MIN);
+    return x.cwiseMax(1e-8);
   }
 };
 
