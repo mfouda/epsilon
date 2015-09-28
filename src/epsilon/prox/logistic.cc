@@ -6,9 +6,9 @@
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
-class Logistic {
+class Logistic final : public SmoothFunction {
 public:
-  static double f(const Eigen::VectorXd &x) {
+  double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     double sum = 0;
     for(int i=0; i<n; i++){
@@ -16,14 +16,14 @@ public:
     }
     return sum;
   }
-  static Eigen::VectorXd gradf(const Eigen::VectorXd &x) {
+  Eigen::VectorXd gradf(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     Eigen::VectorXd g(n);
     for(int i=0; i<n; i++)
       g(i) = std::exp(x(i)) / (1+std::exp(x(i)));
     return g;
   }
-  static Eigen::VectorXd hessf(const Eigen::VectorXd &x) {
+  Eigen::VectorXd hessf(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     Eigen::VectorXd h(n);
     for(int i=0; i<n; i++)
@@ -34,43 +34,14 @@ public:
 
 // lam*||x||_2
 class LogisticProx final : public NewtonProx {
-  double f(const Eigen::VectorXd &x) override {
-    return Logistic::f(x);
-  }
-  Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return Logistic::gradf(x);
-  }
-  Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return Logistic::hessf(x);
-  }
-  void Init(const ProxOperatorArg& arg) override {
-    // Expression tree:
-    // TODO
-    //   VARIABLE (x)
-    lambda_ = arg.lambda();
-  }
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    return ProxByNewton(v, lambda_);
-  }
-
-private:
-  double lambda_;
+public:
+  LogisticProx() : NewtonProx(std::make_unique<Logistic>()) {}
 };
 REGISTER_PROX_OPERATOR(LogisticProx);
 
 // I(||x||_2 <= t)
 class LogisticEpigraph final : public NewtonEpigraph {
-  double f(const Eigen::VectorXd &x) override {
-    return Logistic::f(x);
-  }
-  Eigen::VectorXd gradf(const Eigen::VectorXd &x) override {
-    return Logistic::gradf(x);
-  }
-  Eigen::VectorXd hessf(const Eigen::VectorXd &x) override {
-    return Logistic::hessf(x);
-  }
-  Eigen::VectorXd Apply(const Eigen::VectorXd& sv) override {
-    return EpiByNewton(sv);
-  }
+public:
+  LogisticEpigraph() : NewtonEpigraph(std::make_unique<Logistic>()) {}
 };
 REGISTER_PROX_OPERATOR(LogisticEpigraph);
