@@ -27,6 +27,16 @@ def is_epigraph(expr):
             len(expr.arg) == 2 and
             expr.arg[0].expression_type == Expression.VARIABLE)
 
+LINEAR_EXPRESSION_TYPES = set([
+    Expression.INDEX,
+    Expression.NEGATE,
+    Expression.SUM,
+    Expression.TRANSPOSE,
+    Expression.HSTACK,
+    Expression.VSTACK,
+    Expression.TRACE,
+    Expression.RESHAPE])
+
 def epigraph(f, t):
     """An expression for an epigraph constraint.
 
@@ -65,12 +75,6 @@ def transform_epigraph(f_expr, g_expr):
 # expressions returned need to match those defined in
 # src/epsilon/operators/prox.cc
 
-def priority(pri_val):
-    def priority_decorator(f):
-        f.priority = pri_val
-        return f
-    return priority_decorator
-
 # General rules for dealing with additional and scalar multiplication
 def prox_multiply_scalar(expr):
     if (expr.expression_type == Expression.MULTIPLY and
@@ -89,13 +93,6 @@ def prox_add(expr):
                 yield prox_expr
 
 # Rules for known proximal operators
-def prox_affine(expr):
-    if (expr.curvature.curvature_type == Curvature.CONSTANT or
-        expr.curvature.curvature_type == Curvature.AFFINE):
-        expr.proximal_operator.name = "AffineProx"
-        yield expr
-
-@priority(1)
 def prox_fused_lasso(expr):
     # TODO(mwytock): Make this more flexible? Support weighted form?
     # TODO(mwytock): Rewrite this using a new expression type for TV(x)
@@ -116,7 +113,6 @@ def prox_fused_lasso(expr):
         expr.proximal_operator.name = "FusedLassoProx"
         yield expr
 
-@priority(1)
 def prox_least_squares(expr):
     if (expr.expression_type == Expression.QUAD_OVER_LIN and
         expr.arg[1].expression_type == Expression.CONSTANT and
@@ -202,16 +198,6 @@ def prox_huber(expr):
             for prox_expr in transform_expr(expr):
                 yield prox_expr
 
-def prox_max_elemwise(expr):
-    """Replace max{..., ...} with epigraph constraints"""
-    if expr.expression_type == Expression.MAX_ELEMENTWISE:
-        t = epigraph_variable(expr)
-        for arg in expr.arg:
-            for prox_expr in transform_expr(epigraph(arg, t)):
-                yield prox_expr
-        for prox_expr in transform_expr(t):
-            yield prox_expr
-
 def prox_norm12(expr):
     if (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
@@ -227,23 +213,6 @@ def prox_norm12(expr):
         else:
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
-
-# TODO(mwytock): Remove or implement
-# def prox_norm1inf(expr):
-#     if (expr.expression_type == Expression.SUM and
-#         expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE):
-
-#         # Rewrite this as l1/linf norm using reshape() and hstack()
-#         m = dimension(expr.arg[0].arg[0])
-#         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
-#         expr = norm_pq(arg, 1, float('inf'))
-
-#         expr.proximal_operator.name = "NormL1LinfProx"
-#         if arg.curvature.scalar_multiple:
-#             yield expr
-#         else:
-#             for prox_expr in transform_epigraph(expr, expr.arg[0]):
-#                 yield prox_expr
 
 def prox_neg_log_det(expr):
     if (expr.expression_type == Expression.NEGATE and
@@ -276,6 +245,42 @@ def prox_negative_entropy(expr):
             yield expr
         else:
             raise NotImplementedError()
+
+def prox_max_elementwise(expr):
+    """Replace max{..., ...} with epigraph constraints"""
+    if expr.expression_type != Expression.MAX_ELEMENTWISE:
+        return
+
+    m, n = expr.size.dim
+    t = variable(m, n, "canonicalize:max:" + fp_expr(expr))
+    yield t
+    for arg in expr.arg:
+        for prox_expr in transform_expr(leq_constraint(arg, t)):
+            yield prox_expr
+
+def prox_affine(expr):
+    if not expr.expression_type in LINEAR_EXPRESSION_TYPES:
+        return
+
+    expr.proximal_operator.name = "AffineProx"
+    if (expr.curvature.curvature_type == Curvature.CONSTANT or
+        expr.curvature.curvature_type == Curvature.AFFINE):
+        yield expr
+
+    new_args = []
+    for arg in expr.arg:
+        for prox_expr in transform_expr(arg):
+            if prox_expr.expression_type == Expression.INDICATOR:
+                yield prox_expr
+            else:
+                new_args.append(prox_expr)
+
+    expr.ClearField("arg")
+    for arg in new_args:
+        expr.arg.add().CopyFrom(arg)
+
+    expr.curvature.curvature_type = Curvature.AFFINE
+    yield expr
 
 # Rules for epigraph forms
 def prox_norm2_epigraph(expr):
@@ -384,9 +389,9 @@ def prox_epigraph(expr):
 
         yield equality_constraint(add(*ti_exprs), t_expr)
 
-# Get prox rules sort in decreasing priority order (default priority is 0)
+# NOTE(mwytock): This sorts rules by order in which theyre defined
 PROX_RULES = [f for name, f in locals().items() if name.startswith("prox_")]
-PROX_RULES.sort(key=lambda f: -getattr(f, "priority", 0))
+PROX_RULES.sort()
 
 def transform_expr(expr):
     for prox_rule in PROX_RULES:

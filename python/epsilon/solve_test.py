@@ -26,7 +26,7 @@ REL_TOL = {
     "group_lasso": 1e-3,
     "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
-    "tv_1d": 1e-3,
+    "tv_1d": 1e-3
 }
 
 # TODO(mwytock): Need L1/Linf proximal operator
