@@ -11,7 +11,7 @@
 
 class NegativeLog final : public SmoothFunction {
 public:
-  double f(const Eigen::VectorXd& x) const override {
+  double eval(const Eigen::VectorXd& x) const override {
     int n = x.rows();
     double sum = 0;
     for(int i=0; i<n; i++)
