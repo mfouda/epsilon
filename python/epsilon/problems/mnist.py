@@ -10,10 +10,13 @@ import numpy.linalg as LA
 import scipy.io
 import scipy.sparse as sp
 
-DATA_TINY_FILE = os.path.join(os.path.dirname(__file__), "mnist_tiny.mat")
-DATA_TINY = "file://localhost" + DATA_TINY_FILE  # 10 examples
-DATA_SMALL = "http://mnist_small.mat"            # 2K examples
-DATA_FULL = "http://mnist.mat"                   # 60K examples
+LOCAL_DIR = os.path.dirname(__file__)
+DATA_TINY_FILE = os.path.join(LOCAL_DIR, "mnist_tiny.mat")
+DATA_SMALL_FILE = os.path.join(LOCAL_DIR, "mnist_small.mat")
+
+DATA_TINY = "file://localhost" + DATA_TINY_FILE    # 20 examples
+DATA_SMALL = "file://localhost" + DATA_SMALL_FILE  # 2K examples
+DATA_FULL = "http://mnist.mat"                     # 60K examples
 
 def load_data(data_url):
     d = scipy.io.loadmat(io.BytesIO(urllib.urlopen(data_url).read()))
@@ -30,8 +33,8 @@ def median_dist(X):
 def pca(X):
     dim = 50
     Xc = X - np.mean(X, axis=0)
-    V, _ = LA.eig(Xc.T.dot(Xc))
-    return X.dot(V[: dim])
+    _, D = LA.eigh(Xc.T.dot(Xc))
+    return X.dot(D[:, :dim])
 
 def random_features(X, n):
     # For small datasets, skip PCA

@@ -45,14 +45,10 @@ PROBLEMS = [
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
+    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
-
-PROBLEMS = [
-    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-]
-
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()
