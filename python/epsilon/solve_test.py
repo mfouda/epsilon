@@ -15,6 +15,7 @@ from epsilon.problems import lasso
 from epsilon.problems import least_abs_dev
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
+from epsilon.problems import mnist
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
@@ -47,6 +48,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
+
+PROBLEMS = [
+    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+]
+
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

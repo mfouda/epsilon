@@ -136,7 +136,10 @@ def prox_least_squares(expr):
         return
 
     expr = sum_entries(power(arg, 2))
-    expr.proximal_operator.name = "LeastSquaresProx"
+    m, n = arg.size.dim
+    expr.proximal_operator.name = (
+        "LeastSquaresMatrixProx" if n > 1 else "LeastSquaresProx")
+
     if expr.arg[0].arg[0].curvature.curvature_type == Curvature.AFFINE:
         yield expr
     else:

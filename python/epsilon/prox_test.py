@@ -195,5 +195,50 @@ def test_non_negative_scaled():
         solve.prox(cp.Problem(cp.Minimize(0), c), {x: v})
         np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
 
-    for i in xrange(1):
+    for i in xrange(NUM_TRIALS):
         yield run, i
+
+def test_least_squares():
+    """||Ax - b||^2"""
+    def run(i, m, n):
+        np.random.seed(i)
+        v = np.random.randn(n)
+        A = np.random.randn(m, n)
+        b = np.random.randn(m)
+
+        x = cp.Variable(n)
+        f = cp.sum_squares(A*x  - b)
+        cp.Problem(cp.Minimize(f + 0.5*cp.sum_squares(x - v))).solve()
+        expected = {var: var.value for var in (x,)}
+
+        solve.prox(cp.Problem(cp.Minimize(f)), {x: v})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-3)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i, 5, 10
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i, 15, 10
+
+
+def test_least_squares_matrix():
+    """||AX - B||_F^2"""
+    def run(i, m, n, k):
+        np.random.seed(i)
+        V = np.random.randn(n, k)
+        A = np.random.randn(m, n)
+        B = np.random.randn(m, k)
+
+        X = cp.Variable(n, k)
+        f = cp.sum_squares(A*X  - B)
+        cp.Problem(cp.Minimize(f + 0.5*cp.sum_squares(X - V))).solve()
+        expected = {var: var.value for var in (X,)}
+
+        solve.prox(cp.Problem(cp.Minimize(f)), {X: V})
+        np.testing.assert_allclose(X.value, expected[X], rtol=1e-2, atol=1e-4)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i, 5, 10, 3
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i, 15, 10, 3

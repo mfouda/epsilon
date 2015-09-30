@@ -51,12 +51,11 @@ def create(n, data):
     X, y = load_data(data)
     X = random_features(X, n)
     Y = one_hot_encoding(y)
-
     n = X.shape[1]
     k = Y.shape[1]
-
     lam = 0.1
-    Theta = cp.Variable(n, k)
+
     # TODO(mwytock): Use softmax here
+    Theta = cp.Variable(n, k)
     f = cp.sum_squares(X*Theta - Y) + lam*cp.norm1(Theta)
     return cp.Problem(cp.Minimize(f))
