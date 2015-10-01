@@ -51,7 +51,11 @@ def max_overlap_function(graph, f):
     def overlap(g):
         return len(variables(g).intersection(variables_f))
 
-    return max((g for g in graph.functions if g != f), key=overlap)
+    h = max((g for g in graph.functions if g != f), key=overlap)
+
+    # Only return a function if there is some overlap
+    if overlap(h):
+        return h
 
 def separate_var(f_var):
     variable_id = "separate:%s:%s" % (
@@ -109,8 +113,8 @@ def separate_objective_terms(graph):
             graph.add_edge(f_var)
 
 GRAPH_TRANSFORMS = [
-    combine_affine_functions,
     move_equality_indicators,
+    combine_affine_functions,
     separate_objective_terms,
 ]
 
