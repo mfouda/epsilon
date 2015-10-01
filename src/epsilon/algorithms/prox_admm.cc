@@ -134,32 +134,10 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   const SparseXd& Ai = info.Ai.sparse();
 
   VLOG(2) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(Ai);
-  if (IsBlockScalar(Ai)) {
-    info.B = SparseXd(n, m_);
+  if (IsIdentity(Ai.transpose()*Ai)) {
+    VLOG(2) << "Using standard ADMM";
     info.linearized = false;
-
-    // Case in which variable shows up in the equality contraint only through
-    // scalar multiplication. We can combine multiple terms through the
-    // following logic:
-    //
-    // argmin_x f(x) + 1/2||a1*x - v1||^2 + 1/2||a2*x - v2||^2
-    // is equivalent to:
-    // argmin_x f(x) + (a1^2 + a2^2)/2||x - (a1v1 + a2v2)/(a1 + a2)^2||^2
-
-    double alpha_squared = 0;
-    // Iterate through first column in order to find the blocks where this
-    // variable shows up in the constraints
-    for (SparseXd::InnerIterator iter(Ai, 0); iter; ++iter) {
-      CHECK(iter.value() != 0);
-
-      const double alpha_i = iter.value();
-      alpha_squared += alpha_i*alpha_i;
-      info.B.middleCols(iter.row(), n) = -alpha_i*SparseIdentity(n);
-    }
-
-    info.B *= 1/alpha_squared;
-    info.op = CreateProxOperator(
-        1/params_.rho()/alpha_squared, expr, var_map);
+    info.op = CreateProxOperator(1/params_.rho(), expr, var_map);
   } else {
     VLOG(2) << "Using linearized ADMM";
 
@@ -183,7 +161,6 @@ void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
   VLOG(2) << "ApplyOperator";
 
   const DynamicMatrix& Ai = info.Ai;
-  const SparseXd& B = info.B;
   const double mu = info.mu;
 
   Eigen::VectorXd xi_old = info.V*x_;
@@ -191,7 +168,7 @@ void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
   Eigen::VectorXd Ai_xi_old = Ai.Apply(xi_old);
 
   if (!info.linearized) {
-    xi = info.op->Apply(B*(Ax_ - Ai_xi_old + b_ + u_));
+    xi = info.op->Apply(Ai.ApplyTranspose((Ax_ - Ai_xi_old + b_ + u_)));
   } else {
     xi = info.op->Apply(xi_old - mu*params_.rho()*Ai.ApplyTranspose((Ax_ + u_)));
   }

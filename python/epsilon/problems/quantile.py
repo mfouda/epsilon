@@ -15,11 +15,11 @@ def create(m, n, k):
     mu_sig = np.median(np.sqrt((mu_rbf.T - mu_rbf)**2))
     X = np.hstack([np.exp(-(mu_rbf.T - x).T**2/(2*mu_sig**2)), np.ones((m,1))])
 
-    Theta = cp.Variable(n+1, len(alphas))
-
     quantile_loss = lambda x, alpha : cp.sum_entries(cp.max_elemwise(-alpha*x, (1-alpha)*x))
-    f = sum([quantile_loss(X*Theta[:,i] - y, alpha) for i,alpha in enumerate(alphas)])
-    DXT = X*(Theta[:,1:] - Theta[:,:-1])
-    C = [DXT >= 0]
+    thetas = [cp.Variable(n+1) for i in xrange(len(alphas))]
+    f = sum([quantile_loss(X*thetas[i] - y, alpha) for i, alpha in enumerate(alphas)])
 
-    return cp.Problem(cp.Minimize(f), C)
+    #DXT = X*(Theta[:,1:] - Theta[:,:-1])
+    #C = [DXT >= 0]
+
+    return cp.Problem(cp.Minimize(f))

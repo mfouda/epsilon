@@ -152,6 +152,38 @@ def test_linear_equality_graph():
     for i in xrange(NUM_TRIALS):
         yield run, i
 
+def test_linear_equality_multivariate2():
+    """I(z - (y - alpha*(A*x - b)))"""
+    m = 5
+    alpha = 1
+    def run(i):
+        np.random.seed(i)
+
+        A = np.random.randn(m, n)
+        b = np.random.randn(m)
+        alpha = np.random.randn()
+
+        v = np.random.randn(n)
+        u = np.random.randn(m)
+        w = np.random.randn(m)
+
+        y = cp.Variable(m)
+        z = cp.Variable(m)
+        c = [z - (y - alpha*(A*x - b)) == 0]
+        cp.Problem(
+            cp.Minimize(0.5*(cp.sum_squares(x - v) +
+                             cp.sum_squares(y - u) +
+                             cp.sum_squares(z - w))), c).solve()
+        expected = {var: var.value for var in (x, y, z)}
+
+        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u, z: w})
+        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
+        np.testing.assert_allclose(z.value, expected[z], rtol=1e-2, atol=1e-4)
+
+    for i in xrange(NUM_TRIALS):
+        yield run, i
+
 def test_linear_equality_multivariate():
     """I(z - (y - (1 - Ax)) == 0)"""
     m = 5

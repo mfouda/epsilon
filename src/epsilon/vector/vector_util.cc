@@ -179,6 +179,12 @@ bool IsDiagonal(const SparseXd& A) {
   return true;
 }
 
+bool IsIdentity(const SparseXd& A) {
+  if (!IsDiagonal(A))
+    return false;
+  return (A.diagonal().array() == 1).all();
+}
+
 Eigen::VectorXd ToVector(const Eigen::MatrixXd& A) {
   return Eigen::Map<const Eigen::VectorXd>(A.data(), A.rows()*A.cols());
 }

@@ -25,6 +25,7 @@ SparseXd DiagonalSparse(const VectorXd& a);
 SparseXd SparseIdentity(int n);
 
 bool IsDiagonal(const SparseXd& A);
+bool IsIdentity(const SparseXd& A);
 
 // True if A = [ aI; 0; bI; ...]
 bool IsBlockScalar(const SparseXd& A);
