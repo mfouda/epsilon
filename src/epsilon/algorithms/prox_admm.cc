@@ -138,6 +138,7 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     VLOG(2) << "Using standard ADMM";
     info.linearized = false;
     info.op = CreateProxOperator(1/params_.rho(), expr, var_map);
+    info.B = -Ai.transpose();
   } else {
     VLOG(2) << "Using linearized ADMM";
 
@@ -168,7 +169,7 @@ void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
   Eigen::VectorXd Ai_xi_old = Ai.Apply(xi_old);
 
   if (!info.linearized) {
-    xi = info.op->Apply(Ai.ApplyTranspose((Ax_ - Ai_xi_old + b_ + u_)));
+    xi = info.op->Apply(info.B*(Ax_ - Ai_xi_old + b_ + u_));
   } else {
     xi = info.op->Apply(xi_old - mu*params_.rho()*Ai.ApplyTranspose((Ax_ + u_)));
   }

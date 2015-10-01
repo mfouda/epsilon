@@ -266,7 +266,7 @@ void GetScalarAffineOperator(
   DynamicMatrix b = DynamicMatrix::FromDense(Eigen::VectorXd::Zero(m));
   BuildAffineOperator(expr, var_map, &A, &b);
 
-  CHECK(A.is_sparse() && IsBlockScalar(A.sparse()));
+  CHECK(A.is_sparse());
   *alpha = A.sparse().coeff(0, 0);
   *b_out = b.AsDense();
 }
