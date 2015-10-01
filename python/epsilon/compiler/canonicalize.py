@@ -96,7 +96,7 @@ def prox_add(expr):
 def prox_affine(expr):
     if (expr.curvature.curvature_type == Curvature.CONSTANT or
         expr.curvature.curvature_type == Curvature.AFFINE):
-        expr.proximal_operator.name = "AffineProx"
+        expr.proximal_operator.name = "LinearProx"
         yield expr
 
 def prox_fused_lasso(expr):
@@ -340,7 +340,7 @@ def prox_linear_epigraph(expr):
     if not expr.expression_type in LINEAR_EXPRESSION_TYPES:
         return
 
-    expr.proximal_operator.name = "AffineProx"
+    expr.proximal_operator.name = "LinearProx"
     new_args = []
     for arg in expr.arg:
         for prox_expr in transform_expr(arg):

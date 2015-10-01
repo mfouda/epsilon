@@ -3,6 +3,7 @@ from collections import namedtuple
 
 import numpy as np
 import cvxpy as cp
+from numpy.random import randn
 
 from epsilon import solve
 
@@ -12,28 +13,39 @@ n = 10
 x = cp.Variable(n)
 t = cp.Variable(1)
 
-Prox = namedtuple("Prox", ["name", "objective", "constraints"])
+class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
+    def __new__(cls, name, objective, constraint=None):
+        return super(Prox, cls).__new__(cls, name, objective, constraint)
 
 PROX_TESTS = [
-    Prox("DeadZoneProx", cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)), []),
-    Prox("FusedLassoProx", cp.tv(x), []),
-    Prox("HingeProx", cp.sum_entries(cp.max_elemwise(1-x, 0)), []),
-    Prox("LogisticProx", cp.sum_entries(cp.logistic(x)), []),
-    Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
-    Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
-    Prox("NonNegativeProx", 0, [x >= 0]),
-    Prox("NormL1AsymmetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
-    Prox("NormL1Prox", cp.norm1(x), []),
-    Prox("NormL2Prox", cp.norm2(x), []),
+    Prox("DeadZoneProx",
+         lambda: cp.sum_entries(cp.max_elemwise(x-1,0) +
+                                cp.max_elemwise(-x-1,0))),
+    Prox("FusedLassoProx", lambda: cp.tv(x)),
+    Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    Prox("LinearProx", lambda: randn(n).T*x),
+    Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
+    Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
+    Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
+    Prox("NonNegativeProx", None, lambda: x >= 0),
+    Prox("NormL1AsymmetricProx",
+         lambda: cp.sum_entries(0.75*cp.max_elemwise(x,0) +
+                                0.25*cp.max_elemwise(-x,0))),
+    Prox("NormL1Prox", lambda: cp.norm1(x)),
+    Prox("NormL2Prox", lambda: cp.norm2(x)),
 ]
 
 EPIGRAPH_TESTS = [
-    Prox("DeadZoneEpigraph", 0, [cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)) <= t]),
-    Prox("HingeEpigraph", 0, [cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t]),
-    Prox("LogisticEpigraph", 0, [cp.sum_entries(cp.logistic(x)) <= t]),
-    Prox("NormL1AsymetricEpigraph", 0, [cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)) <= t]),
-    Prox("NormL1Epigraph", 0, [cp.norm1(x) <= t]),
-    Prox("NormL2Epigraph", 0, [cp.norm2(x) <= t]),
+    Prox("DeadZoneEpigraph", None,
+         lambda: cp.sum_entries(cp.max_elemwise(x-1,0) +
+                                cp.max_elemwise(-x-1,0)) <= t),
+    Prox("HingeEpigraph", None, cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t),
+    Prox("LogisticEpigraph", None, cp.sum_entries(cp.logistic(x)) <= t),
+    Prox("NormL1AsymetricEpigraph", None,
+         lambda: cp.sum_entries(0.75*cp.max_elemwise(x, 0) +
+                                0.25*cp.max_elemwise(-x,0)) <= t),
+    Prox("NormL1Epigraph", None, lambda: cp.norm1(x) <= t),
+    Prox("NormL2Epigraph", None, lambda: cp.norm2(x) <= t),
     # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
@@ -43,13 +55,14 @@ def test_prox():
     def run(prox, i):
         np.random.seed(i)
         v = np.random.randn(n)
+        lam = np.abs(np.random.randn())
 
-        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + prox.objective),
-                   prox.constraints).solve(solver=cp.SCS)
+        f = 0 if not prox.objective else prox.objective()
+        c = [] if not prox.constraint else [prox.constraint()]
+        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + lam*f), c).solve()
         expected = {var: var.value for var in (x,)}
 
-        solve.prox(
-            cp.Problem(cp.Minimize(prox.objective), prox.constraints), {x: v})
+        solve.prox(cp.Problem(cp.Minimize(f), c), {x: v}, lam)
         np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-2)
 
     for prox in PROX_TESTS:
@@ -62,16 +75,16 @@ def test_epigraph():
 
         v = np.random.randn(n)
         s = np.random.randn(1)
+        lam = np.abs(np.random.randn())
 
+        f = 0 if not prox.objective else prox.objective()
+        c = [] if not prox.constraint else [prox.constraint()]
         cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) +
                                0.5*cp.sum_squares(t - s) +
-                               prox.objective),
-                   prox.constraints).solve()
+                               lam*f), c).solve()
         expected = {var: var.value for var in (x,t)}
 
-        solve.prox(
-            cp.Problem(cp.Minimize(prox.objective), prox.constraints),
-            {x: v, t: s})
+        solve.prox(cp.Problem(cp.Minimize(f), c),  {x: v, t: s}, lam)
         np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
         np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
 

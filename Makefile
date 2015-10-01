@@ -58,6 +58,7 @@ common_cc = \
 	epsilon/prox/fused_lasso.cc \
 	epsilon/prox/hinge.cc \
 	epsilon/prox/least_squares.cc \
+	epsilon/prox/linear.cc \
 	epsilon/prox/linear_equality.cc \
 	epsilon/prox/logistic.cc \
 	epsilon/prox/negative_entropy.cc \
