@@ -179,10 +179,14 @@ bool IsDiagonal(const SparseXd& A) {
   return true;
 }
 
-bool IsIdentity(const SparseXd& A) {
+bool IsScalarMatrix(const SparseXd& A, double* alpha) {
   if (!IsDiagonal(A))
     return false;
-  return (A.diagonal().array() == 1).all();
+  if ((A.diagonal().array() == A.coeff(0,0)).all()) {
+    *alpha = A.coeff(0,0);
+    return true;
+  }
+  return false;
 }
 
 Eigen::VectorXd ToVector(const Eigen::MatrixXd& A) {

@@ -102,6 +102,8 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
   // Build Ai matrix, force dense
   info.Ai = DynamicMatrix::FromDense(Eigen::MatrixXd::Zero(m_, var_map.n()));
   BuildAffineOperator(constr_expr_, var_map, &info.Ai, nullptr);
+
+  VLOG(1) << "InitLeastSquares, Ai\n" << info.Ai.DebugString();
   CHECK(!info.Ai.is_sparse());
   info.op = std::unique_ptr<VectorOperator>(
       new DenseLeastSquaresOperator(info.Ai.dense()));
@@ -115,8 +117,6 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
 }
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
-  VLOG(2) << "InitProxOperator:\n" << expr.DebugString();
-
   // TODO(mwytock): Should be pruned before getting here
   VariableSet vars = GetVariables(expr);
   if (vars.size() == 0)
@@ -133,12 +133,13 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   CHECK(info.Ai.is_sparse());
   const SparseXd& Ai = info.Ai.sparse();
 
-  VLOG(2) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(Ai);
-  if (IsIdentity(Ai.transpose()*Ai)) {
+  VLOG(1) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(Ai);
+  double alpha;
+  if (IsScalarMatrix(Ai.transpose()*Ai, &alpha)) {
     VLOG(2) << "Using standard ADMM";
     info.linearized = false;
-    info.op = CreateProxOperator(1/params_.rho(), expr, var_map);
-    info.B = -Ai.transpose();
+    info.op = CreateProxOperator(1/params_.rho()/alpha, expr, var_map);
+    info.B = -Ai.transpose()/alpha;
   } else {
     VLOG(2) << "Using linearized ADMM";
 
