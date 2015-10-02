@@ -252,6 +252,25 @@ def prox_negative_entropy(expr):
         else:
             raise NotImplementedError()
 
+# Piecewise Linear Family
+def is_hinge(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[0].constant.scalar == 1. and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].constant.scalar == 0
+        )
+
+
+def prox_hinge(expr):
+    if is_hinge(expr):
+        expr.proximal_operator.name = "HingeProx"
+        yield expr
+
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""
     if expr.expression_type != Expression.MAX_ELEMENTWISE:
@@ -333,6 +352,11 @@ def prox_logistic_epigraph(expr):
         expr.proximal_operator.name = "LogisticEpigraph"
         if expr.arg[1].arg[0].arg[1].curvature.elementwise:
             yield expr
+
+def prox_hinge_epigraph(expr):
+    if is_epigraph(expr) and is_hinge(expr.arg[1]):
+        expr.proximal_operator.name = "HingeEpigraph"
+        yield expr
 
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and
