@@ -69,6 +69,7 @@ common_cc = \
 	epsilon/prox/scaled_zone.cc \
 	epsilon/prox/hinge.cc \
 	epsilon/prox/norm_l1_assymetric.cc \
+	epsilon/prox/deadzone.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

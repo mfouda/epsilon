@@ -22,7 +22,8 @@ PROX_TESTS = [
     Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
     Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
     Prox("HingeProx", cp.sum_entries(cp.max_elemwise(1-x, 0)), []),
-    Prox("NormL1AssymetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
+#    Prox("NormL1AssymetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
+    Prox("DeadZoneProx", cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)), []),
 ]
 
 EPIGRAPH_TESTS = [

@@ -285,6 +285,24 @@ def is_norm_l1_assymetric(expr):
         expr.arg[1].arg[0].arg[1].constant.scalar >= 0
         )
 
+def is_deadzone(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[0].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].constant.scalar == 0 and
+        expr.arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[1].arg[0].arg[0].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[1].constant.scalar == 0 
+        )
 
 def prox_hinge(expr):
     if is_hinge(expr):
@@ -294,6 +312,11 @@ def prox_hinge(expr):
 def prox_norm_l1_assymetric(expr):
     if is_norm_l1_assymetric(expr):
         expr.proximal_operator.name = "NormL1AssymetricProx"
+        yield expr
+
+def prox_deadzone(expr):
+    if is_deadzone(expr):
+        expr.proximal_operator.name = "DeadZoneProx"
         yield expr
 
 def prox_max_elementwise(expr):
