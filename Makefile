@@ -75,8 +75,8 @@ common_cc = \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
 	epsilon/vector/dynamic_matrix.cc \
-	epsilon/vector/vector_util.cc \
-	epsilon/vector/vector_file.cc
+	epsilon/vector/vector_file.cc \
+	epsilon/vector/vector_util.cc
 
 third_party_obj = \
 	$(glmgen_dir)/src/tf/tf_dp.o

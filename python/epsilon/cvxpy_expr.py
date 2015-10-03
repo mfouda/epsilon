@@ -14,10 +14,11 @@ from cvxpy.atoms.affine.trace import trace
 from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
 from cvxpy.atoms.affine.vstack import vstack
-from cvxpy.atoms.elementwise.exp import exp
 from cvxpy.atoms.elementwise.entr import entr
+from cvxpy.atoms.elementwise.exp import exp
 from cvxpy.atoms.elementwise.huber import huber
 from cvxpy.atoms.elementwise.log import log
+from cvxpy.atoms.elementwise.logistic import logistic
 from cvxpy.atoms.elementwise.max_elemwise import max_elemwise
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.atoms.elementwise.power import power
@@ -49,6 +50,7 @@ EXPRESSION_TYPES = (
     (log, E.LOG),
     (log_det, E.LOG_DET),
     (log_sum_exp, E.LOG_SUM_EXP),
+    (logistic, E.LOGISTIC),
     (max_elemwise, E.MAX_ELEMENTWISE),
     (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
     (norm2_elemwise, E.NORM_2_ELEMENTWISE),

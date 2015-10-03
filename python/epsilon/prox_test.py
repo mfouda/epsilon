@@ -15,24 +15,25 @@ t = cp.Variable(1)
 Prox = namedtuple("Prox", ["name", "objective", "constraints"])
 
 PROX_TESTS = [
+    Prox("DeadZoneProx", cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)), []),
+    Prox("FusedLassoProx", cp.tv(x), []),
+    Prox("HingeProx", cp.sum_entries(cp.max_elemwise(1-x, 0)), []),
+    Prox("LogisticProx", cp.sum_entries(cp.logistic(x)), []),
+    Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
+    Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
     Prox("NonNegativeProx", 0, [x >= 0]),
+    Prox("NormL1AsymmetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
     Prox("NormL1Prox", cp.norm1(x), []),
     Prox("NormL2Prox", cp.norm2(x), []),
-    Prox("FusedLassoProx", cp.tv(x), []),
-    Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
-    Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
-    Prox("HingeProx", cp.sum_entries(cp.max_elemwise(1-x, 0)), []),
-    Prox("NormL1AsymetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
-    Prox("DeadZoneProx", cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)), []),
 ]
 
 EPIGRAPH_TESTS = [
+    Prox("DeadZoneEpigraph", 0, [cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)) <= t]),
+    Prox("HingeEpigraph", 0, [cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t]),
+    Prox("LogisticEpigraph", 0, [cp.sum_entries(cp.logistic(x)) <= t]),
+    Prox("NormL1AsymetricEpigraph", 0, [cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)) <= t]),
     Prox("NormL1Epigraph", 0, [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", 0, [cp.norm2(x) <= t]),
-    Prox("HingeEpigraph", 0, [cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t]),
-    Prox("NormL1AsymetricEpigraph", 0,
-        [cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)) <= t]),
-    Prox("DeadZoneEpigraph", 0, [cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)) <= t]),
     # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
@@ -77,44 +78,6 @@ def test_epigraph():
     for prox in EPIGRAPH_TESTS:
         for i in xrange(NUM_TRIALS):
             yield run, prox, i
-
-# TODO(mwytock): Convert test_logistic_prox/epigraph to vectors when logistic
-# atom is fixed
-def test_prox_logistic():
-    def run(i):
-        np.random.seed(i)
-
-        v = np.random.randn(1)
-        x = cp.Variable(1)
-        f = cp.log_sum_exp(cp.vstack(0, x))
-        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + f)).solve()
-        expected = {var: var.value for var in (x,)}
-
-        solve.prox(cp.Problem(cp.Minimize(f)), {x: v})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_epigraph_logistic():
-    def run(i):
-        np.random.seed(i)
-        v = np.random.randn(1)
-        s = np.random.randn(1)
-
-        x = cp.Variable(1)
-        t = cp.Variable(1)
-        c = [cp.log_sum_exp(cp.vstack(0, x)) <= t]
-        cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                                    cp.sum_squares(t - s))), c).solve()
-        expected = {var: var.value for var in (x,t)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, t: s})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
 
 def test_linear_equality():
     """I(Ax == b)"""

@@ -147,16 +147,14 @@ def prox_least_squares(expr):
             yield prox_expr
 
 def prox_logistic(expr):
-    if (expr.expression_type == Expression.LOG_SUM_EXP and
-        expr.arg[0].expression_type == Expression.VSTACK and
-        len(expr.arg[0].arg) == 2 and
-        expr.arg[0].arg[0].expression_type == Expression.CONSTANT):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.LOGISTIC):
 
         expr.proximal_operator.name = "LogisticProx"
-        if expr.arg[0].arg[1].curvature.elementwise:
+        if expr.arg[0].arg[0].curvature.elementwise:
             yield expr
         else:
-            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[1]):
+            for prox_expr in transform_epigraph(expr, expr.arg[0].arg[0]):
                 yield prox_expr
 
 def prox_norm1(expr):
@@ -388,20 +386,16 @@ def prox_negative_entropy_epigraph(expr):
         expr.arg[1].expression_type == Expression.NEGATE and
         expr.arg[1].arg[0].expression_type == Expression.SUM and
         expr.arg[1].arg[0].arg[0].expression_type == Expression.ENTR):
-
         expr.proximal_operator.name = "NegativeEntropyEpigraph"
         if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
             yield expr
 
 def prox_logistic_epigraph(expr):
     if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.LOG_SUM_EXP and
-        expr.arg[1].arg[0].expression_type == Expression.VSTACK and
-        len(expr.arg[1].arg[0].arg) == 2 and
-        expr.arg[1].arg[0].arg[0].expression_type == Expression.CONSTANT):
-
+        expr.arg[1].expression_type == Expression.SUM and
+        expr.arg[1].arg[0].expression_type == Expression.LOGISTIC):
         expr.proximal_operator.name = "LogisticEpigraph"
-        if expr.arg[1].arg[0].arg[1].curvature.elementwise:
+        if expr.arg[1].arg[0].arg[0].curvature.elementwise:
             yield expr
 
 def prox_hinge_epigraph(expr):
