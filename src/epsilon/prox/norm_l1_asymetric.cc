@@ -7,8 +7,20 @@ public:
 
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
-    alpha_ = arg.f_expr().arg(0).arg(0).arg(1).constant().scalar();
-    beta_ = arg.f_expr().arg(1).arg(0).arg(1).constant().scalar();
+    alpha_ = arg.f_expr().arg(0).arg(0).arg(0).constant().scalar();
+    beta_ = arg.f_expr().arg(0).arg(1).arg(0).constant().scalar();
   }
 };
 REGISTER_PROX_OPERATOR(NormL1AsymetricProx);
+
+class NormL1AsymetricEpigraph final : public ScaledZoneEpigraph {
+public:
+  NormL1AsymetricEpigraph() : ScaledZoneEpigraph(0, 0, 0, 0) {};
+
+  void Init(const ProxOperatorArg& arg) override {
+    lambda_ = arg.lambda();
+    alpha_ = arg.f_expr().arg(1).arg(0).arg(0).arg(0).constant().scalar();
+    beta_ = arg.f_expr().arg(1).arg(0).arg(1).arg(0).constant().scalar();
+  }
+};
+REGISTER_PROX_OPERATOR(NormL1AsymetricEpigraph);
