@@ -138,6 +138,7 @@ TEST_F(NormL1Test, Basic) {
       Apply(TestVector({-1,-2,3})), TestVector({0,0,0.5})));
 }
 
+#if 0
 TEST_F(NormL1Test, Weighted) {
   CreateWeightedExpression({0,2,3});
 
@@ -149,6 +150,7 @@ TEST_F(NormL1Test, Weighted) {
   EXPECT_TRUE(VectorEquals(
       Apply(TestVector({-1,-2,3})), TestVector({-1,-1,1.5})));
 }
+#endif
 
 TEST_F(NegativeLogDetTest, Basic) {
   const int n = 10;
