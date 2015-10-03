@@ -40,8 +40,8 @@ def test_composite_epigraph():
     f = cp.exp(cp.norm2(x) + cp.norm1(x) + c.T*x) + cp.norm2(x)
     problem = transform(cp.Problem(cp.Minimize(f)))
 
-def test_multiply_scalar_max_elemwise():
+def test_multiply_scalar():
     n = 5
     x = cp.Variable(n)
-    f = 0.25*cp.max_elemwise(x, 0)
+    f = cp.sum_entries(0.25*cp.max_elemwise(x, 0))
     problem = transform(cp.Problem(cp.Minimize(f)))
