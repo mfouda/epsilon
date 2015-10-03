@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
 
 # Protobuf latest version
 RUN git clone https://github.com/google/protobuf.git
+RUN cd protobuf && git checkout tags/v3.0.0-beta-1
 RUN cd protobuf && ./autogen.sh && ./configure && make install
 RUN ldconfig
 
