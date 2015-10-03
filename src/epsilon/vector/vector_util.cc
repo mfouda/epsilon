@@ -179,6 +179,12 @@ bool IsDiagonal(const SparseXd& A) {
   return true;
 }
 
+bool IsIdentity(const SparseXd& A) {
+  if (!IsDiagonal(A))
+    return false;
+  return (A.diagonal().array() == 1).all();
+}
+
 Eigen::VectorXd ToVector(const Eigen::MatrixXd& A) {
   return Eigen::Map<const Eigen::VectorXd>(A.data(), A.rows()*A.cols());
 }
@@ -186,41 +192,4 @@ Eigen::VectorXd ToVector(const Eigen::MatrixXd& A) {
 Eigen::MatrixXd ToMatrix(const Eigen::VectorXd& a, int m, int n) {
   CHECK_EQ(a.size(), m*n);
   return Eigen::Map<const Eigen::MatrixXd>(a.data(), m, n);
-}
-
-bool IsBlockScalar(const SparseXd& A) {
-  CHECK(!A.IsRowMajor);
-
-  const int m = A.rows();
-  const int n = A.cols();
-  if (m < n)
-    return false;
-
-  // Go through first column, subtract off (potential) identity
-  // matrices and then check if resulting matrix is all zeros
-
-  Eigen::SparseMatrix<double, Eigen::RowMajor> B = A;
-  Eigen::SparseMatrix<double, Eigen::RowMajor> I(n, n);
-  I.setIdentity();
-  for (SparseXd::InnerIterator iter(A, 0); iter; ++iter) {
-    CHECK(iter.value() != 0);
-    if (iter.row() + n > m)
-      return false;
-    B.middleRows(iter.row(), n) -= iter.value()*I;
-  }
-  B.prune([](int, int, float val) { return val != 0; });
-  return B.nonZeros() == 0;
-  return false;
-}
-
-void AppendBlockTriplets(
-    const SparseXd& A, int i_offset, int j_offset,
-    std::vector<Eigen::Triplet<double> >* coeffs) {
-  for (int k = 0; k < A.outerSize(); k++) {
-    for (SparseXd::InnerIterator iter(A, k); iter; ++iter) {
-      coeffs->push_back(
-          Eigen::Triplet<double>(i_offset+iter.row(), j_offset+iter.col(),
-                                 iter.value()));
-    }
-  }
 }

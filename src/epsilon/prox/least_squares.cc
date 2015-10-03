@@ -1,25 +1,80 @@
 
 #include "epsilon/affine/affine.h"
+#include "epsilon/affine/affine_matrix.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
-// lam*||Ax + b||_2^2 with dense or sparse A
-class LeastSquaresProx final : public ProxOperator {
- protected:
+// TODO(mwytock): Likely want to unify this with LeastSquaresProx. Perhaps we
+// can just get rid of the old implementation when affine_matrix.cc is a little
+// more mature.
+//
+// lam*||AX + B||_F^2 with dense A
+// Expression tree:
+// SUM
+//   POWER (p: 2)
+//     AFFINE (X)
+class LeastSquaresMatrixProx final : public ProxOperator {
+public:
   void Init(const ProxOperatorArg& arg) override {
-    // Expression tree:
-    // SUM
-    //   POWER (p: 2)
-    //     AFFINE (x)
+    lambda_ = arg.lambda();
+
+    affine::MatrixOperator op = affine::BuildMatrixOperator(
+        arg.f_expr().arg(0).arg(0));
+    CHECK(op.B.isIdentity());
+    A_ = op.A;
+    ATB_ = A_.transpose()*op.C;
+
+    const int m = A_.rows();
+    const int n = A_.cols();
+    if (m <= n) {
+      VLOG(2) << "Computing I/lambda + AA' (" << m << ", " << m << ")";
+      solver_.compute(
+          Eigen::MatrixXd::Identity(m, m)/lambda_/2 + A_*A_.transpose());
+    } else {
+      VLOG(2) << "Computing I + lambda*AA' (" << n << ", " << n << ")";
+      solver_.compute(
+          Eigen::MatrixXd::Identity(n, n) + 2*arg.lambda()*A_.transpose()*A_);
+    }
+    CHECK_EQ(solver_.info(), Eigen::Success);
+  }
+
+  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+    const int m = ATB_.rows();
+    const int n = ATB_.cols();
+
+    Eigen::MatrixXd Q = ToMatrix(v, m, n) - 2*lambda_*ATB_;
+    if (A_.rows() <= A_.cols()) {
+      return ToVector(Q - A_.transpose()*solver_.solve(A_*Q));
+    } else {
+      return ToVector(solver_.solve(Q));
+    }
+  }
+
+private:
+  Eigen::MatrixXd A_, ATB_;
+  double lambda_;
+  Eigen::LLT<Eigen::MatrixXd> solver_;
+};
+REGISTER_PROX_OPERATOR(LeastSquaresMatrixProx);
+
+// lam*||Ax + b||_2^2 with dense or sparse A
+// Expression tree:
+// SUM
+//   POWER (p: 2)
+//     AFFINE (x)
+class LeastSquaresProx final : public ProxOperator {
+ public:
+  void Init(const ProxOperatorArg& arg) override {
+    const Expression& expr_arg = arg.f_expr().arg(0).arg(0);
 
     // Get affine function
-    const int m = GetDimension(arg.f_expr().arg(0).arg(0));
+    const int m = GetDimension(expr_arg);
     const int n = arg.var_map().n();
     DynamicMatrix A = DynamicMatrix::Zero(m, n);
     DynamicMatrix b0 = DynamicMatrix::FromDense(Eigen::VectorXd::Zero(m));
-    BuildAffineOperator(arg.f_expr().arg(0).arg(0), arg.var_map(), &A, &b0);
+    BuildAffineOperator(expr_arg, arg.var_map(), &A, &b0);
     if (A.is_sparse()) {
       sparse_ = true;
       A_sparse_ = A.sparse();
@@ -56,7 +111,7 @@ class LeastSquaresProx final : public ProxOperator {
       } else {
         VLOG(2) << "Computing I + lambda*AA' (" << n << ", " << n << ")";
         solver_.compute(
-          Eigen::MatrixXd::Identity(n, n) + 2*arg.lambda()*A.transpose()*A);
+            Eigen::MatrixXd::Identity(n, n) + 2*arg.lambda()*A.transpose()*A);
       }
       CHECK_EQ(solver_.info(), Eigen::Success);
     }

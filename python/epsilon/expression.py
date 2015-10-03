@@ -59,12 +59,18 @@ def add(*args):
 
 def multiply(*args):
     assert len(args) == 2
-    assert args[0].size.dim[1] == args[1].size.dim[0]
+    if dimension(args[0]) == 1:
+        size = args[1].size
+    elif dimension(args[1]) == 1:
+        size = args[0].size
+    else:
+        assert args[0].size.dim[1] == args[1].size.dim[0]
+        size = Size(dim=[args[0].size.dim[0], args[1].size.dim[1]])
 
     return Expression(
         expression_type=Expression.MULTIPLY,
         arg=args,
-        size=Size(dim=[args[0].size.dim[0], args[1].size.dim[1]]))
+        size=size)
 
 def hstack(*args):
     e = Expression(expression_type=Expression.HSTACK)

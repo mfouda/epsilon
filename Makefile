@@ -46,6 +46,7 @@ endif
 
 common_cc = \
 	epsilon/affine/affine.cc \
+	epsilon/affine/affine_matrix.cc \
 	epsilon/algorithms/prox_admm.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
@@ -93,10 +94,10 @@ proto = \
 	epsilon/solver_params.proto
 
 tests = \
+	epsilon/affine/affine_matrix_test \
 	epsilon/affine/affine_test \
 	epsilon/algorithms/prox_admm_test \
-	epsilon/prox/prox_test \
-	epsilon/vector/vector_test
+	epsilon/prox/prox_test
 
 binaries = \
 	epsilon/benchmark

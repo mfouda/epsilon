@@ -22,6 +22,7 @@ from epsilon.problems import lasso
 from epsilon.problems import least_abs_dev
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
+from epsilon.problems import mnist
 from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
@@ -56,6 +57,7 @@ PROBLEMS = [
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
+    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]
@@ -82,7 +84,9 @@ def run_benchmarks(problems):
 
         t0 = time.time()
         if args.scs:
-            cvxpy_prob.solve(solver=cp.SCS)
+            cvxpy_prob.solve(
+                solver=cp.SCS, verbose=args.debug,
+                use_indirect=args.scs_indirect)
         else:
             solve.solve(cvxpy_prob)
         t1 = time.time()
@@ -139,6 +143,7 @@ def write_benchmarks(problems, location):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scs", action="store_true")
+    parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--write")
     parser.add_argument("--problem")
     parser.add_argument("--debug", action="store_true")

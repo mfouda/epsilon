@@ -111,7 +111,11 @@ setup(
     author_email = "mwytock@gmail.com",
     packages = find_packages(PYTHON_DIR),
     package_dir = {"": PYTHON_DIR},
-    package_data = {"": ["problems/baby.jpg"]},
+    package_data = {"": [
+        "problems/baby.jpg",
+        "problems/mnist_small.mat",
+        "problems/mnist_tiny.mat",
+    ]},
     ext_modules = [solve],
     install_requires = [
         "cvxpy==0.3.0",
