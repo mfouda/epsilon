@@ -67,6 +67,10 @@ common_cc = \
 	epsilon/prox/negative_entropy.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/newton.cc \
+	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/hinge.cc \
+	epsilon/prox/norm_l1_asymetric.cc \
+	epsilon/prox/deadzone.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
