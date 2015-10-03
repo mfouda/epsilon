@@ -5,7 +5,7 @@ TODO:
         - hinge (prox and epi)
         - logistic (prox and epi)
         - negative log (prox and epi)
-        - assymetric l1 (prox and epi)
+        - asymetric l1 (prox and epi)
         - inverse positive (prox and epi)
         - exponential (prox and epi)
         - non-negative (prox)

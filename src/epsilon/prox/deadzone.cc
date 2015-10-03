@@ -13,7 +13,7 @@ public:
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
     M_ = arg.f_expr().arg(0).arg(0).arg(0).arg(1).arg(0).constant().scalar();
-    VLOG(0) << "Deadzone: M = " << M_ << "\n";
+    VLOG(1) << "Deadzone: M = " << M_ << "\n";
   }
 };
 REGISTER_PROX_OPERATOR(DeadZoneProx);
