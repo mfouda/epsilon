@@ -414,6 +414,10 @@ def prox_norm_l1_asymetric_epigraph(expr):
         expr.proximal_operator.name = "NormL1AsymetricEpigraph"
         yield expr
 
+def prox_deadzone_epigraph(expr):
+    if is_epigraph(expr) and is_deadzone(expr.arg[1]):
+        expr.proximal_operator.name = "DeadZoneEpigraph"
+        yield expr
 
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and

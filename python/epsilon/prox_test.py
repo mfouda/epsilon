@@ -32,6 +32,7 @@ EPIGRAPH_TESTS = [
     Prox("HingeEpigraph", 0, [cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t]),
     Prox("NormL1AsymetricEpigraph", 0,
         [cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)) <= t]),
+    Prox("DeadZoneEpigraph", 0, [cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)) <= t]),
     # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
