@@ -46,9 +46,9 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
-# PROBLEMS = [
-#     ProblemInstance("quantile", quantile.create, dict(m=3, n=2, k=2))
-# ]
+PROBLEMS = [
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2))
+]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

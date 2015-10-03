@@ -7,7 +7,7 @@ from numpy.random import randn
 
 from epsilon import solve
 
-NUM_TRIALS = 10
+NUM_TRIALS = 1
 
 n = 10
 x = cp.Variable(n)

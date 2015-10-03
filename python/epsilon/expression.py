@@ -192,7 +192,7 @@ def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
 
 def leq_constraint(a, b):
-    return indicator(Cone.NON_NEGATIVE, b, a)
+    return indicator(Cone.NON_NEGATIVE, add(negate(a), b))
 
 def non_negative(x):
     return indicator(Cone.NON_NEGATIVE, x)
