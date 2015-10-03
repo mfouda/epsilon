@@ -56,6 +56,7 @@ PROBLEMS = [
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),

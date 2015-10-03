@@ -77,10 +77,11 @@ python -m epsilon.problems.benchmark
 basis_pursuit  |   1.47s|   1.44e+02
 covsel         |   0.46s|   3.63e+02
 group_lasso    |  10.33s|   1.66e+02
-hinge_l1       |  12.17s|   1.64e+03
+hinge_l1       |   5.34s|   1.63e+03
 huber          |   0.49s|   2.18e+03
 lasso          |   3.93s|   1.71e+01
 least_abs_dev  |   0.39s|   7.10e+03
+logreg_l1      |   5.12s|   1.04e+03
 lp             |   0.33s|   7.77e+02
 mnist          |   1.33s|   1.60e+03
 tv_1d          |   0.47s|   2.29e+05
@@ -100,6 +101,7 @@ hinge_l1       |  52.62s|   1.50e+03
 huber          |   3.39s|   2.18e+03
 lasso          |  22.02s|   1.63e+01
 least_abs_dev  |   3.81s|   7.10e+03
+logreg_l1      |  55.53s|   1.04e+03
 lp             |   5.47s|   7.75e+02
 mnist          | 227.65s|   1.60e+03
 tv_1d          |  47.28s|   3.51e+05
