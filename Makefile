@@ -54,23 +54,23 @@ common_cc = \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
 	epsilon/parameters/local_parameter_service.cc \
+	epsilon/prox/deadzone.cc \
 	epsilon/prox/fused_lasso.cc \
+	epsilon/prox/hinge.cc \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear_equality.cc \
-	epsilon/prox/negative_log_det.cc \
-	epsilon/prox/negative_log.cc \
-	epsilon/prox/non_negative.cc \
-	epsilon/prox/norm_l1.cc \
-	epsilon/prox/norm_l1_l2.cc \
-	epsilon/prox/norm_l2.cc \
 	epsilon/prox/logistic.cc \
 	epsilon/prox/negative_entropy.cc \
-	epsilon/prox/prox.cc \
+	epsilon/prox/negative_log.cc \
+	epsilon/prox/negative_log_det.cc \
 	epsilon/prox/newton.cc \
+	epsilon/prox/non_negative.cc \
+	epsilon/prox/norm_l1.cc \
+	epsilon/prox/norm_l1_asymmetric.cc \
+	epsilon/prox/norm_l1_l2.cc \
+	epsilon/prox/norm_l2.cc \
+	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
-	epsilon/prox/hinge.cc \
-	epsilon/prox/norm_l1_asymetric.cc \
-	epsilon/prox/deadzone.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

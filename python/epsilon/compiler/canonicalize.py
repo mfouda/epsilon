@@ -268,7 +268,7 @@ def is_hinge(expr):
         expr.arg[0].arg[1].constant.scalar == 0
         )
 
-def is_norm_l1_asymetric(expr):
+def is_norm_l1_asymmetric(expr):
     return (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.ADD and
         expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
@@ -285,7 +285,7 @@ def is_norm_l1_asymetric(expr):
         expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
         expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0 
+        expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0
         )
 
 def is_deadzone(expr):
@@ -304,7 +304,7 @@ def is_deadzone(expr):
         expr.arg[0].arg[1].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[1].arg[0].arg[1].expression_type == Expression.NEGATE and
         expr.arg[0].arg[1].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].arg[1].constant.scalar == 0 
+        expr.arg[0].arg[1].arg[1].constant.scalar == 0
         )
 
 def prox_hinge(expr):
@@ -312,9 +312,9 @@ def prox_hinge(expr):
         expr.proximal_operator.name = "HingeProx"
         yield expr
 
-def prox_norm_l1_asymetric(expr):
-    if is_norm_l1_asymetric(expr):
-        expr.proximal_operator.name = "NormL1AsymetricProx"
+def prox_norm_l1_asymmetric(expr):
+    if is_norm_l1_asymmetric(expr):
+        expr.proximal_operator.name = "NormL1AsymmetricProx"
         yield expr
 
 def prox_deadzone(expr):
@@ -409,9 +409,9 @@ def prox_hinge_epigraph(expr):
         expr.proximal_operator.name = "HingeEpigraph"
         yield expr
 
-def prox_norm_l1_asymetric_epigraph(expr):
-    if is_epigraph(expr) and is_norm_l1_asymetric(expr.arg[1]):
-        expr.proximal_operator.name = "NormL1AsymetricEpigraph"
+def prox_norm_l1_asymmetric_epigraph(expr):
+    if is_epigraph(expr) and is_norm_l1_asymmetric(expr.arg[1]):
+        expr.proximal_operator.name = "NormL1AsymmetricEpigraph"
         yield expr
 
 def prox_deadzone_epigraph(expr):

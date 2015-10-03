@@ -1,9 +1,9 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/scaled_zone.h"
 
-class NormL1AsymetricProx final : public ScaledZoneProx {
+class NormL1AsymmetricProx final : public ScaledZoneProx {
 public:
-  NormL1AsymetricProx() : ScaledZoneProx(0, 0, 0, 0) {};
+  NormL1AsymmetricProx() : ScaledZoneProx(0, 0, 0, 0) {};
 
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
@@ -11,11 +11,11 @@ public:
     beta_ = arg.f_expr().arg(0).arg(1).arg(0).constant().scalar();
   }
 };
-REGISTER_PROX_OPERATOR(NormL1AsymetricProx);
+REGISTER_PROX_OPERATOR(NormL1AsymmetricProx);
 
-class NormL1AsymetricEpigraph final : public ScaledZoneEpigraph {
+class NormL1AsymmetricEpigraph final : public ScaledZoneEpigraph {
 public:
-  NormL1AsymetricEpigraph() : ScaledZoneEpigraph(0, 0, 0, 0) {};
+  NormL1AsymmetricEpigraph() : ScaledZoneEpigraph(0, 0, 0, 0) {};
 
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
@@ -23,4 +23,4 @@ public:
     beta_ = arg.f_expr().arg(1).arg(0).arg(1).arg(0).constant().scalar();
   }
 };
-REGISTER_PROX_OPERATOR(NormL1AsymetricEpigraph);
+REGISTER_PROX_OPERATOR(NormL1AsymmetricEpigraph);
