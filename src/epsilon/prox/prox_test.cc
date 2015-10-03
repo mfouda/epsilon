@@ -66,6 +66,7 @@ class NormL1Test : public ProxOperatorTest {
     f_expr_.mutable_proximal_operator()->set_name("NormL1Prox");
   }
 
+#if 0
   void CreateWeightedExpression(const std::vector<double>& weights) {
     const int n = weights.size();
     f_expr_ = expression::NormP(
@@ -74,6 +75,7 @@ class NormL1Test : public ProxOperatorTest {
             expression::Variable(n, 1, "x")), 1);
     f_expr_.mutable_proximal_operator()->set_name("NormL1Prox");
   }
+#endif
 };
 
 class NormL1L2Test : public ProxOperatorTest {

@@ -70,12 +70,6 @@ def test_epigraph():
             {x: v, t: s})
         np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
         np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
-        if 0:
-            print 'epi vs expected'
-            print "v,s", v, s
-            print "x:", x.value, expected[x]
-            print "t:", t.value, expected[t]
-            print "lam:", t.value-s, expected[t]-s
 
     for prox in EPIGRAPH_TESTS:
         for i in xrange(NUM_TRIALS):

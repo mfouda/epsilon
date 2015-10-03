@@ -13,7 +13,6 @@ bool abs_cmp_descending(const double &x, const double &y)
     return ax > ay;
 }
 
-// f(x) = \sum_i \alpha \max(0, x_i-M) + \beta \max(0, -x_i-M)
 double ScaledZoneProx::key(double x) {
   if(x>0)
     return (x-M_) / alpha_;
