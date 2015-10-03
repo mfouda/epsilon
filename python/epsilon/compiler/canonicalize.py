@@ -272,20 +272,20 @@ def is_norm_l1_asymetric(expr):
     return (expr.expression_type == Expression.SUM and
         expr.arg[0].expression_type == Expression.ADD and
         expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
-        expr.arg[0].arg[0].arg[0].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[0].arg[0].constant.scalar == 0 and
-        expr.arg[0].arg[0].arg[0].arg[1].expression_type == Expression.VARIABLE and
-        expr.arg[0].arg[0].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[1].constant.scalar >= 0 and
-        expr.arg[1].arg[0].expression_type == Expression.MULTIPLY and
-        expr.arg[1].arg[0].arg[0].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[1].arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[1].arg[0].arg[0].arg[0].constant.scalar == 0 and
-        expr.arg[1].arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
-        expr.arg[1].arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
-        expr.arg[1].arg[0].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[1].arg[0].arg[1].constant.scalar >= 0
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[0].constant.scalar >= 0 and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[0].arg[1].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].arg[1].constant.scalar == 0 and
+        expr.arg[0].arg[1].expression_type == Expression.MULTIPLY and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[0].constant.scalar >= 0 and
+        expr.arg[0].arg[1].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0 
         )
 
 def is_deadzone(expr):
@@ -408,6 +408,12 @@ def prox_hinge_epigraph(expr):
     if is_epigraph(expr) and is_hinge(expr.arg[1]):
         expr.proximal_operator.name = "HingeEpigraph"
         yield expr
+
+def prox_norm_l1_asymetric_epigraph(expr):
+    if is_epigraph(expr) and is_norm_l1_asymetric(expr.arg[1]):
+        expr.proximal_operator.name = "NormL1AsymetricEpigraph"
+        yield expr
+
 
 def prox_equality_constraint(expr):
     if (expr.expression_type == Expression.INDICATOR and

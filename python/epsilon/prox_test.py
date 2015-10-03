@@ -22,7 +22,7 @@ PROX_TESTS = [
     Prox("NegativeLogProx", -cp.sum_entries(cp.log(x)), []),
     Prox("NegativeEntropyProx", -cp.sum_entries(cp.entr(x)), []),
     Prox("HingeProx", cp.sum_entries(cp.max_elemwise(1-x, 0)), []),
-#    Prox("NormL1AsymetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
+    Prox("NormL1AsymetricProx", cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)), []),
     Prox("DeadZoneProx", cp.sum_entries(cp.max_elemwise(x-1, 0)+cp.max_elemwise(-x-1,0)), []),
 ]
 
@@ -30,6 +30,8 @@ EPIGRAPH_TESTS = [
     Prox("NormL1Epigraph", 0, [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", 0, [cp.norm2(x) <= t]),
     Prox("HingeEpigraph", 0, [cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t]),
+    Prox("NormL1AsymetricEpigraph", 0,
+        [cp.sum_entries(0.75*cp.max_elemwise(x, 0)+0.25*cp.max_elemwise(-x,0)) <= t]),
     # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
