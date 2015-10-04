@@ -3,7 +3,6 @@
 from collections import defaultdict
 from collections import namedtuple
 
-from epsilon.compiler import attributes
 from epsilon.compiler import validate
 from epsilon.compiler.problem_graph import *
 from epsilon.expression import *

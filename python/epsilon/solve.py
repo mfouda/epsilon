@@ -7,7 +7,6 @@ from epsilon import cvxpy_expr
 from epsilon import expression_str
 from epsilon import solver_params_pb2
 from epsilon import solver_pb2
-from epsilon.compiler import attributes
 from epsilon.compiler import canonicalize
 from epsilon.compiler import compiler
 from epsilon.compiler import validate

@@ -1,6 +1,5 @@
 import logging
 
-from epsilon.compiler import attributes
 from epsilon.compiler import canonicalize
 from epsilon.compiler import combine
 from epsilon.expression_str import problem_str

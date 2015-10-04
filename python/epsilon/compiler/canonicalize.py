@@ -17,6 +17,7 @@ from epsilon import error
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 from epsilon.expression_str import expr_str
+from epsilon.util import prod
 
 class CanonicalizeError(error.ExpressionError):
     pass
@@ -79,7 +80,7 @@ def transform_epigraph(f_expr, g_expr):
 def prox_multiply_scalar(expr):
     if (expr.expression_type == Expression.MULTIPLY and
         expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
-        dimension(expr.arg[0]) == 1):
+        prod(expr.arg[0].size.dim) == 1):
         for prox_expr in transform_expr(expr.arg[1]):
             if prox_expr.expression_type == Expression.INDICATOR:
                 yield prox_expr
@@ -210,7 +211,7 @@ def prox_norm12(expr):
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
 
         # Rewrite this as l1/l2 norm using reshape() and hstack()
-        m = dimension(expr.arg[0].arg[0])
+        m = prod(expr.arg[0].arg[0].size.dim)
         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
         expr = norm_pq(arg, 1, 2)
 

@@ -11,7 +11,7 @@ mutations.
 from collections import defaultdict
 
 from epsilon import expression
-from epsilon.compiler import attributes
+from epsilon import expression_util
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Expression, Problem, Cone
 
@@ -122,7 +122,8 @@ class ProblemGraph(object):
 
         # Add curvature attributes for equality indicator functions
         if is_equality_indicator(f):
-            var_curvature = attributes.compute_variable_curvature(f.expr.arg[0])
+            var_curvature = expression_util.compute_variable_curvature(
+                f.expr.arg[0])
             for f_var in self.edges_by_function[f]:
                 f_var.curvature = var_curvature[f_var.variable]
 

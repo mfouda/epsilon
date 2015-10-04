@@ -1,29 +1,7 @@
 """Functional form of the expression operators."""
 
-import struct
-from operator import mul
-
 from epsilon.expression_pb2 import *
-
-def prod(x):
-    return reduce(mul, x, 1)
-
-# Accessors
-
-def dimension(expr):
-    return expr.size.dim[0]*expr.size.dim[1]
-
-def expr_vars(expr):
-    retval = {}
-    if expr.expression_type == Expression.VARIABLE:
-        retval[expr.variable.variable_id] = expr
-    else:
-        for arg in expr.arg:
-            retval.update(expr_vars(arg))
-    return retval
-
-def fp_expr(expr):
-    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
+from epsilon.util import prod
 
 # Internal helpers
 
@@ -48,12 +26,32 @@ def _add_curvature(a, b):
     elif b.curvature_type == Curvature.AFFINE:
         c.curvature_type = a.curvature_type
     elif a.curvature_type == b.curvature_type:
-        c.curvature.type = a.curvature_type
+        c.curvature_type = a.curvature_type
     else:
-        c.curvature.type = Curvature.UNKNOWN
+        c.curvature_type = Curvature.UNKNOWN
     return c
 
-# Constructors
+def _multiply_size(a, b):
+    if prod(a.dim) == 1:
+        return b
+    if prod(b.dim) == 1:
+        return a
+    if a.dim[1] == b.dim[0]:
+        return Size(dim=[a.dim[0], b.dim[1]])
+    raise ValueError("multiplying incompatible sizes")
+
+def _multiply_curvature(a, b):
+    if a.curvature_type == Curvature.CONSTANT:
+        return b
+    if b.curvature_type == Curvature.CONSTANT:
+        return a
+
+    return Curvature(
+        curvature_type=Curvature.UNKNOWN,
+        elementwise=False,
+        scalar_multiple=False)
+
+# Expressions
 
 def add(*args):
     if not args:
@@ -72,19 +70,20 @@ def add(*args):
         curvature=curvature)
 
 def multiply(*args):
-    assert len(args) == 2
-    if dimension(args[0]) == 1:
-        size = args[1].size
-    elif dimension(args[1]) == 1:
-        size = args[0].size
-    else:
-        assert args[0].size.dim[1] == args[1].size.dim[0]
-        size = Size(dim=[args[0].size.dim[0], args[1].size.dim[1]])
+    if not args:
+        raise ValueError("multiplying null args")
+
+    size = args[0].size
+    curvature = args[0].curvature
+    for i in range(1, len(args)):
+        size = _multiply_size(size, args[i].size)
+        curvature = _multiply_curvature(curvature, args[i].curvature)
 
     return Expression(
         expression_type=Expression.MULTIPLY,
         arg=args,
-        size=size)
+        size=size,
+        curvature=curvature)
 
 def hstack(*args):
     e = Expression(expression_type=Expression.HSTACK)
@@ -122,7 +121,7 @@ def vstack(*args):
     return e
 
 def reshape(arg, m, n):
-    assert m*n == dimension(arg)
+    assert m*n == prod(arg.size.dim)
 
     return Expression(
         expression_type=Expression.RESHAPE,
@@ -207,6 +206,14 @@ def sum_entries(x):
     return Expression(
         expression_type=Expression.SUM,
         size=Size(dim=[1, 1]),
+        arg=[x])
+
+def transpose(x):
+    m, n = x.size.dim
+    return Expression(
+        expression_type=Expression.TRANSPOSE,
+        size=Size(dim=[n, m]),
+        curvature=x.curvature,
         arg=[x])
 
 def equality_constraint(a, b):

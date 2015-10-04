@@ -33,7 +33,7 @@ from cvxpy.expressions.variables.variable import Variable
 
 from epsilon import data
 from epsilon import expression
-from epsilon.expression_pb2 import Expression, Size, Problem, Sign
+from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature
 
 def index_value(index, size):
     if index < 0:
@@ -54,7 +54,7 @@ def convert_constant(expr):
     m, n = expr.size
     if isinstance(expr.value, (int, long, float)):
         return expression.constant(m, n, scalar=expr.value)
-    assert isinstance(value, numpy.ndarray)
+    assert isinstance(expr.value, numpy.ndarray)
     return expression.constant(m, n, data_location=value_location(expr.value))
 
 def convert_generic(expression_type, expr):
@@ -65,26 +65,32 @@ def convert_generic(expression_type, expr):
             curvature_type=Curvature.Type.Value(expr.curvature)),
         sign=Sign(
             sign_type=Sign.Type.Value(expr.sign)),
-        arg=(convert_expression(arg) for arg in expr.arg))
+        arg=(convert_expression(arg) for arg in expr.args))
 
 def convert_binary(f, expr):
-    return f(*[convert_expression(arg) for arg in expr.arg])
+    return f(*[convert_expression(arg) for arg in expr.args])
 
 def convert_unary(f, expr):
-    assert len(expr.arg) == 0
-    return f(convert_expression(arg))
+    assert len(expr.args) == 1
+    return f(convert_expression(expr.args[0]))
 
 def convert_index(expr):
     return convert_generic(Expression.INDEX, expr)
 
 def convert_huber(expr):
-    return convert_generic(Expression.HUBER, expr)
+    proto = convert_generic(Expression.HUBER, expr)
+    proto.M = expr.M.value
+    return proto
 
 def convert_pnorm(expr):
-    return convert_generic(Expression.NORM_P, expr)
+    proto = convert_generic(Expression.NORM_P, expr)
+    proto.p = expr.p
+    return proto
 
 def convert_power(expr):
-    return convert_generic(Expression.POWER, expr)
+    proto = convert_generic(Expression.POWER, expr)
+    proto.p = expr.p
+    return proto
 
 
             #                for i, key in enumerate(expr.key):
@@ -104,10 +110,6 @@ def convert_power(expr):
     #     convert_constant(expr.value, proto.constant, data_map)
     # elif isinstance(expr, Variable):
     # elif isinstance(expr, index):
-    # elif isinstance(expr, (power, pnorm)):
-    #     proto.p = expr.p
-    # elif isinstance(expr, huber):
-    #     proto.M = expr.M.value
     # elif isinstance(expr, AddExpression):
     #     proto.CopyFrom(expression.add(proto.arg))
 
@@ -135,7 +137,7 @@ EXPRESSION_TYPES = (
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
     (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),
-    (transpose, lambda e: convert_generic(Expression.TRANSPOSE, e)),
+    (transpose, lambda e: convert_unary(expression.transpose, e)),
     (vstack, lambda e: convert_generic(Expression.VSTACK, e)),
 )
 

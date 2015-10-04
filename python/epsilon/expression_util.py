@@ -1,15 +1,11 @@
-"""Compute attributes on expression trees.
 
-These attributes are in addition to the standard DCP attributes which are
-already computed by cvxpy.
+import struct
 
-TODO(mwytock): These routines should be smarter and able to distinguish between
-x + y vs. x + x.
-"""
-from itertools import chain
-
-from epsilon.expression import dimension
+from epsilon.util import prod
 from epsilon.expression_pb2 import Curvature, Expression
+
+def fp_expr(expr):
+    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
 
 def is_scalar_expression(expr):
     if (expr.expression_type in (
@@ -20,7 +16,7 @@ def is_scalar_expression(expr):
         return True
 
     if (expr.expression_type == Expression.MULTIPLY and
-        dimension(expr.arg[0]) == 1):
+        prod(expr.arg[0].size.dim) == 1):
         return True
 
     return False
