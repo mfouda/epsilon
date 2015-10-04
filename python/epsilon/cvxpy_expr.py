@@ -1,4 +1,4 @@
-"""Manipulate cvxpy expressions."""
+"""Convert CVXPY expressions into Expression trees."""
 
 import cvxpy
 import numpy
@@ -32,131 +32,160 @@ from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
 
 from epsilon import data
-from epsilon import expression_pb2
 from epsilon import expression
-from epsilon.expression_pb2 import Expression as E
+from epsilon.expression_pb2 import Expression, Size, Problem, Sign
 
-EXPRESSION_TYPES = (
-    (AddExpression, E.ADD),
-    (Constant, E.CONSTANT),
-    (MulExpression, E.MULTIPLY),
-    (NegExpression, E.NEGATE),
-    (Variable, E.VARIABLE),
-    (exp, E.EXP),
-    (entr, E.ENTR),
-    (hstack, E.HSTACK),
-    (huber, E.HUBER),
-    (index, E.INDEX),
-    (log, E.LOG),
-    (log_det, E.LOG_DET),
-    (log_sum_exp, E.LOG_SUM_EXP),
-    (logistic, E.LOGISTIC),
-    (max_elemwise, E.MAX_ELEMENTWISE),
-    (mul_elemwise, E.MULTIPLY_ELEMENTWISE),
-    (norm2_elemwise, E.NORM_2_ELEMENTWISE),
-    (pnorm, E.NORM_P),
-    (power, E.POWER),
-    (quad_over_lin, E.QUAD_OVER_LIN),
-    (sum_entries, E.SUM),
-    (trace, E.TRACE),
-    (transpose, E.TRANSPOSE),
-    (vstack, E.VSTACK),
-)
-
-import inspect
-for expr_cls, expr_type in EXPRESSION_TYPES:
-    assert inspect.isclass(expr_cls), expr_cls
-
-
-class DistributedConstant(Constant):
-    def __init__(self, value):
-        self._value = value
-        shape = u.Shape(value.m, value.n)
-        self._dcp_attr = u.DCPAttr(u.Sign.UNKNOWN, u.Curvature.CONSTANT, shape)
-
-def variable_id(var):
-    return "cvxpy:" + str(var.id)
-
-def convert_constant(value, proto, data_map):
-    if isinstance(value, (int, long, float)):
-        proto.scalar = value
-        return
-
-    assert isinstance(value, numpy.ndarray)
-    prefix = "/mem/data/" + str(abs(hash(value.tostring())))
-    data_map[data.metadata_file(prefix)] = (
-        data.dense_matrix_metadata(value).SerializeToString())
-    data_map[data.value_file(prefix)] = value.tobytes(order="Fortran")
-    proto.data_location = prefix
-
-def convert_index(index, size):
+def index_value(index, size):
     if index < 0:
         return size + index
     return index
 
-def convert_expression(expr, proto, data_map):
-    """Convert cxvpy expression to protobuf form."""
-    proto.size.dim.extend(expr.size)
-    proto.curvature.curvature_type = (
-        expression_pb2.Curvature.Type.Value(expr.curvature))
-    proto.sign.sign_type = expression_pb2.Sign.Type.Value(expr.sign)
+def variable_id(expr):
+    return "cvxpy:" + str(expr.id)
+
+def value_location(value):
+    return "/mem/data/" + str(abs(hash(value.tostring())))
+
+def convert_variable(expr):
+    m, n = expr.size
+    return expression.variable(m, n, variable_id(expr))
+
+def convert_constant(expr):
+    m, n = expr.size
+    if isinstance(expr.value, (int, long, float)):
+        return expression.constant(m, n, scalar=expr.value)
+    assert isinstance(value, numpy.ndarray)
+    return expression.constant(m, n, data_location=value_location(expr.value))
+
+def convert_generic(expression_type, expr):
+    return Expression(
+        expression_type=expression_type,
+        size=Size(dim=expr.size),
+        curvature=Curvature(
+            curvature_type=Curvature.Type.Value(expr.curvature)),
+        sign=Sign(
+            sign_type=Sign.Type.Value(expr.sign)),
+        arg=(convert_expression(arg) for arg in expr.arg))
+
+def convert_binary(f, expr):
+    return f(*[convert_expression(arg) for arg in expr.arg])
+
+def convert_unary(f, expr):
+    assert len(expr.arg) == 0
+    return f(convert_expression(arg))
+
+def convert_index(expr):
+    return convert_generic(Expression.INDEX, expr)
+
+def convert_huber(expr):
+    return convert_generic(Expression.HUBER, expr)
+
+def convert_pnorm(expr):
+    return convert_generic(Expression.NORM_P, expr)
+
+def convert_power(expr):
+    return convert_generic(Expression.POWER, expr)
+
+
+            #                for i, key in enumerate(expr.key):
+            # key_proto = proto.key.add()
+
+            # size = expr.args[0].size[i]
+            # key_proto.start = convert_index(key.start, size) if key.start else 0
+            # key_proto.stop = convert_index(key.stop, size) if key.stop else size
+            # if key.step:
+            #     key_proto.step = key.step
+            # else:
+            #     key_proto.step = 1
+
+
+
+    # if isinstance(expr, Constant):
+    #     convert_constant(expr.value, proto.constant, data_map)
+    # elif isinstance(expr, Variable):
+    # elif isinstance(expr, index):
+    # elif isinstance(expr, (power, pnorm)):
+    #     proto.p = expr.p
+    # elif isinstance(expr, huber):
+    #     proto.M = expr.M.value
+    # elif isinstance(expr, AddExpression):
+    #     proto.CopyFrom(expression.add(proto.arg))
+
+
+EXPRESSION_TYPES = (
+    (AddExpression, lambda e: convert_binary(expression.add, e)),
+    (Constant, convert_constant),
+    (MulExpression, lambda e: convert_binary(expression.multiply, e)),
+    (NegExpression, lambda e: convert_unary(expression.negate, e)),
+    (Variable, convert_variable),
+    (exp, lambda e: convert_generic(Expression.EXP, e)),
+    (entr, lambda e: convert_generic(Expression.ENTR, e)),
+    (hstack, lambda e: convert_generic(Expression.HSTACK, e)),
+    (huber, convert_huber),
+    (index, convert_index),
+    (log, lambda e: convert_generic(Expression.LOG, e)),
+    (log_det, lambda e: convert_generic(Expression.LOG_DET, e)),
+    (log_sum_exp, lambda e: convert_generic(Expression.LOG_SUM_EXP, e)),
+    (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
+    (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
+    (mul_elemwise, lambda e: convert_generic(Expression.MULTIPLY_ELEMENTWISE, e)),
+    (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
+    (pnorm, convert_pnorm),
+    (power, convert_power),
+    (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
+    (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
+    (trace, lambda e: convert_generic(Expression.TRACE, e)),
+    (transpose, lambda e: convert_generic(Expression.TRANSPOSE, e)),
+    (vstack, lambda e: convert_generic(Expression.VSTACK, e)),
+)
+
+# Sanity check to make sure the CVXPY atoms are all classes. This can change
+# periodically due to implementation details of CVXPY.
+import inspect
+for expr_cls, expr_type in EXPRESSION_TYPES:
+    assert inspect.isclass(expr_cls), expr_cls
+
+def convert_expression(expr):
+    for expr_cls, convert in EXPRESSION_TYPES:
+        if isinstance(expr, expr_cls):
+            return convert(expr)
+    raise RuntimeError("Unknown type: %s" % type(expr))
+
+def convert_constraint(constraint):
+    if isinstance(constraint, EqConstraint):
+        return expression.equality_constraint(
+            convert_expression(constraint.args[0]),
+            convert_expression(constraint.args[1]))
+    if isinstance(constraint, LeqConstraint):
+        return expression.leq_constraint(
+            convert_expression(constraint.args[0]),
+            convert_expression(constraint.args[1]))
+
+    raise RuntimeError("Unknown constraint: %s" % type(constraint))
+
+def add_expression_data(expr, data_map):
+    if isinstance(expr, Constant) and isinstance(expr.value, numpy.ndarray):
+        prefix = value_location(expr.value)
+        data_map[data.metadata_file(prefix)] = (
+            data.dense_matrix_metadata(expr.value).SerializeToString())
+        data_map[data.value_file(prefix)] = expr.value.tobytes(order="F")
 
     for arg in getattr(expr, "args", []):
-        convert_expression(arg, proto.arg.add(), data_map)
+        add_expression_data(arg, data_map)
 
-    if isinstance(expr, Constant):
-        convert_constant(expr.value, proto.constant, data_map)
-    elif isinstance(expr, Variable):
-        proto.variable.variable_id = variable_id(expr)
-    elif isinstance(expr, index):
-        for i, key in enumerate(expr.key):
-            key_proto = proto.key.add()
-
-            size = expr.args[0].size[i]
-            key_proto.start = convert_index(key.start, size) if key.start else 0
-            key_proto.stop = convert_index(key.stop, size) if key.stop else size
-            if key.step:
-                key_proto.step = key.step
-            else:
-                key_proto.step = 1
-    elif isinstance(expr, (power, pnorm)):
-        proto.p = expr.p
-    elif isinstance(expr, huber):
-        proto.M = expr.M.value
-
-    for expr_cls, expr_type in EXPRESSION_TYPES:
-        if isinstance(expr, expr_cls):
-            proto.expression_type = expr_type
-            break
-    else:
-        raise RuntimeError("Unknown type: %s" % type(expr))
-
-def convert_objective(objective, proto, data_map):
-    # TODO(mwytock): Handle Maximize()
-    convert_expression(objective.args[0], proto, data_map)
-
-def convert_constraint(constraint, expr_proto, data_map):
-    lhs_expr, rhs_expr = constraint.args
-
-    # TODO(mwytock): Change convert_expression() to just return Expression()
-    lhs_expr_proto = expression_pb2.Expression()
-    rhs_expr_proto = expression_pb2.Expression()
-    convert_expression(lhs_expr, lhs_expr_proto, data_map)
-    convert_expression(rhs_expr, rhs_expr_proto, data_map)
-
-    if isinstance(constraint, EqConstraint):
-        expr_proto.CopyFrom(expression.equality_constraint(
-            lhs_expr_proto, rhs_expr_proto))
-    elif isinstance(constraint, LeqConstraint):
-        expr_proto.CopyFrom(expression.leq_constraint(
-            lhs_expr_proto, rhs_expr_proto))
-    else:
-        raise RuntimeError("Unknown constraint: %s" % type(constraint))
-
-def convert_problem(problem):
-    proto = expression_pb2.Problem()
+def extract_data(problem):
     data_map = {}
-    convert_objective(problem.objective, proto.objective, data_map)
+    for arg in problem.objective.args:
+        add_expression_data(arg, data_map)
     for constraint in problem.constraints:
-        convert_constraint(constraint, proto.constraint.add(), data_map)
+        for arg in constraint.args:
+            add_expression_data(arg, data_map)
+    return data_map
+
+# TODO(mwytock): Assumes minimize, handle maximize()
+def convert_problem(problem):
+    proto = Problem(
+        objective=convert_expression(problem.objective.args[0]),
+        constraint=[convert_constraint(c) for c in problem.constraints])
+    data_map = extract_data(problem)
     return proto, data_map

@@ -38,7 +38,7 @@ def prox(cvxpy_prob, v_map, lam=1):
 
     problem, data_map = cvxpy_expr.convert_problem(cvxpy_prob)
     logging.debug("Input:\n%s", expression_str.problem_str(problem))
-    problem = canonicalize.transform(attributes.transform(problem))
+    problem = canonicalize.transform(problem)
     validate.check_sum_of_prox(problem)
 
     non_const = []

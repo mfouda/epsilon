@@ -1,8 +1,12 @@
 """Functional form of the expression operators."""
 
 import struct
+from operator import mul
 
 from epsilon.expression_pb2 import *
+
+def prod(x):
+    return reduce(mul, x, 1)
 
 # Accessors
 
@@ -21,41 +25,51 @@ def expr_vars(expr):
 def fp_expr(expr):
     return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
 
+# Internal helpers
+
+def _add_size(a, b):
+    if prod(a.dim) == 1:
+        return b
+    if prod(b.dim) == 1:
+        return a
+    if a == b:
+        return a
+    raise ValueError("adding incompatible sizes")
+
+def _add_curvature(a, b):
+    if a.curvature_type == Curvature.CONSTANT:
+        return b
+    if b.curvature_type == Curvature.CONSTANT:
+        return a
+
+    c = Curvature(elementwise=False, scalar_multiple=False)
+    if a.curvature_type == Curvature.AFFINE:
+        c.curvature_type = b.curvature_type
+    elif b.curvature_type == Curvature.AFFINE:
+        c.curvature_type = a.curvature_type
+    elif a.curvature_type == b.curvature_type:
+        c.curvature.type = a.curvature_type
+    else:
+        c.curvature.type = Curvature.UNKNOWN
+    return c
+
 # Constructors
 
 def add(*args):
-    assert len(args) > 0
+    if not args:
+        raise ValueError("adding null args")
 
     size = args[0].size
+    curvature = args[0].curvature
     for i in range(1, len(args)):
-        if (args[i].size == size or
-            dimension(args[i]) == 1):
-            continue
-
-        if size.dim[0]*size.dim[1] == 1:
-            size = args[i].size
-            continue
-
-        assert False, "adding incompatible sizes"
-
-    argc = [arg.curvature.curvature_type for arg in args]
-    C = Curvature
-    if all(c == C.CONSTANT for c in argc):
-        curvature = Curvature.CONSTANT
-    elif all(c == C.AFFINE or c == C.CONSTANT for c in argc):
-        curvature = Curvature.AFFINE
-    elif all(c == C.CONSTANT or c == C.AFFINE or c == C.CONVEX for c in argc):
-        curvature = Curvature.CONVEX
-    elif all(c == C.CONSTANT or c == C.AFFINE or c == C.CONCAVE for c in argc):
-        curvature = Curvature.CONCAVE
-    else:
-        curvature = Curvature.UNKNOWN
+        size = _add_size(size, args[i].size)
+        curvature = _add_curvature(curvature, args[i].curvature)
 
     return Expression(
         expression_type=Expression.ADD,
         arg=args,
         size=size,
-        curvature=Curvature(curvature_type=curvature))
+        curvature=curvature)
 
 def multiply(*args):
     assert len(args) == 2
@@ -144,11 +158,18 @@ def variable(m, n, variable_id):
             elementwise=True,
             scalar_multiple=True))
 
-def constant(m, n, scalar=0):
+def constant(m, n, scalar=None, data_location=None):
+    if scalar is not None:
+        constant = Constant(scalar=scalar)
+    elif data_location is not None:
+        constant = Constant(data_location=data_location)
+    else:
+        raise ValueError("need either scalar or data_location")
+
     return Expression(
         expression_type=Expression.CONSTANT,
         size=Size(dim=[m, n]),
-        constant=Constant(scalar=scalar),
+        constant=constant,
         curvature=Curvature(curvature_type=Curvature.CONSTANT))
 
 def indicator(cone_type, *args):

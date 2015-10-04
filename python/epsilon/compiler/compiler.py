@@ -6,7 +6,6 @@ from epsilon.compiler import combine
 from epsilon.expression_str import problem_str
 
 TRANSFORMS = [
-    attributes.transform,
     canonicalize.transform,
     combine.transform,
 ]

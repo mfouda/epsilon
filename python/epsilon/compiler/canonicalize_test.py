@@ -16,8 +16,7 @@ ATOMS = [
 ]
 
 def transform(cvxpy_problem):
-    input = attributes.transform(
-        cvxpy_expr.convert_problem(cvxpy_problem)[0])
+    input = cvxpy_expr.convert_problem(cvxpy_problem)[0]
     logging.debug("Input:\n%s", expression_str.problem_str(input))
     return canonicalize.transform(input)
 
