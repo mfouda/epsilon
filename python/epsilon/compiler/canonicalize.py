@@ -132,6 +132,8 @@ def is_deadzone(expr):
         expr.arg[0].arg[1].arg[1].constant.scalar == 0
         )
 
+# TODO(mwytock): Currently these are only used for the epigraph form, use them
+# for proximal operators in the objective as well.
 EXPRESSION_RULES = [
     ("DeadZone", Expression.SUM, is_deadzone),
     ("Hinge", Expression.SUM, is_hinge),
