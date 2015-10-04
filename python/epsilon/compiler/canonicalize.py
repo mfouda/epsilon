@@ -261,10 +261,8 @@ def is_hinge(expr):
         expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[0].arg[0].constant.scalar == 1. and
         expr.arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].constant.scalar == 0
-        )
+        expr.arg[0].arg[1].constant.scalar == 0)
 
 def is_norm_l1_asymmetric(expr):
     return (expr.expression_type == Expression.SUM and
@@ -307,8 +305,14 @@ def is_deadzone(expr):
 
 def prox_hinge(expr):
     if is_hinge(expr):
+        arg = expr.arg[0].arg[0].arg[1].arg[0]
+
         expr.proximal_operator.name = "HingeProx"
-        yield expr
+        if arg.curvature.scalar_multiple:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, arg):
+                yield prox_expr
 
 def prox_norm_l1_asymmetric(expr):
     if is_norm_l1_asymmetric(expr):

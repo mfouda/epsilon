@@ -11,6 +11,7 @@ import cvxpy as cp
 
 from epsilon import cvxpy_expr
 from epsilon import solve
+from epsilon import solver_params_pb2
 from epsilon.compiler import compiler
 from epsilon.expression_pb2 import Expression
 from epsilon.problems import basis_pursuit

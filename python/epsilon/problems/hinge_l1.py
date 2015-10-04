@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from epsilon.problems import classification
 
 def hinge(x):
-    return cp.sum_entries(cp.max_elemwise(0, 1-x))
+    return cp.sum_entries(cp.max_elemwise(1-x,0))
 
 def create(m, n):
     A, b = classification.create_dense(m, n)

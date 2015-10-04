@@ -241,12 +241,13 @@ void ProxADMMSolver::ComputeResiduals() {
   for (const OperatorInfo& info : ops_)
     ATu_norm_squared += info.Ai.ApplyTranspose(u_).squaredNorm();
 
-  // TODO(mwytock): Revisit this a bit more carefully, especially computation of
-  // s_norm and epsilon_primal
+  // TODO(mwytock): May want to calculate s_norm slightly differently here
   r->set_r_norm((Ax_ + b_).norm());
   r->set_s_norm((x_ - x_prev_).norm());
-  r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
-  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(sqrt(ATu_norm_squared)));
+  r->set_epsilon_primal(
+      abs_tol*sqrt(m_) + rel_tol*fmax(max_Ai_xi_norm, b_.norm()));
+  r->set_epsilon_dual(
+      abs_tol*sqrt(n_) + rel_tol*rho*(sqrt(ATu_norm_squared)));
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {
