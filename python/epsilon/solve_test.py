@@ -42,12 +42,9 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2))
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2))
 ]
 
 def solve_problem(problem_instance):

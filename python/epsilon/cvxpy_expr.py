@@ -75,7 +75,19 @@ def convert_unary(f, expr):
     return f(convert_expression(expr.args[0]))
 
 def convert_index(expr):
-    return convert_generic(Expression.INDEX, expr)
+    proto = convert_generic(Expression.INDEX, expr)
+    for i, key in enumerate(expr.key):
+        key_proto = proto.key.add()
+
+        size = expr.args[0].size[i]
+        key_proto.start = index_value(key.start, size) if key.start else 0
+        key_proto.stop = index_value(key.stop, size) if key.stop else size
+        if key.step:
+            key_proto.step = key.step
+        else:
+            key_proto.step = 1
+
+    return proto
 
 def convert_huber(expr):
     proto = convert_generic(Expression.HUBER, expr)
@@ -91,28 +103,6 @@ def convert_power(expr):
     proto = convert_generic(Expression.POWER, expr)
     proto.p = expr.p
     return proto
-
-
-            #                for i, key in enumerate(expr.key):
-            # key_proto = proto.key.add()
-
-            # size = expr.args[0].size[i]
-            # key_proto.start = convert_index(key.start, size) if key.start else 0
-            # key_proto.stop = convert_index(key.stop, size) if key.stop else size
-            # if key.step:
-            #     key_proto.step = key.step
-            # else:
-            #     key_proto.step = 1
-
-
-
-    # if isinstance(expr, Constant):
-    #     convert_constant(expr.value, proto.constant, data_map)
-    # elif isinstance(expr, Variable):
-    # elif isinstance(expr, index):
-    # elif isinstance(expr, AddExpression):
-    #     proto.CopyFrom(expression.add(proto.arg))
-
 
 EXPRESSION_TYPES = (
     (AddExpression, lambda e: convert_binary(expression.add, e)),
@@ -130,7 +120,7 @@ EXPRESSION_TYPES = (
     (log_sum_exp, lambda e: convert_generic(Expression.LOG_SUM_EXP, e)),
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
-    (mul_elemwise, lambda e: convert_generic(Expression.MULTIPLY_ELEMENTWISE, e)),
+    (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
     (pnorm, convert_pnorm),
     (power, convert_power),

@@ -6,6 +6,7 @@ from collections import namedtuple
 from epsilon.compiler import validate
 from epsilon.compiler.problem_graph import *
 from epsilon.expression import *
+from epsilon.expression_util import fp_expr
 from epsilon.expression_pb2 import Expression
 
 def is_affine(f):

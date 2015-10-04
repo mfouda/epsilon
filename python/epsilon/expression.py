@@ -5,51 +5,72 @@ from epsilon.util import prod
 
 # Internal helpers
 
-def _add_size(a, b):
-    if prod(a.dim) == 1:
-        return b
-    if prod(b.dim) == 1:
-        return a
-    if a == b:
-        return a
-    raise ValueError("adding incompatible sizes")
-
-def _add_curvature(a, b):
-    if a.curvature_type == Curvature.CONSTANT:
-        return b
-    if b.curvature_type == Curvature.CONSTANT:
-        return a
-
-    c = Curvature(elementwise=False, scalar_multiple=False)
-    if a.curvature_type == Curvature.AFFINE:
-        c.curvature_type = b.curvature_type
-    elif b.curvature_type == Curvature.AFFINE:
-        c.curvature_type = a.curvature_type
-    elif a.curvature_type == b.curvature_type:
-        c.curvature_type = a.curvature_type
+def _add_binary(a, b):
+    if prod(a.size.dim) == 1:
+        size = b.size
+    elif prod(b.size.dim) == 1:
+        size = a.size
+    elif a.size == b.size:
+        size = a.size
     else:
-        c.curvature_type = Curvature.UNKNOWN
-    return c
+        raise ValueError("adding incompatible sizes")
 
-def _multiply_size(a, b):
-    if prod(a.dim) == 1:
-        return b
-    if prod(b.dim) == 1:
-        return a
-    if a.dim[1] == b.dim[0]:
-        return Size(dim=[a.dim[0], b.dim[1]])
-    raise ValueError("multiplying incompatible sizes")
+    curvature = Curvature()
+    if a.curvature.curvature_type == Curvature.CONSTANT:
+        curvature = b.curvature
+    elif b.curvature.curvature_type == Curvature.CONSTANT:
+        curvature = a.curvature
+    elif a.curvature.curvature_type == Curvature.AFFINE:
+        curvature.curvature_type = b.curvature.curvature_type
+    elif b.curvature.curvature_type == Curvature.AFFINE:
+        curvature.curvature_type = a.curvature.curvature_type
+    elif a.curvature.curvature_type == b.curvature.curvature_type:
+        curvature.curvature_type = a.curvature.curvature_type
+    else:
+        curvature.curvature_type = Curvature.UNKNOWN
 
-def _multiply_curvature(a, b):
-    if a.curvature_type == Curvature.CONSTANT:
-        return b
-    if b.curvature_type == Curvature.CONSTANT:
-        return a
+    return Expression(curvature=curvature, size=size)
 
-    return Curvature(
-        curvature_type=Curvature.UNKNOWN,
-        elementwise=False,
-        scalar_multiple=False)
+def _multiply_binary(a, b, elemwise=False):
+    if prod(a.size.dim) == 1:
+        size = b.size
+    elif prod(b.size.dim) == 1:
+        size = a.size
+    elif not elemwise and a.size.dim[1] == b.size.dim[0]:
+        size = Size(dim=[a.size.dim[0], b.size.dim[1]])
+    elif elemwise and a.size == b.size:
+        size = a.size
+    else:
+        raise ValueError("multiplying incompatible sizes")
+
+    curvature = Curvature()
+    if a.curvature.curvature_type == Curvature.CONSTANT:
+        curvature.curvature_type = b.curvature.curvature_type
+        curvature.scalar_multiple = prod(a.size.dim) == 1
+        curvature.elementwise = curvature.scalar_multiple or elemwise
+    elif b.curvature.curvature_type == Curvature.CONSTANT:
+        curvature.curvature_type = a.curvature.curvature_type
+        curvature.scalar_multiple = prod(b.size.dim) == 1
+        curvature.elementwise = curvature.scalar_multiple or elemwise
+    else:
+        curvature.curvature_type = Curvature.UNKNOWN
+
+    return Expression(curvature=curvature, size=size)
+
+def _multiply(args, elemwise=False):
+    if not args:
+        raise ValueError("multiplying null args")
+
+    a = args[0]
+    for i in range(1, len(args)):
+        a = _multiply_binary(a, args[i], elemwise)
+
+    return Expression(
+        expression_type=(Expression.MULTIPLY_ELEMENTWISE if elemwise else
+                         Expression.MULTIPLY),
+        arg=args,
+        size=a.size,
+        curvature=a.curvature)
 
 # Expressions
 
@@ -57,33 +78,21 @@ def add(*args):
     if not args:
         raise ValueError("adding null args")
 
-    size = args[0].size
-    curvature = args[0].curvature
+    a = args[0]
     for i in range(1, len(args)):
-        size = _add_size(size, args[i].size)
-        curvature = _add_curvature(curvature, args[i].curvature)
+        a = _add_binary(a, args[i])
 
     return Expression(
         expression_type=Expression.ADD,
         arg=args,
-        size=size,
-        curvature=curvature)
+        size=a.size,
+        curvature=a.curvature)
 
 def multiply(*args):
-    if not args:
-        raise ValueError("multiplying null args")
+    return _multiply(args, elemwise=False)
 
-    size = args[0].size
-    curvature = args[0].curvature
-    for i in range(1, len(args)):
-        size = _multiply_size(size, args[i].size)
-        curvature = _multiply_curvature(curvature, args[i].curvature)
-
-    return Expression(
-        expression_type=Expression.MULTIPLY,
-        arg=args,
-        size=size,
-        curvature=curvature)
+def multiply_elemwise(*args):
+    return _multiply(args, elemwise=True)
 
 def hstack(*args):
     e = Expression(expression_type=Expression.HSTACK)
