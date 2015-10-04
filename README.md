@@ -72,20 +72,20 @@ nosetests epsilon
 ```
 python -m epsilon.problems.benchmark
 ```
- Problem       |   Time | Objective
+Problem       |   Time | Objective
 :------------- | ------:| ---------:
-basis_pursuit  |   1.47s|   1.44e+02
-covsel         |   0.46s|   3.63e+02
-group_lasso    |  10.33s|   1.66e+02
-hinge_l1       |   5.65s|   1.50e+03
-huber          |   0.49s|   2.18e+03
-lasso          |   3.93s|   1.71e+01
-least_abs_dev  |   0.39s|   7.10e+03
-logreg_l1      |   5.12s|   1.04e+03
-lp             |   0.33s|   7.77e+02
-mnist          |   1.33s|   1.60e+03
-tv_1d          |   0.47s|   2.29e+05
-tv_denoise     |  19.56s|   1.15e+06
+basis_pursuit  |   2.96s|   1.45e+02
+covsel         |   0.77s|   3.63e+02
+group_lasso    |   9.61s|   1.61e+02
+hinge_l1       |   5.42s|   1.50e+03
+huber          |   0.51s|   2.18e+03
+lasso          |   3.88s|   1.64e+01
+least_abs_dev  |   0.38s|   7.09e+03
+logreg_l1      |   4.84s|   1.04e+03
+lp             |   0.56s|   7.77e+02
+mnist          |   1.44s|   1.53e+03
+tv_1d          |   0.50s|   2.13e+05
+tv_denoise     |  24.17s|   1.15e+06
 
 ### SCS
 ```
