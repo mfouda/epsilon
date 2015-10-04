@@ -39,9 +39,10 @@ EPIGRAPH_TESTS = [
     Prox("DeadZoneEpigraph", None,
          lambda: cp.sum_entries(cp.max_elemwise(x-1,0) +
                                 cp.max_elemwise(-x-1,0)) <= t),
-    Prox("HingeEpigraph", None, cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t),
-    Prox("LogisticEpigraph", None, cp.sum_entries(cp.logistic(x)) <= t),
-    Prox("NormL1AsymetricEpigraph", None,
+    Prox("HingeEpigraph", None,
+         lambda: cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t),
+    Prox("LogisticEpigraph", None, lambda: cp.sum_entries(cp.logistic(x)) <= t),
+    Prox("NormL1AsymmetricEpigraph", None,
          lambda: cp.sum_entries(0.75*cp.max_elemwise(x, 0) +
                                 0.25*cp.max_elemwise(-x,0)) <= t),
     Prox("NormL1Epigraph", None, lambda: cp.norm1(x) <= t),

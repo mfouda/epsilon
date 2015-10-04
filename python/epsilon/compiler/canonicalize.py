@@ -9,24 +9,35 @@ The other major component is arbitrary fucntion composition through the epigraph
 transformation which is handled in transform_expr_epigraph().
 """
 
-from itertools import chain
-import struct
-import sys
+
+from collections import defaultdict
 
 from epsilon import error
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 from epsilon.expression_str import expr_str
+from epsilon.expression_util import fp_expr
 from epsilon.util import prod
 
 class CanonicalizeError(error.ExpressionError):
     pass
 
 def is_epigraph(expr):
+    """Epigraph represented with expression I(t - f(x) >= 0)."""
     return (expr.expression_type == Expression.INDICATOR and
             expr.cone.cone_type == Cone.NON_NEGATIVE and
-            len(expr.arg) == 2 and
-            expr.arg[0].expression_type == Expression.VARIABLE)
+            len(expr.arg) == 1 and
+            len(expr.arg[0].arg) == 2 and
+            len(expr.arg[0].arg[1].arg) == 1 and
+            expr.arg[0].expression_type == Expression.ADD and
+            expr.arg[0].arg[0].expression_type == Expression.VARIABLE and
+            expr.arg[0].arg[1].expression_type == Expression.NEGATE)
+
+def get_epigraph(expr):
+    assert is_epigraph(expr)
+    t_expr = expr.arg[0].arg[0]
+    f_expr = expr.arg[0].arg[1].arg[0]
+    return f_expr, t_expr
 
 LINEAR_EXPRESSION_TYPES = set([
     Expression.INDEX,
@@ -56,9 +67,6 @@ def epigraph(f, t):
     else:
         raise CanonicalizeError("Unknown curvature", f)
 
-def fp_expr(expr):
-    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-
 def epigraph_variable(expr):
     m, n = expr.size.dim
     return variable(m, n, "canonicalize:" + fp_expr(expr))
@@ -71,6 +79,87 @@ def transform_epigraph(f_expr, g_expr):
     yield f_expr
     for prox_expr in transform_expr(epi_g_expr):
         yield prox_expr
+
+# Piecewise Linear Family
+# TODO(mwytock): Replace these with a single ScaledZone function which is what
+# they are mapped to anyways.
+def is_hinge(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[0].constant.scalar == 1. and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].constant.scalar == 0)
+
+def is_norm_l1_asymmetric(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[0].constant.scalar >= 0 and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[0].arg[1].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].arg[1].constant.scalar == 0 and
+        expr.arg[0].arg[1].expression_type == Expression.MULTIPLY and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[0].constant.scalar >= 0 and
+        expr.arg[0].arg[1].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0
+        )
+
+def is_deadzone(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[0].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].constant.scalar == 0 and
+        expr.arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[1].arg[0].arg[0].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[1].arg[1].constant.scalar == 0
+        )
+
+EXPRESSION_RULES = [
+    ("DeadZone", Expression.SUM, is_deadzone),
+    ("Hinge", Expression.SUM, is_hinge),
+    ("Logistic", Expression.SUM,
+     lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
+    ("NegativeEntropy", Expression.NEGATE,
+     lambda e: (e.arg[0].expression_type == Expression.SUM and
+                e.arg[0].arg[0].expression_type == Expression.ENTR and
+                e.arg[0].arg[0].arg[0].curvature.elementwise)),
+    ("NegativeLog", Expression.NEGATE,
+     lambda e: (e.arg[0].expression_type == Expression.SUM and
+                e.arg[0].arg[0].expression_type == Expression.LOG and
+                e.arg[0].arg[0].arg[0].curvature.elementwise)),
+    ("NormL1", Expression.NORM_P,
+     lambda e: (e.p == 1 and e.arg[0].curvature.scalar_multiple)),
+    ("NormL1Asymmetric", Expression.SUM, is_norm_l1_asymmetric),
+    ("NormL2", Expression.NORM_P,
+     lambda e: (e.p == 2 and e.arg[0].curvature.scalar_multiple)),
+]
+
+EXPRESSION_RULE_MAP = defaultdict(list)
+for name, expression_type, rule in EXPRESSION_RULES:
+    EXPRESSION_RULE_MAP[expression_type].append((rule, name))
+
+def get_function(expr):
+    for rule, name in EXPRESSION_RULE_MAP[expr.expression_type]:
+        if rule(expr):
+            return name
 
 # The prox_* functions recognize expressions with known proximal operators. The
 # expressions returned need to match those defined in
@@ -254,56 +343,6 @@ def prox_negative_entropy(expr):
         else:
             raise NotImplementedError()
 
-# Piecewise Linear Family
-def is_hinge(expr):
-    return (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[0].expression_type == Expression.ADD and
-        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[0].constant.scalar == 1. and
-        expr.arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].constant.scalar == 0)
-
-def is_norm_l1_asymmetric(expr):
-    return (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.ADD and
-        expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
-        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[0].constant.scalar >= 0 and
-        expr.arg[0].arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
-        expr.arg[0].arg[0].arg[1].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[1].arg[1].constant.scalar == 0 and
-        expr.arg[0].arg[1].expression_type == Expression.MULTIPLY and
-        expr.arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].arg[0].constant.scalar >= 0 and
-        expr.arg[0].arg[1].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
-        expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0
-        )
-
-def is_deadzone(expr):
-    return (expr.expression_type == Expression.SUM and
-        expr.arg[0].expression_type == Expression.ADD and
-        expr.arg[0].arg[0].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[0].arg[0].expression_type == Expression.ADD and
-        expr.arg[0].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
-        expr.arg[0].arg[0].arg[0].arg[1].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[0].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[1].constant.scalar == 0 and
-        expr.arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[1].arg[0].expression_type == Expression.ADD and
-        expr.arg[0].arg[1].arg[0].arg[0].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[1].arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
-        expr.arg[0].arg[1].arg[0].arg[1].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[1].arg[0].arg[1].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[1].arg[1].constant.scalar == 0
-        )
-
 def prox_hinge(expr):
     if is_hinge(expr):
         arg = expr.arg[0].arg[0].arg[1].arg[0]
@@ -337,85 +376,14 @@ def prox_max_elementwise(expr):
         for prox_expr in transform_expr(leq_constraint(arg, t)):
             yield prox_expr
 
-def prox_linear_epigraph(expr):
-    if not expr.expression_type in LINEAR_EXPRESSION_TYPES:
+def prox_epigraph_atomic(expr):
+    if not is_epigraph(expr):
         return
 
-    expr.proximal_operator.name = "LinearProx"
-    new_args = []
-    for arg in expr.arg:
-        for prox_expr in transform_expr(arg):
-            if prox_expr.expression_type == Expression.INDICATOR:
-                yield prox_expr
-            else:
-                new_args.append(prox_expr)
-
-    expr.ClearField("arg")
-    for arg in new_args:
-        expr.arg.add().CopyFrom(arg)
-
-    expr.curvature.curvature_type = Curvature.AFFINE
-    yield expr
-
-# Rules for epigraph forms
-def prox_norm2_epigraph(expr):
-    if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.NORM_P and
-        expr.arg[1].p == 2):
-
-        expr.proximal_operator.name = "NormL2Epigraph"
-        if expr.arg[1].arg[0].curvature.scalar_multiple:
-            yield expr
-
-def prox_norm1_epigraph(expr):
-    if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.NORM_P and
-        expr.arg[1].p == 1):
-
-        expr.proximal_operator.name = "NormL1Epigraph"
-        if expr.arg[1].arg[0].curvature.scalar_multiple:
-            yield expr
-
-def prox_negative_log_epigraph(expr):
-    if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.NEGATE and
-        expr.arg[1].arg[0].expression_type == Expression.SUM and
-        expr.arg[1].arg[0].arg[0].expression_type == Expression.LOG):
-
-        expr.proximal_operator.name = "NegativeLogEpigraph"
-        if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
-            yield expr
-
-def prox_negative_entropy_epigraph(expr):
-    if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.NEGATE and
-        expr.arg[1].arg[0].expression_type == Expression.SUM and
-        expr.arg[1].arg[0].arg[0].expression_type == Expression.ENTR):
-        expr.proximal_operator.name = "NegativeEntropyEpigraph"
-        if expr.arg[1].arg[0].arg[0].arg[0].curvature.scalar_multiple:
-            yield expr
-
-def prox_logistic_epigraph(expr):
-    if (is_epigraph(expr) and
-        expr.arg[1].expression_type == Expression.SUM and
-        expr.arg[1].arg[0].expression_type == Expression.LOGISTIC):
-        expr.proximal_operator.name = "LogisticEpigraph"
-        if expr.arg[1].arg[0].arg[0].curvature.elementwise:
-            yield expr
-
-def prox_hinge_epigraph(expr):
-    if is_epigraph(expr) and is_hinge(expr.arg[1]):
-        expr.proximal_operator.name = "HingeEpigraph"
-        yield expr
-
-def prox_norm_l1_asymmetric_epigraph(expr):
-    if is_epigraph(expr) and is_norm_l1_asymmetric(expr.arg[1]):
-        expr.proximal_operator.name = "NormL1AsymmetricEpigraph"
-        yield expr
-
-def prox_deadzone_epigraph(expr):
-    if is_epigraph(expr) and is_deadzone(expr.arg[1]):
-        expr.proximal_operator.name = "DeadZoneEpigraph"
+    f_expr, t_expr = get_epigraph(expr)
+    name = get_function(f_expr)
+    if name:
+        expr.proximal_operator.name = name + "Epigraph"
         yield expr
 
 def prox_equality_constraint(expr):
@@ -448,9 +416,29 @@ def prox_non_negative(expr):
                 for prox_expr in transform_expr(expr):
                     yield prox_expr
 
+def prox_linear_epigraph(expr):
+    if not expr.expression_type in LINEAR_EXPRESSION_TYPES:
+        return
+
+    expr.proximal_operator.name = "LinearProx"
+    new_args = []
+    for arg in expr.arg:
+        for prox_expr in transform_expr(arg):
+            if prox_expr.expression_type == Expression.INDICATOR:
+                yield prox_expr
+            else:
+                new_args.append(prox_expr)
+
+    expr.ClearField("arg")
+    for arg in new_args:
+        expr.arg.add().CopyFrom(arg)
+
+    expr.curvature.curvature_type = Curvature.AFFINE
+    yield expr
+
 def prox_epigraph(expr):
     if is_epigraph(expr):
-        t_expr, f_expr = expr.arg
+        f_expr, t_expr = get_epigraph(expr)
 
         # The basic algorithm is to canonicalize the f(x) expression into f_1(x)
         # + ... f_n(x) using the transform_expr(). For each f_i there are two
