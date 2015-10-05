@@ -1,30 +1,39 @@
 
 #include "epsilon/algorithms/prox_admm.h"
 
-#include <Eigen/SparseCholesky>
+#include <Eigen/OrderingMethods>
+#include <Eigen/SparseQR>
 
+#include "epsilon/affine/affine.h"
+#include "epsilon/affine/affine_matrix.h"
+#include "epsilon/affine/split.h"
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/affine/affine.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/vector_operator.h"
 #include "epsilon/util/string.h"
+#include "epsilon/vector/vector_operator.h"
+#include "epsilon/vector/vector_util.h"
 
-class DenseLeastSquaresOperator final : public VectorOperator {
+// Handles constraints of the form AXB + C
+class MatrixLeastSquaresOperator final : public VectorOperator {
  public:
-  DenseLeastSquaresOperator(const Eigen::MatrixXd& A) : A_(A) {}
-
-  void Init() override {
-    svd_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
+  MatrixLeastSquaresOperator(
+      const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
+    m_ = A.cols();
+    n_ = B.rows();
+    svd_A_.compute(A, Eigen::ComputeThinU|Eigen::ComputeThinV);
+    svd_BT_.compute(B.transpose(), Eigen::ComputeThinU|Eigen::ComputeThinV);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    return svd_.solve(v);
+    Eigen::MatrixXd XB = svd_A_.solve(ToMatrix(v, m_, n_));
+    return ToVector(svd_BT_.solve(XB).transpose());
   }
 
  private:
-  Eigen::MatrixXd A_;
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd_;
+  int m_, n_;
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd_A_;
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd_BT_;
 };
 
 ProxADMMSolver::ProxADMMSolver(
@@ -45,24 +54,38 @@ void ProxADMMSolver::InitVariables() {
 // better mechanism, likely built on a more flexible BuildAffineOperator()
 // implementation.
 void ProxADMMSolver::InitConstraints() {
-  std::vector<Expression> args;
+  std::vector<Expression> constr_args;
   for (const Expression& constr : problem_.constraint()) {
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
-    args.push_back(
-        expression::Reshape(constr.arg(0), GetDimension(constr.arg(0)), 1));
+
+    ConstraintInfo info;
+    info.mi = GetDimension(constr.arg(0));
+    DynamicMatrix bi = DynamicMatrix::Zero(info.mi, 1);
+    constr_args.push_back(expression::Reshape(constr.arg(0), info.mi, 1));
+
+    VariableOffsetMap empty_var_map;
+    SplitExpressionIterator iter(constr.arg(0));
+    for (; !iter.done(); iter.NextValue()) {
+      if (iter.leaf().expression_type() == Expression::VARIABLE) {
+        info.exprs_by_var[iter.leaf().variable().variable_id()].push_back(
+            iter.chain());
+      } else {
+        CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT)
+            << iter.chain().DebugString();
+        BuildAffineOperator(iter.chain(), empty_var_map, nullptr, &bi);
+      }
+    }
+
+    b_ = Stack(b_, bi.AsDense());
+    constraints_.push_back(info);
   }
-
-  // Get just the constant term
-  constr_expr_ = expression::VStack(args);
-  m_ = GetDimension(constr_expr_);
-  DynamicMatrix b(m_, 1);
-  VariableOffsetMap empty_var_map;
-  BuildAffineOperator(constr_expr_, empty_var_map, nullptr, &b);
-  b_ = b.AsDense();
-
+  m_ = b_.size();
   VLOG(2) << "b: " << VectorDebugString(b_);
+
+  // TODO(mwytock): Get rid of this
+  constr_expr_ = expression::VStack(constr_args);
 }
 
 void ProxADMMSolver::Init() {
@@ -78,10 +101,8 @@ void ProxADMMSolver::Init() {
 
   VariableSet vars = GetVariables(problem_);
   for (const Expression* expr : vars) {
-    if (vars_in_prox_.find(expr) == vars_in_prox_.end()) {
-      VLOG(1) << "InitLeastSquares, " << expr->variable().variable_id();
+    if (vars_in_prox_.find(expr) == vars_in_prox_.end())
       InitLeastSquares(*expr);
-    }
   }
 
   x_ = Eigen::VectorXd::Zero(n_);
@@ -94,30 +115,51 @@ void ProxADMMSolver::Init() {
 }
 
 void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
+  VLOG(1) << "InitLeastSquares " << var_expr.variable().variable_id() << "\n"
+          << var_expr.size().DebugString();
   VLOG(2) << "InitLeastSquares:\n" << var_expr.DebugString();
+
+  const std::string& var_id = var_expr.variable().variable_id();
+  const int m = GetDimension(var_expr, 0);
+  const int n = GetDimension(var_expr, 1);
+
+  OperatorInfo info;
+  info.linearized = false;
+
+  // TODO(mwytock): This handles constraints of the form AXB and assumes that
+  // (Ai,Bi) are equal across all constraints which simplifies things
+  // considerably. Need to generalize this to other cases.
+  std::vector<Expression> exprs;
+  int i = 0;
+  info.B = SparseXd(m*n, m_);
+  for (const ConstraintInfo& constraint : constraints_) {
+    auto iter = constraint.exprs_by_var.find(var_id);
+    if (iter != constraint.exprs_by_var.end()) {
+      exprs.insert(exprs.begin(), iter->second.begin(), iter->second.end());
+      info.B.middleCols(i, constraint.mi) = -SparseIdentity(constraint.mi);
+    }
+    i += constraint.mi;
+  }
+
+  affine::MatrixOperator op = affine::BuildMatrixOperator(
+      expression::Add(exprs));
+  CHECK(op.C.isZero());
+  info.op = std::unique_ptr<VectorOperator>(
+      new MatrixLeastSquaresOperator(op.A, op.B));
+  info.op->Init();
 
   VariableOffsetMap var_map;
   var_map.Insert(var_expr);
-  OperatorInfo info;
-
-  // Build Ai matrix, force dense
-  info.Ai = DynamicMatrix::FromDense(Eigen::MatrixXd::Zero(m_, var_map.n()));
+  info.Ai = DynamicMatrix::Zero(m_, var_map.n());
   BuildAffineOperator(constr_expr_, var_map, &info.Ai, nullptr);
-
-  VLOG(1) << "InitLeastSquares, Ai\n" << info.Ai.DebugString();
-  CHECK(!info.Ai.is_sparse());
-  info.op = std::unique_ptr<VectorOperator>(
-      new DenseLeastSquaresOperator(info.Ai.dense()));
-
-  info.linearized = false;
-  info.B = -SparseIdentity(m_);
   info.V = GetProjection(var_map_, var_map);
-  info.op->Init();
   info.i = ops_.size();
   ops_.emplace_back(std::move(info));
 }
 
 void ProxADMMSolver::InitProxOperator(const Expression& expr) {
+  VLOG(2) << "InitProxOperator " << expr.DebugString();
+
   // TODO(mwytock): Should be pruned before getting here
   VariableSet vars = GetVariables(expr);
   if (vars.size() == 0)

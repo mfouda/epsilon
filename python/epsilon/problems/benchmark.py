@@ -63,7 +63,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=3)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=10)),
 ]
 
 COLUMNS = [

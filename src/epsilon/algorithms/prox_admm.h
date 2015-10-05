@@ -34,6 +34,16 @@ struct OperatorInfo {
   double mu;
 };
 
+struct ConstraintInfo {
+  // Size of this constraint
+  int mi;
+
+  // Expressions grouped by variable
+  std::unordered_map<std::string, std::vector<Expression>> exprs_by_var;
+
+  Eigen::VectorXd b;
+};
+
 class ProxADMMSolver final : public Solver {
 public:
   ProxADMMSolver(
@@ -79,6 +89,7 @@ private:
   VariableOffsetMap var_map_;
   Expression constr_expr_;
   std::vector<OperatorInfo> ops_;
+  std::vector<ConstraintInfo> constraints_;
 };
 
 

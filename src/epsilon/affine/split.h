@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "epsilon/expression.pb.h"
+#include "epsilon/expression/expression_util.h"
 
 class SplitExpressionIterator {
  public:
@@ -12,7 +13,7 @@ class SplitExpressionIterator {
   // Accessors
   bool done() { return done_; }
   const Expression& chain() { return chain_; }
-  const Expression& leaf() { return *current_; }
+  const Expression& leaf() { return GetLeaf(*current_); }
 
   // Move to next value
   void NextValue();

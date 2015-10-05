@@ -12,12 +12,13 @@ from epsilon.expression_pb2 import Expression
 def is_affine(f):
     return f.expr.curvature.curvature_type == Curvature.AFFINE
 
-def has_constant(expr):
-    if expr.expression_type == Expression.CONSTANT:
+def has_data_constant(expr):
+    if (expr.expression_type == Expression.CONSTANT and
+        expr.constant.data_location != ""):
         return True
 
     for arg in expr.arg:
-        if has_constant(arg):
+        if has_data_constant(arg):
             return True
 
     return False
@@ -25,7 +26,7 @@ def has_constant(expr):
 def is_sparse_equality_constraint(f):
     if not is_equality_indicator(f):
         return False
-    return not has_constant(f.expr)
+    return not has_data_constant(f.expr)
 
 def is_prox_friendly_constraint(graph, f):
     """Returns true if f represents a prox-friendly equality constraint.
