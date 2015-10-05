@@ -20,6 +20,7 @@ int GetDimension(const Expression& expression, int dim);
 
 const Expression& GetOnlyArg(const Expression& expression);
 const Expression& GetLeaf(const Expression& expression);
+const Expression& GetRightmostLeaf(const Expression& expression);
 
 Size CreateSize(int m, int n);
 const Size kScalarSize = CreateSize(1,1);

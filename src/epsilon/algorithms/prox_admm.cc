@@ -19,19 +19,19 @@ class MatrixLeastSquaresOperator final : public VectorOperator {
  public:
   MatrixLeastSquaresOperator(
       const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
-    m_ = A.cols();
-    n_ = B.rows();
+    Vm_ = A.rows();
+    Vn_ = B.cols();
     svd_A_.compute(A, Eigen::ComputeThinU|Eigen::ComputeThinV);
     svd_BT_.compute(B.transpose(), Eigen::ComputeThinU|Eigen::ComputeThinV);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    Eigen::MatrixXd XB = svd_A_.solve(ToMatrix(v, m_, n_));
-    return ToVector(svd_BT_.solve(XB).transpose());
+    Eigen::MatrixXd XB = svd_A_.solve(ToMatrix(v, Vm_, Vn_));
+    return ToVector(svd_BT_.solve(XB.transpose()).transpose());
   }
 
  private:
-  int m_, n_;
+  int Vm_, Vn_;
   Eigen::JacobiSVD<Eigen::MatrixXd> svd_A_;
   Eigen::JacobiSVD<Eigen::MatrixXd> svd_BT_;
 };
@@ -68,12 +68,15 @@ void ProxADMMSolver::InitConstraints() {
     VariableOffsetMap empty_var_map;
     SplitExpressionIterator iter(constr.arg(0));
     for (; !iter.done(); iter.NextValue()) {
-      if (iter.leaf().expression_type() == Expression::VARIABLE) {
-        info.exprs_by_var[iter.leaf().variable().variable_id()].push_back(
+      // This is kind of a hack, we always get the rightmost leaf in case of
+      // multiplying by constants
+      const Expression& leaf = GetRightmostLeaf(iter.leaf());
+
+      if (leaf.expression_type() == Expression::VARIABLE) {
+        info.exprs_by_var[leaf.variable().variable_id()].push_back(
             iter.chain());
       } else {
-        CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT)
-            << iter.chain().DebugString();
+        CHECK_EQ(leaf.expression_type(), Expression::CONSTANT);
         BuildAffineOperator(iter.chain(), empty_var_map, nullptr, &bi);
       }
     }
@@ -115,13 +118,10 @@ void ProxADMMSolver::Init() {
 }
 
 void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
-  VLOG(1) << "InitLeastSquares " << var_expr.variable().variable_id() << "\n"
+  const std::string& var_id = var_expr.variable().variable_id();
+  VLOG(1) << "InitLeastSquares " << var_id << "\n"
           << var_expr.size().DebugString();
   VLOG(2) << "InitLeastSquares:\n" << var_expr.DebugString();
-
-  const std::string& var_id = var_expr.variable().variable_id();
-  const int m = GetDimension(var_expr, 0);
-  const int n = GetDimension(var_expr, 1);
 
   OperatorInfo info;
   info.linearized = false;
@@ -130,20 +130,31 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
   // (Ai,Bi) are equal across all constraints which simplifies things
   // considerably. Need to generalize this to other cases.
   std::vector<Expression> exprs;
-  int i = 0;
-  info.B = SparseXd(m*n, m_);
   for (const ConstraintInfo& constraint : constraints_) {
     auto iter = constraint.exprs_by_var.find(var_id);
-    if (iter != constraint.exprs_by_var.end()) {
-      exprs.insert(exprs.begin(), iter->second.begin(), iter->second.end());
-      info.B.middleCols(i, constraint.mi) = -SparseIdentity(constraint.mi);
-    }
-    i += constraint.mi;
+    if (iter == constraint.exprs_by_var.end())
+      continue;
+    exprs.insert(exprs.begin(), iter->second.begin(), iter->second.end());
   }
 
   affine::MatrixOperator op = affine::BuildMatrixOperator(
       expression::Add(exprs));
   CHECK(op.C.isZero());
+  VLOG(1) << "InitLeastSquares, "
+          << "A:\n" << MatrixDebugString(op.A) << "\n"
+          << "B:\n" << MatrixDebugString(op.B);
+
+  info.B = SparseXd(op.A.rows()*op.B.cols(), m_);
+  int i = 0;
+  for (const ConstraintInfo& constraint : constraints_) {
+    auto iter = constraint.exprs_by_var.find(var_id);
+    if (iter != constraint.exprs_by_var.end()) {
+      CHECK_EQ(constraint.mi, op.A.rows()*op.B.cols());
+      info.B.middleCols(i, constraint.mi) = -SparseIdentity(constraint.mi);
+    }
+    i += constraint.mi;
+  }
+
   info.op = std::unique_ptr<VectorOperator>(
       new MatrixLeastSquaresOperator(op.A, op.B));
   info.op->Init();

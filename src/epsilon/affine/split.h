@@ -13,7 +13,7 @@ class SplitExpressionIterator {
   // Accessors
   bool done() { return done_; }
   const Expression& chain() { return chain_; }
-  const Expression& leaf() { return GetLeaf(*current_); }
+  const Expression& leaf() { return *current_; }
 
   // Move to next value
   void NextValue();
