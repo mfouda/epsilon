@@ -28,7 +28,8 @@ REL_TOL = {
     "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
     "tv_1d": 1e-3,
-    "hinge_l1": 1e-3
+    "hinge_l1": 1e-3,
+    "quantile": 1e-3,
 }
 
 PROBLEMS = [
@@ -45,6 +46,10 @@ PROBLEMS = [
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
+]
+
+PROBLEMS = [
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2)),
 ]
 
 def solve_problem(problem_instance):

@@ -25,6 +25,7 @@ from epsilon.problems import logreg_l1
 from epsilon.problems import lp
 from epsilon.problems import mnist
 from epsilon.problems import quantile
+from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
 from epsilon.problems.problem_instance import ProblemInstance
@@ -60,6 +61,7 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]

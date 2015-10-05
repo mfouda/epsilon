@@ -100,7 +100,6 @@ def is_norm_l1_asymmetric(expr):
         expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[0].arg[0].constant.scalar >= 0 and
         expr.arg[0].arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
-        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[0].arg[1].arg[1].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[0].arg[1].arg[1].constant.scalar == 0 and
         expr.arg[0].arg[1].expression_type == Expression.MULTIPLY and
@@ -108,7 +107,6 @@ def is_norm_l1_asymmetric(expr):
         expr.arg[0].arg[1].arg[0].constant.scalar >= 0 and
         expr.arg[0].arg[1].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
         expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
-        expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0
         )
@@ -132,6 +130,8 @@ def is_deadzone(expr):
         expr.arg[0].arg[1].arg[1].constant.scalar == 0
         )
 
+# TODO(mwytock): Currently these are only used for the epigraph form, use them
+# for proximal operators in the objective as well.
 EXPRESSION_RULES = [
     ("DeadZone", Expression.SUM, is_deadzone),
     ("Hinge", Expression.SUM, is_hinge),
@@ -346,7 +346,6 @@ def prox_negative_entropy(expr):
 def prox_hinge(expr):
     if is_hinge(expr):
         arg = expr.arg[0].arg[0].arg[1].arg[0]
-
         expr.proximal_operator.name = "HingeProx"
         if arg.curvature.scalar_multiple:
             yield expr
@@ -356,8 +355,13 @@ def prox_hinge(expr):
 
 def prox_norm_l1_asymmetric(expr):
     if is_norm_l1_asymmetric(expr):
+        arg = expr.arg[0].arg[0].arg[1].arg[0]
         expr.proximal_operator.name = "NormL1AsymmetricProx"
-        yield expr
+        if arg.curvature.scalar_multiple:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, arg):
+                yield prox_expr
 
 def prox_deadzone(expr):
     if is_deadzone(expr):

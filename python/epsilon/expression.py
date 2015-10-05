@@ -225,6 +225,19 @@ def transpose(x):
         curvature=x.curvature,
         arg=[x])
 
+def index(x, start_i, stop_i, start_j=None, stop_j=None):
+    if start_j is None and stop_j is None:
+        start_j = 0
+        stop_j = x.size.dim[1]
+
+    return Expression(
+        expression_type=Expression.INDEX,
+        size=Size(dim=[stop_i-start_i, stop_j-start_j]),
+        curvature=x.curvature,
+        key=[Slice(start=start_i, stop=stop_i, step=1),
+             Slice(start=start_j, stop=stop_j, step=1)],
+        arg=[x])
+
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
 

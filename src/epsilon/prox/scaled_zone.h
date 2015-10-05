@@ -4,7 +4,7 @@
 // f(x) = \sum_i \alpha \max(0, (x_i-C)-M) + \beta \max(0, -(x_i-C)-M)
 class ScaledZoneProx : public ProxOperator {
 public:
-  ScaledZoneProx(double alpha, double beta, double C, double M) 
+  ScaledZoneProx(double alpha, double beta, double C, double M)
           : alpha_(alpha), beta_(beta), C_(C), M_(M) {};
 
   virtual void Init(const ProxOperatorArg& arg) override {

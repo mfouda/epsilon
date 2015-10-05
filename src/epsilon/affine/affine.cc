@@ -87,7 +87,9 @@ DynamicMatrix Index(const Expression& expr) {
 
 DynamicMatrix Sum(const Expression& expr) {
   const int m = GetDimension(expr);
-  const int n = GetDimension(GetOnlyArg(expr));
+  int n = 0;
+  for (const Expression& arg : expr.arg())
+    n += GetDimension(arg);
   return DynamicMatrix::FromDense(MatrixXd::Constant(m, n, 1));
 }
 
