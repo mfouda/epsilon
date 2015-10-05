@@ -3,11 +3,11 @@ from collections import namedtuple
 
 import numpy as np
 import cvxpy as cp
-from numpy.random import randn
+from numpy.random import randn, rand
 
 from epsilon import solve
 
-NUM_TRIALS = 10
+NUM_TRIALS = 1
 
 n = 10
 x = cp.Variable(n)
@@ -17,10 +17,25 @@ class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
     def __new__(cls, name, objective, constraint=None):
         return super(Prox, cls).__new__(cls, name, objective, constraint)
 
+def f_scaled_zone_single_max():
+    alpha = 2*rand()-1
+    y = cp.mul_elemwise(randn(n), x) + randn(n)
+    return cp.sum_entries(cp.max_elemwise(-alpha*y, (1-alpha)*y))
+
+def f_norm_l1_asymmetric():
+    alpha = rand()
+    return cp.sum_entries(alpha*cp.max_elemwise(x,0) +
+                          (1-alpha)*cp.max_elemwise(-x,0))
+
+def f_dead_zone():
+    C = randn()
+    return cp.sum_entries(cp.max_elemwise(x-C,0) + cp.max_elemwise(-x-C,0))
+
+def f_hinge():
+    return cp.sum_entries(cp.max_elemwise(1-x, 0))
+
 PROX_TESTS = [
-    Prox("DeadZoneProx",
-         lambda: cp.sum_entries(cp.max_elemwise(x-1,0) +
-                                cp.max_elemwise(-x-1,0))),
+    Prox("DeadZoneProx", f_dead_zone),
     Prox("FusedLassoProx", lambda: cp.tv(x)),
     Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     Prox("LinearProx", lambda: randn(n).T*x),
@@ -28,23 +43,17 @@ PROX_TESTS = [
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
     Prox("NonNegativeProx", None, lambda: x >= 0),
-    Prox("NormL1AsymmetricProx",
-         lambda: cp.sum_entries(0.75*cp.max_elemwise(x,0) +
-                                0.25*cp.max_elemwise(-x,0))),
+    Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     Prox("NormL1Prox", lambda: cp.norm1(x)),
     Prox("NormL2Prox", lambda: cp.norm2(x)),
+    Prox("ScaledZoneProx", f_scaled_zone_single_max),
 ]
 
 EPIGRAPH_TESTS = [
-    Prox("DeadZoneEpigraph", None,
-         lambda: cp.sum_entries(cp.max_elemwise(x-1,0) +
-                                cp.max_elemwise(-x-1,0)) <= t),
-    Prox("HingeEpigraph", None,
-         lambda: cp.sum_entries(cp.max_elemwise(1-x, 0)) <= t),
+    Prox("DeadZoneEpigraph", None, lambda: f_dead_zone() <= t),
+    Prox("HingeEpigraph", None, lambda: f_hinge() <= t),
     Prox("LogisticEpigraph", None, lambda: cp.sum_entries(cp.logistic(x)) <= t),
-    Prox("NormL1AsymmetricEpigraph", None,
-         lambda: cp.sum_entries(0.75*cp.max_elemwise(x, 0) +
-                                0.25*cp.max_elemwise(-x,0)) <= t),
+    Prox("NormL1AsymmetricEpigraph", None, lambda: f_norm_l1_asymmetric() <= t),
     Prox("NormL1Epigraph", None, lambda: cp.norm1(x) <= t),
     Prox("NormL2Epigraph", None, lambda: cp.norm2(x) <= t),
     # TODO(mwytock): Figure out why these are failing

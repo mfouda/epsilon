@@ -358,7 +358,7 @@ def prox_hinge(expr):
 def prox_norm_l1_asymmetric(expr):
     if is_norm_l1_asymmetric(expr):
         expr.proximal_operator.name = "NormL1AsymmetricProx"
-        yield prox_expr
+        yield expr
 
 def prox_deadzone(expr):
     if is_deadzone(expr):
@@ -388,17 +388,8 @@ def prox_norm_l1_asymmetric_single_max(expr):
         assert beta < 0
         beta = -beta
 
-
-    m, n = arg0.size.dim
-    var = variable(m, n, "canonicalize:asymmetric_l1:" + fp_expr(arg0))
-    for prox_expr in transform_expr(epigraph(arg0, var)):
-        yield prox_expr
-
-    arg0.CopyFrom(var)
-    arg1.CopyFrom(var)
+    expr = scaled_zone(arg0, alpha, beta, 0, 0)
     expr.proximal_operator.name = "ScaledZoneProx"
-    expr.proximal_operator.scaled_zone_params.alpha = alpha
-    expr.proximal_operator.scaled_zone_params.beta = beta
     yield expr
 
 def prox_max_elementwise(expr):

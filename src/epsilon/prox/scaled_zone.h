@@ -9,15 +9,7 @@ public:
       : alpha_(alpha), beta_(beta), C_(C), M_(M),
         params_from_proto_(false) {}
 
-  virtual void Init(const ProxOperatorArg& arg) override {
-    lambda_ = arg.lambda();
-    if (params_from_proto_) {
-      alpha_ = arg.f_expr().proximal_operator().scaled_zone_params().alpha();
-      beta_ = arg.f_expr().proximal_operator().scaled_zone_params().beta();
-      C_ = arg.f_expr().proximal_operator().scaled_zone_params().c();
-      M_ = arg.f_expr().proximal_operator().scaled_zone_params().m();
-    }
-  }
+  virtual void Init(const ProxOperatorArg& arg) override;
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
 
 protected:
@@ -25,7 +17,9 @@ protected:
 
   double lambda_;
   double alpha_, beta_, C_, M_;
+
   bool params_from_proto_;
+  Eigen::VectorXd a_, b_;
 };
 
 class ScaledZoneEpigraph : public ScaledZoneProx {

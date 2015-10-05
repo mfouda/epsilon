@@ -20,23 +20,52 @@ double ScaledZoneProx::key(double x) {
     return (x+M_) / beta_;
 }
 
+void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
+  lambda_ = arg.lambda();
+  if (params_from_proto_) {
+    alpha_ = arg.f_expr().scaled_zone_params().alpha();
+    beta_ = arg.f_expr().scaled_zone_params().beta();
+    C_ = arg.f_expr().scaled_zone_params().c();
+    M_ = arg.f_expr().scaled_zone_params().m();
+
+    const int n = GetDimension(arg.f_expr().arg(0));
+    a_.resize(n);
+    b_.resize(n);
+    GetDiagonalAffineOperator(arg.f_expr().arg(0), arg.var_map(), &a_, &b_);
+  }
+}
+
 Eigen::VectorXd ScaledZoneProx::Apply(const Eigen::VectorXd &v) {
-  int n = v.rows();
-  Eigen::VectorXd x = (v.array()-C_).matrix();
+  const int n = v.rows();
+  Eigen::VectorXd x(n), lambda(n);
+
+  if (params_from_proto_) {
+    x = (a_.array()*v.array()+b_.array()-C_).matrix();
+    lambda = a_.array().square() * lambda_;
+  } else {
+    x = (v.array()-C_).matrix();
+    lambda = Eigen::VectorXd::Constant(n, lambda_);
+  }
 
   for(int i=0; i<n; i++){ // possible loop unrolling
     if(std::fabs(x(i)) <= M_)
       x(i) = x(i);
-    else if(x(i) > M_ + lambda_ * alpha_)
-      x(i) = x(i) - lambda_ * alpha_;
-    else if(x(i) < -M_ - lambda_ * beta_)
-      x(i) = x(i) + lambda_ * beta_;
+    else if(x(i) > M_ + lambda(i) * alpha_)
+      x(i) = x(i) - lambda(i) * alpha_;
+    else if(x(i) < -M_ - lambda(i) * beta_)
+      x(i) = x(i) + lambda(i) * beta_;
     else if(x(i) > 0)
       x(i) = M_;
     else
       x(i) = -M_;
   }
-  return (x.array()+C_).matrix();
+
+  if (params_from_proto_) {
+    return ((x.array()+C_-b_.array())/a_.array()).matrix();
+  } else {
+    return (x.array()+C_).matrix();
+  }
+
 }
 REGISTER_PROX_OPERATOR(ScaledZoneProx);
 

@@ -18,9 +18,9 @@ def create(m, n, k):
     mu_sig = np.median(np.sqrt((mu_rbf.T - mu_rbf)**2))
     X = np.exp(-(mu_rbf.T - x).T**2/(2*mu_sig**2))
 
-    Theta = cp.Variable(n,k)
-    XT = cp.Variable(m,k)
-    f = sum([quantile_loss(XT[:,i] - y, alphas[i]) for i in xrange(k)])
-    c = [XT == X*Theta,
-         XT[:,1:] - XT[:,:-1] >= 0]
+    thetas = [cp.Variable(n) for i in xrange(k)]
+    yp = [cp.Variable(m) for i in xrange(k)]
+    f = sum([quantile_loss(yp[i] - y, alphas[i]) for i in xrange(k)])
+    c = [yp[i] == X*thetas[i] for i in xrange(k)]
+    c += [yp[i+1] - yp[i] >= 0 for i in xrange(k-1)]
     return cp.Problem(cp.Minimize(f), c)

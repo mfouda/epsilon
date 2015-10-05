@@ -238,6 +238,17 @@ def index(x, start_i, stop_i, start_j=None, stop_j=None):
              Slice(start=start_j, stop=stop_j, step=1)],
         arg=[x])
 
+def scaled_zone(x, alpha, beta, C, M):
+    return Expression(
+        expression_type=Expression.SCALED_ZONE,
+        size=Size(dim=[1, 1]),
+        scaled_zone_params=Expression.ScaledZoneParams(
+            alpha=alpha,
+            beta=beta,
+            c=C,
+            m=M),
+        arg=[x])
+
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
 

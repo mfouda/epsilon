@@ -62,14 +62,6 @@ message Cone {
 
 message ProximalOperator {
   string name = 1;
-
-  message ScaledZoneParams {
-    double alpha = 1;
-    double beta = 2;
-    double c = 3;
-    double m = 4;
-  }
-  ScaledZoneParams scaled_zone_params = 2;
 }
 
 message Expression {
@@ -108,6 +100,7 @@ message Expression {
     HUBER = 55;
     ENTR = 56;
     LOGISTIC = 57;
+    SCALED_ZONE = 58;
 
     // Vector functions
     NORM_P = 100;
@@ -146,6 +139,15 @@ message Expression {
 
   // HUBER
   double M = 13;
+
+  // SCALED_ZONE
+  message ScaledZoneParams {
+    double alpha = 1;
+    double beta = 2;
+    double c = 3;
+    double m = 4;
+  }
+  ScaledZoneParams scaled_zone_params = 14;
 }
 
 // Arbitrary convex problem of the form
