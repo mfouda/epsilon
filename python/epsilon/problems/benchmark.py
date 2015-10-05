@@ -92,7 +92,7 @@ def run_benchmarks(problems):
                 solver=cp.SCS, verbose=args.debug,
                 use_indirect=args.scs_indirect)
         else:
-            params = solver_params_pb2.SolverParams(rel_tol=1e-3)
+            params = solver_params_pb2.SolverParams(rel_tol=1e-2)
             solve.solve(cvxpy_prob, params=params)
         t1 = time.time()
 

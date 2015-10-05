@@ -69,6 +69,7 @@ private:
   Eigen::VectorXd x_, x_prev_, x_param_prev_, u_, Ax_;
   SolverStatus status_;
   std::vector<double> Ai_xi_norm_;
+  std::vector<Eigen::VectorXd> s_xi_;
 
   // Equality constraints
   Eigen::VectorXd b_;

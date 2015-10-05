@@ -90,6 +90,7 @@ void ProxADMMSolver::Init() {
   x_param_prev_ = Eigen::VectorXd::Zero(n_);
   Ax_ = Eigen::VectorXd::Zero(m_);
   Ai_xi_norm_.resize(ops_.size());
+  s_xi_.resize(ops_.size());
 }
 
 void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
@@ -178,6 +179,7 @@ void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
 
   Eigen::VectorXd Ai_xi = Ai.Apply(xi);
   Ai_xi_norm_[info.i] = Ai_xi.norm();
+  s_xi_[info.i] = Ai.ApplyTranspose(Ax_);
   x_ += info.V.transpose()*(xi - xi_old);
   Ax_ += Ai_xi - Ai_xi_old;
 
@@ -236,20 +238,22 @@ void ProxADMMSolver::ComputeResiduals() {
   const double rel_tol = params_.rel_tol();
   const double rho = params_.rho();
 
-  double max_Ai_xi_norm = *std::max_element(
-      Ai_xi_norm_.begin(), Ai_xi_norm_.end());
-
+  double Ai_xi_norm_inf = fmax(
+      *std::max_element(Ai_xi_norm_.begin(), Ai_xi_norm_.end()),
+      b_.norm());
   double ATu_norm_squared = 0.0;
-  for (const OperatorInfo& info : ops_)
-    ATu_norm_squared += info.Ai.ApplyTranspose(u_).squaredNorm();
+  double s_norm_squared = 0.0;
 
-  // TODO(mwytock): May want to calculate s_norm slightly differently here
+  for (int i = 0; i < ops_.size(); i++) {
+    const DynamicMatrix& Ai = ops_[i].Ai;
+    ATu_norm_squared += Ai.ApplyTranspose(u_).squaredNorm();
+    s_norm_squared += (Ai.ApplyTranspose(Ax_) - s_xi_[i]).squaredNorm();
+  }
+
   r->set_r_norm((Ax_ + b_).norm());
-  r->set_s_norm((x_ - x_prev_).norm());
-  r->set_epsilon_primal(
-      abs_tol*sqrt(m_) + rel_tol*fmax(max_Ai_xi_norm, b_.norm()));
-  r->set_epsilon_dual(
-      abs_tol*sqrt(n_) + rel_tol*rho*(sqrt(ATu_norm_squared)));
+  r->set_s_norm(rho*sqrt(s_norm_squared));
+  r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*Ai_xi_norm_inf);
+  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(sqrt(ATu_norm_squared)));
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {
