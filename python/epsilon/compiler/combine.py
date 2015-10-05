@@ -100,8 +100,13 @@ def separate_objective_terms(graph):
         f_vars = [f_var for f_var in graph.edges_by_variable[var]
                   if not f_var.function.constraint]
 
-        # Skip first one, rename the rest
-        for f_var in f_vars[1:]:
+        skipped_one = False
+        for f_var in f_vars:
+            # Skip first one, rename the rest
+            if not f_var.has_linops() and not skipped_one:
+                skipped_one = True
+                continue
+
             graph.remove_edge(f_var)
 
             new_var_id = "separate:%s:%s" % (

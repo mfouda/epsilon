@@ -11,7 +11,6 @@ def is_scalar_expression(expr):
     if (expr.expression_type in (
             Expression.VARIABLE,
             Expression.CONSTANT,
-            Expression.INDEX,
             Expression.NEGATE)):
         return True
 

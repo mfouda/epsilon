@@ -59,8 +59,17 @@ message Cone {
   Type cone_type = 1;
 }
 
+
 message ProximalOperator {
   string name = 1;
+
+  message ScaledZoneParams {
+    double alpha = 1;
+    double beta = 2;
+    double c = 3;
+    double m = 4;
+  }
+  ScaledZoneParams scaled_zone_params = 2;
 }
 
 message Expression {

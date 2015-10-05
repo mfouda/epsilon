@@ -49,6 +49,7 @@ PROBLEMS = [
 ]
 
 PROBLEMS = [
+    #ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2)),
 ]
 
@@ -65,6 +66,7 @@ def solve_problem(problem_instance):
     obj1 = problem.objective.value
 
     np.testing.assert_allclose(obj0, obj1, rtol=1e-2, atol=1e-4)
+    assert False
 
 def test_solve():
     for problem in PROBLEMS:

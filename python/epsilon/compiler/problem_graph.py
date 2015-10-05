@@ -33,6 +33,12 @@ class FunctionVariable(object):
         self.instances = [instance]
         self.instances_with_linops = [instance]
 
+    def has_linops(self):
+        for i, instance in enumerate(self.instances):
+            if instance != self.instances_with_linops[i]:
+                return True
+            return False
+
     def combine(self, other):
         assert self.function == other.function
         assert self.variable == other.variable

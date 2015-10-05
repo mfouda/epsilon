@@ -38,6 +38,7 @@ Eigen::VectorXd ScaledZoneProx::Apply(const Eigen::VectorXd &v) {
   }
   return (x.array()+C_).matrix();
 }
+REGISTER_PROX_OPERATOR(ScaledZoneProx);
 
 std::string ArrayDebugString(double *a, int n)
 {
@@ -95,10 +96,11 @@ Eigen::VectorXd ScaledZoneEpigraph::Apply(const Eigen::VectorXd& sv) {
     }
   }
   double lam = acc/(div+1);
-  
+
   Eigen::VectorXd tx(n+1);
   this->lambda_ = lam;
   tx(0) = s+lam;
   tx.tail(n) = ScaledZoneProx::Apply(sv.tail(n));
   return tx;
 }
+REGISTER_PROX_OPERATOR(ScaledZoneEpigraph);

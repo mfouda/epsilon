@@ -100,6 +100,7 @@ def is_norm_l1_asymmetric(expr):
         expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[0].arg[0].constant.scalar >= 0 and
         expr.arg[0].arg[0].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
+        expr.arg[0].arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[0].arg[1].arg[1].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[0].arg[1].arg[1].constant.scalar == 0 and
         expr.arg[0].arg[1].expression_type == Expression.MULTIPLY and
@@ -107,6 +108,7 @@ def is_norm_l1_asymmetric(expr):
         expr.arg[0].arg[1].arg[0].constant.scalar >= 0 and
         expr.arg[0].arg[1].arg[1].expression_type == Expression.MAX_ELEMENTWISE and
         expr.arg[0].arg[1].arg[1].arg[0].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[1].arg[0].arg[0].expression_type == Expression.VARIABLE and
         expr.arg[0].arg[1].arg[1].arg[1].expression_type == Expression.CONSTANT and
         expr.arg[0].arg[1].arg[1].arg[1].constant.scalar == 0
         )
@@ -355,18 +357,49 @@ def prox_hinge(expr):
 
 def prox_norm_l1_asymmetric(expr):
     if is_norm_l1_asymmetric(expr):
-        arg = expr.arg[0].arg[0].arg[1].arg[0]
         expr.proximal_operator.name = "NormL1AsymmetricProx"
-        if arg.curvature.scalar_multiple:
-            yield expr
-        else:
-            for prox_expr in transform_epigraph(expr, arg):
-                yield prox_expr
+        yield prox_expr
 
 def prox_deadzone(expr):
     if is_deadzone(expr):
         expr.proximal_operator.name = "DeadZoneProx"
         yield expr
+
+def prox_norm_l1_asymmetric_single_max(expr):
+    if not (expr.expression_type == Expression.SUM and
+            expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+            len(expr.arg[0].arg) == 2 and
+            expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
+            expr.arg[0].arg[1].expression_type == Expression.MULTIPLY):
+        return
+
+    arg0 = expr.arg[0].arg[0].arg[1]
+    arg1 = expr.arg[0].arg[1].arg[1]
+    if arg0 != arg1:
+        return
+
+    alpha = expr.arg[0].arg[0].arg[0].constant.scalar
+    beta = expr.arg[0].arg[1].arg[0].constant.scalar
+    if alpha < 0:
+        tmp = beta
+        beta = -alpha
+        alpha = tmp
+    else:
+        assert beta < 0
+        beta = -beta
+
+
+    m, n = arg0.size.dim
+    var = variable(m, n, "canonicalize:asymmetric_l1:" + fp_expr(arg0))
+    for prox_expr in transform_expr(epigraph(arg0, var)):
+        yield prox_expr
+
+    arg0.CopyFrom(var)
+    arg1.CopyFrom(var)
+    expr.proximal_operator.name = "ScaledZoneProx"
+    expr.proximal_operator.scaled_zone_params.alpha = alpha
+    expr.proximal_operator.scaled_zone_params.beta = beta
+    yield expr
 
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""

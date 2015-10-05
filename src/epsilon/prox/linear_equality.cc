@@ -17,10 +17,10 @@ public:
     DynamicMatrix b = DynamicMatrix::Zero(m, 1);
     BuildAffineOperator(arg.f_expr().arg(0), arg.var_map(), &A, &b);
 
-    CHECK(!A.is_sparse()) << "Sparse A not implemented";
+    //CHECK(!A.is_sparse()) << "Sparse A not implemented";
     CHECK(m <= n) << "m > n not implemented";
 
-    A_ = A.dense();
+    A_ = A.AsDense();
     b_ = -b.AsDense();
     AAT_solver_.compute(A_*A_.transpose());
     CHECK_EQ(AAT_solver_.info(), Eigen::Success);

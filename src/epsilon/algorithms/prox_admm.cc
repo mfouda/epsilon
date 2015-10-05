@@ -15,20 +15,15 @@ class DenseLeastSquaresOperator final : public VectorOperator {
   DenseLeastSquaresOperator(const Eigen::MatrixXd& A) : A_(A) {}
 
   void Init() override {
-    CHECK(A_.rows() >= A_.cols());
-    ATA_solver_.compute(A_.transpose()*A_);
-    CHECK_EQ(ATA_solver_.info(), Eigen::Success);
     svd_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    //return ATA_solver_.solve(A_.transpose()*v);
     return svd_.solve(v);
   }
 
  private:
   Eigen::MatrixXd A_;
-  Eigen::LLT<Eigen::MatrixXd> ATA_solver_;
   Eigen::JacobiSVD<Eigen::MatrixXd> svd_;
 };
 
@@ -83,8 +78,10 @@ void ProxADMMSolver::Init() {
 
   VariableSet vars = GetVariables(problem_);
   for (const Expression* expr : vars) {
-    if (vars_in_prox_.find(expr) == vars_in_prox_.end())
+    if (vars_in_prox_.find(expr) == vars_in_prox_.end()) {
+      VLOG(1) << "InitLeastSquares, " << expr->variable().variable_id();
       InitLeastSquares(*expr);
+    }
   }
 
   x_ = Eigen::VectorXd::Zero(n_);
@@ -137,7 +134,8 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   const SparseXd& Ai = info.Ai.sparse();
 
   SparseXd ATA = Ai.transpose()*Ai;
-  VLOG(1) << "InitProxOperator, Ai:\n" << SparseMatrixDebugString(ATA);
+  VLOG(1) << "InitProxOperator " << expr.proximal_operator().name()
+          << ", ATA:\n" << SparseMatrixDebugString(ATA);
   double alpha;
   if (IsScalarMatrix(ATA, &alpha)) {
     VLOG(1) << "Using standard ADMM\n";
@@ -146,7 +144,6 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     info.B = -Ai.transpose()/alpha;
   } else {
     VLOG(1) << "Using linearized ADMM";
-
     info.linearized = true;
     // TODO(mwytock): Figure out how to set this parameter
     info.mu = 0.1;
