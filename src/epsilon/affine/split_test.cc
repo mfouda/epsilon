@@ -106,11 +106,9 @@ TEST(SplitExpressionIterator, Single_NoSplit) {
 
   SplitExpressionIterator iter(a);
 
-  // a
+  // c
   ASSERT_FALSE(iter.done());
-  EXPECT_EQ(1, iter.leaf().size().dim(0));
-  EXPECT_EQ(2, iter.leaf().arg(0).size().dim(0));
-  EXPECT_EQ(3, iter.leaf().arg(1).size().dim(0));
+  EXPECT_EQ(3, iter.leaf().size().dim(0));
   EXPECT_EQ(1, iter.chain().size().dim(0));
   EXPECT_EQ(2, iter.chain().arg(0).size().dim(0));
   EXPECT_EQ(3, iter.chain().arg(1).size().dim(0));
@@ -144,11 +142,9 @@ TEST(SplitExpressionIterator, Tree_NoSplit) {
 
   SplitExpressionIterator iter(a);
 
-  // b
+  // f
   ASSERT_FALSE(iter.done());
-  EXPECT_EQ(2, iter.leaf().size().dim(0));
-  EXPECT_EQ(5, iter.leaf().arg(0).size().dim(0));
-  EXPECT_EQ(6, iter.leaf().arg(1).size().dim(0));
+  EXPECT_EQ(6, iter.leaf().size().dim(0));
   EXPECT_EQ(1, iter.chain().size().dim(0));
   EXPECT_EQ(2, iter.chain().arg(0).size().dim(0));
   EXPECT_EQ(5, iter.chain().arg(0).arg(0).size().dim(0));
@@ -171,6 +167,62 @@ TEST(SplitExpressionIterator, Tree_NoSplit) {
   EXPECT_EQ(0, iter.chain().arg(0).arg_size());
 
   // Done
+  iter.NextValue();
+  ASSERT_TRUE(iter.done());
+}
+
+TEST(SplitExpressionIterator, Tree_Negate) {
+  /**    a
+   *    / \
+   *   b   f
+   *   |
+   *   c
+   *  / \
+   * d   e
+   **/
+  Expression a;
+  a.set_expression_type(Expression::ADD);
+  Expression* b = a.add_arg();
+  b->set_expression_type(Expression::NEGATE);
+  Expression* c = b->add_arg();
+  c->set_expression_type(Expression::ADD);
+  Expression* d = c->add_arg();
+  Expression* e = c->add_arg();
+  Expression* f = a.add_arg();
+
+  a.mutable_variable()->set_variable_id("a");
+  b->mutable_variable()->set_variable_id("b");
+  c->mutable_variable()->set_variable_id("c");
+  d->mutable_variable()->set_variable_id("d");
+  e->mutable_variable()->set_variable_id("e");
+  f->mutable_variable()->set_variable_id("f");
+
+  SplitExpressionIterator iter(a);
+
+  // d
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("a", iter.chain().variable().variable_id());
+  EXPECT_EQ("b", iter.chain().arg(0).variable().variable_id());
+  EXPECT_EQ("c", iter.chain().arg(0).arg(0).variable().variable_id());
+  EXPECT_EQ("d", iter.chain().arg(0).arg(0).arg(0).variable().variable_id());
+  EXPECT_EQ("d", iter.leaf().variable().variable_id());
+
+  // e
+  iter.NextValue();
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("a", iter.chain().variable().variable_id());
+  EXPECT_EQ("b", iter.chain().arg(0).variable().variable_id());
+  EXPECT_EQ("c", iter.chain().arg(0).arg(0).variable().variable_id());
+  EXPECT_EQ("e", iter.chain().arg(0).arg(0).arg(0).variable().variable_id());
+  EXPECT_EQ("e", iter.leaf().variable().variable_id());
+
+  // f
+  iter.NextValue();
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("a", iter.chain().variable().variable_id());
+  EXPECT_EQ("f", iter.chain().arg(0).variable().variable_id());
+  EXPECT_EQ("f", iter.leaf().variable().variable_id());
+
   iter.NextValue();
   ASSERT_TRUE(iter.done());
 }

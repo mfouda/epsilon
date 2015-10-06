@@ -2,17 +2,24 @@
 
 #include <glog/logging.h>
 
-bool ShouldSplitNode(const Expression& expr) {
-  return expr.expression_type() == Expression::ADD;
+int ArgIndex(const Expression& expr) {
+  if (expr.expression_type() == Expression::MULTIPLY ||
+      expr.expression_type() == Expression::MULTIPLY_ELEMENTWISE) {
+    // LHS is an expression which is a parameter to MULTIPLY operators, this
+    // should not be split out.
+    CHECK_EQ(2, expr.arg_size());
+    return 1;
+  }
+  return 0;
 }
 
 SplitExpressionIterator::SplitExpressionIterator(const Expression& expression)
     : done_(false),
       prev_(nullptr) {
-  stack_.push_back({&expression, 0});
+  stack_.push_back({&expression, ArgIndex(expression)});
 
-  // Special case for single node
-  if (!ShouldSplitNode(expression)) {
+  // Special case for single node w/ no splitting
+  if (expression.arg_size() == 0) {
     current_ = &expression;
     FillChain();
   } else {
@@ -23,31 +30,32 @@ SplitExpressionIterator::SplitExpressionIterator(const Expression& expression)
 void SplitExpressionIterator::NextValue() {
   CHECK(!done_);
 
-  bool terminal = false;
-  while (!terminal && !stack_.empty()) {
+  while (!stack_.empty()) {
+    bool leaf = false;
     std::pair<const Expression*, int>& item = stack_.back();
     current_ = item.first;
 
-    if (ShouldSplitNode(*current_)) {
-      // Split this node
-      if (item.second == current_->arg_size()) {
-        // Ascending, done with this node
-        stack_.pop_back();
-      } else if (prev_ == &current_->arg(item.second)) {
-        // Ascending, Next visit sibling
+    if (item.second == current_->arg_size()) {
+      // Visit node, check if leaf
+      if (current_->arg_size() == 0) {
+        leaf = true;
+        FillChain();
+      }
+      stack_.pop_back();
+    } else {
+      if (prev_ == &current_->arg(item.second)) {
+        // Ascending the tree
         item.second++;
       } else {
-        // Descending
-        stack_.push_back({&current_->arg(item.second), 0});
+        // Descending the tree
+        const Expression* next = &current_->arg(item.second);
+        stack_.push_back({next, ArgIndex(*next)});
       }
-    } else {
-      // No splitting, at a terminal node
-      terminal = true;
-      FillChain();
-      stack_.pop_back();
     }
 
     prev_ = current_;
+    if (leaf)
+      break;
   }
 
   done_ = stack_.empty();
@@ -57,8 +65,13 @@ void SplitExpressionIterator::FillChain() {
   chain_.CopyFrom(*stack_[0].first);
   Expression* e = &chain_;
   for (int i = 1; i < stack_.size(); i++) {
-    e->clear_arg();
-    e->add_arg()->CopyFrom(*stack_[i].first);
-    e = e->mutable_arg(0);
+    if (e->expression_type() == Expression::MULTIPLY ||
+        e->expression_type() == Expression::MULTIPLY_ELEMENTWISE) {
+      e = e->mutable_arg(ArgIndex(*e));
+    } else {
+      e->clear_arg();
+      e->add_arg()->CopyFrom(*stack_[i].first);
+      e = e->mutable_arg(0);
+    }
   }
 }
