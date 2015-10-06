@@ -75,19 +75,18 @@ def convert_unary(f, expr):
     return f(convert_expression(expr.args[0]))
 
 def convert_index(expr):
-    proto = convert_generic(Expression.INDEX, expr)
+    starts = []
+    stops = []
+    assert len(expr.key) == 2
     for i, key in enumerate(expr.key):
-        key_proto = proto.key.add()
-
         size = expr.args[0].size[i]
-        key_proto.start = index_value(key.start, size) if key.start else 0
-        key_proto.stop = index_value(key.stop, size) if key.stop else size
-        if key.step:
-            key_proto.step = key.step
-        else:
-            key_proto.step = 1
+        starts.append(index_value(key.start, size) if key.start else 0)
+        stops.append(index_value(key.stop, size) if key.stop else size)
 
-    return proto
+    assert len(expr.args) == 1
+    return expression.index(convert_expression(expr.args[0]),
+                            starts[0], stops[0],
+                            starts[1], stops[1])
 
 def convert_huber(expr):
     proto = convert_generic(Expression.HUBER, expr)

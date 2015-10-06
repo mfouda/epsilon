@@ -68,6 +68,12 @@ const Expression& GetLeaf(const Expression& expr) {
   return *e;
 }
 
+const Expression& GetRightmostLeaf(const Expression& expr) {
+  const Expression* e = &expr;
+  for (; e->arg_size() > 0; e = &e->arg(e->arg_size()-1));
+  return *e;
+}
+
 Size CreateSize(int m, int n) {
   Size size;
   size.add_dim(m);

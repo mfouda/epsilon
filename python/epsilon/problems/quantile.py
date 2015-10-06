@@ -16,12 +16,11 @@ def create(m, n, k):
     # RBF features
     mu_rbf = np.array([np.linspace(-np.pi-1, np.pi+1, n)])
     mu_sig = np.median(np.sqrt((mu_rbf.T - mu_rbf)**2))
-    X = np.hstack([np.exp(-(mu_rbf.T - x).T**2/(2*mu_sig**2)), np.ones((m,1))])
+    X = np.exp(-(mu_rbf.T - x).T**2/(2*mu_sig**2))
 
-    Theta = cp.Variable(n+1,k)
+    Theta = cp.Variable(n,k)
     XT = cp.Variable(m,k)
     f = sum([quantile_loss(XT[:,i] - y, alphas[i]) for i in xrange(k)])
-    c = [XT == X*Theta,
-         XT[:,1:] - XT[:,:-1] >= 0]
-
-    return cp.Problem(cp.Minimize(f), c)
+    C = [XT == X*Theta,
+         XT[:,:-1] - XT[:,1:] >= 0]
+    return cp.Problem(cp.Minimize(f), C)

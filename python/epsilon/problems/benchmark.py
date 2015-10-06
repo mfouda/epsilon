@@ -25,6 +25,7 @@ from epsilon.problems import logreg_l1
 from epsilon.problems import lp
 from epsilon.problems import mnist
 from epsilon.problems import quantile
+from epsilon.problems import quantile
 from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
 from epsilon.problems.problem_instance import ProblemInstance
@@ -62,6 +63,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
 ]
 
 COLUMNS = [
@@ -79,18 +81,18 @@ def print_result(*args):
 
 def run_benchmarks(problems):
     for problem in problems:
-        if args.problem and problem.name != args.problem:
-            continue
-
         cvxpy_prob = problem.create()
 
         t0 = time.time()
         if args.scs:
             cvxpy_prob.solve(
                 solver=cp.SCS, verbose=args.debug,
-                use_indirect=args.scs_indirect)
+                use_indirect=args.scs_indirect,
+                max_iterations=10000)
+        elif args.ecos:
+            cvxpy_prob.solve(solver=cp.ECOS, verbose=args.debug)
         else:
-            params = solver_params_pb2.SolverParams(rel_tol=1e-3)
+            params = solver_params_pb2.SolverParams(rel_tol=1e-2)
             solve.solve(cvxpy_prob, params=params)
         t1 = time.time()
 
@@ -145,21 +147,30 @@ def write_benchmarks(problems, location):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--ecos", action="store_true")
+    parser.add_argument("--problem")
     parser.add_argument("--scs", action="store_true")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--write")
-    parser.add_argument("--problem")
-    parser.add_argument("--debug", action="store_true")
+
     args = parser.parse_args()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    if args.write:
-        write_benchmarks(PROBLEMS, args.write)
+    if args.problem:
+        problems = [p for p in PROBLEMS if p.name == args.problem]
     else:
-        print_benchmarks(PROBLEMS)
+        problems = PROBLEMS
+
+    if args.write:
+        write_benchmarks(problems, args.write)
+    else:
+        print_benchmarks(problems)
+
 else:
     args = argparse.Namespace()
     args.scs = False
+    args.ecos = False
     args.problem = ""

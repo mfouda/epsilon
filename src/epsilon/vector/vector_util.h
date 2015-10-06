@@ -26,13 +26,15 @@ SparseXd SparseIdentity(int n);
 
 bool IsDiagonal(const SparseXd& A);
 bool IsScalarMatrix(const SparseXd& A, double* alpha);
+bool IsMatrixEqual(const MatrixXd& A, const MatrixXd& B);
 
 // Row and column norms of sparse matrices
 VectorXd RowNorm(const SparseXd& A);
 VectorXd ColNorm(const SparseXd& A);
 
 // X = [A; B]
-MatrixXd Stack(const MatrixXd& A, const MatrixXd& B);
+MatrixXd VStack(const MatrixXd& A, const MatrixXd& B);
+MatrixXd HStack(const MatrixXd& A, const MatrixXd& B);
 
 // vec()/mat() operators
 Eigen::VectorXd ToVector(const Eigen::MatrixXd& A);

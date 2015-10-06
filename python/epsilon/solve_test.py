@@ -28,7 +28,7 @@ REL_TOL = {
     "least_abs_dev": 1e-3,
     "logreg_l1": 1e-3,
     "tv_1d": 1e-3,
-    "hinge_l1": 1e-3
+    "hinge_l1": 1e-3,
 }
 
 PROBLEMS = [
@@ -42,7 +42,7 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=2)),
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
@@ -59,7 +59,8 @@ def solve_problem(problem_instance):
     solve.solve(problem, params)
     obj1 = problem.objective.value
 
-    np.testing.assert_allclose(obj0, obj1, rtol=1e-2, atol=1e-4)
+    # A lower objective is okay
+    assert obj1 <= obj0 + 1e-2*abs(obj0) + 1e-4
 
 def test_solve():
     for problem in PROBLEMS:

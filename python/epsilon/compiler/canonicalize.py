@@ -348,7 +348,6 @@ def prox_negative_entropy(expr):
 def prox_hinge(expr):
     if is_hinge(expr):
         arg = expr.arg[0].arg[0].arg[1].arg[0]
-
         expr.proximal_operator.name = "HingeProx"
         if arg.curvature.scalar_multiple:
             yield expr
@@ -365,6 +364,33 @@ def prox_deadzone(expr):
     if is_deadzone(expr):
         expr.proximal_operator.name = "DeadZoneProx"
         yield expr
+
+def prox_norm_l1_asymmetric_single_max(expr):
+    if not (expr.expression_type == Expression.SUM and
+            expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+            len(expr.arg[0].arg) == 2 and
+            expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
+            expr.arg[0].arg[1].expression_type == Expression.MULTIPLY):
+        return
+
+    arg0 = expr.arg[0].arg[0].arg[1]
+    arg1 = expr.arg[0].arg[1].arg[1]
+    if arg0 != arg1:
+        return
+
+    alpha = expr.arg[0].arg[0].arg[0].constant.scalar
+    beta = expr.arg[0].arg[1].arg[0].constant.scalar
+    if alpha < 0:
+        tmp = beta
+        beta = -alpha
+        alpha = tmp
+    else:
+        assert beta < 0
+        beta = -beta
+
+    expr = scaled_zone(arg0, alpha, beta, 0, 0)
+    expr.proximal_operator.name = "ScaledZoneProx"
+    yield expr
 
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""

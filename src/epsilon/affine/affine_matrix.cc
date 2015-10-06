@@ -14,7 +14,6 @@
 #define MULTIPLY_SCALAR(a, B) (                                 \
     (!(B).rows() ? (B) : static_cast<Eigen::MatrixXd>(a*B)))
 
-
 namespace affine {
 
 namespace {
@@ -38,8 +37,22 @@ MatrixOperator Add(const Expression& expr) {
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
   for (int i = 1; i < expr.arg_size(); i++) {
     MatrixOperator op_i = BuildMatrixOperator(expr.arg(i));
-    op.A = ADD(op.A, op_i.A);
-    op.B = ADD(op.B, op_i.B);
+    if (!op.A.rows() && !op.B.rows()) {
+      op.A = op_i.A;
+      op.B = op_i.B;
+    } else if (!op_i.A.rows() && !op_i.B.rows()) {
+      // Do nothing
+    } else if (IsMatrixEqual(op.A, op_i.A)) {
+      op.B = ADD(op.B, op_i.B);
+    } else if (IsMatrixEqual(op.B, op_i.B)) {
+      op.A = ADD(op.A, op_i.A);
+    } else {
+      LOG(FATAL) << "Incompatible operators\n"
+                 << "A1:\n" << MatrixDebugString(op_i.A)
+                 << "B1:\n" << MatrixDebugString(op_i.B)
+                 << "A2:\n" << MatrixDebugString(op.A)
+                 << "B2:\n" << MatrixDebugString(op.B);
+    }
     op.C = ADD(op.C, op_i.C);
   }
   return op;
@@ -65,8 +78,29 @@ MatrixOperator Multiply(const Expression& expr) {
 MatrixOperator Negate(const Expression& expr) {
   CHECK_EQ(1, expr.arg_size());
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
-  op.A = MULTIPLY_SCALAR(-1, op.A);
+  op.B = MULTIPLY_SCALAR(-1, op.B);
   op.C = MULTIPLY_SCALAR(-1, op.C);
+  return op;
+}
+
+MatrixOperator Index(const Expression& expr) {
+  CHECK_EQ(1, expr.arg_size());
+  MatrixOperator op = BuildMatrixOperator(expr.arg(0));
+
+  CHECK_EQ(expr.key_size(), 2);
+  CHECK_EQ(expr.key(0).step(), 1);
+  CHECK_EQ(expr.key(1).step(), 1);
+  const int m = expr.key(0).stop() - expr.key(0).start();
+  const int n = expr.key(1).stop() - expr.key(1).start();
+
+  if (op.A.rows() && op.B.rows()) {
+    op.A = op.A.middleRows(expr.key(0).start(), m).eval();
+    op.B = op.B.middleCols(expr.key(1).start(), n).eval();
+  }
+  if (op.C.rows()) {
+    op.C = op.C.block(expr.key(0).start(), m, expr.key(1).start(), n).eval();
+  }
+
   return op;
 }
 
@@ -91,10 +125,11 @@ typedef MatrixOperator(*AffineMatrixFunction)(
     const Expression& expr);
 std::unordered_map<int, AffineMatrixFunction> kAffineMatrixFunctions = {
   {Expression::ADD, &Add},
+  {Expression::CONSTANT, &Constant},
+  {Expression::INDEX, &Index},
   {Expression::MULTIPLY, &Multiply},
   {Expression::NEGATE, &Negate},
   {Expression::VARIABLE, &Variable},
-  {Expression::CONSTANT, &Constant},
 };
 
 MatrixOperator BuildMatrixOperator(const Expression& expr) {
@@ -104,7 +139,16 @@ MatrixOperator BuildMatrixOperator(const Expression& expr) {
     LOG(FATAL) << "No affine matrix function for "
                << Expression::Type_Name(expr.expression_type());
   }
-  return iter->second(expr);
+
+  if (VLOG_IS_ON(2)) {
+    MatrixOperator op = iter->second(expr);
+    VLOG(2) << "BuildMatrixOperator returning\n"
+            << "A:\n" << MatrixDebugString(op.A)
+            << "B:\n" << MatrixDebugString(op.B);
+    return op;
+  } else {
+    return iter->second(expr);
+  }
 }
 
 }  // namespace affine
