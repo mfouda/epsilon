@@ -29,7 +29,6 @@ REL_TOL = {
     "logreg_l1": 1e-3,
     "tv_1d": 1e-3,
     "hinge_l1": 1e-3,
-    "quantile": 1e-3,
 }
 
 PROBLEMS = [
@@ -48,11 +47,6 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
-PROBLEMS = [
-    #ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
-]
-
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 
@@ -65,8 +59,8 @@ def solve_problem(problem_instance):
     solve.solve(problem, params)
     obj1 = problem.objective.value
 
-    np.testing.assert_allclose(obj0, obj1, rtol=1e-2, atol=1e-4)
-    assert False
+    # A lower objective is okay
+    assert obj1 <= obj0 + 1e-2*abs(obj0) + 1e-4
 
 def test_solve():
     for problem in PROBLEMS:

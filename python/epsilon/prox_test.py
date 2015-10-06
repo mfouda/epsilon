@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-NUM_TRIALS = 1
+NUM_TRIALS = 10
 
 n = 10
 x = cp.Variable(n)
@@ -18,7 +18,7 @@ class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
         return super(Prox, cls).__new__(cls, name, objective, constraint)
 
 def f_scaled_zone_single_max():
-    alpha = 2*rand()-1
+    alpha = rand()
     y = cp.mul_elemwise(randn(n), x) + randn(n)
     return cp.sum_entries(cp.max_elemwise(-alpha*y, (1-alpha)*y))
 
@@ -28,8 +28,7 @@ def f_norm_l1_asymmetric():
                           (1-alpha)*cp.max_elemwise(-x,0))
 
 def f_dead_zone():
-    C = randn()
-    return cp.sum_entries(cp.max_elemwise(x-C,0) + cp.max_elemwise(-x-C,0))
+    return cp.sum_entries(cp.max_elemwise(x-1,0) + cp.max_elemwise(-x-1,0))
 
 def f_hinge():
     return cp.sum_entries(cp.max_elemwise(1-x, 0))

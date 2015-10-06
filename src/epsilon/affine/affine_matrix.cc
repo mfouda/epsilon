@@ -14,7 +14,6 @@
 #define MULTIPLY_SCALAR(a, B) (                                 \
     (!(B).rows() ? (B) : static_cast<Eigen::MatrixXd>(a*B)))
 
-
 namespace affine {
 
 namespace {
@@ -38,8 +37,22 @@ MatrixOperator Add(const Expression& expr) {
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
   for (int i = 1; i < expr.arg_size(); i++) {
     MatrixOperator op_i = BuildMatrixOperator(expr.arg(i));
-    op.A = ADD(op.A, op_i.A);
-    op.B = ADD(op.B, op_i.B);
+    if (!op.A.rows() && !op.B.rows()) {
+      op.A = op_i.A;
+      op.B = op_i.B;
+    } else if (!op_i.A.rows() && !op_i.B.rows()) {
+      // Do nothing
+    } else if (IsMatrixEqual(op.A, op_i.A)) {
+      op.B = ADD(op.B, op_i.B);
+    } else if (IsMatrixEqual(op.B, op_i.B)) {
+      op.A = ADD(op.A, op_i.A);
+    } else {
+      LOG(FATAL) << "Incompatible operators\n"
+                 << "A1:\n" << MatrixDebugString(op_i.A)
+                 << "B1:\n" << MatrixDebugString(op_i.B)
+                 << "A2:\n" << MatrixDebugString(op.A)
+                 << "B2:\n" << MatrixDebugString(op.B);
+    }
     op.C = ADD(op.C, op_i.C);
   }
   return op;
@@ -65,7 +78,7 @@ MatrixOperator Multiply(const Expression& expr) {
 MatrixOperator Negate(const Expression& expr) {
   CHECK_EQ(1, expr.arg_size());
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
-  op.A = MULTIPLY_SCALAR(-1, op.A);
+  op.B = MULTIPLY_SCALAR(-1, op.B);
   op.C = MULTIPLY_SCALAR(-1, op.C);
   return op;
 }

@@ -26,7 +26,7 @@ SparseXd SparseIdentity(int n);
 
 bool IsDiagonal(const SparseXd& A);
 bool IsScalarMatrix(const SparseXd& A, double* alpha);
-bool IsEqualMatrix(const MatrixXd& A, const MatrixXd& B);
+bool IsMatrixEqual(const MatrixXd& A, const MatrixXd& B);
 
 // Row and column norms of sparse matrices
 VectorXd RowNorm(const SparseXd& A);

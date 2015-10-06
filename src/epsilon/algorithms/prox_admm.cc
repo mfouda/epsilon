@@ -68,15 +68,11 @@ void ProxADMMSolver::InitConstraints() {
     VariableOffsetMap empty_var_map;
     SplitExpressionIterator iter(constr.arg(0));
     for (; !iter.done(); iter.NextValue()) {
-      // This is kind of a hack, we always get the rightmost leaf in case of
-      // multiplying by constants
-      const Expression& leaf = GetRightmostLeaf(iter.leaf());
-
-      if (leaf.expression_type() == Expression::VARIABLE) {
-        info.exprs_by_var[leaf.variable().variable_id()].push_back(
+      if (iter.leaf().expression_type() == Expression::VARIABLE) {
+        info.exprs_by_var[iter.leaf().variable().variable_id()].push_back(
             iter.chain());
       } else {
-        CHECK_EQ(leaf.expression_type(), Expression::CONSTANT);
+        CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
         BuildAffineOperator(iter.chain(), empty_var_map, nullptr, &bi);
       }
     }
@@ -138,16 +134,18 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
           expression::Add(iter->second));
       CHECK(op.C.isZero());
 
-      VLOG(1) << "MatrixOp Debug, "
-              << "A:\n" << MatrixDebugString(op.A) << "\n"
+      VLOG(2) << expression::Add(iter->second).DebugString();
+      VLOG(2) << "Matrix Op:\n"
+              << "A:\n" << MatrixDebugString(op.A)
               << "B:\n" << MatrixDebugString(op.B);
+
 
       if (!A.rows() && !B.rows()) {
         A = op.A;
         B = op.B;
       } else {
-        const bool A_equal = IsEqualMatrix(op.A, A);
-        const bool B_equal = IsEqualMatrix(op.B, B);
+        const bool A_equal = IsMatrixEqual(op.A, A);
+        const bool B_equal = IsMatrixEqual(op.B, B);
 
         if (A_equal && B_equal) {
           // No change
@@ -158,7 +156,11 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
           A = VStack(A, op.A);
           LOG(FATAL) << "Not implemented";
         } else {
-          LOG(FATAL) << "Incompatible matrix constraints";
+          LOG(FATAL) << "Incompatible matrix constraints\n"
+                     << "A1: " << MatrixDebugString(A) << "\n"
+                     << "B1: " << MatrixDebugString(B) << "\n"
+                     << "A2: " << MatrixDebugString(op.A) << "\n"
+                     << "B2: " << MatrixDebugString(op.B);
         }
       }
 

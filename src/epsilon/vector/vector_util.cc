@@ -208,7 +208,7 @@ Eigen::MatrixXd ToMatrix(const Eigen::VectorXd& a, int m, int n) {
   return Eigen::Map<const Eigen::MatrixXd>(a.data(), m, n);
 }
 
-bool IsEqualMatrix(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
+bool IsMatrixEqual(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
   return (A.rows() == B.rows() &&
           A.cols() == B.cols() &&
           A == B);

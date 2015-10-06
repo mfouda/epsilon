@@ -21,6 +21,6 @@ def create(m, n, k):
     Theta = cp.Variable(n,k)
     XT = cp.Variable(m,k)
     f = sum([quantile_loss(XT[:,i] - y, alphas[i]) for i in xrange(k)])
-    C = [XT == X*Theta]
-    #XT[:,:-1] - XT[:,1:] >= 0]
+    C = [XT == X*Theta,
+         XT[:,:-1] - XT[:,1:] >= 0]
     return cp.Problem(cp.Minimize(f), C)

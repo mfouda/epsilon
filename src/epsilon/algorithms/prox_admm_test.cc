@@ -51,8 +51,8 @@ class ProxADMMSolverTest : public testing::Test {
                   expression::Negate(TestConstant(bi))), 2), 2);
       f.mutable_proximal_operator()->set_name("LeastSquaresProx");
 
-      *A = Stack(*A, Ai);
-      *b = Stack(*b, bi);
+      *A = VStack(*A, Ai);
+      *b = VStack(*b, bi);
       xs.push_back(x);
       fs.push_back(f);
     }
