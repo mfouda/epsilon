@@ -81,7 +81,7 @@ void ProxADMMSolver::InitConstraints() {
       }
     }
 
-    b_ = Stack(b_, bi.AsDense());
+    b_ = VStack(b_, bi.AsDense());
     constraints_.push_back(info);
   }
   m_ = b_.size();
@@ -126,37 +126,57 @@ void ProxADMMSolver::InitLeastSquares(const Expression& var_expr) {
   OperatorInfo info;
   info.linearized = false;
 
-  // TODO(mwytock): This handles constraints of the form AXB and assumes that
-  // (Ai,Bi) are equal across all constraints which simplifies things
-  // considerably. Need to generalize this to other cases.
-  std::vector<Expression> exprs;
-  for (const ConstraintInfo& constraint : constraints_) {
-    auto iter = constraint.exprs_by_var.find(var_id);
-    if (iter == constraint.exprs_by_var.end())
-      continue;
-    exprs.insert(exprs.begin(), iter->second.begin(), iter->second.end());
-  }
-
-  affine::MatrixOperator op = affine::BuildMatrixOperator(
-      expression::Add(exprs));
-  CHECK(op.C.isZero());
-  VLOG(1) << "InitLeastSquares, "
-          << "A:\n" << MatrixDebugString(op.A) << "\n"
-          << "B:\n" << MatrixDebugString(op.B);
-
-  info.B = SparseXd(op.A.rows()*op.B.cols(), m_);
+  Eigen::MatrixXd A, B;
   int i = 0;
+  int j = 0;
+  std::vector<Eigen::Triplet<double> >  C_coeffs;
   for (const ConstraintInfo& constraint : constraints_) {
     auto iter = constraint.exprs_by_var.find(var_id);
     if (iter != constraint.exprs_by_var.end()) {
-      CHECK_EQ(constraint.mi, op.A.rows()*op.B.cols());
-      info.B.middleCols(i, constraint.mi) = -SparseIdentity(constraint.mi);
+
+      affine::MatrixOperator op = affine::BuildMatrixOperator(
+          expression::Add(iter->second));
+      CHECK(op.C.isZero());
+
+      VLOG(1) << "MatrixOp Debug, "
+              << "A:\n" << MatrixDebugString(op.A) << "\n"
+              << "B:\n" << MatrixDebugString(op.B);
+
+      if (!A.rows() && !B.rows()) {
+        A = op.A;
+        B = op.B;
+      } else {
+        const bool A_equal = IsEqualMatrix(op.A, A);
+        const bool B_equal = IsEqualMatrix(op.B, B);
+
+        if (A_equal && B_equal) {
+          // No change
+          LOG(FATAL) << "Not implemented";
+        } else if (A_equal) {
+          B = HStack(B, op.B);
+        } else if (B_equal) {
+          A = VStack(A, op.A);
+          LOG(FATAL) << "Not implemented";
+        } else {
+          LOG(FATAL) << "Incompatible matrix constraints";
+        }
+      }
+
+      AppendBlockTriplets(-SparseIdentity(constraint.mi), i, j, &C_coeffs);
+      i += constraint.mi;
     }
-    i += constraint.mi;
+
+    j += constraint.mi;
   }
 
+  VLOG(1) << "InitLeastSquares, "
+          << "A:\n" << MatrixDebugString(A) << "\n"
+          << "B:\n" << MatrixDebugString(B);
+
+  info.B = SparseXd(A.rows()*B.cols(), m_);
+  info.B.setFromTriplets(C_coeffs.begin(), C_coeffs.end());
   info.op = std::unique_ptr<VectorOperator>(
-      new MatrixLeastSquaresOperator(op.A, op.B));
+      new MatrixLeastSquaresOperator(A, B));
   info.op->Init();
 
   VariableOffsetMap var_map;

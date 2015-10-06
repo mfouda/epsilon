@@ -67,13 +67,23 @@ VectorXd ColNorm(const SparseXd& A) {
       .array().sqrt();
 }
 
-MatrixXd Stack(const MatrixXd& A, const MatrixXd& B) {
+MatrixXd VStack(const MatrixXd& A, const MatrixXd& B) {
   MatrixXd X(A.rows() + B.rows(), B.cols());
   if (A.rows() > 0) {
     CHECK_EQ(A.cols(), B.cols());
     X.topRows(A.rows()) = A;
   }
   X.bottomRows(B.rows()) = B;
+  return X;
+}
+
+MatrixXd HStack(const MatrixXd& A, const MatrixXd& B) {
+  MatrixXd X(A.rows(), A.cols() + B.cols());
+  if (A.cols() > 0) {
+    CHECK_EQ(A.rows(), B.rows());
+    X.leftCols(A.cols()) = A;
+  }
+  X.rightCols(B.cols()) = B;
   return X;
 }
 
@@ -196,4 +206,22 @@ Eigen::VectorXd ToVector(const Eigen::MatrixXd& A) {
 Eigen::MatrixXd ToMatrix(const Eigen::VectorXd& a, int m, int n) {
   CHECK_EQ(a.size(), m*n);
   return Eigen::Map<const Eigen::MatrixXd>(a.data(), m, n);
+}
+
+bool IsEqualMatrix(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
+  return (A.rows() == B.rows() &&
+          A.cols() == B.cols() &&
+          A == B);
+}
+
+void AppendBlockTriplets(
+    const SparseXd& A, int i_offset, int j_offset,
+    std::vector<Eigen::Triplet<double> >* coeffs) {
+  for (int k = 0; k < A.outerSize(); k++) {
+    for (SparseXd::InnerIterator iter(A, k); iter; ++iter) {
+      coeffs->push_back(
+          Eigen::Triplet<double>(i_offset+iter.row(), j_offset+iter.col(),
+                                 iter.value()));
+    }
+  }
 }

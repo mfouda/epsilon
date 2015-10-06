@@ -70,6 +70,27 @@ MatrixOperator Negate(const Expression& expr) {
   return op;
 }
 
+MatrixOperator Index(const Expression& expr) {
+  CHECK_EQ(1, expr.arg_size());
+  MatrixOperator op = BuildMatrixOperator(expr.arg(0));
+
+  CHECK_EQ(expr.key_size(), 2);
+  CHECK_EQ(expr.key(0).step(), 1);
+  CHECK_EQ(expr.key(1).step(), 1);
+  const int m = expr.key(0).stop() - expr.key(0).start();
+  const int n = expr.key(1).stop() - expr.key(1).start();
+
+  if (op.A.rows() && op.B.rows()) {
+    op.A = op.A.middleRows(expr.key(0).start(), m).eval();
+    op.B = op.B.middleCols(expr.key(1).start(), n).eval();
+  }
+  if (op.C.rows()) {
+    op.C = op.C.block(expr.key(0).start(), m, expr.key(1).start(), n).eval();
+  }
+
+  return op;
+}
+
 MatrixOperator Variable(const Expression& expr) {
   const int m = GetDimension(expr, 0);
   const int n = GetDimension(expr, 1);
@@ -91,10 +112,11 @@ typedef MatrixOperator(*AffineMatrixFunction)(
     const Expression& expr);
 std::unordered_map<int, AffineMatrixFunction> kAffineMatrixFunctions = {
   {Expression::ADD, &Add},
+  {Expression::CONSTANT, &Constant},
+  {Expression::INDEX, &Index},
   {Expression::MULTIPLY, &Multiply},
   {Expression::NEGATE, &Negate},
   {Expression::VARIABLE, &Variable},
-  {Expression::CONSTANT, &Constant},
 };
 
 MatrixOperator BuildMatrixOperator(const Expression& expr) {
@@ -104,7 +126,16 @@ MatrixOperator BuildMatrixOperator(const Expression& expr) {
     LOG(FATAL) << "No affine matrix function for "
                << Expression::Type_Name(expr.expression_type());
   }
-  return iter->second(expr);
+
+  if (VLOG_IS_ON(2)) {
+    MatrixOperator op = iter->second(expr);
+    VLOG(2) << "BuildMatrixOperator returning\n"
+            << "A:\n" << MatrixDebugString(op.A)
+            << "B:\n" << MatrixDebugString(op.B);
+    return op;
+  } else {
+    return iter->second(expr);
+  }
 }
 
 }  // namespace affine
