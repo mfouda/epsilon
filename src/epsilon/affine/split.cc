@@ -13,10 +13,10 @@ int ArgIndex(const Expression& expr) {
   return 0;
 }
 
-void ComputeStackOffset(int index, int dim, xExpression* stack) {
+int ComputeStackOffset(const Expression& stack, int index, int dim) {
   int offset = 0;
   for (int i = 0; i < index; i++)
-    offset += stack->arg(i).size().dim(i);
+    offset += stack.arg(i).size().dim(dim);
   return offset;
 }
 
@@ -72,7 +72,7 @@ void SplitExpressionIterator::FillChain() {
   chain_.CopyFrom(*stack_[0].first);
   Expression* e = &chain_;
   for (int i = 1; i < stack_.size(); i++) {
-    if (e->expression_type() == Expression::MULTIPLY ||
+     if (e->expression_type() == Expression::MULTIPLY ||
         e->expression_type() == Expression::MULTIPLY_ELEMENTWISE) {
       e = e->mutable_arg(ArgIndex(*e));
     } else {
@@ -80,6 +80,7 @@ void SplitExpressionIterator::FillChain() {
           e->expression_type() == Expression::HSTACK) {
         e->mutable_stack_params()->set_offset(
             ComputeStackOffset(
+                *e, stack_[i-1].second,
                 e->expression_type() == Expression::VSTACK ? 0 : 1));
       }
       e->clear_arg();

@@ -152,7 +152,7 @@ message Expression {
   // HSTACK/VSTACK
   message StackParams {
     // Used when we split a *STACK() operator
-    int offset = 1;
+    int32 offset = 1;
   }
   StackParams stack_params = 15;
 }
