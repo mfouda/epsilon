@@ -204,11 +204,31 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
   const int n = var_map.n();
 
   info.V = GetProjection(var_map_, var_map);
-  info.Ai = DynamicMatrix::Zero(m_, n);
-  BuildAffineOperator(constr_expr_, var_map, &info.Ai, nullptr);
-  CHECK(info.Ai.is_sparse());
-  const SparseXd& Ai = info.Ai.sparse();
+  {
+    // Build Ai
+    std::vector<Eigen::Triplet<double> > Ai_coeffs;
+    int i = 0;
+    for (const ConstraintInfo& constraint : constraints_) {
+      DynamicMatrix Aik = DynamicMatrix::Zero(constraint.mi, n);
+      for (const Expression* var_expr : vars) {
+        auto iter = constraint.exprs_by_var.find(var_expr->variable().variable_id());
+        if (iter == constraint.exprs_by_var.end())
+          continue;
 
+        for (const Expression& expr : iter->second)
+          BuildAffineOperator(expr, var_map, &Aik, nullptr);
+      }
+      CHECK(Aik.is_sparse());
+      AppendBlockTriplets(Aik.sparse(), i, 0, &Ai_coeffs);
+      i += constraint.mi;
+    }
+    info.Ai = DynamicMatrix::FromSparse(BuildSparseMatrix(m_, n, Ai_coeffs));
+  }
+  LOG(INFO) << "New:\n" << SparseMatrixDebugString(info.Ai.sparse());
+
+
+
+  const SparseXd& Ai = info.Ai.sparse();
   SparseXd ATA = Ai.transpose()*Ai;
   VLOG(1) << "InitProxOperator " << expr.proximal_operator().name()
           << ", ATA:\n" << SparseMatrixDebugString(ATA);

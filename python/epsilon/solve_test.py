@@ -61,7 +61,7 @@ def solve_problem(problem_instance):
     obj1 = problem.objective.value
 
     # A lower objective is okay
-    assert obj1 <= obj0 + 1e-2*abs(obj0) + 1e-4
+    assert obj1 <= obj0 + 1e-2*abs(obj0) + 1e-4, "%.2e vs. %.2e" % (obj1, obj0)
 
 def test_solve():
     for problem in PROBLEMS:
