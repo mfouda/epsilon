@@ -83,10 +83,10 @@ MatrixOperator Negate(const Expression& expr) {
   CHECK_EQ(1, expr.arg_size());
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
   if (!op.A.isZero() && !op.B.isZero()) {
-    if (op.B.isIdentity())
-      op.A *= -1;
-    else
+    if (op.A.isIdentity())
       op.B *= -1;
+    else
+      op.A *= -1;
   }
 
   if (!op.C.isZero())

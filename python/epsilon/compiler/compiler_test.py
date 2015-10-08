@@ -25,7 +25,7 @@ def prox_ops(problem):
 def test_basis_pursuit():
     problem = compiler.compile(cvxpy_expr.convert_problem(
         basis_pursuit.create(m=10, n=30))[0])
-    assert_items_equal(prox_ops(problem), ["NormL1Prox", "LinearEqualityProx"])
+    assert_items_equal(prox_ops(problem), ["NormL1Prox", "LinearEqualityMatrixProx"])
     assert_equal(1, len(problem.constraint))
 
 def test_least_abs_deviations():

@@ -19,6 +19,8 @@ def create(m, n, k):
     X = np.exp(-(mu_rbf.T - x).T**2/(2*mu_sig**2))
 
     Theta = cp.Variable(n,k)
-    f = sum([quantile_loss(X*Theta[:,i] - y, alphas[i]) for i in xrange(k)])
-    C = [X*(Theta[:,:-1] - Theta[:,1:]) >= 0]
+    XT = cp.Variable(m,k)
+    f = sum([quantile_loss(XT[:,i] - y, alphas[i]) for i in xrange(k)])
+    C = [XT == X*Theta,
+         XT[:,:-1] - XT[:,1:] >= 0]
     return cp.Problem(cp.Minimize(f), C)

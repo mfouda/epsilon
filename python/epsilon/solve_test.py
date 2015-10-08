@@ -43,12 +43,9 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
 ]
 
 def solve_problem(problem_instance):
@@ -65,7 +62,6 @@ def solve_problem(problem_instance):
 
     # A lower objective is okay
     assert obj1 <= obj0 + 1e-2*abs(obj0) + 1e-4
-    assert False
 
 def test_solve():
     for problem in PROBLEMS:
