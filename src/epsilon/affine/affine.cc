@@ -191,7 +191,7 @@ void BuildAffineOperatorImpl(
     }
     BuildAffineOperatorImpl(expr.arg(expr.arg_size() - 1), offset_map, L, A, b);
   } else if (expr.expression_type() == Expression::HSTACK) {
-    int offset = expr.stack_params().offset();
+    int offset = expr.stack_params().offset() * GetDimension(expr, 0);
     for (const Expression& arg : expr.arg()) {
       int mi = GetDimension(arg);
       BuildAffineOperatorImpl(

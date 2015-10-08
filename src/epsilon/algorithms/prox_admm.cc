@@ -216,11 +216,8 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
         if (iter == constraint.exprs_by_var.end())
           continue;
 
-        for (const Expression& expr : iter->second) {
-          LOG(INFO) << "Building:\n" << expr.DebugString();
+        for (const Expression& expr : iter->second)
           BuildAffineOperator(expr, var_map, &Aik, nullptr);
-          LOG(INFO) << Aik.DebugString();
-        }
       }
       CHECK(Aik.is_sparse());
       AppendBlockTriplets(Aik.sparse(), i, 0, &Ai_coeffs);
@@ -228,14 +225,6 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     }
     info.Ai = DynamicMatrix::FromSparse(BuildSparseMatrix(m_, n, Ai_coeffs));
   }
-  LOG(INFO) << "New:\n" << info.Ai.DebugString();
-
-
-  DynamicMatrix old_Ai = DynamicMatrix::Zero(m_, n);
-  BuildAffineOperator(constr_expr_, var_map, &old_Ai, nullptr);
-  LOG(INFO) << "Old:\n" << old_Ai.DebugString();
-
-
   const SparseXd& Ai = info.Ai.sparse();
   SparseXd ATA = Ai.transpose()*Ai;
   VLOG(1) << "InitProxOperator " << expr.proximal_operator().name()
