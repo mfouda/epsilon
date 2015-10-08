@@ -12,6 +12,7 @@ PROX_TRIALS = 10
 # Common variable
 n = 10
 x = cp.Variable(n)
+X = cp.Variable(3,3)
 t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
@@ -125,6 +126,7 @@ PROX_TESTS = [
     Prox("LinearProx", lambda: randn(n).T*x),
     Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
+    Prox("NegativeLogDetProx", lambda: -cp.log_det(X)),
     Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
     Prox("NonNegativeProx", None, C_non_negative_scaled),
     Prox("NonNegativeProx", None, lambda: [x >= 0]),

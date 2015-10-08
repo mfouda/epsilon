@@ -23,6 +23,7 @@ class NegativeLogDetProx final : public ProxOperator {
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
     Eigen::MatrixXd V = ToMatrix(v, n_, n_);
+    V = (V + V.transpose())/2;
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(V);
     CHECK_EQ(solver.info(), Eigen::Success);
     const Eigen::VectorXd& d = solver.eigenvalues();
