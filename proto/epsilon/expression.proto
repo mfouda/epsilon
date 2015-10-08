@@ -148,6 +148,13 @@ message Expression {
     double m = 4;
   }
   ScaledZoneParams scaled_zone_params = 14;
+
+  // HSTACK/VSTACK
+  message StackParams {
+    // Used when we split a *STACK() operator
+    int offset = 1;
+  }
+  StackParams stack_params = 15;
 }
 
 // Arbitrary convex problem of the form

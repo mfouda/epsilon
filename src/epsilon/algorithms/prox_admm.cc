@@ -209,14 +209,18 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     std::vector<Eigen::Triplet<double> > Ai_coeffs;
     int i = 0;
     for (const ConstraintInfo& constraint : constraints_) {
+
       DynamicMatrix Aik = DynamicMatrix::Zero(constraint.mi, n);
       for (const Expression* var_expr : vars) {
         auto iter = constraint.exprs_by_var.find(var_expr->variable().variable_id());
         if (iter == constraint.exprs_by_var.end())
           continue;
 
-        for (const Expression& expr : iter->second)
+        for (const Expression& expr : iter->second) {
+          LOG(INFO) << "Building:\n" << expr.DebugString();
           BuildAffineOperator(expr, var_map, &Aik, nullptr);
+          LOG(INFO) << Aik.DebugString();
+        }
       }
       CHECK(Aik.is_sparse());
       AppendBlockTriplets(Aik.sparse(), i, 0, &Ai_coeffs);

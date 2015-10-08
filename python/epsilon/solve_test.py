@@ -48,6 +48,11 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
+]
+
+
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 
