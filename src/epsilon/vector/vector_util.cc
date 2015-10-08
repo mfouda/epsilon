@@ -225,3 +225,10 @@ void AppendBlockTriplets(
     }
   }
 }
+
+SparseXd BuildSparseMatrix(
+    int m, int n, const std::vector<Eigen::Triplet<double>>& coeffs) {
+  SparseXd A(m, n);
+  A.setFromTriplets(coeffs.begin(), coeffs.end());
+  return A;
+}

@@ -109,15 +109,28 @@ TEST(BuildAffineOperator, HStack) {
       Eigen::VectorXd::Zero(m*n*2));
 }
 
+TEST(BuildAffineOperator, HStack_Offset) {
+  const int m = 3;
+  const int n = 2;
+
+  Expression hstack = expression::HStack({expression::Variable(m, n, "y")});
+  hstack.mutable_stack_params()->set_offset(2);
+  *hstack.mutable_size() = CreateSize(3, 4);
+
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(m*n*2, m*n);
+  A.block(m*n, 0, m*n, m*n) = Eigen::MatrixXd::Identity(m*n, m*n);
+  TestBuildAffineOperator(hstack, A, Eigen::VectorXd::Zero(m*n*2));
+}
+
 TEST(BuildAffineOperator, VStack) {
   const int m = 3;
   const int n = 2;
 
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(m*n*2, m*n*2);
-  A.block(0, 0, 3, 3) = Eigen::MatrixXd::Identity(3,3);
-  A.block(6, 3, 3, 3) = Eigen::MatrixXd::Identity(3,3);
-  A.block(3, 6, 3, 3) = Eigen::MatrixXd::Identity(3,3);
-  A.block(9, 9, 3, 3) = Eigen::MatrixXd::Identity(3,3);
+  A.block(0, 0, m, m) = Eigen::MatrixXd::Identity(3,3);
+  A.block(m*n, m, m, m) = Eigen::MatrixXd::Identity(3,3);
+  A.block(m, m*n, m, m) = Eigen::MatrixXd::Identity(3,3);
+  A.block(m*m, m*m, m, m) = Eigen::MatrixXd::Identity(3,3);
 
   TestBuildAffineOperator(
       expression::VStack({
@@ -125,6 +138,21 @@ TEST(BuildAffineOperator, VStack) {
           expression::Variable(m, n, "y")}),
       A, Eigen::VectorXd::Zero(m*n*2));
 }
+
+TEST(BuildAffineOperator, VStack_Offset) {
+  const int m = 3;
+  const int n = 2;
+
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(m*n*2, m*n);
+  A.block(m, 0, m, m) = Eigen::MatrixXd::Identity(m,m);
+  A.block(m*m, m, m, m) = Eigen::MatrixXd::Identity(m,m);
+
+  Expression vstack = expression::VStack({expression::Variable(m, n, "y")});
+  vstack.mutable_stack_params()->set_offset(3);
+  *vstack.mutable_size() = CreateSize(6, 2);
+  TestBuildAffineOperator(vstack, A, Eigen::VectorXd::Zero(m*n*2));
+}
+
 
 TEST(GetProjection, Basic) {
   VariableOffsetMap a;
