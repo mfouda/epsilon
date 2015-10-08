@@ -147,6 +147,9 @@ EXPRESSION_RULES = [
      lambda e: (e.arg[0].expression_type == Expression.SUM and
                 e.arg[0].arg[0].expression_type == Expression.LOG and
                 e.arg[0].arg[0].arg[0].curvature.elementwise)),
+    ("NegativeLogDet", Expression.NEGATE,
+     lambda e: (e.arg[0].expression_type == Expression.LOG_DET and
+                e.arg[0].arg[0].curvature.scalar_multiple)),
     ("NormL1", Expression.NORM_P,
      lambda e: (e.p == 1 and e.arg[0].curvature.scalar_multiple)),
     ("NormL1Asymmetric", Expression.SUM, is_norm_l1_asymmetric),
