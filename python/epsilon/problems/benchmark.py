@@ -61,9 +61,9 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
 ]
 
 COLUMNS = [
