@@ -38,3 +38,12 @@ def compute_variable_curvature(expr):
                 scalar_multiple=c.scalar_multiple and d.scalar_multiple)
 
     return retval
+
+def expr_vars(expr):
+    if expr.expression_type == Expression.VARIABLE:
+        return {expr.variable.variable_id}
+
+    retval = set()
+    for arg in expr.arg:
+        retval |= expr_vars(arg)
+    return retval

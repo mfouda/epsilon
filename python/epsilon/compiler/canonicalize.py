@@ -16,7 +16,7 @@ from epsilon import error
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
 from epsilon.expression_str import expr_str
-from epsilon.expression_util import fp_expr
+from epsilon.expression_util import fp_expr, expr_vars
 from epsilon.util import prod
 
 class CanonicalizeError(error.ExpressionError):
@@ -420,7 +420,41 @@ def prox_epigraph_atomic(expr):
         expr.proximal_operator.name = name + "Epigraph"
         yield expr
 
-def prox_equality_constraint(expr):
+def prox_linear_equality_graph(expr):
+    if not (expr.expression_type == Expression.INDICATOR and
+            expr.cone.cone_type == Cone.ZERO and
+            len(expr.arg) == 1 and
+            expr.arg[0].expression_type == Expression.ADD and
+            len(expr.arg[0].arg) == 2):
+        return
+
+    for i, arg in enumerate(expr.arg[0].arg):
+        if (arg.expression_type == Expression.VARIABLE or
+            (arg.expression_type == Expression.NEGATE and
+             arg.arg[0].expression_type == Expression.VARIABLE)):
+            break
+    else:
+        return
+
+    AX_expr = expr.arg[0].arg[1-i]
+    if (len(expr_vars(AX_expr)) != 1 or
+        AX_expr.curvature.curvature_type != Curvature.AFFINE):
+        return
+
+    expr.proximal_operator.name = "LinearEqualityGraphProx"
+    yield expr
+
+def prox_linear_equality_matrix(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.ZERO and
+        len(expr.arg) == 1 and
+        expr.arg[0].curvature.curvature_type == Curvature.AFFINE and
+        len(expr_vars(expr)) == 1):
+
+        expr.proximal_operator.name = "LinearEqualityMatrixProx"
+        yield expr
+
+def prox_linear_equality(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO):
 

@@ -5,35 +5,52 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/dynamic_matrix.h"
 
-// I(Ax == b)
+// I(Y == AX + B) or I(Y == XA + B)
 // Expression tree:
 // INDICATOR (cone: ZERO)
-//   AFFINE (Ax - b)
-
-class LinearEqualityProx final : public ProxOperator {
+//   ADD
+//     AFFINE (AX + B or XA + B)
+//     VARIABLE (Y)
+class LinearEqualityGraphProx final : public ProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
-    graph_form_ = InitGraph(arg);
-    if (graph_form_)
-      return;
-
-    matrix_form_ = InitMatrix(arg);
-    if (matrix_form_)
-      return;
-
-    InitGeneric(arg);
+    CHECK(InitGraph(arg));
   }
 
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    if (graph_form_)
-      return ApplyGraph(v);
-    if (matrix_form_)
-      return ApplyMatrix(v);
-    return ApplyGeneric(v);
+  Eigen::VectorXd Apply(const Eigen::VectorXd& vu) override {
+    Eigen::MatrixXd V = ToMatrix(vu.segment(X_index_, X_m_*X_n_), X_m_, X_n_);
+    Eigen::MatrixXd U = ToMatrix(vu.segment(Y_index_, Y_m_*Y_n_), Y_m_, Y_n_);
+
+    Eigen::MatrixXd X, Y;
+    if (const_lhs_) {
+      if (A_.rows() <= A_.cols()) {
+        Eigen::MatrixXd Z = llt_solver_.solve(A_*V - U + B_);
+        X = V - A_.transpose()*Z;
+        Y = U + Z;
+      } else {
+        X = llt_solver_.solve(V + A_.transpose()*(U - B_));
+        Y = A_*X + B_;
+      }
+    } else {
+      if (A_.rows() <= A_.cols()) {
+        X = llt_solver_.solve(
+            A_*((U - B_).transpose()) + V.transpose()).transpose();
+        Y = X*A_ + B_;
+      } else {
+        Eigen::MatrixXd Z = llt_solver_.solve(
+            (V*A_ - U + B_).transpose()).transpose();
+        X = V - Z*A_.transpose();
+        Y = U + Z;
+      }
+    }
+
+    Eigen::VectorXd xy(X_m_*X_n_ + Y_m_*Y_n_);
+    xy.segment(X_index_, X_m_*X_n_) = ToVector(X);
+    xy.segment(Y_index_, Y_m_*Y_n_) = ToVector(Y);
+    return xy;
   }
 
 private:
-  // I(Y == AX + BY) or I(Y == XA + B)
   bool InitGraph(const ProxOperatorArg& arg) {
     CHECK_EQ(1, arg.f_expr().arg_size());
     if (arg.f_expr().arg(0).expression_type() != Expression::ADD ||
@@ -116,7 +133,38 @@ private:
     return true;
   }
 
-  // I(AX + B == 0) or I(XA + B == 0)
+  bool const_lhs_;
+
+  // For graph optimized methods
+  int X_index_, X_m_, X_n_;
+  int Y_index_, Y_m_, Y_n_;
+
+  // Common across all methods use these
+  Eigen::MatrixXd A_;
+  Eigen::MatrixXd B_;
+  Eigen::LLT<Eigen::MatrixXd> llt_solver_;
+};
+REGISTER_PROX_OPERATOR(LinearEqualityGraphProx);
+
+// I(AX + B == 0) or I(XA + B == 0)
+// Expression tree:
+// INDICATOR (cone: ZERO)
+//   AFFINE (AX + B or XA + B)
+class LinearEqualityMatrixProx final : public ProxOperator {
+public:
+  void Init(const ProxOperatorArg& arg) override {
+    CHECK(InitMatrix(arg));
+  }
+
+  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+    Eigen::MatrixXd V = ToMatrix(v, X_m_, X_n_);
+    if (!const_lhs_) V.transposeInPlace();
+    Eigen::MatrixXd X = V - svd_solver_.solve(A_*V + B_);
+    if (!const_lhs_) X.transposeInPlace();
+    return ToVector(X);
+  }
+
+private:
   bool InitMatrix(const ProxOperatorArg& arg) {
     CHECK_EQ(1, arg.f_expr().arg_size());
     const Expression* AX = &arg.f_expr().arg(0);
@@ -147,8 +195,22 @@ private:
     return true;
   }
 
-  // I(Ax + b == 0)
-  void InitGeneric(const ProxOperatorArg& arg) {
+  bool const_lhs_;
+  int X_m_, X_n_;
+
+  Eigen::MatrixXd A_;
+  Eigen::MatrixXd B_;
+  Eigen::JacobiSVD<Eigen::MatrixXd> svd_solver_;
+};
+REGISTER_PROX_OPERATOR(LinearEqualityMatrixProx);
+
+// I(Ax + b == 0)
+// Expression tree:
+// INDICATOR (cone: ZERO)
+//   AFFINE (AX + B or XA + B)
+class LinearEqualityProx final : public ProxOperator {
+public:
+  void Init(const ProxOperatorArg& arg) override {
     CHECK_EQ(1, arg.f_expr().arg_size());
     const int m = GetDimension(arg.f_expr().arg(0));
     const int n = arg.var_map().n();
@@ -157,66 +219,17 @@ private:
     BuildAffineOperator(arg.f_expr().arg(0), arg.var_map(), &A, &b);
 
     A_ = A.AsDense();
-    B_ = b.AsDense();
+    b_ = b.AsDense();
     svd_solver_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
   }
 
-  Eigen::VectorXd ApplyGraph(const Eigen::VectorXd& vu) {
-    Eigen::MatrixXd V = ToMatrix(vu.segment(X_index_, X_m_*X_n_), X_m_, X_n_);
-    Eigen::MatrixXd U = ToMatrix(vu.segment(Y_index_, Y_m_*Y_n_), Y_m_, Y_n_);
-
-    Eigen::MatrixXd X, Y;
-    if (const_lhs_) {
-      if (A_.rows() <= A_.cols()) {
-        Eigen::MatrixXd Z = llt_solver_.solve(A_*V - U + B_);
-        X = V - A_.transpose()*Z;
-        Y = U + Z;
-      } else {
-        X = llt_solver_.solve(V + A_.transpose()*(U - B_));
-        Y = A_*X + B_;
-      }
-    } else {
-      if (A_.rows() <= A_.cols()) {
-        X = llt_solver_.solve(
-            A_*((U - B_).transpose()) + V.transpose()).transpose();
-        Y = X*A_ + B_;
-      } else {
-        Eigen::MatrixXd Z = llt_solver_.solve(
-            (V*A_ - U + B_).transpose()).transpose();
-        X = V - Z*A_.transpose();
-        Y = U + Z;
-      }
-    }
-
-    Eigen::VectorXd xy(X_m_*X_n_ + Y_m_*Y_n_);
-    xy.segment(X_index_, X_m_*X_n_) = ToVector(X);
-    xy.segment(Y_index_, Y_m_*Y_n_) = ToVector(Y);
-    return xy;
+  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+    return v - svd_solver_.solve(A_*v + b_);
   }
 
-  Eigen::VectorXd ApplyMatrix(const Eigen::VectorXd& v) {
-    Eigen::MatrixXd V = ToMatrix(v, X_m_, X_n_);
-    if (!const_lhs_) V.transposeInPlace();
-    Eigen::MatrixXd X = V - svd_solver_.solve(A_*V + B_);
-    if (!const_lhs_) X.transposeInPlace();
-    return ToVector(X);
-  }
-
-  Eigen::VectorXd ApplyGeneric(const Eigen::VectorXd& v) {
-    return v - svd_solver_.solve(A_*v + B_);
-  }
-
-  // Solver decision tree
-  bool matrix_form_, graph_form_, const_lhs_;
-
-  // For graph optimized methods
-  int X_index_, X_m_, X_n_;
-  int Y_index_, Y_m_, Y_n_;
-
-  // Common across all methods use these
+private:
   Eigen::MatrixXd A_;
-  Eigen::MatrixXd B_;
-  Eigen::LLT<Eigen::MatrixXd> llt_solver_;
+  Eigen::MatrixXd b_;
   Eigen::JacobiSVD<Eigen::MatrixXd> svd_solver_;
 };
 REGISTER_PROX_OPERATOR(LinearEqualityProx);
