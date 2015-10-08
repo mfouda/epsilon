@@ -7,11 +7,12 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # Common variable
 n = 10
 x = cp.Variable(n)
+t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
     def __new__(cls, name, objective, constraint=None):
@@ -34,11 +35,14 @@ def f_hinge():
     return cp.sum_entries(cp.max_elemwise(1-x, 0))
 
 def f_least_squares():
+    m = 20
     A = np.random.randn(m, n)
     b = np.random.randn(m)
     return  cp.sum_squares(A*x  - b)
 
 def f_least_squares_matrix():
+    m = 20
+    k = 3
     A = np.random.randn(m, n)
     B = np.random.randn(m, k)
     X = cp.Variable(n, k)
@@ -83,6 +87,7 @@ def C_linear_equality_graph_rhs(m, n):
     return [Y == X*A + B]
 
 def C_linear_equality_multivariate():
+    m = 5
     A = np.random.randn(m, n)
     b = np.random.randn(m)
     alpha = np.random.randn()
@@ -91,6 +96,7 @@ def C_linear_equality_multivariate():
     return [z - (y - alpha*(A*x - b)) == 0]
 
 def C_linear_equality_multivariate2():
+    m = 5
     A = np.random.randn(m, n)
     y = cp.Variable(m)
     z = cp.Variable(m)

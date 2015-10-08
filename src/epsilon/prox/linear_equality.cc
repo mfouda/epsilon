@@ -149,20 +149,16 @@ private:
 
   // I(Ax + b == 0)
   void InitGeneric(const ProxOperatorArg& arg) {
-    LOG(FATAL) << "Not implemented";
+    CHECK_EQ(1, arg.f_expr().arg_size());
+    const int m = GetDimension(arg.f_expr().arg(0));
+    const int n = arg.var_map().n();
+    DynamicMatrix A = DynamicMatrix::Zero(m, n);
+    DynamicMatrix b = DynamicMatrix::Zero(m, 1);
+    BuildAffineOperator(arg.f_expr().arg(0), arg.var_map(), &A, &b);
 
-    // const int m = GetDimension(arg.f_expr().arg(0));
-    // const int n = arg.var_map().n();
-    // DynamicMatrix A = DynamicMatrix::Zero(m, n);
-    // DynamicMatrix b = DynamicMatrix::Zero(m, 1);
-    // BuildAffineOperator(arg.f_expr().arg(0), arg.var_map(), &A, &b);
-    // CHECK(m <= n) << "m > n not implemented";
-
-    // VLOG(1) << "Factoring AA', A = " << A.rows() << " x " << A.cols();
-    // A_ = A.AsDense();
-    // b_ = -b.AsDense();
-    // AAT_solver_.compute(A_*A_.transpose());
-    // CHECK_EQ(AAT_solver_.info(), Eigen::Success);
+    A_ = A.AsDense();
+    B_ = b.AsDense();
+    svd_solver_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
   }
 
   Eigen::VectorXd ApplyGraph(const Eigen::VectorXd& vu) {
@@ -207,19 +203,17 @@ private:
   }
 
   Eigen::VectorXd ApplyGeneric(const Eigen::VectorXd& v) {
-    LOG(FATAL) << "Not implemented";
+    return v - svd_solver_.solve(A_*v + B_);
   }
 
   // Solver decision tree
   bool matrix_form_, graph_form_, const_lhs_;
 
-  // For matrix-based methods
+  // For graph optimized methods
   int X_index_, X_m_, X_n_;
   int Y_index_, Y_m_, Y_n_;
 
-  // For generic vector method
-
-  // All methods use these
+  // Common across all methods use these
   Eigen::MatrixXd A_;
   Eigen::MatrixXd B_;
   Eigen::LLT<Eigen::MatrixXd> llt_solver_;
