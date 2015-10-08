@@ -531,9 +531,34 @@ def prox_epigraph(expr):
 
         yield equality_constraint(add(*ti_exprs), t_expr)
 
-# NOTE(mwytock): This sorts rules by order in which theyre defined
-PROX_RULES = [f for name, f in locals().items() if name.startswith("prox_")]
-PROX_RULES.sort()
+PROX_RULES = [
+    prox_multiply_scalar,
+    prox_add,
+    prox_affine,
+    prox_fused_lasso,
+    prox_least_squares,
+    prox_logistic,
+    prox_norm1,
+    prox_norm2,
+    prox_exp,
+    prox_huber,
+    prox_norm12,
+    prox_neg_log_det,
+    prox_negative_log,
+    prox_negative_entropy,
+    prox_hinge,
+    prox_norm_l1_asymmetric,
+    prox_deadzone,
+    prox_norm_l1_asymmetric_single_max,
+    prox_max_elementwise,
+    prox_epigraph_atomic,
+    prox_linear_equality_graph,
+    prox_linear_equality_matrix,
+    prox_linear_equality,
+    prox_non_negative,
+    prox_linear_epigraph,
+    prox_epigraph,
+]
 
 def transform_expr(expr):
     for prox_rule in PROX_RULES:
