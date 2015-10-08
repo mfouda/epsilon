@@ -224,8 +224,12 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
     }
     info.Ai = DynamicMatrix::FromSparse(BuildSparseMatrix(m_, n, Ai_coeffs));
   }
-  LOG(INFO) << "New:\n" << SparseMatrixDebugString(info.Ai.sparse());
+  LOG(INFO) << "New:\n" << info.Ai.DebugString();
 
+
+  DynamicMatrix old_Ai = DynamicMatrix::Zero(m_, n);
+  BuildAffineOperator(constr_expr_, var_map, &old_Ai, nullptr);
+  LOG(INFO) << "Old:\n" << old_Ai.DebugString();
 
 
   const SparseXd& Ai = info.Ai.sparse();
