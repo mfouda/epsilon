@@ -155,7 +155,7 @@ public:
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
     Eigen::MatrixXd V = ToMatrix(v, X_m_, X_n_);
     if (!const_lhs_) V.transposeInPlace();
-    Eigen::MatrixXd X = V - svd_solver_.solve(A_*V + B_);
+    Eigen::MatrixXd X = V - A_.transpose()*llt_solver_.solve(A_*V + B_);
     if (!const_lhs_) X.transposeInPlace();
     return ToVector(X);
   }
@@ -185,7 +185,8 @@ private:
       return false;
     }
 
-    svd_solver_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
+    llt_solver_.compute(A_*A_.transpose());
+    CHECK_EQ(llt_solver_.info(), Eigen::Success);
     X_m_ = GetDimension(*X, 0);
     X_n_ = GetDimension(*X, 1);
     return true;
@@ -196,7 +197,7 @@ private:
 
   Eigen::MatrixXd A_;
   Eigen::MatrixXd B_;
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd_solver_;
+  Eigen::LLT<Eigen::MatrixXd> llt_solver_;
 };
 REGISTER_PROX_OPERATOR(LinearEqualityMatrixProx);
 
@@ -216,16 +217,17 @@ public:
 
     A_ = A.AsDense();
     b_ = b.AsDense();
-    svd_solver_.compute(A_, Eigen::ComputeThinU|Eigen::ComputeThinV);
+    llt_solver_.compute(A_*A_.transpose());
+    CHECK_EQ(llt_solver_.info(), Eigen::Success);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    return v - svd_solver_.solve(A_*v + b_);
+    return v - A_.transpose()*llt_solver_.solve(A_*v + b_);
   }
 
 private:
   Eigen::MatrixXd A_;
   Eigen::MatrixXd b_;
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd_solver_;
+  Eigen::LLT<Eigen::MatrixXd> llt_solver_;
 };
 REGISTER_PROX_OPERATOR(LinearEqualityProx);
