@@ -63,7 +63,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=10)),
 ]
 
 COLUMNS = [
@@ -88,7 +88,7 @@ def run_benchmarks(problems):
             cvxpy_prob.solve(
                 solver=cp.SCS, verbose=args.debug,
                 use_indirect=args.scs_indirect,
-                max_iterations=10000)
+                max_iters=10000)
         elif args.ecos:
             cvxpy_prob.solve(solver=cp.ECOS, verbose=args.debug)
         else:

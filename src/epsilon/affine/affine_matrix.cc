@@ -11,8 +11,6 @@
 // Convenice functions to handle zeros
 #define ADD(A, B) (!(A).rows() ? (B) : (!(B).rows() ? (A) : (A)+(B)))
 #define MULTIPLY(A, B) (!(A).rows() ? (A) : (!(B).rows() ? (B) : (A)*(B)))
-#define MULTIPLY_SCALAR(a, B) (                                 \
-    (!(B).rows() ? (B) : static_cast<Eigen::MatrixXd>(a*B)))
 
 namespace affine {
 
@@ -59,8 +57,6 @@ MatrixOperator Add(const Expression& expr) {
 }
 
 MatrixOperator Multiply(const Expression& expr) {
-  // NOTE(mwytock): Assumes LHS is a constant (this is assumed in CVXPY) but
-  // this could be relaxed.
   CHECK_EQ(2, expr.arg_size());
   CHECK_EQ(GetDimension(expr, 0), GetDimension(expr.arg(0), 0));
   CHECK_EQ(GetDimension(expr, 1), GetDimension(expr.arg(1), 1));
@@ -68,18 +64,34 @@ MatrixOperator Multiply(const Expression& expr) {
 
   MatrixOperator lhs = BuildMatrixOperator(expr.arg(0));
   MatrixOperator rhs = BuildMatrixOperator(expr.arg(1));
-  CHECK(lhs.A.isZero());
-  CHECK(lhs.B.isZero());
-  rhs.A = MULTIPLY(lhs.C, rhs.A);
-  rhs.C = MULTIPLY(lhs.C, rhs.C);
-  return rhs;
+  if (lhs.A.isZero()) {
+    CHECK(lhs.B.isZero());
+    rhs.A = MULTIPLY(lhs.C, rhs.A);
+    rhs.C = MULTIPLY(lhs.C, rhs.C);
+    return rhs;
+  } else if (rhs.A.isZero()) {
+    CHECK(rhs.B.isZero());
+    lhs.B = MULTIPLY(lhs.B, rhs.C);
+    lhs.C = MULTIPLY(lhs.C, rhs.C);
+    return lhs;
+  }
+
+  LOG(FATAL) << "multiplying on both sides";
 }
 
 MatrixOperator Negate(const Expression& expr) {
   CHECK_EQ(1, expr.arg_size());
   MatrixOperator op = BuildMatrixOperator(expr.arg(0));
-  op.B = MULTIPLY_SCALAR(-1, op.B);
-  op.C = MULTIPLY_SCALAR(-1, op.C);
+  if (!op.A.isZero() && !op.B.isZero()) {
+    if (op.B.isIdentity())
+      op.A *= -1;
+    else
+      op.B *= -1;
+  }
+
+  if (!op.C.isZero())
+    op.C *= -1;
+
   return op;
 }
 
@@ -142,9 +154,12 @@ MatrixOperator BuildMatrixOperator(const Expression& expr) {
 
   if (VLOG_IS_ON(2)) {
     MatrixOperator op = iter->second(expr);
-    VLOG(2) << "BuildMatrixOperator returning\n"
+    VLOG(2) << "BuildMatrixOperator "
+            << Expression::Type_Name(expr.expression_type())
+            << " returning\n"
             << "A:\n" << MatrixDebugString(op.A)
-            << "B:\n" << MatrixDebugString(op.B);
+            << "B:\n" << MatrixDebugString(op.B)
+            << "C:\n" << MatrixDebugString(op.C);
     return op;
   } else {
     return iter->second(expr);

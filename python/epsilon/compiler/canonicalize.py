@@ -390,7 +390,13 @@ def prox_norm_l1_asymmetric_single_max(expr):
 
     expr = scaled_zone(arg0, alpha, beta, 0, 0)
     expr.proximal_operator.name = "ScaledZoneProx"
-    yield expr
+
+    arg = expr.arg[0]
+    if arg.curvature.elementwise:
+        yield expr
+    else:
+        for prox_expr in transform_epigraph(expr, arg):
+            yield prox_expr
 
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""

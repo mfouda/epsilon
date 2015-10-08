@@ -7,11 +7,11 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-NUM_TRIALS = 10
+PROX_TRIALS = 1
 
+# Common variable
 n = 10
 x = cp.Variable(n)
-t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
     def __new__(cls, name, objective, constraint=None):
@@ -33,28 +33,109 @@ def f_dead_zone():
 def f_hinge():
     return cp.sum_entries(cp.max_elemwise(1-x, 0))
 
+def f_least_squares():
+    A = np.random.randn(m, n)
+    b = np.random.randn(m)
+    return  cp.sum_squares(A*x  - b)
+
+def f_least_squares_matrix():
+    A = np.random.randn(m, n)
+    B = np.random.randn(m, k)
+    X = cp.Variable(n, k)
+    return cp.sum_squares(A*X  - B)
+
+def C_linear_equality():
+    m = 5
+    A = np.random.randn(m, n)
+    b = A.dot(np.random.randn(n))
+    return [A*x == b]
+
+def C_linear_equality_matrix_lhs():
+    m = 5
+    k = 3
+    A = np.random.randn(m, n)
+    X = cp.Variable(n, k)
+    B = A.dot(np.random.randn(n, k))
+    return [A*X == B]
+
+def C_linear_equality_matrix_rhs():
+    m = 3
+    k = 5
+    A = np.random.randn(k, m)
+    X = cp.Variable(n, k)
+    B = np.random.randn(n, k).dot(A)
+    return [X*A == B]
+
+def C_linear_equality_graph_lhs(m, n):
+    k = 3
+    A = np.random.randn(m, n)
+    B = A.dot(np.random.randn(n,k))
+    X = cp.Variable(n, k)
+    Y = cp.Variable(m, k)
+    return [Y == A*X + B]
+
+def C_linear_equality_graph_rhs(m, n):
+    k = 3
+    A = np.random.randn(m, n)
+    B = np.random.randn(k, m).dot(A)
+    X = cp.Variable(k, m)
+    Y = cp.Variable(k, n)
+    return [Y == X*A + B]
+
+def C_linear_equality_multivariate():
+    A = np.random.randn(m, n)
+    b = np.random.randn(m)
+    alpha = np.random.randn()
+    y = cp.Variable(m)
+    z = cp.Variable(m)
+    return [z - (y - alpha*(A*x - b)) == 0]
+
+def C_linear_equality_multivariate2():
+    A = np.random.randn(m, n)
+    y = cp.Variable(m)
+    z = cp.Variable(m)
+    return [z - (y - (1 - A*x)) == 0]
+
+def C_non_negative_scaled():
+    alpha = np.random.randn()
+    return [alpha*x >= 0]
+
+# Proximal operators
 PROX_TESTS = [
     Prox("DeadZoneProx", f_dead_zone),
     Prox("FusedLassoProx", lambda: cp.tv(x)),
     Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    Prox("LeastSquaresProx", f_least_squares),
+    Prox("LeastSquaresProx", f_least_squares_matrix),
+    Prox("LinearEqualityProx", None, C_linear_equality),
+    Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
+    Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
+    Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
+    Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
     Prox("LinearProx", lambda: randn(n).T*x),
     Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
-    Prox("NonNegativeProx", None, lambda: x >= 0),
+    Prox("NonNegativeProx", None, C_non_negative_scaled),
+    Prox("NonNegativeProx", None, lambda: [x >= 0]),
     Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     Prox("NormL1Prox", lambda: cp.norm1(x)),
     Prox("NormL2Prox", lambda: cp.norm2(x)),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
 ]
 
-EPIGRAPH_TESTS = [
-    Prox("DeadZoneEpigraph", None, lambda: f_dead_zone() <= t),
-    Prox("HingeEpigraph", None, lambda: f_hinge() <= t),
-    Prox("LogisticEpigraph", None, lambda: cp.sum_entries(cp.logistic(x)) <= t),
-    Prox("NormL1AsymmetricEpigraph", None, lambda: f_norm_l1_asymmetric() <= t),
-    Prox("NormL1Epigraph", None, lambda: cp.norm1(x) <= t),
-    Prox("NormL2Epigraph", None, lambda: cp.norm2(x) <= t),
+# Epigraph operators
+PROX_TESTS += [
+    Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
+    Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
+    Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
+    Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
+    Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
+    Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
     # TODO(mwytock): Figure out why these are failing
     # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
@@ -67,202 +148,23 @@ def test_prox():
         lam = np.abs(np.random.randn())
 
         f = 0 if not prox.objective else prox.objective()
-        c = [] if not prox.constraint else [prox.constraint()]
-        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) + lam*f), c).solve()
-        expected = {var: var.value for var in (x,)}
+        C = [] if not prox.constraint else prox.constraint()
 
-        solve.prox(cp.Problem(cp.Minimize(f), c), {x: v}, lam)
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-2)
+        # Form problem and solve with proximal operator implementation
+        prob = cp.Problem(cp.Minimize(f), C)
+        v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+        solve.prox(prob, v_map, lam)
+        actual = {x: x.value for x in prob.variables()}
+
+        # Compare to solution with cvxpy
+        prob.objective.args[0] *= lam
+        prob.objective.args[0] += sum(
+            0.5*cp.sum_squares(x - v_map[x]) for x, v in v_map.iteritems())
+        prob.solve()
+
+        for x in prob.variables():
+            np.testing.assert_allclose(x.value, actual[x], rtol=1e-2, atol=1e-2)
 
     for prox in PROX_TESTS:
-        for i in xrange(NUM_TRIALS):
+        for i in xrange(PROX_TRIALS):
             yield run, prox, i
-
-def test_epigraph():
-    def run(prox, i):
-        np.random.seed(i)
-
-        v = np.random.randn(n)
-        s = np.random.randn(1)
-        lam = np.abs(np.random.randn())
-
-        f = 0 if not prox.objective else prox.objective()
-        c = [] if not prox.constraint else [prox.constraint()]
-        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v) +
-                               0.5*cp.sum_squares(t - s) +
-                               lam*f), c).solve()
-        expected = {var: var.value for var in (x,t)}
-
-        solve.prox(cp.Problem(cp.Minimize(f), c),  {x: v, t: s}, lam)
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(t.value, expected[t], rtol=1e-2, atol=1e-4)
-
-    for prox in EPIGRAPH_TESTS:
-        for i in xrange(NUM_TRIALS):
-            yield run, prox, i
-
-def test_linear_equality():
-    """I(Ax == b)"""
-    m = 5
-    def run(i):
-        np.random.seed(i)
-        A = np.random.randn(m, n)
-        b = A.dot(np.random.randn(n))
-        v = np.random.randn(n)
-
-        c = [A*x == b]
-        cp.Problem(cp.Minimize(0.5*(cp.sum_squares(x - v))), c).solve()
-        expected = {var: var.value for var in (x,)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_linear_equality_graph():
-    """I(Ax == y)"""
-    m = 5
-    def run(i):
-        A = np.random.randn(m,n)
-        v = np.random.randn(n)
-        u = np.random.randn(m)
-
-        x = cp.Variable(n)
-        y = cp.Variable(m)
-        c = [A*x == y]
-        cp.Problem(
-            cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                             cp.sum_squares(y - u))),
-            c).solve()
-        expected = {var: var.value for var in (x,y)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_linear_equality_multivariate2():
-    """I(z - (y - alpha*(A*x - b)))"""
-    m = 5
-    alpha = 1
-    def run(i):
-        np.random.seed(i)
-
-        A = np.random.randn(m, n)
-        b = np.random.randn(m)
-        alpha = np.random.randn()
-
-        v = np.random.randn(n)
-        u = np.random.randn(m)
-        w = np.random.randn(m)
-
-        y = cp.Variable(m)
-        z = cp.Variable(m)
-        c = [z - (y - alpha*(A*x - b)) == 0]
-        cp.Problem(
-            cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                             cp.sum_squares(y - u) +
-                             cp.sum_squares(z - w))), c).solve()
-        expected = {var: var.value for var in (x, y, z)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u, z: w})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(z.value, expected[z], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_linear_equality_multivariate():
-    """I(z - (y - (1 - Ax)) == 0)"""
-    m = 5
-    def run(i):
-        np.random.seed(i)
-
-        A = np.random.randn(m, n)
-        v = np.random.randn(n)
-        u = np.random.randn(m)
-        w = np.random.randn(m)
-
-        y = cp.Variable(m)
-        z = cp.Variable(m)
-        c = [z - (y - (1 - A*x)) == 0]
-        cp.Problem(
-            cp.Minimize(0.5*(cp.sum_squares(x - v) +
-                             cp.sum_squares(y - u) +
-                             cp.sum_squares(z - w))), c).solve()
-        expected = {var: var.value for var in (x, y, z)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v, y: u, z: w})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(y.value, expected[y], rtol=1e-2, atol=1e-4)
-        np.testing.assert_allclose(z.value, expected[z], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_non_negative_scaled():
-    """I(alpha*x >= 0)"""
-    def run(i):
-        np.random.seed(i)
-        v = np.random.randn(n)
-        alpha = np.random.randn()
-
-        x = cp.Variable(n)
-        c = [alpha*x >= 0]
-        cp.Problem(cp.Minimize(0.5*cp.sum_squares(x - v)), c).solve()
-        expected = {var: var.value for var in (x,)}
-
-        solve.prox(cp.Problem(cp.Minimize(0), c), {x: v})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i
-
-def test_least_squares():
-    """||Ax - b||^2"""
-    def run(i, m, n):
-        np.random.seed(i)
-        v = np.random.randn(n)
-        A = np.random.randn(m, n)
-        b = np.random.randn(m)
-
-        x = cp.Variable(n)
-        f = cp.sum_squares(A*x  - b)
-        cp.Problem(cp.Minimize(f + 0.5*cp.sum_squares(x - v))).solve()
-        expected = {var: var.value for var in (x,)}
-
-        solve.prox(cp.Problem(cp.Minimize(f)), {x: v})
-        np.testing.assert_allclose(x.value, expected[x], rtol=1e-2, atol=1e-3)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i, 5, 10
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i, 15, 10
-
-
-def test_least_squares_matrix():
-    """||AX - B||_F^2"""
-    def run(i, m, n, k):
-        np.random.seed(i)
-        V = np.random.randn(n, k)
-        A = np.random.randn(m, n)
-        B = np.random.randn(m, k)
-
-        X = cp.Variable(n, k)
-        f = cp.sum_squares(A*X  - B)
-        cp.Problem(cp.Minimize(f + 0.5*cp.sum_squares(X - V))).solve()
-        expected = {var: var.value for var in (X,)}
-
-        solve.prox(cp.Problem(cp.Minimize(f)), {X: V})
-        np.testing.assert_allclose(X.value, expected[X], rtol=1e-2, atol=1e-4)
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i, 5, 10, 3
-
-    for i in xrange(NUM_TRIALS):
-        yield run, i, 15, 10, 3
