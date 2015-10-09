@@ -135,6 +135,7 @@ PROX_TESTS = [
     Prox("NormL2Prox", lambda: cp.norm2(x)),
     Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
+    Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
 ]
 
 # Epigraph operators
@@ -149,6 +150,7 @@ PROX_TESTS += [
     Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
+    Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
 ]
 
 def test_prox():
