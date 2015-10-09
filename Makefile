@@ -70,6 +70,7 @@ common_cc = \
 	epsilon/prox/norm_l1_asymmetric.cc \
 	epsilon/prox/norm_l1_l2.cc \
 	epsilon/prox/norm_l2.cc \
+	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
 	epsilon/util/file.cc \

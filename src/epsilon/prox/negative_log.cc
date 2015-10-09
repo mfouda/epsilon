@@ -87,14 +87,16 @@ public:
 };
 REGISTER_PROX_OPERATOR(NegativeLogEpigraph);
 
-class NegativeLogDetProx : public OrthoInvariantProx {
+class NegativeLogDetProx final : public OrthoInvariantProx {
 public:
-  NegativeLogDetProx() : OrthoInvariantProx(std::make_unique<NegativeLogProx>()) {}
+  NegativeLogDetProx()
+    : OrthoInvariantProx(std::make_unique<NegativeLogProx>(), true) {}
 };
 REGISTER_PROX_OPERATOR(NegativeLogDetProx);
 
-class NegativeLogDetEpigraph : public OrthoInvariantEpigraph {
+class NegativeLogDetEpigraph final : public OrthoInvariantEpigraph {
 public:
-  NegativeLogDetEpigraph() : OrthoInvariantEpigraph(std::make_unique<NegativeLogEpigraph>()) {}
+  NegativeLogDetEpigraph()
+    : OrthoInvariantEpigraph(std::make_unique<NegativeLogEpigraph>(), true) {}
 };
 REGISTER_PROX_OPERATOR(NegativeLogDetEpigraph);

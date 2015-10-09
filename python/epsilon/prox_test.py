@@ -133,6 +133,7 @@ PROX_TESTS = [
     Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     Prox("NormL1Prox", lambda: cp.norm1(x)),
     Prox("NormL2Prox", lambda: cp.norm2(x)),
+    Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
 ]
 
@@ -141,12 +142,13 @@ PROX_TESTS += [
     Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
     Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
     Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
-    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
     Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
+    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
+    Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
 ]
 
 def test_prox():
@@ -179,8 +181,9 @@ def test_prox():
             print 'cvx:'
             print map(lambda x: x.value, prob.variables())
             print 'actual:'
-            print actual
-            print 'vmap:', v_map
+            print actual.values()
+            print 'vmap:'
+            print v_map.values()
             print 'cvx obj:', prob.objective.value
             for c in prob.constraints:
                 print c, c.value, map(lambda x: x.value, c.args)

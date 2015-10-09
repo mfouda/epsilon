@@ -25,6 +25,7 @@ from cvxpy.atoms.elementwise.power import power
 from cvxpy.atoms.log_det import log_det
 from cvxpy.atoms.log_sum_exp import log_sum_exp
 from cvxpy.atoms.pnorm import pnorm
+from cvxpy.atoms.norm_nuc import normNuc
 from cvxpy.atoms.quad_over_lin import quad_over_lin
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
@@ -121,6 +122,7 @@ EXPRESSION_TYPES = (
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
+    (normNuc, lambda e: convert_generic(Expression.NORM_NUC, e)),
     (pnorm, convert_pnorm),
     (power, convert_power),
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),

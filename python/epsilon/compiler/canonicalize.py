@@ -155,6 +155,8 @@ EXPRESSION_RULES = [
     ("NormL1Asymmetric", Expression.SUM, is_norm_l1_asymmetric),
     ("NormL2", Expression.NORM_P,
      lambda e: (e.p == 2 and e.arg[0].curvature.scalar_multiple)),
+    ("NormNuclear", Expression.NORM_NUC,
+     lambda e: (e.arg[0].curvature.scalar_multiple)),
 ]
 
 EXPRESSION_RULE_MAP = defaultdict(list)
@@ -264,6 +266,15 @@ def prox_norm1(expr):
 def prox_norm2(expr):
     if (expr.expression_type == Expression.NORM_P and expr.p == 2):
         expr.proximal_operator.name = "NormL2Prox"
+        if expr.arg[0].curvature.scalar_multiple:
+            yield expr
+        else:
+            for prox_expr in transform_epigraph(expr, expr.arg[0]):
+                yield prox_expr
+
+def prox_norm_nuc(expr):
+    if (expr.expression_type == Expression.NORM_NUC):
+        expr.proximal_operator.name = "NormNuclearProx"
         if expr.arg[0].curvature.scalar_multiple:
             yield expr
         else:
@@ -543,6 +554,7 @@ PROX_RULES = [
     prox_logistic,
     prox_norm1,
     prox_norm2,
+    prox_norm_nuc,
     prox_exp,
     prox_huber,
     prox_norm12,
