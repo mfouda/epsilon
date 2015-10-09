@@ -141,12 +141,12 @@ PROX_TESTS += [
     Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
     Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
     Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
-    # Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
+    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
     Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
-#   # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
+    # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
 ]
 
 def test_prox():
@@ -177,7 +177,7 @@ def test_prox():
             # print objective value and constraints
             print
             print 'cvx:'
-            print prob.variables()
+            print map(lambda x: x.value, prob.variables())
             print 'actual:'
             print actual
             print 'vmap:', v_map

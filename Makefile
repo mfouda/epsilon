@@ -64,7 +64,6 @@ common_cc = \
 	epsilon/prox/logistic.cc \
 	epsilon/prox/negative_entropy.cc \
 	epsilon/prox/negative_log.cc \
-	epsilon/prox/negative_log_det.cc \
 	epsilon/prox/newton.cc \
 	epsilon/prox/non_negative.cc \
 	epsilon/prox/norm_l1.cc \

@@ -6,6 +6,7 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/prox/ortho_invariant.h"
 #include <cmath>
 
 // \sum_i log(xi)
@@ -85,3 +86,15 @@ public:
   }
 };
 REGISTER_PROX_OPERATOR(NegativeLogEpigraph);
+
+class NegativeLogDetProx : public OrthoInvariantProx {
+public:
+  NegativeLogDetProx() : OrthoInvariantProx(std::make_unique<NegativeLogProx>()) {}
+};
+REGISTER_PROX_OPERATOR(NegativeLogDetProx);
+
+class NegativeLogDetEpigraph : public OrthoInvariantEpigraph {
+public:
+  NegativeLogDetEpigraph() : OrthoInvariantEpigraph(std::make_unique<NegativeLogEpigraph>()) {}
+};
+REGISTER_PROX_OPERATOR(NegativeLogDetEpigraph);
