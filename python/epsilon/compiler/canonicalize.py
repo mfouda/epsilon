@@ -137,6 +137,8 @@ def is_deadzone(expr):
 EXPRESSION_RULES = [
     ("DeadZone", Expression.SUM, is_deadzone),
     ("Hinge", Expression.SUM, is_hinge),
+    ("LambdaMax", Expression.LAMBDA_MAX,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("Logistic", Expression.SUM,
      lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
     ("MaxEntries", Expression.MAX_ENTRIES,
@@ -216,6 +218,12 @@ def prox_fused_lasso(expr):
             return
 
         expr.proximal_operator.name = "FusedLassoProx"
+        yield expr
+
+def prox_lambda_max(expr):
+    if (expr.expression_type == Expression.LAMBDA_MAX and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "LambdaMaxProx"
         yield expr
 
 def prox_least_squares(expr):
@@ -558,6 +566,7 @@ PROX_RULES = [
     prox_add,
     prox_affine,
     prox_fused_lasso,
+    prox_lambda_max,
     prox_least_squares,
     prox_logistic,
     prox_norm1,

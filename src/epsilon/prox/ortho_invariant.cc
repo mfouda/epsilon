@@ -22,7 +22,7 @@ Eigen::VectorXd OrthoInvariantProx::Apply(const Eigen::VectorXd& y) {
     V = solver.matrixV();
   }
 
-  VLOG(1) << "D = \n" << VectorDebugString(d) << "\n";
+  VLOG(1) << "\nD = " << VectorDebugString(d) << "\n";
 
   Eigen::VectorXd x_tilde = f_->Apply(d);
 
@@ -52,6 +52,8 @@ Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
       U = solver.matrixU();
       V = solver.matrixV();
     }
+
+    VLOG(1) << "\nD = " << VectorDebugString(d) << "\n";
 
     Eigen::VectorXd f_sv(1+n);
     f_sv(0) = s;

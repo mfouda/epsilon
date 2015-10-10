@@ -1,6 +1,7 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
+#include "epsilon/prox/ortho_invariant.h"
 #include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
@@ -86,3 +87,15 @@ public:
   }
 };
 REGISTER_PROX_OPERATOR(MaxEntriesEpigraph);
+
+class LambdaMaxProx final : public OrthoInvariantProx {
+public:
+  LambdaMaxProx() : OrthoInvariantProx(std::make_unique<MaxEntriesProx>(), true) {}
+};
+REGISTER_PROX_OPERATOR(LambdaMaxProx);
+
+class LambdaMaxEpigraph final : public OrthoInvariantEpigraph {
+public:
+  LambdaMaxEpigraph() : OrthoInvariantEpigraph(std::make_unique<MaxEntriesEpigraph>(), true) {}
+};
+REGISTER_PROX_OPERATOR(LambdaMaxEpigraph);
