@@ -21,19 +21,22 @@ class MatrixVariant {
     Destruct();
   }
 
-  MatrixVariant(const DenseMatrix& dense) {
+  MatrixVariant() : type_(SCALAR), scalar_({0, 0}) {}
+
+  // TODO(mwytock): Add special matrices:
+  // static MatrixVariant Identity(int n) {
+  // }
+
+  // static MatrixVariant Zero(int m, int n) {
+  // }
+
+  explicit MatrixVariant(const DenseMatrix& dense) {
     VLOG(2) << "dense copy ctor " << this;
     type_ = DENSE;
     new (&dense_) DenseMatrix(dense);
   }
 
-  MatrixVariant(DenseMatrix&& dense) {
-    VLOG(2) << "dense move ctor " << this;
-    type_ = DENSE;
-    new (&dense_) DenseMatrix(dense);
-  }
-
-  MatrixVariant(const SparseMatrix& sparse) {
+  explicit MatrixVariant(const SparseMatrix& sparse) {
     VLOG(2) << "sparse copy ctor " << this;
     type_ = SPARSE;
     new (&sparse_) SparseMatrix(sparse);
@@ -110,6 +113,10 @@ class MatrixVariant {
   MatrixVariant& operator+=(const MatrixVariant& rhs);
   MatrixVariant& operator*=(const MatrixVariant& rhs);
 
+  friend Eigen::VectorXd operator*(
+      const MatrixVariant& lhs,
+      const Eigen::VectorXd& rhs);
+
   int rows() const;
   int cols() const;
   DenseMatrix AsDense() const;
@@ -152,5 +159,9 @@ class MatrixVariant {
 
 MatrixVariant operator+(MatrixVariant lhs, const MatrixVariant& rhs);
 MatrixVariant operator*(MatrixVariant lhs, const MatrixVariant& rhs);
+
+Eigen::VectorXd operator*(
+    const MatrixVariant& lhs,
+    const Eigen::VectorXd& rhs);
 
 #endif  // EPSILON_VECTOR_MATRIX_VARIANT_H

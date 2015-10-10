@@ -1,5 +1,4 @@
 #include "epsilon/vector/matrix_variant.h"
-
 int MatrixVariant::rows() const {
   switch (type_) {
     case DENSE:
@@ -57,7 +56,8 @@ MatrixVariant& MatrixVariant::operator+=(const MatrixVariant& rhs) {
   }
   else if (t == SPARSE) {
     if (s == DENSE) {
-      *this = (MatrixVariant::DenseMatrix(sparse_) + rhs.dense_).eval();
+      *this = MatrixVariant(
+          (MatrixVariant::DenseMatrix(sparse_) + rhs.dense_).eval());
     }
     else if (s == SPARSE)   { sparse_ += rhs.sparse_; }
     else if (s == DIAGONAL) {
@@ -84,7 +84,8 @@ MatrixVariant& MatrixVariant::operator*=(const MatrixVariant& rhs) {
     else if (s == SCALAR)   { dense_ *= rhs.scalar_.n; }
   }
   else if (t == SPARSE) {
-    if (s == DENSE)         { *this = (sparse_ * rhs.dense_).eval(); }
+    if (s == DENSE)         { *this =
+          MatrixVariant((sparse_ * rhs.dense_).eval()); }
     else if (s == SPARSE)   { sparse_ = sparse_ * rhs.sparse_; }
     else if (s == DIAGONAL) {
       sparse_ = sparse_ * DiagonalSparse(rhs.diagonal_.diagonal());
@@ -103,4 +104,20 @@ MatrixVariant operator+(MatrixVariant lhs, const MatrixVariant& rhs) {
 MatrixVariant operator*(MatrixVariant lhs, const MatrixVariant& rhs) {
   lhs *= rhs;
   return lhs;
+}
+
+Eigen::VectorXd operator*(
+    const MatrixVariant& lhs,
+    const Eigen::VectorXd& rhs) {
+  switch (lhs.type_) {
+    case MatrixVariant::DENSE:
+      return lhs.dense_*rhs;
+    case MatrixVariant::SPARSE:
+      return lhs.sparse_*rhs;
+    case MatrixVariant::DIAGONAL:
+      return lhs.diagonal_*rhs;
+    case MatrixVariant::SCALAR:
+      CHECK_EQ(lhs.scalar_.n, rhs.rows());
+      return lhs.scalar_.alpha*rhs;
+  }
 }
