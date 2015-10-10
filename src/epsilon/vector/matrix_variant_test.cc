@@ -33,35 +33,35 @@ class MatrixVariantTest : public testing::Test {
 };
 
 TEST_F(MatrixVariantTest, Assignment) {
-  MatrixVariant X = A_;
+  MatrixVariant X = MatrixVariant(A_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_));
-  X = B_;
+  X = MatrixVariant(B_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), B_));
-  X = C_;
+  X = MatrixVariant(C_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), C_));
-  X = D_;
+  X = MatrixVariant(D_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), D_));
-  X = A_;
+  X = MatrixVariant(A_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_));
   MatrixVariant Y = X;
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), A_));
 }
 
 TEST_F(MatrixVariantTest, Add) {
-  MatrixVariant X = A_;
-  X += B_;
+  MatrixVariant X = MatrixVariant(A_);
+  X += MatrixVariant(B_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_+B_));
-  X += C_;
+  X += MatrixVariant(C_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_+B_+C2_));
-  X += D_;
+  X += MatrixVariant(D_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_+B_+C2_+D2_));
 
-  MatrixVariant Y = C_;
-  Y += D_;
+  MatrixVariant Y = MatrixVariant(C_);
+  Y += MatrixVariant(D_);
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), C2_+D2_));
-  Y += A_;
+  Y += MatrixVariant(A_);
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), C2_+D2_+A_));
-  Y += B_;
+  Y += MatrixVariant(B_);
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), C2_+D2_+A_+B_));
 
   X += Y + Y;
@@ -69,18 +69,18 @@ TEST_F(MatrixVariantTest, Add) {
 }
 
 TEST_F(MatrixVariantTest, Multiply) {
-  MatrixVariant X = A_;
-  X *= B_;
+  MatrixVariant X = MatrixVariant(A_);
+  X *= MatrixVariant(B_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_ * B_));
-  X *= C_;
+  X *= MatrixVariant(C_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_ * B_ * C_));
-  X *= D_;
+  X *= MatrixVariant(D_);
   EXPECT_TRUE(MatrixEquals(X.AsDense(), A_ * B_ * C_ * D_));
 
-  MatrixVariant Y = C_;
-  Y *= D_;
+  MatrixVariant Y = MatrixVariant(C_);
+  Y *= MatrixVariant(D_);
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), (C_ * D_).eval()));
-  Y *= A_;
+  Y *= MatrixVariant(A_);
   EXPECT_TRUE(MatrixEquals(Y.AsDense(), C_ * D_ * A_));
 
   Y = Y * X;
