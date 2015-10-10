@@ -13,6 +13,7 @@ PROX_TRIALS = 10
 n = 10
 x = cp.Variable(n)
 X = cp.Variable(3,3)
+S = cp.Semidef(3)
 t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
@@ -138,6 +139,7 @@ PROX_TESTS = [
     Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
     Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
     Prox("LambdaMaxProx", lambda: cp.lambda_max(X)),
+    Prox("SemidefiniteProx", None, lambda: [X >> 0]),
 ]
 
 # Epigraph operators

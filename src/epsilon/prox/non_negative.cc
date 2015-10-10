@@ -2,6 +2,7 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/dynamic_matrix.h"
+#include "epsilon/prox/ortho_invariant.h"
 
 // I(alpha*x + b >= 0)
 //
@@ -23,3 +24,17 @@ private:
   Eigen::VectorXd b_;
 };
 REGISTER_PROX_OPERATOR(NonNegativeProx);
+
+class SimpleNonNegativeProx final : public ProxOperator {
+public:
+  void Init(const ProxOperatorArg& arg) override {}
+  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+    return v.cwiseMax(0);
+  }
+};
+
+class SemidefiniteProx final : public OrthoInvariantProx {
+public:
+  SemidefiniteProx() : OrthoInvariantProx(std::make_unique<SimpleNonNegativeProx>(), true, true) {}
+};
+REGISTER_PROX_OPERATOR(SemidefiniteProx);
