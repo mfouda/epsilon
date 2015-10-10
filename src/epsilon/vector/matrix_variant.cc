@@ -10,6 +10,7 @@ int MatrixVariant::rows() const {
     case SCALAR:
       return scalar_.n;
   }
+  LOG(FATAL) << "unknown type: " << type_;
 }
 
 int MatrixVariant::cols() const {
@@ -23,6 +24,7 @@ int MatrixVariant::cols() const {
     case SCALAR:
       return scalar_.n;
   }
+  LOG(FATAL) << "unknown type: " << type_;
 }
 
 MatrixVariant::DenseMatrix MatrixVariant::AsDense() const {
@@ -37,6 +39,7 @@ MatrixVariant::DenseMatrix MatrixVariant::AsDense() const {
       return static_cast<DenseMatrix>(
             scalar_.alpha*DenseMatrix::Identity(scalar_.n, scalar_.n));
   }
+  LOG(FATAL) << "unknown type: " << type_;
 }
 
 MatrixVariant& MatrixVariant::operator+=(const MatrixVariant& rhs) {
@@ -120,4 +123,5 @@ Eigen::VectorXd operator*(
       CHECK_EQ(lhs.scalar_.n, rhs.rows());
       return lhs.scalar_.alpha*rhs;
   }
+  LOG(FATAL) << "unknown type: " << lhs.type_;
 }
