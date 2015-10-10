@@ -133,7 +133,9 @@ PROX_TESTS = [
     Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     Prox("NormL1Prox", lambda: cp.norm1(x)),
     Prox("NormL2Prox", lambda: cp.norm2(x)),
+    Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
+    Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
 ]
 
 # Epigraph operators
@@ -144,9 +146,11 @@ PROX_TESTS += [
     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
-    # TODO(mwytock): Figure out why these are failing
-    # Prox("NegativeLogEpigraph", 0, [-cp.sum_entries(cp.log(x)) <= t]),
+    Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
+    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
+    Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
+    Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
 ]
 
 def test_prox():
@@ -170,8 +174,30 @@ def test_prox():
             0.5*cp.sum_squares(x - v_map[x]) for x, v in v_map.iteritems())
         prob.solve()
 
-        for x in prob.variables():
-            np.testing.assert_allclose(x.value, actual[x], rtol=1e-2, atol=1e-2)
+        try:
+            for x in prob.variables():
+                np.testing.assert_allclose(x.value, actual[x], rtol=1e-2, atol=1e-2)
+        except AssertionError as e:
+            # print objective value and constraints
+            print
+            print 'cvx:'
+            print map(lambda x: x.value, prob.variables())
+            print 'actual:'
+            print actual.values()
+            print 'vmap:'
+            print v_map.values()
+            print 'cvx obj:', prob.objective.value
+            for c in prob.constraints:
+                print c, c.value, map(lambda x: x.value, c.args)
+
+            for x,v in actual.items():
+                x.value = v
+            print 'our obj:', prob.objective.value
+            for c in prob.constraints:
+                print c, c.value, map(lambda x: x.value, c.args)
+            print 
+
+            raise e
 
     for prox in PROX_TESTS:
         for i in xrange(PROX_TRIALS):
