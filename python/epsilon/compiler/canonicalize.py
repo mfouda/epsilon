@@ -139,6 +139,8 @@ EXPRESSION_RULES = [
     ("Hinge", Expression.SUM, is_hinge),
     ("Logistic", Expression.SUM,
      lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
+    ("MaxEntries", Expression.MAX_ENTRIES,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("NegativeEntropy", Expression.NEGATE,
      lambda e: (e.arg[0].expression_type == Expression.SUM and
                 e.arg[0].arg[0].expression_type == Expression.ENTR and
@@ -424,6 +426,12 @@ def prox_max_elementwise(expr):
         for prox_expr in transform_expr(leq_constraint(arg, t)):
             yield prox_expr
 
+def prox_max_entries(expr):
+    if (expr.expression_type == Expression.MAX_ENTRIES and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "MaxEntriesProx"
+        yield expr
+
 def prox_epigraph_atomic(expr):
     if not is_epigraph(expr):
         return
@@ -557,6 +565,7 @@ PROX_RULES = [
     prox_norm_nuc,
     prox_exp,
     prox_huber,
+    prox_max_entries,
     prox_norm12,
     prox_neg_log_det,
     prox_negative_log,
