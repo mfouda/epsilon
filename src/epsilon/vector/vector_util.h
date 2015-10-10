@@ -46,6 +46,8 @@ void WriteTextSparseMatrix(const SparseXd& input, const std::string& file);
 void WriteTextVector(const VectorXd& input, const std::string& file);
 
 // Debugging strings
+// TODO(mwytock): These should should just use templates, EigenBase and be a
+// single definition, most likely
 std::string VectorDebugString(const VectorXd& x);
 std::string MatrixDebugString(const MatrixXd& A);
 std::string SparseMatrixDebugString(const SparseXd& A);
