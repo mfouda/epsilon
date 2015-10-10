@@ -137,8 +137,12 @@ def is_deadzone(expr):
 EXPRESSION_RULES = [
     ("DeadZone", Expression.SUM, is_deadzone),
     ("Hinge", Expression.SUM, is_hinge),
+    ("LambdaMax", Expression.LAMBDA_MAX,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("Logistic", Expression.SUM,
      lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
+    ("MaxEntries", Expression.MAX_ENTRIES,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("NegativeEntropy", Expression.NEGATE,
      lambda e: (e.arg[0].expression_type == Expression.SUM and
                 e.arg[0].arg[0].expression_type == Expression.ENTR and
@@ -214,6 +218,12 @@ def prox_fused_lasso(expr):
             return
 
         expr.proximal_operator.name = "FusedLassoProx"
+        yield expr
+
+def prox_lambda_max(expr):
+    if (expr.expression_type == Expression.LAMBDA_MAX and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "LambdaMaxProx"
         yield expr
 
 def prox_least_squares(expr):
@@ -424,6 +434,12 @@ def prox_max_elementwise(expr):
         for prox_expr in transform_expr(leq_constraint(arg, t)):
             yield prox_expr
 
+def prox_max_entries(expr):
+    if (expr.expression_type == Expression.MAX_ENTRIES and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "MaxEntriesProx"
+        yield expr
+
 def prox_epigraph_atomic(expr):
     if not is_epigraph(expr):
         return
@@ -478,9 +494,20 @@ def prox_linear_equality(expr):
                for arg in expr.arg):
             yield expr
 
+
 def prox_non_negative(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.NON_NEGATIVE):
+
+        if (expr.arg[0].expression_type == Expression.ADD and
+            expr.arg[0].arg[0].expression_type == Expression.CONSTANT and
+            expr.arg[0].arg[0].constant.scalar == 0. and
+            expr.arg[0].arg[1].expression_type == Expression.NEGATE and
+            expr.arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
+            prod(expr.arg[0].arg[1].arg[0].size.dim) != 1):
+            expr.proximal_operator.name = "SemidefiniteProx"
+            yield expr
+            raise StopIteration
 
         expr.proximal_operator.name = "NonNegativeProx"
         if all(arg.curvature.scalar_multiple for arg in expr.arg):
@@ -550,6 +577,7 @@ PROX_RULES = [
     prox_add,
     prox_affine,
     prox_fused_lasso,
+    prox_lambda_max,
     prox_least_squares,
     prox_logistic,
     prox_norm1,
@@ -557,6 +585,7 @@ PROX_RULES = [
     prox_norm_nuc,
     prox_exp,
     prox_huber,
+    prox_max_entries,
     prox_norm12,
     prox_neg_log_det,
     prox_negative_log,

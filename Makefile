@@ -62,6 +62,7 @@ common_cc = \
 	epsilon/prox/linear.cc \
 	epsilon/prox/linear_equality.cc \
 	epsilon/prox/logistic.cc \
+	epsilon/prox/max_entries.cc \
 	epsilon/prox/negative_entropy.cc \
 	epsilon/prox/negative_log.cc \
 	epsilon/prox/newton.cc \

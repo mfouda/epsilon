@@ -13,6 +13,7 @@ PROX_TRIALS = 10
 n = 10
 x = cp.Variable(n)
 X = cp.Variable(3,3)
+S = cp.Semidef(3)
 t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
@@ -136,6 +137,9 @@ PROX_TESTS = [
     Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
     Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
+    Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
+    Prox("LambdaMaxProx", lambda: cp.lambda_max(X)),
+    Prox("SemidefiniteProx", None, lambda: [X >> 0]),
 ]
 
 # Epigraph operators
@@ -151,6 +155,8 @@ PROX_TESTS += [
     # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
+    Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
+    Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
 ]
 
 def test_prox():

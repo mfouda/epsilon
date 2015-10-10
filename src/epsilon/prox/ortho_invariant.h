@@ -12,13 +12,14 @@ public:
     ProxOperatorArg prox_arg(lambda_, NULL, NULL);
     f_->Init(prox_arg);
   }
-  OrthoInvariantProx(std::unique_ptr<ProxOperator> f, bool to_symm=false)
-    : f_(std::move(f)), to_symm_(to_symm) {}
+  OrthoInvariantProx(std::unique_ptr<ProxOperator> f, bool symm_part_=false, bool add_res=false)
+    : f_(std::move(f)), symm_part_(symm_part_), add_res_(add_res) {}
   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& y) override;
 protected:
   std::unique_ptr<ProxOperator> f_;
   double lambda_;
-  bool to_symm_;
+  bool symm_part_;
+  bool add_res_;
 };
 
 class OrthoInvariantEpigraph: public ProxOperator {
@@ -28,12 +29,12 @@ public:
     ProxOperatorArg prox_arg(lambda_, NULL, NULL);
     f_->Init(prox_arg);
   }
-  OrthoInvariantEpigraph(std::unique_ptr<ProxOperator> f, bool to_symm=false)
-    : f_(std::move(f)), to_symm_(to_symm) {}
+  OrthoInvariantEpigraph(std::unique_ptr<ProxOperator> f, bool symm_part_=false)
+    : f_(std::move(f)), symm_part_(symm_part_) {}
   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& sy) override;
 
 protected:
   std::unique_ptr<ProxOperator> f_;
   double lambda_;
-  bool to_symm_;
+  bool symm_part_;
 };

@@ -6,9 +6,12 @@ Eigen::VectorXd OrthoInvariantProx::Apply(const Eigen::VectorXd& y) {
   int n = (int)std::sqrt(y.rows());
 
   Eigen::MatrixXd Y = ToMatrix(y, n, n);
+  Eigen::MatrixXd R;
+  if(add_res_)
+    R = (Y-Y.transpose())/2;
   Eigen::VectorXd d;
   Eigen::MatrixXd U, V;
-  if(to_symm_) {
+  if(symm_part_) {
     Y = (Y + Y.transpose()) / 2;
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y);
     CHECK_EQ(solver.info(), Eigen::Success);
@@ -22,11 +25,13 @@ Eigen::VectorXd OrthoInvariantProx::Apply(const Eigen::VectorXd& y) {
     V = solver.matrixV();
   }
 
-  VLOG(1) << "D = \n" << VectorDebugString(d) << "\n";
+  VLOG(1) << "\nD = " << VectorDebugString(d) << "\n";
 
   Eigen::VectorXd x_tilde = f_->Apply(d);
 
   Eigen::MatrixXd X = U*x_tilde.asDiagonal()*V.transpose();
+  if(add_res_)
+    X = X + R;
 
   return ToVector(X);
 }
@@ -39,7 +44,7 @@ Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
     Eigen::MatrixXd Y = ToMatrix(sy.tail(n*n), n, n);
     Eigen::VectorXd d;
     Eigen::MatrixXd U, V;
-    if(to_symm_) {
+    if(symm_part_) {
       Y = (Y + Y.transpose()) / 2;
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y);
       CHECK_EQ(solver.info(), Eigen::Success);
@@ -52,6 +57,8 @@ Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
       U = solver.matrixU();
       V = solver.matrixV();
     }
+
+    VLOG(1) << "\nD = " << VectorDebugString(d) << "\n";
 
     Eigen::VectorXd f_sv(1+n);
     f_sv(0) = s;
