@@ -499,8 +499,12 @@ def prox_non_negative(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.NON_NEGATIVE):
 
-        if (expr.arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
-                prod(expr.arg[0].arg[1].arg[0].size.dim) != 1):
+        if (expr.arg[0].expression_type == Expression.ADD and
+            expr.arg[0].arg[0].expression_type == Expression.CONSTANT and
+            expr.arg[0].arg[0].constant.scalar == 0. and
+            expr.arg[0].arg[1].expression_type == Expression.NEGATE and
+            expr.arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
+            prod(expr.arg[0].arg[1].arg[0].size.dim) != 1):
             expr.proximal_operator.name = "SemidefiniteProx"
             yield expr
             raise StopIteration
