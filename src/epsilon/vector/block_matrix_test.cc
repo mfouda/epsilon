@@ -25,6 +25,21 @@ TEST_F(BlockMatrixTest, Assignment) {
   EXPECT_TRUE(MatrixEquals(sparse_, A("row1", "col1").AsDense()));
 }
 
+TEST_F(BlockMatrixTest, Transpose) {
+  BlockMatrix A;
+  A("0", "0") = MatrixVariant(dense_);
+  A("0", "1") = MatrixVariant(Eigen::MatrixXd::Identity(3,3).eval());
+  BlockMatrix AT = A.transpose();
+
+  BlockMatrix B = A.transpose();
+  EXPECT_TRUE(MatrixEquals(
+      dense_.transpose(),
+      B("0", "0").AsDense()));
+  EXPECT_TRUE(MatrixEquals(
+      Eigen::MatrixXd::Identity(3, 3),
+      B("1", "0").AsDense()));
+}
+
 TEST_F(BlockMatrixTest, MultiplyVector) {
   BlockMatrix A;
   A("0", "0") = MatrixVariant(dense_);
@@ -40,39 +55,37 @@ TEST_F(BlockMatrixTest, MultiplyVector) {
   EXPECT_TRUE(VectorEquals(dense_*x0 + x1, (A*x)("0")));
 }
 
-// TEST_F(BlockMatrixTest, MultiplyMatrix) {
-//   BlockMatrix A;
-//   A("0", "0") = dense_;
-//   A("0", "1") = sparse_;
+TEST_F(BlockMatrixTest, MultiplyMatrix) {
+  BlockMatrix A;
+  A("0", "0") = MatrixVariant(dense_);
+  A("0", "1") = MatrixVariant(sparse_);
 
-//   BlockMatrix B;
-//   B("0", "3") = dense_.transpose();
-//   B("1", "3") = sparse_.transpose();
+  BlockMatrix B;
+  B("0", "3") = MatrixVariant(dense_.transpose());
+  B("1", "3") = MatrixVariant(
+      static_cast<SparseXd>(sparse_.transpose()));
 
-//   // TODO(mwytock): Check result?
-// }
+  BlockMatrix C = A*B;
 
-// TEST_F(BlockMatrixTest, Transpose) {
-//   BlockMatrix A;
-//   A("0", "0") = A_;
-//   A("0", "1") = Eigen::MatrixXd::Identity(3,3);
-//   BlockMatrix AT = A.transpose();
+  Eigen::MatrixXd expected = (
+      dense_*dense_.transpose() +
+      static_cast<Eigen::MatrixXd>(
+          (sparse_*sparse_.transpose()).eval()));
+  EXPECT_TRUE(MatrixEquals(expected, C("0", "3").AsDense()));
+}
 
-//   // TODO(mwytock): Check result?
-// }
-
-// TEST_F(BlockMatrixTest, Inverse) {
+// TEST_F(BlockMatrixTest, SolveSingleDense) {
 //   Eigen::MatrixXd I = Eigen::MatrixXd::Identity(3,3);
 //   BlockMatrix A;
-//   A("0", "0") = A_;
-//   A("0", "1") = I;
-//   BlockMatrix::Solver solver = (A*A.transpose()).inv();
+//   A("0", "0") = MatrixVariant(dense_);
+//   A("0", "1") = MatrixVariant(I);
+//   std::unique_ptr<BlockMatrix::Solver> solver = (A*A.transpose()).inv();
 
 //   Eigen::LLT<MatrixXd> solver2;
-//   solver2.compute(A_*A_.transpose() + I);
+//   solver2.compute(dense_*dense_.transpose() + I);
 
 //   BlockVector b;
 //   b("0") << 1, 2, 3;
 
-//   EXPECT_TRUE(VectorEquals(solver2.solve(b), solver.solve(b)));
+//   EXPECT_TRUE(VectorEquals(solver2.solve(b("0")), solver->solve(b)("0")));
 // }

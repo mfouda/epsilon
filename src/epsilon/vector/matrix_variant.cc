@@ -27,6 +27,20 @@ int MatrixVariant::cols() const {
   LOG(FATAL) << "unknown type: " << type_;
 }
 
+MatrixVariant MatrixVariant::transpose() const {
+
+  switch (type_) {
+    case DENSE:
+      return MatrixVariant(dense_.transpose());
+    case SPARSE:
+      return MatrixVariant(static_cast<MatrixVariant::SparseMatrix>(
+          sparse_.transpose()));
+    case DIAGONAL:
+    case SCALAR:
+      return *this;
+  }
+}
+
 MatrixVariant::DenseMatrix MatrixVariant::AsDense() const {
   switch (type_) {
     case MatrixVariant::DENSE:
