@@ -1,4 +1,24 @@
 #include "epsilon/vector/matrix_variant.h"
+
+class DenseSolver : public MatrixVariant::Solver {
+ public:
+  DenseSolver(const MatrixVariant::DenseMatrix& A) {
+    // TODO(mwytock): Handle failure more gracefully. This is especially
+    // important for numerical issues where we may want to add epsI to diagonal
+    // if LLT fails.
+    llt_.compute(A);
+    CHECK_EQ(Eigen::Success, llt_.info());
+  }
+
+  MatrixVariant::DenseVector solve(
+      const MatrixVariant::DenseVector& b) override {
+    return llt_.solve(b);
+  }
+
+ private:
+  Eigen::LLT<MatrixVariant::DenseMatrix> llt_;
+};
+
 int MatrixVariant::rows() const {
   switch (type_) {
     case DENSE:
@@ -28,7 +48,6 @@ int MatrixVariant::cols() const {
 }
 
 MatrixVariant MatrixVariant::transpose() const {
-
   switch (type_) {
     case DENSE:
       return MatrixVariant(dense_.transpose());
@@ -39,6 +58,19 @@ MatrixVariant MatrixVariant::transpose() const {
     case SCALAR:
       return *this;
   }
+  LOG(FATAL) << "unknown type: " << type_;
+}
+
+std::unique_ptr<MatrixVariant::Solver> MatrixVariant::inv() const {
+  switch (type_) {
+    case DENSE:
+      return std::unique_ptr<Solver>(new DenseSolver(dense_));
+    case SPARSE:
+    case DIAGONAL:
+    case SCALAR:
+      LOG(FATAL) << "Not implemented";
+  }
+  LOG(FATAL) << "unknown type: " << type_;
 }
 
 MatrixVariant::DenseMatrix MatrixVariant::AsDense() const {

@@ -1,4 +1,6 @@
 
+#include <glog/logging.h>
+
 #include "epsilon/vector/block_vector.h"
 
 BlockVector& BlockVector::operator+=(const BlockVector& rhs) {
@@ -28,4 +30,12 @@ void BlockVector::InsertOrAdd(
     DenseVector value) {
   auto res = data_.insert(std::make_pair(key, value));
   if (!res.second) (res.first)->second += value;
+}
+
+const BlockVector::DenseVector& BlockVector::operator()(
+    const std::string& key) const {
+  auto iter = data_.find(key);
+  if (iter == data_.end())
+    LOG(FATAL) << key << " not in BlockVector";
+  return iter->second;
 }

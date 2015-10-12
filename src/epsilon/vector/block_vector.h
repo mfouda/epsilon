@@ -13,9 +13,10 @@ class BlockVector {
   typedef Eigen::Matrix<double, Eigen::Dynamic, 1> DenseVector;
 
   DenseVector& operator()(const std::string& key) { return data_[key]; };
+  const DenseVector& operator()(const std::string& key) const;
+
   BlockVector& operator+=(const BlockVector& rhs);
   BlockVector& operator-=(const BlockVector& rhs);
-
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
  private:

@@ -1,20 +1,23 @@
 
 #include "epsilon/vector/block_matrix.h"
 
-class LLTDenseSolver final : public BlockMatrix::Solver {
-  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> DenseMatrix;
-
+class SingletonSolver : public BlockMatrix::Solver {
  public:
-  LLTDenseSolver(const BlockMatrix& matrix, double lambda) {
-    // Build/factor dense representation
+  SingletonSolver(
+      std::string key,
+      std::unique_ptr<MatrixVariant::Solver> solver)
+      : key_(key),
+        solver_(std::move(solver)) {}
+
+  BlockVector solve(const BlockVector& b) const {
+    BlockVector x;
+    x(key_) = solver_->solve(b(key_));
+    return x;
   }
 
-  BlockVector solve(const BlockVector& b) override {
-    return BlockVector();
-  }
-
-private:
-  Eigen::LLT<DenseMatrix> solver_;
+ private:
+  std::string key_;
+  std::unique_ptr<MatrixVariant::Solver> solver_;
 };
 
 MatrixVariant& BlockMatrix::operator()(
@@ -33,10 +36,17 @@ BlockMatrix BlockMatrix::transpose() const {
   return transpose;
 }
 
-std::unique_ptr<BlockMatrix::Solver> BlockMatrix::inv(double lambda) const {
-  // TODO(mwytock): Add other solvers, etc.
+std::unique_ptr<BlockMatrix::Solver> BlockMatrix::inv() const {
+  // Assumes a singleton, symmetric matrix
+
+  CHECK_EQ(1, data_.size());
+  auto iter = data_.begin();
+  CHECK_EQ(1, iter->second.size());
+  CHECK_EQ(iter->first, iter->second.begin()->first);
   return std::unique_ptr<BlockMatrix::Solver>(
-      new LLTDenseSolver(*this, lambda));
+      new SingletonSolver(iter->first, iter->second.begin()->second.inv()));
+  // TODO(mwytock): Add other solvers, etc.
+
 }
 
 BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {

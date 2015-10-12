@@ -32,17 +32,16 @@ class BlockMatrix {
  public:
   class Solver {
    public:
-    virtual BlockVector solve(const BlockVector& b) = 0;
+    virtual BlockVector solve(const BlockVector& b) const = 0;
   };
 
   MatrixVariant& operator()(
       const std::string& row_key, const std::string& col_key);
-
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
   BlockMatrix transpose() const;
-  std::unique_ptr<Solver> inv(double lambda = 0) const;
+  std::unique_ptr<Solver> inv() const;
 
  private:
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,

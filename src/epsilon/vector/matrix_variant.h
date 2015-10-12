@@ -13,8 +13,14 @@
 class MatrixVariant {
  public:
   typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> DenseMatrix;
+  typedef Eigen::Matrix<double, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<double> SparseMatrix;
   typedef Eigen::DiagonalMatrix<double, Eigen::Dynamic> DiagonalMatrix;
+
+  class Solver {
+   public:
+    virtual DenseVector solve(const DenseVector& b) = 0;
+  };
 
   ~MatrixVariant() {
     VLOG(2) << "dtor";
@@ -120,6 +126,7 @@ class MatrixVariant {
   int rows() const;
   int cols() const;
   DenseMatrix AsDense() const;
+  std::unique_ptr<Solver> inv() const;
 
  private:
   void Destruct() {
