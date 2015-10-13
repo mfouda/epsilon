@@ -441,6 +441,11 @@ def prox_norm_l1_asymmetric_single_max(expr):
         for prox_expr in transform_epigraph(expr, arg):
             yield prox_expr
 
+def prox_matrix_frac(expr):
+    if expr.expression_type == Expression.MATRIX_FRAC:
+        expr.proximal_operator.name = 'MatrixFracProx'
+        yield expr
+
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""
     if expr.expression_type != Expression.MAX_ELEMENTWISE:
@@ -614,6 +619,7 @@ PROX_RULES = [
     prox_norm_l1_asymmetric,
     prox_deadzone,
     prox_norm_l1_asymmetric_single_max,
+    prox_matrix_frac,
     prox_max_elementwise,
     prox_epigraph_atomic,
     prox_linear_equality_graph,

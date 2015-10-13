@@ -12,8 +12,8 @@ PROX_TRIALS = 10
 # Common variable
 n = 10
 x = cp.Variable(n)
+p = cp.Variable(3)
 X = cp.Variable(3,3)
-S = cp.Semidef(3)
 t = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
@@ -142,6 +142,7 @@ PROX_TESTS = [
     Prox("SemidefiniteProx", None, lambda: [X >> 0]),
     Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
+    Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
 ]
 
 # Epigraph operators

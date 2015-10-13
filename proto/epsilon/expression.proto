@@ -115,6 +115,7 @@ message Expression {
     MAX_ELEMENTWISE = 203;
     NORM_NUC = 204;
     LAMBDA_MAX = 205;
+    MATRIX_FRAC = 206;
   }
   Type expression_type = 1;
   Size size = 2;
