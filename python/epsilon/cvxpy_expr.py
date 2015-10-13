@@ -103,7 +103,11 @@ def convert_pnorm(expr):
 
 def convert_power(expr):
     proto = convert_generic(Expression.POWER, expr)
-    proto.p = expr.p
+    try:
+        proto.p = expr.p
+    except TypeError: # FIXME expr.p has type Fraciton on inv_pos
+        proto.p = -1
+
     return proto
 
 EXPRESSION_TYPES = (

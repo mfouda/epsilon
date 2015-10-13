@@ -132,10 +132,19 @@ def is_deadzone(expr):
         expr.arg[0].arg[1].arg[1].constant.scalar == 0
         )
 
+def is_inv_pos(expr):
+    return (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.POWER and
+        expr.arg[0].p == -1 and
+        expr.arg[0].arg[0].expression_type == Expression.VARIABLE)
+
 # TODO(mwytock): Currently these are only used for the epigraph form, use them
 # for proximal operators in the objective as well.
 EXPRESSION_RULES = [
     ("DeadZone", Expression.SUM, is_deadzone),
+    ("SumExp", Expression.SUM,
+     lambda e: (e.arg[0].expression_type == Expression.EXP)),
+    ("InvPos", Expression.SUM, is_inv_pos),
     ("Hinge", Expression.SUM, is_hinge),
     ("LambdaMax", Expression.LAMBDA_MAX,
      lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
@@ -291,14 +300,24 @@ def prox_norm_nuc(expr):
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
 
-def prox_exp(expr):
+def prox_sum_exp(expr):
     if expr.expression_type == Expression.EXP:
-        expr.proximal_operator.name = "ExpProx"
+        expr.proximal_operator.name = "SumExpProx"
         if expr.arg[0].curvature.elementwise:
             yield expr
         else:
             for prox_expr in transform_epigraph(expr, expr.arg[0]):
                 yield prox_expr
+    elif (expr.expression_type == Expression.SUM and
+          expr.arg[0].expression_type == Expression.EXP and
+          expr.arg[0].arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "SumExpProx"
+        yield expr
+
+def prox_inv_pos(expr):
+    if is_inv_pos(expr):
+        expr.proximal_operator.name = "InvPosProx"
+        yield expr
 
 def prox_huber(expr):
     if (expr.expression_type == Expression.SUM and
@@ -583,7 +602,8 @@ PROX_RULES = [
     prox_norm1,
     prox_norm2,
     prox_norm_nuc,
-    prox_exp,
+    prox_sum_exp,
+    prox_inv_pos,
     prox_huber,
     prox_max_entries,
     prox_norm12,

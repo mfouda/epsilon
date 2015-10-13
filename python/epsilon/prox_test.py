@@ -140,6 +140,8 @@ PROX_TESTS = [
     Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
     Prox("LambdaMaxProx", lambda: cp.lambda_max(X)),
     Prox("SemidefiniteProx", None, lambda: [X >> 0]),
+    Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
+    Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
 ]
 
 # Epigraph operators
@@ -152,11 +154,13 @@ PROX_TESTS += [
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
     Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
     Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
-    # Prox("NegativeEntropyEpigraph", 0, [-cp.sum_entries(cp.entr(x)) <= t]),
+    #Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
     Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
+    Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
+    Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
 ]
 
 def test_prox():

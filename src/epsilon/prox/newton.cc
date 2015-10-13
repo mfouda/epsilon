@@ -68,13 +68,14 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
 
   double s = sv(0);
   Eigen::VectorXd v = sv.tail(n);
+  Eigen::VectorXd x = f_->proj_feasible(v);
+  double feasible_dist = (v-x).norm();
 
   // easy case
-  if (f_->eval(v) <= s)
+  if (feasible_dist < eps && f_->eval(x) <= s)
     return sv;
 
   // init
-  Eigen::VectorXd x = f_->proj_feasible(v);
   double t = s;
   double lam = 1;
 
@@ -84,6 +85,7 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * f_->hessf(x);
     Eigen::VectorXd g = residual(x, t, lam, v, s);
     VLOG(2) << "Iter " << iter << "\n"
+            << " lam: " << lam << "\n"
             << " x: " << VectorDebugString(x) << "\n"
             << " g: " << VectorDebugString(g) << "\n"
             << " hx: " << VectorDebugString(hx);
@@ -97,6 +99,7 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
     z(n) = -1.;
     double alpha = 0;
     Eigen::VectorXd step = SolveArrowheadSystem(d, z, alpha, g);
+    VLOG(2) << " step: " << VectorDebugString(step);
 
     // line search
     double beta = 0.001;
@@ -105,11 +108,13 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
     double x_res = g.norm();
     while(theta > eps) {
       Eigen::VectorXd nx = x - theta*step.head(n);
+      nx = f_->proj_feasible(nx);
       double nt = t - theta*step(n);
       double nlam = lam - theta*step(n+1);
-      if(nlam < 0)
-              nlam = 0;
+      if(nlam < eps)
+              nlam = eps;
       double nx_res = residual(nx, nt, nlam, v, s).norm();
+      VLOG(2) << "x_res = " << x_res << ", nx_res = " << nx_res << "\n";
       if(nx_res <= (1-beta*theta)*x_res) {
         x = nx;
         t = nt;
@@ -121,6 +126,7 @@ Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
       if(theta < eps)
               VLOG(1) << "Line search reach max iter, x_res=" << x_res << "\n";
     }
+    VLOG(2) << "XRES = "<< x_res << ", theta = " << theta <<"\n";
 
     if(x_res < eps) {
       VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";

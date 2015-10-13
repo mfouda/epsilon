@@ -56,8 +56,10 @@ common_cc = \
 	epsilon/file/file.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/deadzone.cc \
+	epsilon/prox/sum_exp.cc \
 	epsilon/prox/fused_lasso.cc \
 	epsilon/prox/hinge.cc \
+	epsilon/prox/inv_pos.cc \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear.cc \
 	epsilon/prox/linear_equality.cc \
