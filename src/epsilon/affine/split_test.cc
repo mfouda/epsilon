@@ -226,3 +226,53 @@ TEST(SplitExpressionIterator, Tree_Negate) {
   iter.NextValue();
   ASSERT_TRUE(iter.done());
 }
+
+TEST(SplitExpressionIterator, HStack) {
+  /**
+   *          a
+   *        /   \
+   *      b      f
+   *    / | \
+   *   c  d  e
+   */
+
+  Expression expr = expression::Add(
+      expression::HStack(
+          {expression::Variable(10, 1, "c"),
+           expression::Variable(10, 2, "d"),
+           expression::Variable(10, 3, "e")}),
+      expression::Variable(10, 6, "f"));
+
+  SplitExpressionIterator iter(expr);
+
+  // c
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("c", iter.leaf().variable().variable_id());
+  EXPECT_EQ(0, iter.chain().arg(0).stack_params().offset());
+
+  // d
+  iter.NextValue();
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("d", iter.leaf().variable().variable_id());
+  EXPECT_EQ(1, iter.chain().arg(0).stack_params().offset());
+  EXPECT_EQ(10, iter.chain().arg(0).size().dim(0));
+  EXPECT_EQ(6, iter.chain().arg(0).size().dim(1));
+
+  // e
+  iter.NextValue();
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("e", iter.leaf().variable().variable_id());
+  EXPECT_EQ(3, iter.chain().arg(0).stack_params().offset());
+  EXPECT_EQ(10, iter.chain().arg(0).size().dim(0));
+  EXPECT_EQ(6, iter.chain().arg(0).size().dim(1));
+
+  // f
+  iter.NextValue();
+  ASSERT_FALSE(iter.done());
+  EXPECT_EQ("f", iter.leaf().variable().variable_id());
+  EXPECT_EQ(10, iter.chain().arg(0).size().dim(0));
+  EXPECT_EQ(6, iter.chain().arg(0).size().dim(1));
+
+  iter.NextValue();
+  ASSERT_TRUE(iter.done());
+}

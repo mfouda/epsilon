@@ -79,7 +79,10 @@ common_cc = \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
+	epsilon/vector/block_vector.cc \
+	epsilon/vector/block_matrix.cc \
 	epsilon/vector/dynamic_matrix.cc \
+	epsilon/vector/matrix_variant.cc \
 	epsilon/vector/vector_file.cc \
 	epsilon/vector/vector_util.cc
 
@@ -103,7 +106,10 @@ tests = \
 	epsilon/affine/affine_test \
 	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
-	epsilon/prox/prox_test
+	epsilon/prox/prox_test \
+	epsilon/vector/block_matrix_test \
+	epsilon/vector/block_vector_test \
+	epsilon/vector/matrix_variant_test
 
 binaries = \
 	epsilon/benchmark

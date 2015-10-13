@@ -84,6 +84,7 @@ least_abs_dev  |   0.38s|   7.09e+03
 logreg_l1      |   4.84s|   1.04e+03
 lp             |   0.56s|   7.77e+02
 mnist          |   1.44s|   1.53e+03
+quantile       |  16.40s|   3.64e+03
 tv_1d          |   0.50s|   2.13e+05
 tv_denoise     |  24.17s|   1.15e+06
 
@@ -106,3 +107,4 @@ lp             |   5.47s|   7.75e+02
 mnist          | 227.65s|   1.60e+03
 tv_1d          |  47.28s|   3.51e+05
 tv_denoise     | 372.86s|   1.69e+06
+quantile       |  88.60s|   4.99e+03

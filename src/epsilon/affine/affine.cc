@@ -191,7 +191,7 @@ void BuildAffineOperatorImpl(
     }
     BuildAffineOperatorImpl(expr.arg(expr.arg_size() - 1), offset_map, L, A, b);
   } else if (expr.expression_type() == Expression::HSTACK) {
-    int offset = 0;
+    int offset = expr.stack_params().offset() * GetDimension(expr, 0);
     for (const Expression& arg : expr.arg()) {
       int mi = GetDimension(arg);
       BuildAffineOperatorImpl(
@@ -200,7 +200,7 @@ void BuildAffineOperatorImpl(
     }
   } else if (expr.expression_type() == Expression::VSTACK) {
     const int m = GetDimension(expr, 0);
-    int offset = 0;
+    int offset = expr.stack_params().offset();
     for (int i = 0; i < expr.arg_size(); i++) {
       const Expression& arg = expr.arg(i);
       const int mi = GetDimension(arg, 0);
