@@ -39,6 +39,7 @@ MatrixVariant MatrixVariant::transpose() const {
     case SCALAR:
       return *this;
   }
+  LOG(FATAL) << "unknown type: " << type_;
 }
 
 MatrixVariant::DenseMatrix MatrixVariant::AsDense() const {
