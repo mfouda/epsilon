@@ -14,28 +14,6 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-// Handles constraints of the form AXB + C
-class MatrixLeastSquaresOperator final : public VectorOperator {
- public:
-  MatrixLeastSquaresOperator(
-      const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
-    Vm_ = A.rows();
-    Vn_ = B.cols();
-    svd_A_.compute(A, Eigen::ComputeThinU|Eigen::ComputeThinV);
-    svd_BT_.compute(B.transpose(), Eigen::ComputeThinU|Eigen::ComputeThinV);
-  }
-
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    Eigen::MatrixXd XB = svd_A_.solve(ToMatrix(v, Vm_, Vn_));
-    return ToVector(svd_BT_.solve(XB.transpose()).transpose());
-  }
-
- private:
-  int Vm_, Vn_;
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd_A_;
-  Eigen::JacobiSVD<Eigen::MatrixXd> svd_BT_;
-};
-
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
     const SolverParams& params,
@@ -253,7 +231,7 @@ void ProxADMMSolver::InitProxOperator(const Expression& expr) {
 // which are typically scalar identity matrices (by definition, in the case of
 // applying the proximal operator directly). Find a way to optimize this better
 // with more intelligence in the initialization phase.
-void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
+void ProxADMMSolver::ApplyOperator(int i) {
   VLOG(2) << "ApplyOperator";
 
   const DynamicMatrix& Ai = info.Ai;
@@ -263,7 +241,13 @@ void ProxADMMSolver::ApplyOperator(const OperatorInfo& info) {
   Eigen::VectorXd xi;
   Eigen::VectorXd Ai_xi_old = Ai.Apply(xi_old);
 
-  if (!info.linearized) {
+  for (const std::string var& : info.vars) {
+    v_ -= A_*x_[var];
+    x_ +=
+  }
+
+
+
     xi = info.op->Apply(info.B*(Ax_ - Ai_xi_old + b_ + u_));
   } else {
     xi = info.op->Apply(xi_old - mu*params_.rho()*Ai.ApplyTranspose((Ax_ + u_)));
@@ -312,15 +296,15 @@ void ProxADMMSolver::Solve() {
 }
 
 void ProxADMMSolver::UpdateLocalParameters() {
-  for (const Expression* expr : GetVariables(problem_)) {
-    const int i = var_map_.Get(expr->variable().variable_id());
-    const int n = GetDimension(*expr);
-    uint64_t param_id = VariableParameterId(
-        problem_id(), expr->variable().variable_id());
-    const Eigen::VectorXd delta = x_.segment(i, n) - x_param_prev_.segment(i, n);
-    parameter_service_->Update(param_id, delta);
-    x_param_prev_.segment(i, n) += delta;
-  }
+  // for (const Expression* expr : GetVariables(problem_)) {
+  //   const int i = var_map_.Get(expr->variable().variable_id());
+  //   const int n = GetDimension(*expr);
+  //   uint64_t param_id = VariableParameterId(
+  //       problem_id(), expr->variable().variable_id());
+  //   const Eigen::VectorXd delta = x_.segment(i, n) - x_param_prev_.segment(i, n);
+  //   parameter_service_->Update(param_id, delta);
+  //   x_param_prev_.segment(i, n) += delta;
+  // }
 }
 
 void ProxADMMSolver::ComputeResiduals() {

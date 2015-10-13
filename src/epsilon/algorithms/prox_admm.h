@@ -16,34 +16,6 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-struct OperatorInfo {
-  int i;
-  std::unique_ptr<VectorOperator> op;
-
-  // Holds the block of the constraint matrix
-  DynamicMatrix Ai;
-
-  // Maps R^m -> R^ni for input to prox operator.
-  SparseXd B;
-
-  // Maps R^n -> R^ni for output of prox operator
-  SparseXd V;
-
-  // For linearization
-  bool linearized;
-  double mu;
-};
-
-struct ConstraintInfo {
-  // Size of this constraint
-  int mi;
-
-  // Expressions grouped by variable
-  std::unordered_map<std::string, std::vector<Expression>> exprs_by_var;
-
-  Eigen::VectorXd b;
-};
-
 class ProxADMMSolver final : public Solver {
 public:
   ProxADMMSolver(
@@ -56,10 +28,10 @@ private:
   void Init();
   void InitVariables();
   void InitConstraints();
-  void InitProxOperator(const Expression& expr);
-  void InitLeastSquares(const Expression& expr);
+  std::unique_ptr<BlockVectorOperator> InitProxOperator(
+      const Expression& expr);
 
-  void ApplyOperator(const OperatorInfo& op);
+  void ApplyProxOperator(int i);
   void ComputeResiduals();
   void LogStatus();
   void UpdateLocalParameters();
@@ -71,25 +43,22 @@ private:
   // Stores parameter
   std::unique_ptr<ParameterService> parameter_service_;
 
-  // Problem size
+  // Problem parameters
   int m_, n_;
+  BlockMatrix A_;
+  BlockVector b_;
 
   // Iteration variables
   int iter_;
-  Eigen::VectorXd x_, x_prev_, x_param_prev_, u_, Ax_;
+  BlockVector x_, x_prev_, u_, v_;
   SolverStatus status_;
-  std::vector<double> Ai_xi_norm_;
-  std::vector<Eigen::VectorXd> s_xi_;
 
-  // Equality constraints
-  Eigen::VectorXd b_;
+  // For computing residuals
+  std::vector<double> Ai_xi_norm_;
+  std::vector<Eigen::VectorXd> s_;
 
   // Precomputed
-  VariableSet vars_in_prox_;
-  VariableOffsetMap var_map_;
-  Expression constr_expr_;
-  std::vector<OperatorInfo> ops_;
-  std::vector<ConstraintInfo> constraints_;
+  std::vector<std::unique_ptr<BlockVectorOperator>> prox_;
 };
 
 
