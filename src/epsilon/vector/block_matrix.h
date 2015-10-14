@@ -32,25 +32,27 @@ class BlockMatrix {
  public:
   class Solver {
    public:
-    BlockVector solve(const BlockVector& b);
+    virtual BlockVector solve(const BlockVector& b) = 0;
   };
 
   MatrixVariant& operator()(
       const std::string& row_key, const std::string& col_key);
-  BlockMatrix& operator*=(const BlockMatrix& rhs);
 
+  friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
   BlockMatrix transpose() const;
-  Solver inv(double lambda = 0) const;
+  std::unique_ptr<Solver> inv(double lambda = 0) const;
 
  private:
+  void InsertOrAdd(const std::string& row_key, const std::string& col_key,
+                   MatrixVariant value);
 
   // col -> row -> value
   std::map<std::string, std::map<std::string, MatrixVariant>> data_;
 };
 
-BlockMatrix operator*(BlockMatrix lhs, const BlockMatrix& rhs);
+BlockMatrix operator*(const BlockMatrix& lhs, const BlockMatrix& rhs);
 BlockVector operator*(const BlockMatrix& lhs, const BlockVector& rhs);
 
 #endif  // EPSILON_VECTOR_BLOCK_MATRIX_H
