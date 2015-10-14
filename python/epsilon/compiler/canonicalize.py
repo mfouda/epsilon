@@ -150,6 +150,8 @@ EXPRESSION_RULES = [
      lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("Logistic", Expression.SUM,
      lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
+    ("KLDiv", Expression.KL_DIV,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("MaxEntries", Expression.MAX_ENTRIES,
      lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("NegativeEntropy", Expression.NEGATE,
@@ -227,6 +229,12 @@ def prox_fused_lasso(expr):
             return
 
         expr.proximal_operator.name = "FusedLassoProx"
+        yield expr
+
+def prox_kl_div(expr):
+    if (expr.expression_type == Expression.KL_DIV and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "KLDivProx"
         yield expr
 
 def prox_lambda_max(expr):
@@ -601,6 +609,7 @@ PROX_RULES = [
     prox_add,
     prox_affine,
     prox_fused_lasso,
+    prox_kl_div,
     prox_lambda_max,
     prox_least_squares,
     prox_logistic,

@@ -60,6 +60,7 @@ common_cc = \
 	epsilon/prox/fused_lasso.cc \
 	epsilon/prox/hinge.cc \
 	epsilon/prox/inv_pos.cc \
+	epsilon/prox/kl_div.cc \
 	epsilon/prox/least_squares.cc \
 	epsilon/prox/linear.cc \
 	epsilon/prox/linear_equality.cc \
