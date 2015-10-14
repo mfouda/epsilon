@@ -50,6 +50,8 @@ private:
   int m_, n_, N_;
   BlockMatrix A_;
   BlockVector b_;
+  // (Ai)^T
+  std::vector<BlockMatrix> AT_;
 
   // Iteration variables
   int iter_;
@@ -61,10 +63,7 @@ private:
   SolverStatus status_;
 
   // For computing residuals
-  BlockMatrix AT_;
-  std::vector<BlockMatrix> ATA_;
   std::vector<BlockVector> x_prev_;
-
 
   // Precomputed
 };

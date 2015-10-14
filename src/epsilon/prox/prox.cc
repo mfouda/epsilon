@@ -111,3 +111,43 @@ std::unique_ptr<VectorOperator> CreateProxOperator(
   return std::unique_ptr<VectorOperator>(new ProxVectorOperator(
       lambda, f_expr, var_map));
 }
+
+class ProxBlockVectorOperator final : public BlockVectorOperator {
+ public:
+  ProxBlockVectorOperator(
+      double lambda,
+      const Expression& f_expr)
+      : prox_vector_operator_(lambda, f_expr, var_map_) {
+    var_map_.Insert(f_expr);
+  }
+
+  void Init() override {
+    prox_vector_operator_.Init();
+  }
+
+  // Currently we just map to ProxVectorOperator. In future we will replace that
+  // functionality here and avoid unnecessary copying.
+  virtual BlockVector Apply(const BlockVector& v) override {
+    Eigen::VectorXd v_vec;
+    for (auto iter : var_map_.offsets()) {
+      v_vec.segment(iter.second, var_map_.Size(iter.first)) = v(iter.first);
+    }
+    Eigen::VectorXd x_vec = prox_vector_operator_.Apply(v_vec);
+    BlockVector x;
+    for (auto iter : var_map_.offsets()) {
+      x(iter.first) = x_vec.segment(iter.second, var_map_.Size(iter.first));
+    }
+    return x;
+  }
+
+ private:
+  VariableOffsetMap var_map_;
+  ProxVectorOperator prox_vector_operator_;
+};
+
+std::unique_ptr<BlockVectorOperator> CreateProxOperator(
+    double lambda,
+    const Expression& f_expr) {
+  return std::unique_ptr<BlockVectorOperator>(new ProxBlockVectorOperator(
+      lambda, f_expr));
+}

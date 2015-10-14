@@ -6,6 +6,8 @@
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/vector/dynamic_matrix.h"
 
+class BlockMatrix;
+class BlockVector;
 class Data;
 class Expression;
 

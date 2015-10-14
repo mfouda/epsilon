@@ -33,7 +33,6 @@ void ProxADMMSolver::InitConstraints() {
         "constr" + std::to_string(i),
         &A_, &b_);
   }
-  AT_ = A_.transpose();
   m_ = A_.rows();
   n_ = A_.cols();
 }
@@ -41,18 +40,17 @@ void ProxADMMSolver::InitConstraints() {
 void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
-  for (const Expression& expr : problem_.objective().arg()) {
-    prox_.emplace_back(CreateProxOperator(1/params_.rho(), expr, A_));
-  }
 
-  // For computing s norm residual
-  BlockMatrix ATA = AT_*A_;
-  ATA_.resize(N_);
   for (int i = 0; i < N_; i++) {
+    const Expression& f_expr = problem_.objective().arg(i);
     std::vector<std::string> var_ids;
     for (const Expression* expr : GetVariables(problem_.objective().arg(i)))
       var_ids.push_back(expr->variable().variable_id());
-    ATA_[i] = ATA.RowBlock(var_ids);
+
+    // TODO(mwytock): Check that A'A is a scalar matrix and get alpha
+    AT_.emplace_back(A_.ColBlock(var_ids).transpose());
+    prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));
+    prox_.back()->Init();
   }
 }
 
@@ -68,11 +66,11 @@ void ProxADMMSolver::Solve() {
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
     x_prev_ = x_;
-    u_ += b_;
+    u_ -= b_;
     for (int i = 0; i < N_; i++) {
-      u_ -= A_*x_[i];
-      x_[i] = prox_[i]->Apply(u_);
       u_ += A_*x_[i];
+      x_[i] = prox_[i]->Apply(AT_[i]*u_);
+      u_ -= A_*x_[i];
     }
 
     if ((iter_+1) % params_.epoch_iterations() == 0) {
@@ -114,19 +112,22 @@ void ProxADMMSolver::ComputeResiduals() {
     Ax_b += Ai_xi;
   }
 
-  const double ATu_norm = (AT_*u_).norm();
+  double ATu_norm_squared = 0.0;
   double s_norm_squared = 0;
   BlockVector x_diff;
   for (int i = N_ - 2; i >= 0; i--) {
     x_diff += x_[i+1] - x_prev_[i+1];
-    const double s_norm_i = (ATA_[i]*x_diff).norm();
+    const double s_norm_i = (AT_[i]*A_*x_diff).norm();
+    const double ATu_norm_i = (AT_[i]*u_).norm();
     s_norm_squared += s_norm_i*s_norm_i;
+    ATu_norm_squared += ATu_norm_i*ATu_norm_i;
   }
 
   r->set_r_norm(Ax_b.norm());
   r->set_s_norm(rho*sqrt(s_norm_squared));
   r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
-  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*ATu_norm);
+  r->set_epsilon_dual(  abs_tol*sqrt(n_) +
+                        rel_tol*rho*sqrt(ATu_norm_squared));
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {
