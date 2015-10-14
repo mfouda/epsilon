@@ -19,6 +19,8 @@ class BlockVector {
   BlockVector& operator-=(const BlockVector& rhs);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
+  double norm() const;
+
  private:
   void InsertOrAdd(const std::string& key, DenseVector value);
 

@@ -12,9 +12,15 @@
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/parameters/parameter_service.h"
 #include "epsilon/solver_params.pb.h"
-#include "epsilon/vector/dynamic_matrix.h"
+#include "epsilon/vector/block_matrix.h"
+#include "epsilon/vector/block_vector.h"
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
+
+struct ProxOperatorInfo {
+  std::unique_ptr<BlockVectorOperator> op;
+  VariableSet vars;
+};
 
 class ProxADMMSolver final : public Solver {
 public:
@@ -26,12 +32,9 @@ public:
 
 private:
   void Init();
-  void InitVariables();
   void InitConstraints();
-  std::unique_ptr<BlockVectorOperator> InitProxOperator(
-      const Expression& expr);
+  void InitProxOperators();
 
-  void ApplyProxOperator(int i);
   void ComputeResiduals();
   void LogStatus();
   void UpdateLocalParameters();
@@ -44,21 +47,26 @@ private:
   std::unique_ptr<ParameterService> parameter_service_;
 
   // Problem parameters
-  int m_, n_;
+  int m_, n_, N_;
   BlockMatrix A_;
   BlockVector b_;
 
   // Iteration variables
   int iter_;
-  BlockVector x_, x_prev_, u_, v_;
+  BlockVector u_;
+  std::vector<BlockVector> x_;
+  std::vector<std::unique_ptr<BlockVectorOperator> > prox_;
+
+  // Iteration variables
   SolverStatus status_;
 
   // For computing residuals
-  std::vector<double> Ai_xi_norm_;
-  std::vector<Eigen::VectorXd> s_;
+  BlockMatrix AT_;
+  std::vector<BlockMatrix> ATA_;
+  std::vector<BlockVector> x_prev_;
+
 
   // Precomputed
-  std::vector<std::unique_ptr<BlockVectorOperator>> prox_;
 };
 
 

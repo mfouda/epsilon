@@ -13,6 +13,13 @@ std::unique_ptr<VectorOperator> CreateProxOperator(
     const Expression& f_expr,
     const VariableOffsetMap& var_map);
 
+// Create a "proximal operator" for expression
+// argmin_x lambda*f(x) + (1/2)||Ax - v||^2
+std::unique_ptr<BlockVectorOperator> CreateProxOperator(
+    double lambda,
+    const Expression& f_expr,
+    const BlockMatrix& A);
+
 // Arguments to the proximal operator, lambda*f(A*x + b)
 class ProxOperatorArg {
  public:

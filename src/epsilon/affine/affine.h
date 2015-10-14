@@ -38,4 +38,15 @@ SparseXd GetSparseAffineOperator(
 // offsets in a to those in b.
 SparseXd GetProjection(const VariableOffsetMap& a, const VariableOffsetMap& b);
 
+
+namespace affine {
+
+void BuildAffineOperator(
+    const Expression& expr,
+    const std::string& row_key,
+    BlockMatrix* A,
+    BlockVector* b);
+
+}  // namespace affine
+
 #endif  // EPSILON_OPERATORS_AFFINE_H

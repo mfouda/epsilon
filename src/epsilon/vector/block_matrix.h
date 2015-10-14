@@ -40,8 +40,13 @@ class BlockMatrix {
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
+  int rows() const;
+  int cols() const;
+
   BlockMatrix transpose() const;
   std::unique_ptr<Solver> inv() const;
+  BlockMatrix RowBlock(const std::vector<std::string> row_keys) const;
+  BlockMatrix ColBlock(const std::vector<std::string> col_keys) const;
 
  private:
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
