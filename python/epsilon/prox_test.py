@@ -176,6 +176,9 @@ def test_prox():
         # Form problem and solve with proximal operator implementation
         prob = cp.Problem(cp.Minimize(f), C)
         v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+        #for (k,v) in v_map.items():
+        #    if v.shape[0] == v.shape[1]:
+        #        v_map[k] = v.dot(v.T) #(v + v.T)/2
         solve.prox(prob, v_map, lam)
         actual = {x: x.value for x in prob.variables()}
 
