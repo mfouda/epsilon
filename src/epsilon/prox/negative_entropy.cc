@@ -49,8 +49,9 @@ public:
 REGISTER_PROX_OPERATOR(NegativeEntropyProx);
 
 // I(\sum_i xi log xi <= t)
-class NegativeEntropyEpigraph final : public NewtonEpigraph {
+class NegativeEntropyEpigraph final : public ImplicitNewtonEpigraph {
 public:
-  NegativeEntropyEpigraph() : NewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
+  NegativeEntropyEpigraph() 
+    : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
 };
 REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);

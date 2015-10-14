@@ -101,6 +101,7 @@ message Expression {
     ENTR = 56;
     LOGISTIC = 57;
     SCALED_ZONE = 58;
+    KL_DIV = 59;
 
     // Vector functions
     NORM_P = 100;
