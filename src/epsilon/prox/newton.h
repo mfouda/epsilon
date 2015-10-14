@@ -19,7 +19,7 @@ class NewtonProx : public ProxOperator {
   }
   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
 
- private:
+ protected:
   Eigen::VectorXd residual(
       const Eigen::VectorXd& x, const Eigen::VectorXd& v, double lam);
 
@@ -42,4 +42,12 @@ class NewtonEpigraph : public ProxOperator {
       const Eigen::VectorXd& b);
 
   std::unique_ptr<SmoothFunction> f_;
+};
+
+class ImplicitNewtonEpigraph : public NewtonProx {
+ public:
+  ImplicitNewtonEpigraph
+    (std::unique_ptr<SmoothFunction> f) : NewtonProx(std::move(f)) {}
+
+  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
 };

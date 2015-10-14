@@ -22,10 +22,12 @@ from cvxpy.atoms.elementwise.logistic import logistic
 from cvxpy.atoms.elementwise.max_elemwise import max_elemwise
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.atoms.elementwise.power import power
+from cvxpy.atoms.kl_div import kl_div
 from cvxpy.atoms.lambda_max import lambda_max
 from cvxpy.atoms.log_det import log_det
 from cvxpy.atoms.log_sum_exp import log_sum_exp
 from cvxpy.atoms.max_entries import max_entries
+from cvxpy.atoms.matrix_frac import matrix_frac
 from cvxpy.atoms.norm_nuc import normNuc
 from cvxpy.atoms.pnorm import pnorm
 from cvxpy.atoms.quad_over_lin import quad_over_lin
@@ -121,6 +123,7 @@ EXPRESSION_TYPES = (
     (hstack, lambda e: convert_generic(Expression.HSTACK, e)),
     (huber, convert_huber),
     (index, convert_index),
+    (kl_div, lambda e: convert_generic(Expression.KL_DIV, e)),
     (lambda_max, lambda e: convert_generic(Expression.LAMBDA_MAX, e)),
     (log, lambda e: convert_generic(Expression.LOG, e)),
     (log_det, lambda e: convert_generic(Expression.LOG_DET, e)),
@@ -128,6 +131,7 @@ EXPRESSION_TYPES = (
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
     (max_entries, lambda e: convert_generic(Expression.MAX_ENTRIES, e)),
+    (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
     (normNuc, lambda e: convert_generic(Expression.NORM_NUC, e)),
