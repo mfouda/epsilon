@@ -17,11 +17,6 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-struct ProxOperatorInfo {
-  std::unique_ptr<BlockVectorOperator> op;
-  VariableSet vars;
-};
-
 class ProxADMMSolver final : public Solver {
 public:
   ProxADMMSolver(
@@ -50,8 +45,7 @@ private:
   int m_, n_, N_;
   BlockMatrix A_;
   BlockVector b_;
-  // (Ai)^T
-  std::vector<BlockMatrix> AT_;
+  std::vector<BlockMatrix> AiT_;
 
   // Iteration variables
   int iter_;
@@ -64,8 +58,9 @@ private:
 
   // For computing residuals
   std::vector<BlockVector> x_prev_;
+  BlockMatrix AT_;
 
-  // Precomputed
+  friend class ProxADMMSolverTest;
 };
 
 

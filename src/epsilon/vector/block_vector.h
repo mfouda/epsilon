@@ -12,7 +12,34 @@ class BlockVector {
  public:
   typedef Eigen::Matrix<double, Eigen::Dynamic, 1> DenseVector;
 
-  DenseVector& operator()(const std::string& key) { return data_[key]; };
+  BlockVector() {
+    VLOG(3) << "default ctor";
+  }
+
+  BlockVector(const BlockVector& rhs) {
+    VLOG(3) << "copy ctor";
+    data_ = rhs.data_;
+  }
+
+  BlockVector(BlockVector&& rhs) {
+    VLOG(3) << "move ctor";
+    data_ = std::move(rhs.data_);
+  }
+
+  BlockVector& operator=(const BlockVector& rhs) {
+    VLOG(3) << "copy assignment";
+    BlockVector lhs(rhs);
+    *this = std::move(lhs);
+    return *this;
+  }
+
+  BlockVector& operator=(BlockVector&& rhs) {
+    VLOG(3) << "move assignment";
+    std::swap(data_, rhs.data_);
+    return *this;
+  }
+
+  DenseVector& operator()(const std::string& key);
   const DenseVector& operator()(const std::string& key) const;
 
   BlockVector& operator+=(const BlockVector& rhs);
@@ -20,6 +47,11 @@ class BlockVector {
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
   double norm() const;
+  bool has_key(const std::string& key) const {
+    return data_.find(key) != data_.end();
+  }
+
+  std::string DebugString() const;
 
  private:
   void InsertOrAdd(const std::string& key, DenseVector value);

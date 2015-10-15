@@ -46,6 +46,7 @@ void ProxADMMSolver::InitConstraints() {
       }
     }
   }
+  AT_ = A_.transpose();
   m_ = A_.rows();
   n_ = A_.cols();
 }
@@ -53,13 +54,14 @@ void ProxADMMSolver::InitConstraints() {
 void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
-  AT_.resize(N_);
+  AiT_.resize(N_);
+  x_.resize(N_);
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();
       for (auto iter : A_.col(var_id))
-        AT_[i](var_id, iter.first) = iter.second.transpose();
+        AiT_[i](var_id, iter.first) = iter.second.transpose();
     }
 
     prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));
@@ -71,7 +73,7 @@ void ProxADMMSolver::Init() {
   VLOG(2) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
-  VLOG(1) << "Prox ADMM " << " m = " << m_ << " n = " << n_ << " N = " << N_;
+  VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
 }
 
 void ProxADMMSolver::Solve() {
@@ -81,12 +83,18 @@ void ProxADMMSolver::Solve() {
     x_prev_ = x_;
     u_ -= b_;
     for (int i = 0; i < N_; i++) {
-      u_ += A_*x_[i];
-      x_[i] = prox_[i]->Apply(AT_[i]*u_);
       u_ -= A_*x_[i];
     }
 
-    if ((iter_+1) % params_.epoch_iterations() == 0) {
+    for (int i = 0; i < N_; i++) {
+      u_ += A_*x_[i];
+      x_[i] = prox_[i]->Apply(AiT_[i]*u_);
+      u_ -= A_*x_[i];
+      VLOG(2) << "x: " << x_[i].DebugString();
+    }
+    VLOG(2) << "u: " << u_.DebugString();
+
+    if (iter_ % params_.epoch_iterations() == 0) {
       ComputeResiduals();
       LogStatus();
       if (status_.state() == SolverStatus::OPTIMAL)
@@ -94,9 +102,13 @@ void ProxADMMSolver::Solve() {
     }
   }
 
+  if (iter_ == params_.max_iterations()) {
+    ComputeResiduals();
+    LogStatus();
+    status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
+  }
+
   UpdateLocalParameters();
-  if (iter_ == params_.max_iterations())
-      status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   UpdateStatus(status_);
 }
 
@@ -125,22 +137,18 @@ void ProxADMMSolver::ComputeResiduals() {
     Ax_b += Ai_xi;
   }
 
-  double ATu_norm_squared = 0.0;
   double s_norm_squared = 0;
   BlockVector x_diff;
   for (int i = N_ - 2; i >= 0; i--) {
     x_diff += x_[i+1] - x_prev_[i+1];
-    const double s_norm_i = (AT_[i]*A_*x_diff).norm();
-    const double ATu_norm_i = (AT_[i]*u_).norm();
+    const double s_norm_i = (AiT_[i]*A_*x_diff).norm();
     s_norm_squared += s_norm_i*s_norm_i;
-    ATu_norm_squared += ATu_norm_i*ATu_norm_i;
   }
 
   r->set_r_norm(Ax_b.norm());
   r->set_s_norm(rho*sqrt(s_norm_squared));
   r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
-  r->set_epsilon_dual(  abs_tol*sqrt(n_) +
-                        rel_tol*rho*sqrt(ATu_norm_squared));
+  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(AT_*u_).norm());
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {

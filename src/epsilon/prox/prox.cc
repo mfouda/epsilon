@@ -128,9 +128,10 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   // Currently we just map to ProxVectorOperator. In future we will replace that
   // functionality here and avoid unnecessary copying.
   virtual BlockVector Apply(const BlockVector& v) override {
-    Eigen::VectorXd v_vec;
+    Eigen::VectorXd v_vec = Eigen::VectorXd::Zero(var_map_.n());
     for (auto iter : var_map_.offsets()) {
-      v_vec.segment(iter.second, var_map_.Size(iter.first)) = v(iter.first);
+      if (v.has_key(iter.first))
+        v_vec.segment(iter.second, var_map_.Size(iter.first)) = v(iter.first);
     }
     Eigen::VectorXd x_vec = prox_vector_operator_.Apply(v_vec);
     BlockVector x;

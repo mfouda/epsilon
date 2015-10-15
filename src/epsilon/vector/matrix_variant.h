@@ -28,7 +28,7 @@ class MatrixVariant {
   };
 
   ~MatrixVariant() {
-    VLOG(2) << "dtor";
+    VLOG(3) << "dtor";
     Destruct();
   }
 
@@ -39,25 +39,25 @@ class MatrixVariant {
   }
 
   explicit MatrixVariant(const DenseMatrix& dense) {
-    VLOG(2) << "dense conv ctor " << this;
+    VLOG(3) << "dense conv ctor " << this;
     type_ = DENSE;
     new (&dense_) DenseMatrix(dense);
   }
 
   explicit MatrixVariant(const SparseMatrix& sparse) {
-    VLOG(2) << "sparse conv ctor " << this;
+    VLOG(3) << "sparse conv ctor " << this;
     type_ = SPARSE;
     new (&sparse_) SparseMatrix(sparse);
   }
 
   explicit MatrixVariant(const ScalarMatrix& scalar) {
-    VLOG(2) << "scalar conv ctor " << this;
+    VLOG(3) << "scalar conv ctor " << this;
     type_ = SCALAR;
     new (&scalar_) ScalarMatrix(scalar);
   }
 
   MatrixVariant(const MatrixVariant& rhs) {
-    VLOG(2) << "copy ctor";
+    VLOG(3) << "copy ctor";
     switch (rhs.type_) {
       case MatrixVariant::SPARSE:
         new (&sparse_) SparseMatrix(rhs.sparse_);
@@ -76,7 +76,7 @@ class MatrixVariant {
   }
 
   MatrixVariant(MatrixVariant&& rhs) {
-    VLOG(2) << "move ctor " << this;
+    VLOG(3) << "move ctor " << this;
     switch (rhs.type_) {
       case MatrixVariant::SPARSE:
         new (&sparse_) SparseMatrix(std::move(rhs.sparse_));
@@ -95,14 +95,14 @@ class MatrixVariant {
   }
 
   MatrixVariant& operator=(const MatrixVariant& rhs) {
-    VLOG(2) << "copy assignment " << this;
+    VLOG(3) << "copy assignment " << this;
     MatrixVariant lhs(rhs);
     *this = std::move(lhs);
     return *this;
   }
 
   MatrixVariant& operator=(MatrixVariant&& rhs) {
-    VLOG(2) << "move assignment " << this;
+    VLOG(3) << "move assignment " << this;
     Destruct();
     switch (rhs.type_) {
       case MatrixVariant::SPARSE:
