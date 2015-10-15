@@ -6,6 +6,7 @@
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/matrix_variant.h"
+#include "epsilon/vector/block_matrix.h"
 
 class BlockMatrix;
 class BlockVector;
@@ -45,6 +46,7 @@ SparseXd GetProjection(const VariableOffsetMap& a, const VariableOffsetMap& b);
 namespace affine {
 
 MatrixVariant BuildLinearOperator(const Expression& expr);
+void BuildOperator(const Expression& expr, BlockMatrix* A, BlockVector* b);
 
 }  // namespace affine
 

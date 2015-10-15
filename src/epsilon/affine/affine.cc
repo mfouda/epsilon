@@ -7,12 +7,13 @@
 
 #include <Eigen/SparseCore>
 
+#include "epsilon/affine/split.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
 #include "epsilon/util/string.h"
-#include "epsilon/vector/vector_util.h"
 #include "epsilon/vector/vector_file.h"
+#include "epsilon/vector/vector_util.h"
 
 using Eigen::Map;
 using Eigen::MatrixXd;
@@ -365,7 +366,24 @@ MatrixVariant VStack(const Expression& expr) {
 }
 
 MatrixVariant Index(const Expression& expr) {
-  LOG(FATAL) << "Not implemented";
+  const Expression& arg = GetOnlyArg(expr);
+  CHECK_EQ(expr.size().dim_size(), 2);
+  CHECK_EQ(2, expr.key_size());
+  const int rows = GetDimension(arg, 0);
+  const Slice& rkey = expr.key(0);
+  const Slice& ckey = expr.key(1);
+
+  std::vector<Eigen::Triplet<double> > coeffs;
+  int k = 0;
+  for (int j = ckey.start(); j < ckey.stop(); j += ckey.step()) {
+    for (int i = rkey.start(); i < rkey.stop(); i += rkey.step()) {
+      coeffs.push_back(Eigen::Triplet<double>(k++, j*rows + i, 1));
+    }
+  }
+
+  SparseXd A(GetDimension(expr), GetDimension(arg));
+  A.setFromTriplets(coeffs.begin(), coeffs.end());
+  return MatrixVariant(A)*BuildLinearOperator(arg);
 }
 
 
@@ -391,7 +409,32 @@ MatrixVariant BuildLinearOperator(const Expression& expr) {
     LOG(FATAL) << "No linear function for "
                << Expression::Type_Name(expr.expression_type());
   }
-  return iter->second(expr);
+
+  MatrixVariant A = iter->second(expr);
+  VLOG(2) << "BuildLinearOperator returning\n" << A.DebugString();
+  return A;
 }
+
+void BuildOperator(
+    const Expression& expr,
+    BlockMatrix* A,
+    BlockVector* b) {
+  SplitExpressionIterator iter(expr);
+  for (; !iter.done(); iter.NextValue()) {
+    if (iter.leaf().expression_type() == Expression::VARIABLE) {
+      MatrixVariant Aij = affine::BuildLinearOperator(iter.chain());
+      (*A)("_", iter.leaf().variable().variable_id()) = Aij;
+    } else {
+      CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
+      Eigen::VectorXd bi = ToVector(
+          affine::BuildLinearOperator(iter.chain()).AsDense());
+      if (b->has_key("_"))
+        (*b)("_") += bi;
+      else
+        (*b)("_") = bi;
+    }
+  }
+}
+
 
 }  // affine

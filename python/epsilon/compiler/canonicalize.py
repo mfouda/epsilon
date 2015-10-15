@@ -450,49 +450,13 @@ def prox_epigraph_atomic(expr):
         expr.proximal_operator.name = name + "Epigraph"
         yield expr
 
-def prox_linear_equality_graph(expr):
-    if not (expr.expression_type == Expression.INDICATOR and
-            expr.cone.cone_type == Cone.ZERO and
-            len(expr.arg) == 1 and
-            expr.arg[0].expression_type == Expression.ADD and
-            len(expr.arg[0].arg) == 2):
-        return
-
-    for i, arg in enumerate(expr.arg[0].arg):
-        if (arg.expression_type == Expression.VARIABLE or
-            (arg.expression_type == Expression.NEGATE and
-             arg.arg[0].expression_type == Expression.VARIABLE)):
-            break
-    else:
-        return
-
-    AX_expr = expr.arg[0].arg[1-i]
-    if (len(expr_vars(AX_expr)) != 1 or
-        AX_expr.curvature.curvature_type != Curvature.AFFINE):
-        return
-
-    expr.proximal_operator.name = "LinearEqualityGraphProx"
-    yield expr
-
-def prox_linear_equality_matrix(expr):
+def prox_linear_equality(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.ZERO and
         len(expr.arg) == 1 and
-        expr.arg[0].curvature.curvature_type == Curvature.AFFINE and
-        len(expr_vars(expr)) == 1):
-
-        expr.proximal_operator.name = "LinearEqualityMatrixProx"
-        yield expr
-
-def prox_linear_equality(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.ZERO):
-
+        expr.arg[0].curvature.curvature_type == Curvature.AFFINE):
         expr.proximal_operator.name = "LinearEqualityProx"
-        if all(arg.curvature.curvature_type == Curvature.AFFINE or
-               arg.curvature.curvature_type == Curvature.CONSTANT
-               for arg in expr.arg):
-            yield expr
+        yield expr
 
 
 def prox_non_negative(expr):
@@ -596,8 +560,6 @@ PROX_RULES = [
     prox_norm_l1_asymmetric_single_max,
     prox_max_elementwise,
     prox_epigraph_atomic,
-    prox_linear_equality_graph,
-    prox_linear_equality_matrix,
     prox_linear_equality,
     prox_non_negative,
     prox_linear_epigraph,

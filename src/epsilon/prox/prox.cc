@@ -61,6 +61,10 @@ std::unordered_map<
   std::string,
   std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
 
+std::unordered_map<
+  std::string,
+  std::function<std::unique_ptr<BlockProxOperator>()>>* kBlockProxOperatorMap;
+
 // Preprocess f(x) to extract f(x) = alpha*g(Ax + b) + c'x.
 // NOTE(mwytock): We assume the input expression has already undergone
 // processing and thus we dont need to handle fully general expressions here.
@@ -117,17 +121,31 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   ProxBlockVectorOperator(
       double lambda,
       const Expression& f_expr)
-      : prox_vector_operator_(lambda, f_expr, var_map_) {
+      : prox_vector_operator_(lambda, f_expr, var_map_),
+      lambda_(lambda),
+      f_expr_(f_expr) {
     var_map_.Insert(f_expr);
   }
 
   void Init() override {
-    prox_vector_operator_.Init();
+    CHECK(kBlockProxOperatorMap != nullptr) << "No registered operators";
+    auto iter = kBlockProxOperatorMap->find(f_expr_.proximal_operator().name());
+    if (iter == kBlockProxOperatorMap->end()) {
+      block_vector_prox_ = false;
+      prox_vector_operator_.Init();
+    } else {
+      block_vector_prox_ = true;
+      prox_ = iter->second();
+      prox_->Init(ProxOperatorArg(lambda_, &f_expr_, nullptr));
+    }
   }
 
   // Currently we just map to ProxVectorOperator. In future we will replace that
   // functionality here and avoid unnecessary copying.
   virtual BlockVector Apply(const BlockVector& v) override {
+    if (block_vector_prox_)
+      return prox_->Apply(v);
+
     Eigen::VectorXd v_vec = Eigen::VectorXd::Zero(var_map_.n());
     for (auto iter : var_map_.offsets()) {
       if (v.has_key(iter.first))
@@ -144,6 +162,11 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
  private:
   VariableOffsetMap var_map_;
   ProxVectorOperator prox_vector_operator_;
+
+  bool block_vector_prox_;
+  double lambda_;
+  Expression f_expr_;
+  std::unique_ptr<BlockProxOperator> prox_;
 };
 
 std::unique_ptr<BlockVectorOperator> CreateProxOperator(

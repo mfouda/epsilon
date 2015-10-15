@@ -1,4 +1,5 @@
 #include "epsilon/vector/matrix_variant.h"
+#include "epsilon/util/string.h"
 
 class DenseSolver : public MatrixVariant::Solver {
  public:
@@ -47,6 +48,21 @@ int MatrixVariant::cols() const {
   LOG(FATAL) << "unknown type: " << type_;
 }
 
+std::string MatrixVariant::DebugString() const {
+  switch (type_) {
+    case DENSE:
+      return MatrixDebugString(dense_);
+    case SPARSE:
+      return SparseMatrixDebugString(sparse_);
+    case DIAGONAL:
+      return MatrixDebugString(dense_);
+    case SCALAR:
+      return StringPrintf("scalar matrix: n=%d alpha=%3.4f", scalar_.n, scalar_.alpha);
+  }
+  LOG(FATAL) << "unkonwn type: " << type_;
+}
+
+
 MatrixVariant MatrixVariant::transpose() const {
   switch (type_) {
     case DENSE:
@@ -62,6 +78,7 @@ MatrixVariant MatrixVariant::transpose() const {
 }
 
 std::unique_ptr<MatrixVariant::Solver> MatrixVariant::inv() const {
+  VLOG(3) << "Inverting\n" << DebugString();
   switch (type_) {
     case DENSE:
       return std::unique_ptr<Solver>(new DenseSolver(dense_));
@@ -117,6 +134,9 @@ MatrixVariant& MatrixVariant::operator+=(const MatrixVariant& rhs) {
           rhs.scalar_.n);
     }
   }
+  else if (t == DIAGONAL || t == SCALAR) {
+    LOG(FATAL) << "Not implemented";
+  }
 
   return *this;
 }
@@ -130,7 +150,7 @@ MatrixVariant& MatrixVariant::operator*=(const MatrixVariant& rhs) {
     if      (s == DENSE)    { dense_ *= rhs.dense_; }
     else if (s == SPARSE)   { dense_ *= rhs.sparse_; }
     else if (s == DIAGONAL) { dense_ *= rhs.diagonal_; }
-    else if (s == SCALAR)   { dense_ *= rhs.scalar_.n; }
+    else if (s == SCALAR)   { dense_ *= rhs.scalar_.alpha; }
   }
   else if (t == SPARSE) {
     if (s == DENSE)         { *this =
@@ -140,6 +160,24 @@ MatrixVariant& MatrixVariant::operator*=(const MatrixVariant& rhs) {
       sparse_ = sparse_ * DiagonalSparse(rhs.diagonal_.diagonal());
     }
     else if (s == SCALAR)   { sparse_ *= rhs.scalar_.alpha; }
+  }
+  else if (t == DIAGONAL) {
+    LOG(FATAL) << "Not implemented";
+  }
+  else if (t == SCALAR) {
+    if (s == DENSE) {
+      *this = MatrixVariant(scalar_.alpha*rhs.dense_);
+    }
+    else if (s == SPARSE) {
+      *this = MatrixVariant((scalar_.alpha*rhs.sparse_).eval());
+    }
+    else if (s == DIAGONAL) {
+      *this = MatrixVariant(scalar_.alpha*rhs.diagonal_);
+    }
+    else if (s == SCALAR) {
+      CHECK_EQ(scalar_.n, rhs.scalar_.n);
+      scalar_.alpha *= rhs.scalar_.alpha;
+    }
   }
 
   return *this;

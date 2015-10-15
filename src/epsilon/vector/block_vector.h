@@ -4,6 +4,8 @@
 
 #include <Eigen/Dense>
 
+#include <glog/logging.h>
+
 #include <map>
 
 class BlockMatrix;
@@ -54,6 +56,7 @@ class BlockVector {
   bool has_key(const std::string& key) const {
     return data_.find(key) != data_.end();
   }
+  const std::map<std::string, DenseVector>& data() const { return data_; }
 
   std::string DebugString() const;
 

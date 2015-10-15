@@ -140,10 +140,10 @@ void ProxADMMSolver::ComputeResiduals() {
 
   VLOG(3) << "compute s norm";
   double s_norm_squared = 0;
-  BlockVector x_diff;
+  BlockVector Ax_diff;
   for (int i = N_ - 2; i >= 0; i--) {
-    x_diff += x_[i+1] - x_prev_[i+1];
-    const double s_norm_i = (AiT_[i]*(A_*x_diff)).norm();
+    Ax_diff += A_*(x_[i+1] - x_prev_[i+1]);
+    const double s_norm_i = (AiT_[i]*Ax_diff).norm();
     s_norm_squared += s_norm_i*s_norm_i;
   }
 

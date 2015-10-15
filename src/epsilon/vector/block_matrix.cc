@@ -9,18 +9,22 @@ class SingletonSolver : public BlockMatrix::Solver {
  public:
   SingletonSolver(
       std::string key,
+      int n,
       std::unique_ptr<MatrixVariant::Solver> solver)
       : key_(key),
+        n_(n),
         solver_(std::move(solver)) {}
 
   BlockVector solve(const BlockVector& b) const {
     BlockVector x;
-    x(key_) = solver_->solve(b(key_));
+    x(key_) = solver_->solve(
+        b.has_key(key_) ? b(key_) : MatrixVariant::DenseVector::Zero(n_));
     return x;
   }
 
  private:
   std::string key_;
+  int n_;
   std::unique_ptr<MatrixVariant::Solver> solver_;
 };
 
@@ -42,14 +46,18 @@ BlockMatrix BlockMatrix::transpose() const {
 
 std::unique_ptr<BlockMatrix::Solver> BlockMatrix::inv() const {
   // Assumes a singleton, symmetric matrix
+  // TODO(mwytock): Add other solvers, etc.
 
   CHECK_EQ(1, data_.size());
   auto iter = data_.begin();
   CHECK_EQ(1, iter->second.size());
   CHECK_EQ(iter->first, iter->second.begin()->first);
+
+  const MatrixVariant& A = iter->second.begin()->second;
+  CHECK_EQ(A.rows(), A.cols());
+
   return std::unique_ptr<BlockMatrix::Solver>(
-      new SingletonSolver(iter->first, iter->second.begin()->second.inv()));
-  // TODO(mwytock): Add other solvers, etc.
+      new SingletonSolver(iter->first, A.rows(), A.inv()));
 
 }
 
@@ -129,4 +137,17 @@ const std::map<std::string, MatrixVariant>& BlockMatrix::col(
   auto iter = data_.find(col_key);
   CHECK(iter != data_.end());
   return iter->second;
+}
+
+std::string BlockMatrix::DebugString() const {
+  std::string retval = "";
+  for (auto col_iter : data_) {
+    for (auto block_iter : col_iter.second) {
+      if (retval != "") retval += "\n";
+      retval += "(" + block_iter.first + ", " + col_iter.first + ")\n";
+      retval += block_iter.second.DebugString();
+
+    }
+  }
+  return retval;
 }

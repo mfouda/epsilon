@@ -73,6 +73,7 @@ class BlockMatrix {
 
   int rows() const;
   int cols() const;
+  std::string DebugString() const;
 
   const std::map<std::string, MatrixVariant>& col(
       const std::string& col_key) const;
