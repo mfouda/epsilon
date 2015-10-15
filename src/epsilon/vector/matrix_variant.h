@@ -22,6 +22,11 @@ class MatrixVariant {
     virtual DenseVector solve(const DenseVector& b) = 0;
   };
 
+  struct ScalarMatrix {
+    int n;
+    double alpha;
+  };
+
   ~MatrixVariant() {
     VLOG(2) << "dtor";
     Destruct();
@@ -29,23 +34,26 @@ class MatrixVariant {
 
   MatrixVariant() : type_(SCALAR), scalar_({0, 0}) {}
 
-  // TODO(mwytock): Add special matrices:
-  // static MatrixVariant Identity(int n) {
-  // }
-
-  // static MatrixVariant Zero(int m, int n) {
-  // }
+  static MatrixVariant Identity(int n) {
+    return MatrixVariant(ScalarMatrix({n, 1}));
+  }
 
   explicit MatrixVariant(const DenseMatrix& dense) {
-    VLOG(2) << "dense copy ctor " << this;
+    VLOG(2) << "dense conv ctor " << this;
     type_ = DENSE;
     new (&dense_) DenseMatrix(dense);
   }
 
   explicit MatrixVariant(const SparseMatrix& sparse) {
-    VLOG(2) << "sparse copy ctor " << this;
+    VLOG(2) << "sparse conv ctor " << this;
     type_ = SPARSE;
     new (&sparse_) SparseMatrix(sparse);
+  }
+
+  explicit MatrixVariant(const ScalarMatrix& scalar) {
+    VLOG(2) << "scalar conv ctor " << this;
+    type_ = SCALAR;
+    new (&scalar_) ScalarMatrix(scalar);
   }
 
   MatrixVariant(const MatrixVariant& rhs) {
@@ -150,11 +158,6 @@ class MatrixVariant {
     DIAGONAL,
     SCALAR,
   } type_;
-
-  struct ScalarMatrix {
-    int n;
-    double alpha;
-  };
 
   union {
     DenseMatrix dense_;

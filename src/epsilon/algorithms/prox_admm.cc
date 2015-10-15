@@ -28,10 +28,23 @@ ProxADMMSolver::ProxADMMSolver(
 // implementation.
 void ProxADMMSolver::InitConstraints() {
   for (int i = 0; i < problem_.constraint_size(); i++) {
-    affine::BuildAffineOperator(
-        problem_.constraint(i),
-        "constr" + std::to_string(i),
-        &A_, &b_);
+    const Expression& constr = problem_.constraint(i);
+    CHECK_EQ(Expression::INDICATOR, constr.expression_type());
+    CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
+    CHECK_EQ(1, constr.arg_size());
+
+    std::string constr_id = std::to_string(i);
+    SplitExpressionIterator iter(constr.arg(0));
+    for (; !iter.done(); iter.NextValue()) {
+      if (iter.leaf().expression_type() == Expression::VARIABLE) {
+        MatrixVariant Aij = affine::BuildLinearOperator(iter.chain());
+        A_(constr_id, iter.leaf().variable().variable_id()) = Aij;
+      } else {
+        CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
+        b_(constr_id) += ToVector(
+            affine::BuildLinearOperator(iter.chain()).AsDense());
+      }
+    }
   }
   m_ = A_.rows();
   n_ = A_.cols();
@@ -40,15 +53,15 @@ void ProxADMMSolver::InitConstraints() {
 void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
-
+  AT_.resize(N_);
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
-    std::vector<std::string> var_ids;
-    for (const Expression* expr : GetVariables(problem_.objective().arg(i)))
-      var_ids.push_back(expr->variable().variable_id());
+    for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
+      const std::string& var_id = expr->variable().variable_id();
+      for (auto iter : A_.col(var_id))
+        AT_[i](var_id, iter.first) = iter.second.transpose();
+    }
 
-    // TODO(mwytock): Check that A'A is a scalar matrix and get alpha
-    AT_.emplace_back(A_.ColBlock(var_ids).transpose());
     prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));
     prox_.back()->Init();
   }

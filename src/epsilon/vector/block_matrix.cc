@@ -1,4 +1,6 @@
 
+#include <unordered_set>
+
 #include "epsilon/vector/block_matrix.h"
 
 class SingletonSolver : public BlockMatrix::Solver {
@@ -93,4 +95,34 @@ void BlockMatrix::InsertOrAdd(
     MatrixVariant value) {
   auto res = data_[col_key].insert(std::make_pair(row_key, value));
   if (!res.second) (res.first)->second += value;
+}
+
+int BlockMatrix::rows() const {
+  std::unordered_set<std::string> seen;
+  int m = 0;
+  for (auto col_iter : data_) {
+    for (auto block_iter : col_iter.second) {
+      auto seen_iter = seen.find(block_iter.first);
+      if (seen_iter != seen.end())
+        continue;
+      m += block_iter.second.rows();
+      seen.insert(block_iter.first);
+    }
+  }
+  return m;
+}
+
+int BlockMatrix::cols() const {
+  int n = 0;
+  for (auto col_iter : data_) {
+    n += col_iter.second.begin()->second.cols();
+  }
+  return n;
+}
+
+const std::map<std::string, MatrixVariant>& BlockMatrix::col(
+    const std::string& col_key) const {
+  auto iter = data_.find(col_key);
+  CHECK(iter != data_.end());
+  return iter->second;
 }

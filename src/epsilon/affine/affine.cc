@@ -301,3 +301,97 @@ SparseXd GetProjection(
   P.setFromTriplets(coeffs.begin(), coeffs.end());
   return P;
 }
+
+namespace affine {
+
+
+MatrixVariant Variable(const Expression& expr) {
+  return MatrixVariant::Identity(GetDimension(expr));
+}
+
+MatrixVariant Constant(const Expression& expr) {
+  const int m = GetDimension(expr, 0);
+  const int n = GetDimension(expr, 1);
+  const ::Constant& c = expr.constant();
+  if (c.data_location() == "")
+    return MatrixVariant(Eigen::MatrixXd::Constant(m, n, c.scalar()));
+
+  VLOG(2) << "Read: " << c.data_location();
+  std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
+  VLOG(2) << "Read done: " << c.data_location();
+  return MatrixVariant(GetMatrixData(*d));
+
+}
+
+MatrixVariant Negate(const Expression& expr) {
+  CHECK_EQ(1, expr.arg_size());
+  MatrixVariant arg = BuildLinearOperator(expr.arg(0));
+  return MatrixVariant(
+      MatrixVariant::ScalarMatrix({arg.rows(),-1}))*arg;
+}
+
+MatrixVariant Sum(const Expression& expr) {
+  CHECK_EQ(1, expr.arg_size());
+  LOG(FATAL) << "Not implemented";
+}
+
+MatrixVariant Multiply(const Expression& expr) {
+  CHECK_EQ(2, expr.arg_size());
+
+  // TODO(mwytock): Support matrix multiplication with kronecker product
+  CHECK_EQ(Curvature::CONSTANT, expr.arg(0).curvature().curvature_type());
+  CHECK_EQ(1, GetDimension(expr.arg(1), 1));
+  MatrixVariant lhs = BuildLinearOperator(expr.arg(0));
+  MatrixVariant rhs = BuildLinearOperator(expr.arg(1));
+
+  return lhs*rhs;
+}
+
+MatrixVariant MultiplyElementwise(const Expression& expr) {
+  LOG(FATAL) << "Not implemented";
+}
+
+MatrixVariant Add(const Expression& expr) {
+  CHECK_EQ(1, expr.arg_size());
+  return BuildLinearOperator(expr.arg(0));
+}
+
+MatrixVariant HStack(const Expression& expr) {
+  LOG(FATAL) << "Not implemented";
+}
+
+MatrixVariant VStack(const Expression& expr) {
+  LOG(FATAL) << "Not implemented";
+}
+
+MatrixVariant Index(const Expression& expr) {
+  LOG(FATAL) << "Not implemented";
+}
+
+
+typedef MatrixVariant(*LinearFunction)(
+    const Expression& expr);
+std::unordered_map<int, LinearFunction> kLinearFunctions = {
+  {Expression::ADD, &Add},
+  {Expression::CONSTANT, &Constant},
+  {Expression::HSTACK, &HStack},
+  {Expression::INDEX, &Index},
+  {Expression::MULTIPLY, &Multiply},
+  {Expression::MULTIPLY_ELEMENTWISE, &MultiplyElementwise},
+  {Expression::NEGATE, &Negate},
+  {Expression::SUM, &Sum},
+  {Expression::VARIABLE, &Variable},
+  {Expression::VSTACK, &VStack},
+};
+
+MatrixVariant BuildLinearOperator(const Expression& expr) {
+  VLOG(2) << "BuildLinearOperator\n" << expr.DebugString();
+  auto iter = kLinearFunctions.find(expr.expression_type());
+  if (iter == kLinearFunctions.end()) {
+    LOG(FATAL) << "No linear function for "
+               << Expression::Type_Name(expr.expression_type());
+  }
+  return iter->second(expr);
+}
+
+}  // affine

@@ -39,3 +39,11 @@ const BlockVector::DenseVector& BlockVector::operator()(
     LOG(FATAL) << key << " not in BlockVector";
   return iter->second;
 }
+
+double BlockVector::norm() const {
+  double norm_squared = 0;
+  for (auto iter : data_) {
+    norm_squared += iter.second.squaredNorm();
+  }
+  return sqrt(norm_squared);
+}

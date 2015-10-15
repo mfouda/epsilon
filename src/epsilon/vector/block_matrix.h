@@ -43,10 +43,11 @@ class BlockMatrix {
   int rows() const;
   int cols() const;
 
+  const std::map<std::string, MatrixVariant>& col(
+      const std::string& col_key) const;
+
   BlockMatrix transpose() const;
   std::unique_ptr<Solver> inv() const;
-  BlockMatrix RowBlock(const std::vector<std::string> row_keys) const;
-  BlockMatrix ColBlock(const std::vector<std::string> col_keys) const;
 
  private:
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
