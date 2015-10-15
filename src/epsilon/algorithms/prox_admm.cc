@@ -129,6 +129,7 @@ void ProxADMMSolver::ComputeResiduals() {
   const double rel_tol = params_.rel_tol();
   const double rho = params_.rho();
 
+  VLOG(3) << "compute r norm";
   BlockVector Ax_b = b_;
   double max_Ai_xi_norm = b_.norm();
   for (int i = 0; i < N_; i++) {
@@ -137,14 +138,16 @@ void ProxADMMSolver::ComputeResiduals() {
     Ax_b += Ai_xi;
   }
 
+  VLOG(3) << "compute s norm";
   double s_norm_squared = 0;
   BlockVector x_diff;
   for (int i = N_ - 2; i >= 0; i--) {
     x_diff += x_[i+1] - x_prev_[i+1];
-    const double s_norm_i = (AiT_[i]*A_*x_diff).norm();
+    const double s_norm_i = (AiT_[i]*(A_*x_diff)).norm();
     s_norm_squared += s_norm_i*s_norm_i;
   }
 
+  VLOG(3) << "set residuals";
   r->set_r_norm(Ax_b.norm());
   r->set_s_norm(rho*sqrt(s_norm_squared));
   r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);

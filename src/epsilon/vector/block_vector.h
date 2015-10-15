@@ -16,6 +16,10 @@ class BlockVector {
     VLOG(3) << "default ctor";
   }
 
+  ~BlockVector() {
+    VLOG(3) << "dtor";
+  }
+
   BlockVector(const BlockVector& rhs) {
     VLOG(3) << "copy ctor";
     data_ = rhs.data_;

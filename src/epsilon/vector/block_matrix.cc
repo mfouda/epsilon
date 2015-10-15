@@ -1,6 +1,8 @@
 
 #include <unordered_set>
 
+#include <glog/logging.h>
+
 #include "epsilon/vector/block_matrix.h"
 
 class SingletonSolver : public BlockMatrix::Solver {
@@ -77,15 +79,17 @@ BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {
 }
 
 BlockVector operator*(const BlockMatrix& A, const BlockVector& x) {
+  VLOG(3) << "block matrix-vector product";
   BlockVector y;
-  for (auto x_iter : x.data_) {
+  for (const auto& x_iter : x.data_) {
     auto col_iter = A.data_.find(x_iter.first);
     if (col_iter == A.data_.end())
       continue;
 
-    for (auto block_iter : col_iter->second)
+    for (const auto& block_iter : col_iter->second)
       y.InsertOrAdd(block_iter.first, block_iter.second*x_iter.second);
   }
+  VLOG(3) << "block matrix-vector product done";
   return y;
 }
 

@@ -35,6 +35,37 @@ class BlockMatrix {
     virtual BlockVector solve(const BlockVector& b) const = 0;
   };
 
+  BlockMatrix() {
+    VLOG(3) << "default ctor";
+  }
+
+  ~BlockMatrix() {
+    VLOG(3) << "dtor";
+  }
+
+  BlockMatrix(const BlockMatrix& rhs) {
+    VLOG(3) << "copy ctor";
+    data_ = rhs.data_;
+  }
+
+  BlockMatrix(BlockMatrix&& rhs) {
+    VLOG(3) << "move ctor";
+    data_ = std::move(rhs.data_);
+  }
+
+  BlockMatrix& operator=(const BlockMatrix& rhs) {
+    VLOG(3) << "copy assignment";
+    BlockMatrix lhs(rhs);
+    *this = std::move(lhs);
+    return *this;
+  }
+
+  BlockMatrix& operator=(BlockMatrix&& rhs) {
+    VLOG(3) << "move assignment";
+    std::swap(data_, rhs.data_);
+    return *this;
+  }
+
   MatrixVariant& operator()(
       const std::string& row_key, const std::string& col_key);
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
