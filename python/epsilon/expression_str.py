@@ -19,6 +19,8 @@ def node_contents_str(expr):
     elif expr.expression_type in (Expression.POWER,
                                   Expression.NORM_P):
         c += ["p: " + str(expr.p)]
+    elif expr.expression_type == Expression.SUM_LARGEST:
+        c += ["k: " + str(expr.k)]
     elif expr.expression_type == Expression.INDICATOR:
         c += ["cone: " + Cone.Type.Name(expr.cone.cone_type)]
 

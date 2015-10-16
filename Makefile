@@ -78,6 +78,7 @@ common_cc = \
 	epsilon/prox/prox.cc \
 	epsilon/prox/quad_over_lin.cc \
 	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/sum_largest.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

@@ -31,6 +31,7 @@ from cvxpy.atoms.matrix_frac import matrix_frac
 from cvxpy.atoms.norm_nuc import normNuc
 from cvxpy.atoms.pnorm import pnorm
 from cvxpy.atoms.quad_over_lin import quad_over_lin
+from cvxpy.atoms.sum_largest import sum_largest
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.expressions.constants.constant import Constant
@@ -112,6 +113,11 @@ def convert_power(expr):
 
     return proto
 
+def convert_sum_largest(expr):
+    proto = convert_generic(Expression.SUM_LARGEST, expr)
+    proto.k = expr.k
+    return proto
+
 EXPRESSION_TYPES = (
     (AddExpression, lambda e: convert_binary(expression.add, e)),
     (Constant, convert_constant),
@@ -139,6 +145,7 @@ EXPRESSION_TYPES = (
     (power, convert_power),
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
     (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
+    (sum_largest, lambda e: convert_sum_largest(e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),
     (transpose, lambda e: convert_unary(expression.transpose, e)),
     (vstack, lambda e: convert_generic(Expression.VSTACK, e)),
