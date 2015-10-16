@@ -20,7 +20,8 @@ class DenseMatrixImpl final : public LinearMapImpl {
     return new DenseMatrixImpl(A_.transpose());
   }
   virtual LinearMapImpl* Inverse() const {
-    LOG(FATAL) << "Not implemented";
+    // TODO(mwytock): LLT method may be faster?
+    return new DenseMatrixImpl(A_.inverse());
   }
 
   // Dense matrix API

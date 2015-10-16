@@ -75,19 +75,19 @@ TEST_F(BlockMatrixTest, MultiplyMatrix) {
   EXPECT_TRUE(MatrixEquals(expected, C("0", "3").impl().AsDense()));
 }
 
-// TEST_F(BlockMatrixTest, SolveSingleDense) {
-//   Eigen::MatrixXd I = Eigen::MatrixXd::Identity(3,3);
-//   BlockMatrix A;
-//   A("0", "0") = MatrixVariant(dense_);
-//   A("0", "1") = MatrixVariant(I);
-//   std::unique_ptr<BlockMatrix::Solver> solver = (A*A.transpose()).inv();
+TEST_F(BlockMatrixTest, Inverse) {
+  BlockMatrix A;
+  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
+  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  BlockMatrix AAT_inv = (A*A.Transpose()).Inverse();
 
-//   Eigen::LLT<MatrixXd> solver2;
-//   solver2.compute(dense_*dense_.transpose() + I);
+  Eigen::LLT<MatrixXd> solver2;
+  solver2.compute(A0_*A0_.transpose() + I_);
 
-//   BlockVector b;
-//   b("0") = Eigen::VectorXd(3);
-//   b("0") << 1, 2, 3;
+  BlockVector b;
+  b("0") = Eigen::VectorXd(3);
+  b("0") << 1, 2, 3;
 
-//   EXPECT_TRUE(VectorEquals(solver2.solve(b("0")), solver->solve(b)("0")));
-// }
+  EXPECT_TRUE(VectorEquals(
+      solver2.solve(b("0")), (AAT_inv*b)("0"), 1e-8));
+}

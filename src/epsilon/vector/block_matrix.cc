@@ -82,7 +82,7 @@ void BlockMatrix::InsertOrAdd(
     const std::string& row_key,
     const std::string& col_key,
     LinearMap value) {
-  auto res = data_[col_key].insert(std::make_pair(row_key, std::move(value)));
+  auto res = data_[col_key].insert(std::make_pair(row_key, value));
   if (!res.second) (res.first)->second += value;
 }
 
