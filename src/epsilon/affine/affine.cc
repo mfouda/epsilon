@@ -407,7 +407,7 @@ void Index(
   }
 
   BuildAffineOperatorImpl(
-      expr,
+      GetOnlyArg(expr),
       row_key,
       L*LinearMap(new SparseMatrixImpl(P)),
       A, b);
@@ -477,7 +477,8 @@ void BuildAffineOperatorImpl(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  VLOG(2) << "BuildLinearOperator\n" << expr.DebugString();
+  VLOG(2) << "BuildLinearOperatorImpl\n" << expr.DebugString()
+          << "L:\n" << L.impl().DebugString();
   auto iter = kLinearFunctions.find(expr.expression_type());
   if (iter == kLinearFunctions.end()) {
     LOG(FATAL) << "No linear function for "
