@@ -4,15 +4,16 @@
 #include <Eigen/Dense>
 
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/vector/dynamic_matrix.h"
-#include "epsilon/vector/matrix_variant.h"
+#include "epsilon/linear/linear_map.h"
 #include "epsilon/vector/block_matrix.h"
+#include "epsilon/vector/dynamic_matrix.h"
 
 class BlockMatrix;
 class BlockVector;
 class Data;
 class Expression;
 
+// TODO(mwytock): Delete the below
 void BuildAffineOperator(
     const Expression& expr,
     const VariableOffsetMap& offsets,
@@ -45,8 +46,13 @@ SparseXd GetProjection(const VariableOffsetMap& a, const VariableOffsetMap& b);
 
 namespace affine {
 
-MatrixVariant BuildLinearOperator(const Expression& expr);
-void BuildOperator(const Expression& expr, BlockMatrix* A, BlockVector* b);
+// Convenience function, calls BuildConstant() and BuildLinearMap() on the
+// expressions and puts the result in row_key in the BlockMatrix
+void BuildAffineOperator(
+    const Expression& expr,
+    const std::string& row_key,
+    BlockMatrix* A,
+    BlockVector* b);
 
 }  // namespace affine
 

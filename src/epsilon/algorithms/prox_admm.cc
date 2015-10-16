@@ -33,22 +33,22 @@ void ProxADMMSolver::InitConstraints() {
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
 
-    std::string constr_id = std::to_string(i);
-    SplitExpressionIterator iter(constr.arg(0));
-    for (; !iter.done(); iter.NextValue()) {
-      if (iter.leaf().expression_type() == Expression::VARIABLE) {
-        MatrixVariant Aij = affine::BuildLinearOperator(iter.chain());
-        A_(constr_id, iter.leaf().variable().variable_id()) = Aij;
-      } else {
-        CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
-        b_(constr_id) += ToVector(
-            affine::BuildLinearOperator(iter.chain()).AsDense());
-      }
-    }
+    // std::string constr_id = std::to_string(i);
+    // SplitExpressionIterator iter(constr.arg(0));
+    // for (; !iter.done(); iter.NextValue()) {
+    //   if (iter.leaf().expression_type() == Expression::VARIABLE) {
+    //     MatrixVariant Aij = affine::BuildLinearOperator(iter.chain());
+    //     A_(constr_id, iter.leaf().variable().variable_id()) = Aij;
+    //   } else {
+    //     CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
+    //     b_(constr_id) += ToVector(
+    //         affine::BuildLinearOperator(iter.chain()).AsDense());
+    //   }
+    // }
   }
-  AT_ = A_.transpose();
-  m_ = A_.rows();
-  n_ = A_.cols();
+  AT_ = A_.Transpose();
+  m_ = A_.m();
+  n_ = A_.n();
 }
 
 void ProxADMMSolver::InitProxOperators() {
@@ -61,7 +61,7 @@ void ProxADMMSolver::InitProxOperators() {
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();
       for (auto iter : A_.col(var_id))
-        AiT_[i](var_id, iter.first) = iter.second.transpose();
+        AiT_[i].InsertOrAdd(var_id, iter.first, iter.second.Transpose());
     }
 
     prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));

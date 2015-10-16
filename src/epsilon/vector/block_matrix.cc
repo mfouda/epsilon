@@ -5,33 +5,10 @@
 
 #include "epsilon/vector/block_matrix.h"
 
-class SingletonSolver : public BlockMatrix::Solver {
- public:
-  SingletonSolver(
-      std::string key,
-      int n,
-      LinearMap A)
-      : key_(key),
-        n_(n),
-        A_(std::move(A)) {}
-
-  BlockVector solve(const BlockVector& b) const {
-    BlockVector x;
-    x(key_) = A_.impl().Apply(
-        b.has_key(key_) ? b(key_) : LinearMap::DenseVector::Zero(n_));
-    return x;
-  }
-
- private:
-  std::string key_;
-  int n_;
-  LinearMap A_;
-};
-
-LinearMap& BlockMatrix::operator()(
-    const std::string& row_key, const std::string& col_key) {
-  return data_[col_key][row_key];
-}
+// LinearMap& BlockMatrix::operator()(
+//     const std::string& row_key, const std::string& col_key) {
+//   return data_[col_key][row_key];
+// }
 
 BlockMatrix BlockMatrix::Transpose() const {
   BlockMatrix transpose;
@@ -44,8 +21,8 @@ BlockMatrix BlockMatrix::Transpose() const {
   return transpose;
 }
 
-std::unique_ptr<BlockMatrix::Solver> BlockMatrix::Inverse() const {
-  // Assumes a singleton, symmetric matrix
+BlockMatrix BlockMatrix::Inverse() const {
+  // Assumes a singleton
   // TODO(mwytock): Add other solvers, etc.
 
   CHECK_EQ(1, data_.size());
@@ -56,8 +33,9 @@ std::unique_ptr<BlockMatrix::Solver> BlockMatrix::Inverse() const {
   const LinearMap& A = iter->second.begin()->second;
   CHECK_EQ(A.impl().m(), A.impl().n());
 
-  return std::unique_ptr<BlockMatrix::Solver>(
-      new SingletonSolver(iter->first, A.impl().n(), A.Inverse()));
+  BlockMatrix inv;
+  inv.InsertOrAdd(iter->first, iter->first, A.Inverse());
+  return inv;
 }
 
 BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {

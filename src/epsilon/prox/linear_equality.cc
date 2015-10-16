@@ -13,23 +13,20 @@ class LinearEqualityProx final : public BlockProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
     CHECK_EQ(1, arg.f_expr().arg_size());
-
-    affine::BuildOperator(arg.f_expr().arg(0), &A_, &b_);
-    AT_ = A_.transpose();
-    solver_ = (A_*AT_).inv();
+    affine::BuildAffineOperator(arg.f_expr().arg(0), "f", &A_, &b_);
+    AT_ = A_.Transpose();
+    AAT_inv_ = (A_*AT_).Inverse();
 
     VLOG(2) << "A:\n" << A_.DebugString();
     VLOG(2) << "b:\n" << b_.DebugString();
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return v - AT_*solver_->solve(A_*v + b_);
+    return v - AT_*(AAT_inv_*(A_*v + b_));
   }
 
 private:
-  BlockMatrix A_;
-  BlockMatrix AT_;
+  BlockMatrix A_, AT_, AAT_inv_;
   BlockVector b_;
-  std::unique_ptr<BlockMatrix::Solver> solver_;
 };
 REGISTER_BLOCK_PROX_OPERATOR(LinearEqualityProx);

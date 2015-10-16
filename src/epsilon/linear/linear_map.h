@@ -29,16 +29,14 @@ class LinearMapImpl {
   LinearMapImpl(LinearMapImplType type) : type_(type) {}
   virtual ~LinearMapImpl() {}
 
+  LinearMapImplType type() const { return type_; }
   virtual int m() const = 0;
   virtual int n() const = 0;
   virtual std::string DebugString() const = 0;
   virtual DenseMatrix AsDense() const = 0;
   virtual DenseVector Apply(const DenseVector& x) const = 0;
-
   virtual LinearMapImpl* Transpose() const = 0;
   virtual LinearMapImpl* Inverse() const = 0;
-
-  LinearMapImplType type() const { return type_; }
 
  private:
   LinearMapImplType type_;
@@ -55,10 +53,6 @@ class LinearMap {
 
   LinearMap();
   explicit LinearMap(LinearMapImpl* impl) : impl_(impl) {}
-  LinearMap(const LinearMap& rhs) {
-    LOG(FATAL) << "LinearMap copy ctor";
-  }
-
 
   static LinearMap Identity(int n);
 
@@ -72,7 +66,7 @@ class LinearMap {
   }
 
  private:
-  std::unique_ptr<LinearMapImpl> impl_;
+  std::shared_ptr<const LinearMapImpl> impl_;
 };
 
 // Matrix-matrix multiply, add, subtract
@@ -84,6 +78,8 @@ LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs);
 template<typename Scalar>
 Eigen::Matrix<Scalar, Eigen::Dynamic, 1> operator*(
     const LinearMap& lhs,
-    const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& rhs);
+    const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& rhs) {
+  return lhs.impl().Apply(rhs);
+}
 
 #endif  // EPSILON_LINEAR_LINEAR_MAP_H

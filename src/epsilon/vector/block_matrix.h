@@ -30,11 +30,6 @@
 
 class BlockMatrix {
  public:
-  class Solver {
-   public:
-    virtual BlockVector solve(const BlockVector& b) const = 0;
-  };
-
   BlockMatrix() {
     VLOG(3) << "default ctor";
   }
@@ -43,19 +38,9 @@ class BlockMatrix {
     VLOG(3) << "dtor";
   }
 
-  BlockMatrix(BlockMatrix&& rhs) {
-    VLOG(3) << "move ctor";
-    data_ = std::move(rhs.data_);
-  }
+  // LinearMap& operator()(
+  //     const std::string& row_key, const std::string& col_key);
 
-  BlockMatrix& operator=(BlockMatrix&& rhs) {
-    VLOG(3) << "move assignment";
-    std::swap(data_, rhs.data_);
-    return *this;
-  }
-
-  LinearMap& operator()(
-      const std::string& row_key, const std::string& col_key);
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
@@ -66,12 +51,12 @@ class BlockMatrix {
       const std::string& col_key) const;
 
   BlockMatrix Transpose() const;
-  std::unique_ptr<Solver> Inverse() const;
+  BlockMatrix Inverse() const;
 
- private:
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
                    LinearMap value);
 
+ private:
   // col -> row -> value
   std::map<std::string, std::map<std::string, LinearMap>> data_;
 };

@@ -59,9 +59,9 @@ class BlockVector {
   const std::map<std::string, DenseVector>& data() const { return data_; }
 
   std::string DebugString() const;
+  void InsertOrAdd(const std::string& key, DenseVector value);
 
  private:
-  void InsertOrAdd(const std::string& key, DenseVector value);
 
   std::map<std::string, DenseVector> data_;
 };
