@@ -19,10 +19,10 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
   DenseMatrix AsDense() const override { return static_cast<DenseMatrix>(A_); }
   DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
-  std::unique_ptr<LinearMapImpl> Transpose() const override {
-    return std::unique_ptr<LinearMapImpl>(new DiagonalMatrixImpl(A_));
+  LinearMapImpl* Transpose() const override {
+    return new DiagonalMatrixImpl(A_);
   }
-  std::unique_ptr<LinearMapImpl> Inverse() const override {
+  LinearMapImpl* Inverse() const override {
     LOG(FATAL) << "Not implemented";
   }
 

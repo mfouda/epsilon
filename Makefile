@@ -105,6 +105,7 @@ tests = \
 	epsilon/affine/affine_test \
 	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
+	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/multiply_test \
 	epsilon/prox/prox_test \
 	epsilon/vector/block_matrix_test \

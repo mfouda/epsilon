@@ -16,10 +16,10 @@ class DenseMatrixImpl final : public LinearMapImpl {
   virtual DenseMatrix AsDense() const { return A_; }
   virtual DenseVector Apply(const DenseVector& x) const { return A_*x; }
 
-  virtual std::unique_ptr<LinearMapImpl> Transpose() const {
-    return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(A_.transpose()));
+  virtual LinearMapImpl* Transpose() const {
+    return new DenseMatrixImpl(A_.transpose());
   }
-  virtual std::unique_ptr<LinearMapImpl> Inverse() const {
+  virtual LinearMapImpl* Inverse() const {
     LOG(FATAL) << "Not implemented";
   }
 

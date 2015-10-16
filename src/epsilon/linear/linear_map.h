@@ -35,8 +35,8 @@ class LinearMapImpl {
   virtual DenseMatrix AsDense() const = 0;
   virtual DenseVector Apply(const DenseVector& x) const = 0;
 
-  virtual std::unique_ptr<LinearMapImpl> Transpose() const = 0;
-  virtual std::unique_ptr<LinearMapImpl> Inverse() const = 0;
+  virtual LinearMapImpl* Transpose() const = 0;
+  virtual LinearMapImpl* Inverse() const = 0;
 
   LinearMapImplType type() const { return type_; }
 
@@ -54,8 +54,6 @@ class LinearMap {
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
   explicit LinearMap(LinearMapImpl* impl) : impl_(impl) {}
-  explicit LinearMap(std::unique_ptr<LinearMapImpl> impl)
-      : impl_(std::move(impl)) {}
 
   static LinearMap Identity(int n);
 
@@ -63,9 +61,9 @@ class LinearMap {
   const LinearMapImpl& impl() const { return *impl_; }
 
   // These just wrap the values in impl
-  LinearMap Inverse() const { return LinearMap(std::move(impl_->Inverse())); }
+  LinearMap Inverse() const { return LinearMap(impl_->Inverse()); }
   LinearMap Transpose() const {
-    return LinearMap(std::move(impl_->Transpose()));
+    return LinearMap(impl_->Transpose());
   }
 
  private:

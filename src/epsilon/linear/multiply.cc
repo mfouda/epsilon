@@ -1,91 +1,106 @@
 
 #include "epsilon/linear/dense_matrix_impl.h"
 #include "epsilon/linear/diagonal_matrix_impl.h"
+#include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
 
-std::unique_ptr<LinearMapImpl> Multiply_DenseMatrix_DenseMatrix(
+LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
+
+LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  return new DenseMatrixImpl(
       static_cast<const DenseMatrixImpl&>(lhs).dense()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense()));
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DenseMatrix_SparseMatrix(
+LinearMapImpl* Multiply_DenseMatrix_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  return new DenseMatrixImpl(
       static_cast<const DenseMatrixImpl&>(lhs).dense()*
-      static_cast<const SparseMatrixImpl&>(rhs).sparse()));
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DenseMatrix_DiagonalMatrix(
+LinearMapImpl* Multiply_DenseMatrix_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  return new DenseMatrixImpl(
       static_cast<const DenseMatrixImpl&>(lhs).dense()*
-      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal()));
+      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DenseMatrix_ScalarMatrix(
+LinearMapImpl* Multiply_DenseMatrix_ScalarMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  return new DenseMatrixImpl(
       static_cast<const DenseMatrixImpl&>(lhs).dense()*
-      static_cast<const ScalarMatrixImpl&>(rhs).alpha()));
+      static_cast<const ScalarMatrixImpl&>(rhs).alpha());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_SparseMatrix_DenseMatrix(
+LinearMapImpl* Multiply_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_SparseMatrix_DenseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new DenseMatrixImpl(
       static_cast<const SparseMatrixImpl&>(lhs).sparse()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense()));
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_SparseMatrix_SparseMatrix(
+LinearMapImpl* Multiply_SparseMatrix_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(
+  return new SparseMatrixImpl(
       static_cast<const SparseMatrixImpl&>(lhs).sparse()*
-      static_cast<const SparseMatrixImpl&>(rhs).sparse()));
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_SparseMatrix_DiagonalMatrix(
+LinearMapImpl* Multiply_SparseMatrix_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(
+  return new SparseMatrixImpl(
       static_cast<const SparseMatrixImpl&>(lhs).sparse()*
-      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal()));
+      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_SparseMatrix_ScalarMatrix(
+LinearMapImpl* Multiply_SparseMatrix_ScalarMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(
+  return new SparseMatrixImpl(
       static_cast<const SparseMatrixImpl&>(lhs).sparse()*
-      static_cast<const ScalarMatrixImpl&>(rhs).alpha()));
+      static_cast<const ScalarMatrixImpl&>(rhs).alpha());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DiagonalMatrix_DenseMatrix(
+LinearMapImpl* Multiply_SparseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_DiagonalMatrix_DenseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new DenseMatrixImpl(
       static_cast<const DiagonalMatrixImpl&>(lhs).diagonal()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense()));
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DiagonalMatrix_SparseMatrix(
+LinearMapImpl* Multiply_DiagonalMatrix_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(
+  return new SparseMatrixImpl(
       static_cast<const DiagonalMatrixImpl&>(lhs).diagonal()*
-      static_cast<const SparseMatrixImpl&>(rhs).sparse()));
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DiagonalMatrix_DiagonalMatrix(
+LinearMapImpl* Multiply_DiagonalMatrix_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   const DiagonalMatrixImpl::DiagonalMatrix& A =
@@ -94,57 +109,114 @@ std::unique_ptr<LinearMapImpl> Multiply_DiagonalMatrix_DiagonalMatrix(
       static_cast<const DiagonalMatrixImpl&>(rhs).diagonal();
   DiagonalMatrixImpl::DiagonalMatrix C(A.rows());
   C.diagonal().array() = A.diagonal().array()*B.diagonal().array();
-  return std::unique_ptr<LinearMapImpl>(new DiagonalMatrixImpl(C));
+  return new DiagonalMatrixImpl(C);
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_DiagonalMatrix_ScalarMatrix(
+LinearMapImpl* Multiply_DiagonalMatrix_ScalarMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DiagonalMatrixImpl(
+  return new DiagonalMatrixImpl(
       static_cast<const DiagonalMatrixImpl&>(lhs).diagonal()*
-      static_cast<const ScalarMatrixImpl&>(rhs).alpha()));
+      static_cast<const ScalarMatrixImpl&>(rhs).alpha());
 }
 
-std::unique_ptr<LinearMapImpl> Multiply_ScalarMatrix_DenseMatrix(
-    const LinearMapImpl& lhs,
-    const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DenseMatrixImpl(
-      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense()));
-}
-
-std::unique_ptr<LinearMapImpl> Multiply_ScalarMatrix_SparseMatrix(
-    const LinearMapImpl& lhs,
-    const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(
-      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
-      static_cast<const SparseMatrixImpl&>(rhs).sparse()));
-}
-
-std::unique_ptr<LinearMapImpl> Multiply_ScalarMatrix_DiagonalMatrix(
-    const LinearMapImpl& lhs,
-    const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new DiagonalMatrixImpl(
-      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
-      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal()));
-}
-
-std::unique_ptr<LinearMapImpl> Multiply_ScalarMatrix_ScalarMatrix(
-    const LinearMapImpl& lhs,
-    const LinearMapImpl& rhs) {
-  return std::unique_ptr<LinearMapImpl>(new ScalarMatrixImpl(
-      static_cast<const ScalarMatrixImpl&>(lhs).n(),
-      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
-      static_cast<const ScalarMatrixImpl&>(rhs).alpha()));
-}
-
-std::unique_ptr<LinearMapImpl> Multiply_NotImplemented(
+LinearMapImpl* Multiply_DiagonalMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   LOG(FATAL) << "Not implemented";
 }
 
-typedef std::unique_ptr<LinearMapImpl> (*MultiplyLinearMap)(
+LinearMapImpl* Multiply_ScalarMatrix_DenseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new DenseMatrixImpl(
+      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
+}
+
+LinearMapImpl* Multiply_ScalarMatrix_SparseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new SparseMatrixImpl(
+      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
+}
+
+LinearMapImpl* Multiply_ScalarMatrix_DiagonalMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new DiagonalMatrixImpl(
+      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
+      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal());
+}
+
+LinearMapImpl* Multiply_ScalarMatrix_ScalarMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  return new ScalarMatrixImpl(
+      static_cast<const ScalarMatrixImpl&>(lhs).n(),
+      static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
+      static_cast<const ScalarMatrixImpl&>(rhs).alpha());
+}
+
+LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(rhs);
+  return new KroneckerProductImpl(
+      Multiply(lhs, C.A().impl()),
+      Multiply(lhs, C.B().impl()));
+}
+
+LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_KroneckerProduct_DiagonalMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_KroneckerProduct_ScalarMatrix(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(lhs);
+  return new KroneckerProductImpl(
+      Multiply(C.A().impl(), rhs),
+      Multiply(C.B().impl(), rhs));
+}
+
+LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(lhs);
+  const KroneckerProductImpl& D = static_cast<const KroneckerProductImpl&>(rhs);
+  if (C.A().impl().n() == D.A().impl().m() &&
+      C.B().impl().n() == D.B().impl().m()) {
+  return new KroneckerProductImpl(
+      Multiply(C.A().impl(), D.A().impl()),
+      Multiply(C.B().impl(), D.B().impl()));
+  }
+
+  LOG(FATAL) << "Not implemented";
+}
+
+LinearMapImpl* Multiply_NotImplemented(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs) {
+  LOG(FATAL) << "Not implemented";
+}
+
+typedef LinearMapImpl* (*MultiplyLinearMap)(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs);
 
@@ -155,7 +227,7 @@ MultiplyLinearMap kMultiplyTable
     &Multiply_DenseMatrix_SparseMatrix,
     &Multiply_DenseMatrix_DiagonalMatrix,
     &Multiply_DenseMatrix_ScalarMatrix,
-    &Multiply_NotImplemented,
+    &Multiply_DenseMatrix_KroneckerProduct,
     &Multiply_NotImplemented,
   },
   {
@@ -163,7 +235,7 @@ MultiplyLinearMap kMultiplyTable
     &Multiply_SparseMatrix_SparseMatrix,
     &Multiply_SparseMatrix_DiagonalMatrix,
     &Multiply_SparseMatrix_ScalarMatrix,
-    &Multiply_NotImplemented,
+    &Multiply_SparseMatrix_KroneckerProduct,
     &Multiply_NotImplemented,
   },
   {
@@ -171,7 +243,7 @@ MultiplyLinearMap kMultiplyTable
     &Multiply_DiagonalMatrix_SparseMatrix,
     &Multiply_DiagonalMatrix_DiagonalMatrix,
     &Multiply_DiagonalMatrix_ScalarMatrix,
-    &Multiply_NotImplemented,
+    &Multiply_DiagonalMatrix_KroneckerProduct,
     &Multiply_NotImplemented,
   },
   {
@@ -179,15 +251,15 @@ MultiplyLinearMap kMultiplyTable
     &Multiply_ScalarMatrix_SparseMatrix,
     &Multiply_ScalarMatrix_DiagonalMatrix,
     &Multiply_ScalarMatrix_ScalarMatrix,
-    &Multiply_NotImplemented,
+    &Multiply_ScalarMatrix_KroneckerProduct,
     &Multiply_NotImplemented,
   },
   {
-    &Multiply_NotImplemented,
-    &Multiply_NotImplemented,
-    &Multiply_NotImplemented,
-    &Multiply_NotImplemented,
-    &Multiply_NotImplemented,
+    &Multiply_KroneckerProduct_DenseMatrix,
+    &Multiply_KroneckerProduct_SparseMatrix,
+    &Multiply_KroneckerProduct_DiagonalMatrix,
+    &Multiply_KroneckerProduct_ScalarMatrix,
+    &Multiply_KroneckerProduct_KroneckerProduct,
     &Multiply_NotImplemented,
   },
   {
@@ -200,7 +272,10 @@ MultiplyLinearMap kMultiplyTable
   },
 };
 
+LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+  return (*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs);
+}
+
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs) {
-  return LinearMap((*kMultiplyTable[lhs.impl().type()][rhs.impl().type()])(
-      lhs.impl(), rhs.impl()));
+  return LinearMap(Multiply(lhs.impl(), rhs.impl()));
 }

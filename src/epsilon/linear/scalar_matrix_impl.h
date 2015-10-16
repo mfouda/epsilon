@@ -21,10 +21,10 @@ class ScalarMatrixImpl final : public LinearMapImpl {
   }
   DenseVector Apply(const DenseVector& x) const override { return n_*x; }
 
-  std::unique_ptr<LinearMapImpl> Transpose() const override {
-    return std::unique_ptr<LinearMapImpl>(new ScalarMatrixImpl(n_, alpha_));
+  LinearMapImpl* Transpose() const override {
+    return new ScalarMatrixImpl(n_, alpha_);
   }
-  std::unique_ptr<LinearMapImpl> Inverse() const override {
+  LinearMapImpl* Inverse() const override {
     LOG(FATAL) << "Not implemented";
   }
 
