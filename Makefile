@@ -82,6 +82,8 @@ common_cc = \
 	epsilon/vector/dynamic_matrix.cc \
 	epsilon/vector/matrix_variant.cc \
 	epsilon/vector/vector_file.cc \
+	epsilon/linear/linear_map.cc \
+	epsilon/linear/multiply.cc \
 	epsilon/vector/vector_util.cc
 
 third_party_obj = \
@@ -104,6 +106,7 @@ tests = \
 	epsilon/affine/affine_test \
 	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
+	epsilon/linear/multiply_test \
 	epsilon/prox/prox_test \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test \
