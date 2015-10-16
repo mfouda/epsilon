@@ -11,21 +11,21 @@ class SparseMatrixImpl final : public LinearMapImpl {
   SparseMatrixImpl(SparseMatrix A)
       : LinearMapImpl(SPARSE_MATRIX), A_(A) {}
 
-  virtual int m() const { return A_.rows(); }
-  virtual int n() const { return A_.cols(); }
-  virtual std::string DebugString() const { return SparseMatrixDebugString(A_); }
-  virtual DenseMatrix AsDense() const { return static_cast<DenseMatrix>(A_); }
-  virtual DenseVector Apply(const DenseVector& x) const { return A_*x; }
+  int m() const override { return A_.rows(); }
+  int n() const override { return A_.cols(); }
+  std::string DebugString() const override { return SparseMatrixDebugString(A_); }
+  DenseMatrix AsDense() const override { return static_cast<DenseMatrix>(A_); }
+  DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
-  virtual std::unique_ptr<LinearMapImpl> Transpose() const {
+  std::unique_ptr<LinearMapImpl> Transpose() const override {
     return std::unique_ptr<LinearMapImpl>(new SparseMatrixImpl(A_.transpose()));
   }
-  virtual std::unique_ptr<LinearMapImpl> Inverse() const {
+  std::unique_ptr<LinearMapImpl> Inverse() const override {
     LOG(FATAL) << "Not implemented";
   }
 
   // Sparse matrix API
-  const SparseMatrix sparse() const { return A_; }
+  const SparseMatrix& sparse() const { return A_; }
 
  private:
   SparseMatrix A_;

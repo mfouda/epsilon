@@ -53,12 +53,11 @@ class LinearMap {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
-  LinearMap(std::unique_ptr<LinearMapImpl> impl)
+  explicit LinearMap(LinearMapImpl* impl) : impl_(impl) {}
+  explicit LinearMap(std::unique_ptr<LinearMapImpl> impl)
       : impl_(std::move(impl)) {}
 
   static LinearMap Identity(int n);
-  static LinearMap FromDense(DenseMatrix A);
-  static LinearMap FromSparse(SparseMatrix A);
 
   // Accessor for implementation
   const LinearMapImpl& impl() const { return *impl_; }

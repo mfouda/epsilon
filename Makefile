@@ -82,7 +82,6 @@ common_cc = \
 	epsilon/vector/dynamic_matrix.cc \
 	epsilon/vector/matrix_variant.cc \
 	epsilon/vector/vector_file.cc \
-	epsilon/linear/linear_map.cc \
 	epsilon/linear/multiply.cc \
 	epsilon/vector/vector_util.cc
 

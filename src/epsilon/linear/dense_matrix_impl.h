@@ -24,7 +24,7 @@ class DenseMatrixImpl final : public LinearMapImpl {
   }
 
   // Dense matrix API
-  const DenseMatrix dense() const { return A_; }
+  const DenseMatrix& dense() const { return A_; }
 
  private:
   DenseMatrix A_;
