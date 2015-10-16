@@ -216,11 +216,7 @@ LinearMapImpl* Multiply_NotImplemented(
   LOG(FATAL) << "Not implemented";
 }
 
-typedef LinearMapImpl* (*MultiplyLinearMap)(
-    const LinearMapImpl& lhs,
-    const LinearMapImpl& rhs);
-
-MultiplyLinearMap kMultiplyTable
+LinearMapBinaryOp kMultiplyTable
 [NUM_LINEAR_MAP_IMPL_TYPES][NUM_LINEAR_MAP_IMPL_TYPES] = {
   {
     &Multiply_DenseMatrix_DenseMatrix,

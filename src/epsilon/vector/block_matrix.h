@@ -38,8 +38,8 @@ class BlockMatrix {
     VLOG(3) << "dtor";
   }
 
-  // LinearMap& operator()(
-  //     const std::string& row_key, const std::string& col_key);
+  LinearMap& operator()(
+      const std::string& row_key, const std::string& col_key);
 
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
@@ -57,6 +57,7 @@ class BlockMatrix {
                    LinearMap value);
 
  private:
+
   // col -> row -> value
   std::map<std::string, std::map<std::string, LinearMap>> data_;
 };

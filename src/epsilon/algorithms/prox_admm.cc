@@ -22,29 +22,14 @@ ProxADMMSolver::ProxADMMSolver(
       params_(params),
       parameter_service_(std::move(parameter_service)) {}
 
-// TODO(mwytock): Dealing with constraints in the fashion: w/ vstack() and
-// multiple calls to BuildAffineOperator() can be highly inefficient. We need a
-// better mechanism, likely built on a more flexible BuildAffineOperator()
-// implementation.
 void ProxADMMSolver::InitConstraints() {
   for (int i = 0; i < problem_.constraint_size(); i++) {
     const Expression& constr = problem_.constraint(i);
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
-
-    // std::string constr_id = std::to_string(i);
-    // SplitExpressionIterator iter(constr.arg(0));
-    // for (; !iter.done(); iter.NextValue()) {
-    //   if (iter.leaf().expression_type() == Expression::VARIABLE) {
-    //     MatrixVariant Aij = affine::BuildLinearOperator(iter.chain());
-    //     A_(constr_id, iter.leaf().variable().variable_id()) = Aij;
-    //   } else {
-    //     CHECK_EQ(iter.leaf().expression_type(), Expression::CONSTANT);
-    //     b_(constr_id) += ToVector(
-    //         affine::BuildLinearOperator(iter.chain()).AsDense());
-    //   }
-    // }
+    affine::BuildAffineOperator(
+        problem_.constraint(i).arg(0), std::to_string(i), &A_, &b_);
   }
   AT_ = A_.Transpose();
   m_ = A_.m();
@@ -61,7 +46,7 @@ void ProxADMMSolver::InitProxOperators() {
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();
       for (auto iter : A_.col(var_id))
-        AiT_[i].InsertOrAdd(var_id, iter.first, iter.second.Transpose());
+        AiT_[i](var_id, iter.first) = iter.second.Transpose();
     }
 
     prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));

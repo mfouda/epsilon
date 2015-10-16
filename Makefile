@@ -55,7 +55,8 @@ common_cc = \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
 	epsilon/linear/linear_map.cc \
-	epsilon/linear/multiply.cc \
+	epsilon/linear/linear_map_add.cc \
+	epsilon/linear/linear_map_multiply.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/deadzone.cc \
 	epsilon/prox/fused_lasso.cc \
@@ -106,7 +107,7 @@ tests = \
 	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
 	epsilon/linear/kronecker_product_impl_test \
-	epsilon/linear/multiply_test \
+	epsilon/linear/linear_map_test \
 	epsilon/prox/prox_test \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test

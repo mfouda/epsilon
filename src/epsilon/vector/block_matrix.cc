@@ -5,10 +5,10 @@
 
 #include "epsilon/vector/block_matrix.h"
 
-// LinearMap& BlockMatrix::operator()(
-//     const std::string& row_key, const std::string& col_key) {
-//   return data_[col_key][row_key];
-// }
+LinearMap& BlockMatrix::operator()(
+    const std::string& row_key, const std::string& col_key) {
+  return data_[col_key][row_key];
+}
 
 BlockMatrix BlockMatrix::Transpose() const {
   BlockMatrix transpose;
@@ -82,8 +82,8 @@ void BlockMatrix::InsertOrAdd(
     const std::string& row_key,
     const std::string& col_key,
     LinearMap value) {
-  //auto res = data_[col_key].insert(std::make_pair(row_key, std::move(value)));
-  //if (!res.second) (res.first)->second += value;
+  auto res = data_[col_key].insert(std::make_pair(row_key, std::move(value)));
+  if (!res.second) (res.first)->second += value;
 }
 
 int BlockMatrix::m() const {

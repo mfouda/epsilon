@@ -65,13 +65,16 @@ class LinearMap {
     return LinearMap(impl_->Transpose());
   }
 
+  // Convenience operators
+  LinearMap& operator+=(const LinearMap& rhs);
+  LinearMap& operator*=(const LinearMap& rhs);
+
  private:
   std::shared_ptr<const LinearMapImpl> impl_;
 };
 
 // Matrix-matrix multiply, add, subtract
-// LinearMap operator-(LinearMap lhs, LinearMap rhs);
-// LinearMap operator+(LinearMap lhs, LinearMap rhs);
+LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs);
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs);
 
 // Matrix-vector multiply
@@ -81,5 +84,10 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> operator*(
     const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& rhs) {
   return lhs.impl().Apply(rhs);
 }
+
+typedef LinearMapImpl* (*LinearMapBinaryOp)(
+    const LinearMapImpl& lhs,
+    const LinearMapImpl& rhs);
+
 
 #endif  // EPSILON_LINEAR_LINEAR_MAP_H
