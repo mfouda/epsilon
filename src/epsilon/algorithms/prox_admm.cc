@@ -59,6 +59,8 @@ void ProxADMMSolver::Init() {
   InitConstraints();
   InitProxOperators();
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
+  VLOG(2) << "A:\n" << A_.DebugString() << "\n"
+          << "b:\n" << b_.DebugString();
 }
 
 void ProxADMMSolver::Solve() {

@@ -29,8 +29,12 @@ class LinearMapTest : public testing::Test {
     diag.diagonal() << -1, 3;
     D0 = static_cast<Eigen::MatrixXd>(diag);
     D = LinearMap(new DiagonalMatrixImpl(diag));
+
+    x = Eigen::VectorXd(2);
+    x << 3,4;
   }
 
+  Eigen::VectorXd x;
   Eigen::MatrixXd A0, B0, C0, D0;
   LinearMap A, B, C, D;
 };
@@ -77,4 +81,11 @@ TEST_F(LinearMapTest, Add) {
   EXPECT_TRUE(MatrixEquals(D0+B0, (D+B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0+C0, (D+C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0+D0, (D+D).impl().AsDense()));
+}
+
+TEST_F(LinearMapTest, Apply) {
+  EXPECT_TRUE(VectorEquals(A0*x, A*x));
+  EXPECT_TRUE(VectorEquals(B0*x, B*x));
+  EXPECT_TRUE(VectorEquals(C0*x, C*x));
+  EXPECT_TRUE(VectorEquals(D0*x, D*x));
 }

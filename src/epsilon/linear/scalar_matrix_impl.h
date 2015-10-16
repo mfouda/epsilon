@@ -19,7 +19,7 @@ class ScalarMatrixImpl final : public LinearMapImpl {
   DenseMatrix AsDense() const override {
     return alpha_*DenseMatrix::Identity(n_, n_);
   }
-  DenseVector Apply(const DenseVector& x) const override { return n_*x; }
+  DenseVector Apply(const DenseVector& x) const override { return alpha_*x; }
 
   LinearMapImpl* Transpose() const override {
     return new ScalarMatrixImpl(n_, alpha_);

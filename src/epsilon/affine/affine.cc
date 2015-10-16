@@ -458,11 +458,12 @@ typedef void(*LinearFunction)(
     BlockMatrix* A,
     BlockVector* b);
 
-std::unordered_map<int, LinearFunction> kUnaryLinearFunctions = {
+std::unordered_map<int, LinearFunction> kLinearFunctions = {
   //{Expression::HSTACK, &HStack},
   //{Expression::MULTIPLY_ELEMENTWISE, &MultiplyElementwise},
   //{Expression::SUM, &Sum},
   //{Expression::VSTACK, &VStack},
+  {Expression::ADD, &Add},
   {Expression::CONSTANT, &Constant},
   {Expression::INDEX, &Index},
   {Expression::MULTIPLY, &Multiply},
@@ -482,7 +483,7 @@ void BuildAffineOperatorImpl(
     LOG(FATAL) << "No linear function for "
                << Expression::Type_Name(expr.expression_type());
   }
-  iter->second(expr);
+  iter->second(expr, row_key, L, A, b);
 }
 
 void BuildAffineOperator(
