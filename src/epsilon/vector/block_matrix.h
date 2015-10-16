@@ -26,7 +26,7 @@
 #define EPSILON_VECTOR_BLOCK_MATRIX_H
 
 #include "epsilon/vector/block_vector.h"
-#include "epsilon/vector/matrix_variant.h"
+#include "epsilon/linear/linear_map.h"
 
 class BlockMatrix {
  public:
@@ -43,21 +43,9 @@ class BlockMatrix {
     VLOG(3) << "dtor";
   }
 
-  BlockMatrix(const BlockMatrix& rhs) {
-    VLOG(3) << "copy ctor";
-    data_ = rhs.data_;
-  }
-
   BlockMatrix(BlockMatrix&& rhs) {
     VLOG(3) << "move ctor";
     data_ = std::move(rhs.data_);
-  }
-
-  BlockMatrix& operator=(const BlockMatrix& rhs) {
-    VLOG(3) << "copy assignment";
-    BlockMatrix lhs(rhs);
-    *this = std::move(lhs);
-    return *this;
   }
 
   BlockMatrix& operator=(BlockMatrix&& rhs) {
@@ -66,27 +54,26 @@ class BlockMatrix {
     return *this;
   }
 
-  MatrixVariant& operator()(
+  LinearMap& operator()(
       const std::string& row_key, const std::string& col_key);
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
-  int rows() const;
-  int cols() const;
   std::string DebugString() const;
-
-  const std::map<std::string, MatrixVariant>& col(
+  int m() const;
+  int n() const;
+  const std::map<std::string, LinearMap>& col(
       const std::string& col_key) const;
 
-  BlockMatrix transpose() const;
-  std::unique_ptr<Solver> inv() const;
+  BlockMatrix Transpose() const;
+  std::unique_ptr<Solver> Inverse() const;
 
  private:
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
-                   MatrixVariant value);
+                   LinearMap value);
 
   // col -> row -> value
-  std::map<std::string, std::map<std::string, MatrixVariant>> data_;
+  std::map<std::string, std::map<std::string, LinearMap>> data_;
 };
 
 BlockMatrix operator*(const BlockMatrix& lhs, const BlockMatrix& rhs);

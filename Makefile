@@ -54,6 +54,8 @@ common_cc = \
 	epsilon/expression/expression_util.cc \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
+	epsilon/linear/linear_map.cc \
+	epsilon/linear/multiply.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/deadzone.cc \
 	epsilon/prox/fused_lasso.cc \
@@ -77,12 +79,10 @@ common_cc = \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
-	epsilon/vector/block_vector.cc \
 	epsilon/vector/block_matrix.cc \
+	epsilon/vector/block_vector.cc \
 	epsilon/vector/dynamic_matrix.cc \
-	epsilon/vector/matrix_variant.cc \
 	epsilon/vector/vector_file.cc \
-	epsilon/linear/multiply.cc \
 	epsilon/vector/vector_util.cc
 
 third_party_obj = \
@@ -109,8 +109,7 @@ tests = \
 	epsilon/linear/multiply_test \
 	epsilon/prox/prox_test \
 	epsilon/vector/block_matrix_test \
-	epsilon/vector/block_vector_test \
-	epsilon/vector/matrix_variant_test
+	epsilon/vector/block_vector_test
 
 binaries = \
 	epsilon/benchmark

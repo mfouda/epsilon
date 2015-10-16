@@ -53,7 +53,12 @@ class LinearMap {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
+  LinearMap();
   explicit LinearMap(LinearMapImpl* impl) : impl_(impl) {}
+  LinearMap(const LinearMap& rhs) {
+    LOG(FATAL) << "LinearMap copy ctor";
+  }
+
 
   static LinearMap Identity(int n);
 

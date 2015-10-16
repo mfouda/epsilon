@@ -10,41 +10,41 @@ class SingletonSolver : public BlockMatrix::Solver {
   SingletonSolver(
       std::string key,
       int n,
-      std::unique_ptr<MatrixVariant::Solver> solver)
+      LinearMap A)
       : key_(key),
         n_(n),
-        solver_(std::move(solver)) {}
+        A_(std::move(A)) {}
 
   BlockVector solve(const BlockVector& b) const {
     BlockVector x;
-    x(key_) = solver_->solve(
-        b.has_key(key_) ? b(key_) : MatrixVariant::DenseVector::Zero(n_));
+    x(key_) = A_.impl().Apply(
+        b.has_key(key_) ? b(key_) : LinearMap::DenseVector::Zero(n_));
     return x;
   }
 
  private:
   std::string key_;
   int n_;
-  std::unique_ptr<MatrixVariant::Solver> solver_;
+  LinearMap A_;
 };
 
-MatrixVariant& BlockMatrix::operator()(
+LinearMap& BlockMatrix::operator()(
     const std::string& row_key, const std::string& col_key) {
   return data_[col_key][row_key];
 }
 
-BlockMatrix BlockMatrix::transpose() const {
+BlockMatrix BlockMatrix::Transpose() const {
   BlockMatrix transpose;
-  for (auto col_iter : data_) {
-    for (auto item_iter : col_iter.second) {
-      transpose(col_iter.first, item_iter.first) =
-          item_iter.second.transpose();
+  for (const auto& col_iter : data_) {
+    for (const auto& item_iter : col_iter.second) {
+      transpose.InsertOrAdd(
+          col_iter.first, item_iter.first, item_iter.second.Transpose());
     }
   }
   return transpose;
 }
 
-std::unique_ptr<BlockMatrix::Solver> BlockMatrix::inv() const {
+std::unique_ptr<BlockMatrix::Solver> BlockMatrix::Inverse() const {
   // Assumes a singleton, symmetric matrix
   // TODO(mwytock): Add other solvers, etc.
 
@@ -53,30 +53,29 @@ std::unique_ptr<BlockMatrix::Solver> BlockMatrix::inv() const {
   CHECK_EQ(1, iter->second.size());
   CHECK_EQ(iter->first, iter->second.begin()->first);
 
-  const MatrixVariant& A = iter->second.begin()->second;
-  CHECK_EQ(A.rows(), A.cols());
+  const LinearMap& A = iter->second.begin()->second;
+  CHECK_EQ(A.impl().m(), A.impl().n());
 
   return std::unique_ptr<BlockMatrix::Solver>(
-      new SingletonSolver(iter->first, A.rows(), A.inv()));
-
+      new SingletonSolver(iter->first, A.impl().n(), A.Inverse()));
 }
 
 BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {
   BlockMatrix C;
 
-  for (auto B_col_iter : B.data_) {
-    for (auto B_iter : B_col_iter.second) {
+  for (const auto& B_col_iter : B.data_) {
+    for (const auto& B_iter : B_col_iter.second) {
       auto A_col_iter_ptr = A.data_.find(B_iter.first);
       if (A_col_iter_ptr == A.data_.end())
         continue;
       const auto& A_col_iter = *A_col_iter_ptr;
 
-      for (auto A_iter : A_col_iter.second) {
+      for (const auto& A_iter : A_col_iter.second) {
         VLOG(3) << "C(" << A_iter.first << "," << B_col_iter.first << ") += "
                 << "A(" << A_iter.first << "," << A_col_iter.first << ")*"
                 << "B(" << B_iter.first << "," << B_col_iter.first << ")";
-        VLOG(3) << A_iter.second.rows() << " x " << A_iter.second.cols();
-        VLOG(3) << B_iter.second.rows() << " x " << B_iter.second.cols();
+        VLOG(3) << A_iter.second.impl().m() << " x " << A_iter.second.impl().n();
+        VLOG(3) << B_iter.second.impl().m() << " x " << B_iter.second.impl().n();
         C.InsertOrAdd(
             A_iter.first, B_col_iter.first, A_iter.second*B_iter.second);
       }
@@ -104,35 +103,35 @@ BlockVector operator*(const BlockMatrix& A, const BlockVector& x) {
 void BlockMatrix::InsertOrAdd(
     const std::string& row_key,
     const std::string& col_key,
-    MatrixVariant value) {
-  auto res = data_[col_key].insert(std::make_pair(row_key, value));
-  if (!res.second) (res.first)->second += value;
+    LinearMap value) {
+  //auto res = data_[col_key].insert(std::make_pair(row_key, std::move(value)));
+  //if (!res.second) (res.first)->second += value;
 }
 
-int BlockMatrix::rows() const {
+int BlockMatrix::m() const {
   std::unordered_set<std::string> seen;
   int m = 0;
-  for (auto col_iter : data_) {
-    for (auto block_iter : col_iter.second) {
+  for (const auto& col_iter : data_) {
+    for (const auto& block_iter : col_iter.second) {
       auto seen_iter = seen.find(block_iter.first);
       if (seen_iter != seen.end())
         continue;
-      m += block_iter.second.rows();
+      m += block_iter.second.impl().m();
       seen.insert(block_iter.first);
     }
   }
   return m;
 }
 
-int BlockMatrix::cols() const {
+int BlockMatrix::n() const {
   int n = 0;
   for (auto col_iter : data_) {
-    n += col_iter.second.begin()->second.cols();
+    n += col_iter.second.begin()->second.impl().n();
   }
   return n;
 }
 
-const std::map<std::string, MatrixVariant>& BlockMatrix::col(
+const std::map<std::string, LinearMap>& BlockMatrix::col(
     const std::string& col_key) const {
   auto iter = data_.find(col_key);
   CHECK(iter != data_.end());
@@ -141,12 +140,11 @@ const std::map<std::string, MatrixVariant>& BlockMatrix::col(
 
 std::string BlockMatrix::DebugString() const {
   std::string retval = "";
-  for (auto col_iter : data_) {
-    for (auto block_iter : col_iter.second) {
+  for (const auto& col_iter : data_) {
+    for (const auto& block_iter : col_iter.second) {
       if (retval != "") retval += "\n";
       retval += "(" + block_iter.first + ", " + col_iter.first + ")\n";
-      retval += block_iter.second.DebugString();
-
+      retval += block_iter.second.impl().DebugString();
     }
   }
   return retval;
