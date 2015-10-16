@@ -24,7 +24,7 @@ Eigen::VectorXd NewtonProx::Apply(const Eigen::VectorXd &v) {
     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lambda_ * f_->hessf(x);
     Eigen::VectorXd gx = residual(x, v, lambda_);
     Eigen::VectorXd dx = (gx.array() / hx.array()).matrix();
-    VLOG(2) << "Iter " << iter << " gx: " << VectorDebugString(gx);
+//    VLOG(2) << "Iter " << iter << " gx: " << VectorDebugString(gx);
 
     // line search
     double beta = 0.001;
@@ -46,7 +46,7 @@ Eigen::VectorXd NewtonProx::Apply(const Eigen::VectorXd &v) {
       VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
       break;
     } else if(iter == MAX_ITER-1) {
-      VLOG(1) << "Newton Method won't converge for epigraph.\n";
+      VLOG(1) << "Newton Method won't converge for prox, lam = " << lambda_ << ", xres = " << x_res << "\n";
     }
   }
   return x;
@@ -157,4 +157,55 @@ Eigen::VectorXd NewtonEpigraph::SolveArrowheadSystem
     dinv_b(n) = 0;
 
     return dinv_b + 1/rho * y.dot(b) * y;
+}
+
+Eigen::VectorXd ImplicitNewtonEpigraph::Apply(const Eigen::VectorXd& sv) {
+  int n = sv.rows()-1;
+  double s = sv(0);
+  Eigen::VectorXd v = sv.tail(n);
+  double t = s;
+  Eigen::VectorXd x = f_->proj_feasible(v);
+
+  if(f_->eval(x) <= t) {
+    Eigen::VectorXd txx(n+1);
+    txx(0) = s;
+    txx.tail(n) = x;
+    return txx;
+  }
+
+  double lam = 1;
+  int iter = 0, max_iter=100;
+  double res = 0;
+  for(; iter < max_iter; iter++) {
+    //ProxOperatorArg prox_arg(lam, NULL, NULL);
+    //NewtonProx::Init(prox_arg);
+    lambda_ = lam;
+    x = NewtonProx::Apply(v);
+
+    Eigen::VectorXd gx = f_->gradf(x);
+    Eigen::VectorXd hx = f_->hessf(x);
+    double glam = f_->eval(x) - lam - s;
+    double hlam = -(gx.cwiseQuotient((1.+lam*hx.array()).matrix()).dot(gx)) - 1;
+    VLOG(2) << "glam = " << glam << ", hlam = " << hlam << "\n";
+
+    res = std::abs(glam);
+    if(res < 1e-10)
+      break;
+
+    lam = lam - glam/hlam;
+    if (lam < 0)
+      lam = 1e-6;
+
+  }
+  if(iter == max_iter) {
+    VLOG(2) << "Newton reach max iter, residual = " << res << "\n";
+  } else {
+    VLOG(2) << "Newton ends in " << iter << "iterations, r = " << res << "\n";
+  }
+
+  Eigen::VectorXd tx(n+1);
+  tx(0) = s+lam;
+  tx.tail(n) = NewtonProx::Apply(v);
+
+  return tx;
 }

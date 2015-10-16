@@ -150,6 +150,8 @@ EXPRESSION_RULES = [
      lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("Logistic", Expression.SUM,
      lambda e: (e.arg[0].expression_type == Expression.LOGISTIC)),
+    ("KLDiv", Expression.KL_DIV,
+     lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("MaxEntries", Expression.MAX_ENTRIES,
      lambda e: (e.arg[0].expression_type == Expression.VARIABLE)),
     ("NegativeEntropy", Expression.NEGATE,
@@ -227,6 +229,12 @@ def prox_fused_lasso(expr):
             return
 
         expr.proximal_operator.name = "FusedLassoProx"
+        yield expr
+
+def prox_kl_div(expr):
+    if (expr.expression_type == Expression.KL_DIV and
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr.proximal_operator.name = "KLDivProx"
         yield expr
 
 def prox_lambda_max(expr):
@@ -441,6 +449,11 @@ def prox_norm_l1_asymmetric_single_max(expr):
         for prox_expr in transform_epigraph(expr, arg):
             yield prox_expr
 
+def prox_matrix_frac(expr):
+    if expr.expression_type == Expression.MATRIX_FRAC:
+        expr.proximal_operator.name = 'MatrixFracProx'
+        yield expr
+
 def prox_max_elementwise(expr):
     """Replace max{..., ...} with epigraph constraints"""
     if expr.expression_type != Expression.MAX_ELEMENTWISE:
@@ -596,6 +609,7 @@ PROX_RULES = [
     prox_add,
     prox_affine,
     prox_fused_lasso,
+    prox_kl_div,
     prox_lambda_max,
     prox_least_squares,
     prox_logistic,
@@ -614,6 +628,7 @@ PROX_RULES = [
     prox_norm_l1_asymmetric,
     prox_deadzone,
     prox_norm_l1_asymmetric_single_max,
+    prox_matrix_frac,
     prox_max_elementwise,
     prox_epigraph_atomic,
     prox_linear_equality_graph,

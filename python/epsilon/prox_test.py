@@ -12,9 +12,11 @@ PROX_TRIALS = 10
 # Common variable
 n = 10
 x = cp.Variable(n)
+p = cp.Variable(3)
 X = cp.Variable(3,3)
-S = cp.Semidef(3)
 t = cp.Variable(1)
+p1 = cp.Variable(1)
+q1 = cp.Variable(1)
 
 class Prox(namedtuple("Prox", ["name", "objective", "constraint"])):
     def __new__(cls, name, objective, constraint=None):
@@ -142,6 +144,8 @@ PROX_TESTS = [
     Prox("SemidefiniteProx", None, lambda: [X >> 0]),
     Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
+    #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
+    Prox("KLDivProx", lambda: cp.kl_div(p1, q1)),
 ]
 
 # Epigraph operators
@@ -154,13 +158,14 @@ PROX_TESTS += [
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
     Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
     Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
-    #Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
+    Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
     Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
     Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
     Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
+    Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
 
 def test_prox():
@@ -175,6 +180,9 @@ def test_prox():
         # Form problem and solve with proximal operator implementation
         prob = cp.Problem(cp.Minimize(f), C)
         v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+        #for (k,v) in v_map.items():
+        #    if v.shape[0] == v.shape[1]:
+        #        v_map[k] = v.dot(v.T) #(v + v.T)/2
         solve.prox(prob, v_map, lam)
         actual = {x: x.value for x in prob.variables()}
 
