@@ -159,6 +159,11 @@ PROX_TESTS += [
     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
 ]
 
+# PROX_TESTS = [
+#     Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
+#     Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
+# ]
+
 def test_prox():
     def run(prox, i):
         np.random.seed(i)

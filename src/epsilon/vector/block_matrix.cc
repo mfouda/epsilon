@@ -31,20 +31,19 @@ BlockMatrix BlockMatrix::Transpose() const {
 }
 
 BlockMatrix BlockMatrix::Inverse() const {
-  // Assumes a singleton
-  // TODO(mwytock): Add other solvers, etc.
+  // Assumed to be block diagonal
+  // TODO(mwytock): Handle general structure?
 
-  CHECK_EQ(1, data_.size());
-  auto iter = data_.begin();
-  CHECK_EQ(1, iter->second.size());
-  CHECK_EQ(iter->first, iter->second.begin()->first);
-
-  const LinearMap& A = iter->second.begin()->second;
-  CHECK_EQ(A.impl().m(), A.impl().n());
-
-  BlockMatrix inv;
-  inv.InsertOrAdd(iter->first, iter->first, A.Inverse());
-  return inv;
+  BlockMatrix inverse;
+  VLOG(2) << "Inverting: " << DebugString();
+  for (const auto& col_iter : data_) {
+    CHECK(col_iter.second.size() == 1 &&
+          col_iter.first == col_iter.second.begin()->first)
+        << "Trying to invert non block diagonal matrix\n" << DebugString();
+    const std::string& key = col_iter.first;
+    inverse.InsertOrAdd(key, key, col_iter.second.begin()->second.Inverse());
+  }
+  return inverse;
 }
 
 BlockMatrix BlockMatrix::LeftIdentity() const {

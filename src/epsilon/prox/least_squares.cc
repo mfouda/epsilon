@@ -18,8 +18,12 @@ class LeastSquaresProx final : public BlockProxOperator {
     BlockMatrix C;
     BlockVector b;
     affine::BuildAffineOperator(arg.f_expr().arg(0).arg(0), "f", &C, &b);
-
     const BlockMatrix& A = arg.A();
+
+    VLOG(2) << "A: " << A.DebugString();
+    VLOG(2) << "C: " << C.DebugString();
+    VLOG(2) << "b: " << b.DebugString();
+
     const double rho = 1/(2*arg.lambda());
     BlockMatrix CT = C.Transpose();
     BlockMatrix AT = A.Transpose();

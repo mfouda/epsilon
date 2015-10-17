@@ -6,19 +6,21 @@
 // Expression tree:
 // ZERO
 //   VARIABLE
+//
+// Only useful with a non trivial A matrix, in which case we solve ||Ax - v||^2
 class ZeroProx final : public BlockProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
-    ATA_inv_ = arg.ATA().Inverse();
+    const BlockMatrix& A = arg.A();
+    BlockMatrix AT = A.Transpose();
+    F_ = (AT*A).Inverse()*AT;
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    // NOTE(mwytock): v is already transformed by A.Transpose() before
-    // being passed here.
-    return ATA_inv_*v;
+    return F_*v;
   }
 
 private:
-  BlockMatrix ATA_inv_;
+  BlockMatrix F_;
 };
 REGISTER_BLOCK_PROX_OPERATOR(ZeroProx);

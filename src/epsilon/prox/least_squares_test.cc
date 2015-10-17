@@ -75,8 +75,8 @@ TEST_F(LeastSquaresTest, FatA) {
   lambda_ = 1;
   EXPECT_TRUE(VectorEquals(Apply(v), ComputeLS(v), 1e-8));
 
-  // lambda_ = 0.1;
-  // EXPECT_TRUE(VectorEquals(Apply(v), ComputeLS(v), 1e-8));
+  lambda_ = 0.1;
+  EXPECT_TRUE(VectorEquals(Apply(v), ComputeLS(v), 1e-8));
 }
 
 TEST_F(LeastSquaresTest, SkinnyA) {

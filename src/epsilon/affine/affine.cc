@@ -339,7 +339,10 @@ void Negate(
   BuildAffineOperatorImpl(
       GetOnlyArg(expr),
       row_key,
-      L*LinearMap(new ScalarMatrixImpl(GetDimension(expr), -1)),
+      // TODO(mwytock): We use scalar multiplication here instead of explicitly
+      // mulitplying by a linear map to handle promotion. We should instead
+      // handle this as a preprocessing step.
+      -1*L,
       A, b);
 }
 
