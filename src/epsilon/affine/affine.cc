@@ -318,7 +318,8 @@ void BuildAffineOperatorImpl(
 
 // Utility function used by Multiply()
 // TODO(mwytock): Should support non-dense constants.
-Eigen::MatrixXd GetConstant(const Expression& expr) {
+Eigen::MatrixXd EvalConstant(
+    const Expression& expr) {
   BlockVector b;
   BuildAffineOperatorImpl(
       expr,
@@ -352,12 +353,15 @@ void Multiply(
 
   if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT &&
       GetDimension(expr, 1) == 1) {
-    // Ax
-    BuildAffineOperatorImpl(
-        expr.arg(1),
-        row_key,
-        L*LinearMap(new DenseMatrixImpl(GetConstant(expr.arg(0)))),
-        A, b);
+    // Ax, get constant, handling promotion if necessary
+    Eigen::MatrixXd C0 = EvalConstant(expr.arg(0));
+    LinearMap C;
+    if (C0.rows() == 1 && GetDimension(expr, 0) != 1) {
+      C = LinearMap(new ScalarMatrixImpl(GetDimension(expr, 0), C0(0,0)));
+    } else {
+      C = LinearMap(new DenseMatrixImpl(C0));
+    }
+    BuildAffineOperatorImpl(expr.arg(1), row_key, L*C, A, b);
   } else if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
     // AX
     BuildAffineOperatorImpl(
@@ -365,7 +369,7 @@ void Multiply(
         row_key,
         L*LinearMap(new KroneckerProductImpl(
             new ScalarMatrixImpl(GetDimension(expr, 1), 1),
-            new DenseMatrixImpl(GetConstant(expr.arg(0))))),
+            new DenseMatrixImpl(EvalConstant(expr.arg(0))))),
         A, b);
   } else if (expr.arg(1).curvature().curvature_type() == Curvature::CONSTANT) {
     // XA
@@ -373,7 +377,7 @@ void Multiply(
         expr.arg(0),
         row_key,
         L*LinearMap(new KroneckerProductImpl(
-            new DenseMatrixImpl(GetConstant(expr.arg(1)).transpose()),
+            new DenseMatrixImpl(EvalConstant(expr.arg(1)).transpose()),
             new ScalarMatrixImpl(GetDimension(expr, 0), 1))),
         A, b);
   } else {
@@ -441,13 +445,15 @@ void Constant(
   Eigen::VectorXd b_dense;
   const ::Constant& c = expr.constant();
   if (c.data_location() == "") {
-    b_dense = Eigen::VectorXd::Constant(GetDimension(expr), c.scalar());
+    // Handle promotion if necessary by using L
+    b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
     VLOG(1) << "Read: " << c.data_location();
     std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
     VLOG(1) << "Read done: " << c.data_location();
     b_dense = ToVector(GetMatrixData(*d));
   }
+
   b->InsertOrAdd(row_key, L*b_dense);
 }
 

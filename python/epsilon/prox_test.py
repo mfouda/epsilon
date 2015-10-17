@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # Common variable
 n = 10
@@ -157,14 +157,6 @@ PROX_TESTS += [
     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
     Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
-]
-
-PROX_TESTS = [
-    Prox("LinearEqualityProx", None, C_linear_equality),
-    Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
-    Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
-    Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
-    Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
 ]
 
 def test_prox():
