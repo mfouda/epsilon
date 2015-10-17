@@ -109,7 +109,7 @@ tests = \
 	epsilon/algorithms/prox_admm_test \
 	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/linear_map_test \
-	epsilon/prox/prox_test \
+	epsilon/prox/least_squares_test \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test
 

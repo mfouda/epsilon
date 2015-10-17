@@ -50,6 +50,8 @@ class BlockVector {
 
   BlockVector& operator+=(const BlockVector& rhs);
   BlockVector& operator-=(const BlockVector& rhs);
+  BlockVector& operator*=(double alpha);
+
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
   double norm() const;
@@ -68,5 +70,6 @@ class BlockVector {
 
 BlockVector operator+(BlockVector lhs, const BlockVector& rhs);
 BlockVector operator-(BlockVector lhs, const BlockVector& rhs);
+BlockVector operator*(double alpha, BlockVector rhs);
 
 #endif  // EPSILON_VECTOR_BLOCK_VECTOR_H

@@ -137,9 +137,8 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
       prox_vector_operator_.Init();
     } else {
       block_vector_prox_ = true;
-      ATA_ = A_.Transpose()*A_;
       prox_ = iter->second();
-      prox_->Init(ProxOperatorArg(lambda_, &ATA_, &f_expr_, &var_map_));
+      prox_->Init(ProxOperatorArg(lambda_, &A_, &f_expr_, &var_map_));
     }
   }
 
@@ -165,7 +164,6 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
  private:
   VariableOffsetMap var_map_;
   ProxVectorOperator prox_vector_operator_;
-  BlockMatrix ATA_;
 
   bool block_vector_prox_;
   double lambda_;

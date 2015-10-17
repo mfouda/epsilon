@@ -61,6 +61,18 @@ BlockMatrix BlockMatrix::LeftIdentity() const {
   return C;
 }
 
+BlockMatrix BlockMatrix::RightIdentity() const {
+  BlockMatrix C;
+  for (const auto& col_iter : data_) {
+    CHECK(col_iter.second.size() > 0);
+    const auto& block_iter = *col_iter.second.begin();
+    const std::string& key = col_iter.first;
+    C.InsertOrAdd(
+        key, key, LinearMap::Identity(block_iter.second.impl().n()));
+  }
+  return C;
+}
+
 BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {
   BlockMatrix C;
 
@@ -94,6 +106,10 @@ BlockMatrix operator+(const BlockMatrix& A, const BlockMatrix& B) {
     }
   }
   return C;
+}
+
+BlockMatrix operator-(const BlockMatrix& A, const BlockMatrix& B) {
+  return A + (-1)*B;
 }
 
 BlockMatrix operator*(double alpha, const BlockMatrix& A) {

@@ -49,8 +49,9 @@ class BlockMatrix {
   BlockMatrix Transpose() const;
   BlockMatrix Inverse() const;
 
-  // Returns a matrix such that IA = A
+  // Returns a matrix such that IA = A or AI = A.
   BlockMatrix LeftIdentity() const;
+  BlockMatrix RightIdentity() const;
 
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
                    LinearMap value);
@@ -69,6 +70,7 @@ class BlockMatrix {
 // Matrix-matrix product, sum
 BlockMatrix operator*(const BlockMatrix& lhs, const BlockMatrix& rhs);
 BlockMatrix operator+(const BlockMatrix& lhs, const BlockMatrix& rhs);
+BlockMatrix operator-(const BlockMatrix& lhs, const BlockMatrix& rhs);
 
 // Matrix-matrix short hand products
 BlockMatrix operator*(double alpha, const BlockMatrix& A);

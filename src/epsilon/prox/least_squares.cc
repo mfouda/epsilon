@@ -21,21 +21,25 @@ class LeastSquaresProx final : public BlockProxOperator {
 
     const BlockMatrix& A = arg.A();
     const double rho = 1/(2*arg.lambda());
+    BlockMatrix CT = C.Transpose();
+    BlockMatrix AT = A.Transpose();
 
-    // Use Gaussian elimination / matrix inversion lemma depending on the size
-    // of C. We assume that ATA is diagonal.
+    // Use Gaussian elimination to solve the system:
+    //
+    // [ pA'A  C'][ x ] = [ pA'v ]
+    // [ C    -I ][ y ]   [ b    ]
+    //
+    // where p = 1/(2*lambda). We assume that A'A is diagonal so that the
+    // computaitonal time is dominated by C.
     if (C.m() <= C.n()) {
-      // y = (I + C*(rho*A'A)^{-1}*C')^{-1}b
-      // x = rho*A'v - C'y
-      BlockMatrix ATA_inv = rho*(A.Transpose()*A).Inverse();
-      BlockVector y = (C.LeftIdentity() + C*ATA_inv*C.Transpose()).Inverse()*b;
-      F_ = ATA_inv*rho*A.Transpose();
-      g_ = ATA_inv*C.Transpose()*y;
+      BlockMatrix D_inv = (rho*AT*A).Inverse();
+      BlockMatrix H_inv = (C.LeftIdentity() + C*D_inv*CT).Inverse();
+      F_ = rho*D_inv*(C.RightIdentity() - CT*H_inv*C*D_inv)*AT;
+      g_ = D_inv*CT*(H_inv*b);
     } else {
-      // x = (rho*A'A + C'C)^{-1} * (rho*A'v - b)
-      BlockMatrix ATA_CTC_inv =(rho*A.Transpose()*A + C.Transpose()*C).Inverse();
-      F_ = ATA_CTC_inv*rho*A.Transpose();
-      g_ = ATA_CTC_inv*b;
+      BlockMatrix H_inv =(rho*AT*A + CT*C).Inverse();
+      F_ = rho*H_inv*AT;
+      g_ = H_inv*(CT*b);
     }
   }
 

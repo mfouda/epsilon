@@ -16,6 +16,13 @@ BlockVector& BlockVector::operator-=(const BlockVector& rhs) {
   return *this;
 }
 
+BlockVector& BlockVector::operator*=(double alpha) {
+  for (auto& iter : data_) {
+    iter.second *= alpha;
+  }
+  return *this;
+}
+
 BlockVector operator+(BlockVector lhs, const BlockVector& rhs) {
   lhs += rhs;
   return lhs;
@@ -24,6 +31,11 @@ BlockVector operator+(BlockVector lhs, const BlockVector& rhs) {
 BlockVector operator-(BlockVector lhs, const BlockVector& rhs) {
   lhs -= rhs;
   return lhs;
+}
+
+BlockVector operator*(double alpha, BlockVector x) {
+  x *= alpha;
+  return x;
 }
 
 void BlockVector::InsertOrAdd(
