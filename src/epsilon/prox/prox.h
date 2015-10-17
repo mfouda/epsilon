@@ -8,11 +8,6 @@
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/vector/vector_operator.h"
 
-std::unique_ptr<VectorOperator> CreateProxOperator(
-    double lambda,
-    const Expression& f_expr,
-    const VariableOffsetMap& var_map);
-
 // Create a "proximal operator" for expression
 // argmin_x lambda*f(x) + (1/2)||Ax - v||^2
 std::unique_ptr<BlockVectorOperator> CreateProxOperator(
