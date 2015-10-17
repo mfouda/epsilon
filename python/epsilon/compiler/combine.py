@@ -52,7 +52,11 @@ def max_overlap_function(graph, f):
     def overlap(g):
         return len(variables(g).intersection(variables_f))
 
-    h = max((g for g in graph.functions if g != f), key=overlap)
+    # TODO(mwytock): Remove temporary hack to exclude certain functions form merging
+    exclude = ["LinearEqualityProx"]
+    h = max((g for g in graph.functions
+             if g != f and g.expr.proximal_operator.name not in exclude),
+            key=overlap)
 
     # Only return a function if there is some overlap
     if overlap(h):

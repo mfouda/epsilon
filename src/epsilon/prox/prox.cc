@@ -60,6 +60,7 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
                    << g_expr_->proximal_operator().name() << "\n"
                    << g_expr_->DebugString();
       }
+      AT_ = A_.Transpose();
       legacy_prox_ = iter2->second();
       var_map_.Insert(f_expr_);
       legacy_prox_->Init(ProxOperatorArg(alpha_*lambda_, nullptr, g_expr_, &var_map_));
@@ -67,14 +68,20 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   }
 
   virtual BlockVector Apply(const BlockVector& v) override {
-    BlockVector v_c = v - lambda_*c_;
-    if (block_vector_prox_)
-      return prox_->Apply(v_c);
+    if (block_vector_prox_) {
+      CHECK(c_.n() == 0);
+      return prox_->Apply(v);
+    }
+
+    // TODO(mwytock): Its strange that the legacy proximal operators apply to v
+    // vs the new ones, A'v. Fix this, probably by going back to parameterizing
+    // the proximal operators with ATA.
+    BlockVector v_c = AT_*v - lambda_*c_;
 
     // Old style prox. First we have to extract vectors from BlockVector
     Eigen::VectorXd v_vec = Eigen::VectorXd::Zero(var_map_.n());
     for (auto iter : var_map_.offsets()) {
-      if (v.has_key(iter.first))
+      if (v_c.has_key(iter.first))
         v_vec.segment(iter.second, var_map_.Size(iter.first)) = v_c(iter.first);
     }
 
@@ -93,6 +100,7 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   // Input parameters
   double lambda_;
   BlockMatrix A_;
+  BlockMatrix AT_;
   Expression f_expr_;
 
   // Prox function
@@ -123,7 +131,7 @@ void ProxBlockVectorOperator::Preprocess() {
     BlockMatrix A;
     BlockVector b;
     affine::BuildAffineOperator(f_expr_.arg(1), "c", &A, &b);
-    for (const std::string& var_id : A.row_keys())
+    for (const std::string& var_id : A.col_keys())
       c_(var_id) = ToVector(A("c", var_id).impl().AsDense());
   }
 

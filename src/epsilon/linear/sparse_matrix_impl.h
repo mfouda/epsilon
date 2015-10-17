@@ -2,6 +2,7 @@
 #define EPSILON_LINEAR_SPARSE_MATRIX_IMPL_H
 
 #include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
 
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/vector/vector_util.h"
@@ -21,7 +22,14 @@ class SparseMatrixImpl final : public LinearMapImpl {
     return new SparseMatrixImpl(A_.transpose());
   }
   LinearMapImpl* Inverse() const override {
-    LOG(FATAL) << "Not implemented";
+    // TODO(mwytock): Verify symmetry, fill-in
+    CHECK_EQ(A_.rows(), A_.cols());
+
+    Eigen::SimplicialLDLT<SparseMatrix> ldlt_;
+    ldlt_.compute(A_);
+    CHECK_EQ(Eigen::Success, ldlt_.info());
+    SparseMatrix A_inv = ldlt_.solve(SparseIdentity(A_.rows()));
+    return new SparseMatrixImpl(A_inv);
   }
 
   // Sparse matrix API

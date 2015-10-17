@@ -57,9 +57,17 @@ const BlockVector::DenseVector& BlockVector::operator()(
   return iter->second;
 }
 
+int BlockVector::n() const {
+  int n = 0;
+  for (const auto& iter : data_) {
+    n += iter.second.rows();
+  }
+  return n;
+}
+
 double BlockVector::norm() const {
   double norm_squared = 0;
-  for (auto iter : data_) {
+  for (const auto& iter : data_) {
     norm_squared += iter.second.squaredNorm();
   }
   return sqrt(norm_squared);

@@ -70,13 +70,12 @@ void ProxADMMSolver::Solve() {
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
     x_prev_ = x_;
     u_ -= b_;
-    for (int i = 0; i < N_; i++) {
+    for (int i = 0; i < N_; i++)
       u_ -= A_*x_[i];
-    }
 
     for (int i = 0; i < N_; i++) {
       u_ += A_*x_[i];
-      x_[i] = prox_[i]->Apply(AiT_[i]*u_);
+      x_[i] = prox_[i]->Apply(u_);
       u_ -= A_*x_[i];
       VLOG(2) << "x: " << x_[i].DebugString();
     }

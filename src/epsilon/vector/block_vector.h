@@ -54,6 +54,7 @@ class BlockVector {
 
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 
+  int n() const;
   double norm() const;
   bool has_key(const std::string& key) const {
     return data_.find(key) != data_.end();

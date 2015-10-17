@@ -41,11 +41,6 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
-PROBLEMS = [
-    #    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
-]
-
-
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 
