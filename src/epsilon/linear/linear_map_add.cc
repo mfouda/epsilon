@@ -159,7 +159,28 @@ LinearMapImpl* Add_ScalarMatrix_ScalarMatrix(
 LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
+  auto const& S = static_cast<const ScalarMatrixImpl&>(lhs);
+
+  // kron(A, alpha*I) + beta*I  can be rewritten as
+  // kron(A + beta/alpha*I, alpha*I)
+  if (K.A().impl().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A().impl());
+    ScalarMatrixImpl S1(K.A().impl().n(), 0);
+    ScalarMatrixImpl S2(K.B().impl().n(), S.alpha()/KS.alpha());
+    return new KroneckerProductImpl(
+        Add(S1, K.A().impl()),
+        Add(S2, K.B().impl()));
+  } else if (K.B().impl().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B().impl());
+    ScalarMatrixImpl S1(K.A().impl().n(), S.alpha()/KS.alpha());
+    ScalarMatrixImpl S2(K.B().impl().n(), 0);
+    return new KroneckerProductImpl(
+        Add(S1, K.A().impl()),
+        Add(S2, K.B().impl()));
+  } else {
+    LOG(FATAL) << "Not implemented";
+  }
 }
 
 LinearMapImpl* Add_KroneckerProduct_DenseMatrix(

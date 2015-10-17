@@ -63,14 +63,11 @@ TEST_F(LinearMapTest, Multiply) {
   EXPECT_TRUE(MatrixEquals(C0*B0, (C*B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(C0*C0, (C*C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(C0*D0, (C*D).impl().AsDense()));
-  EXPECT_TRUE(MatrixEquals(C0*E0, (C*E).impl().AsDense()));
 
   EXPECT_TRUE(MatrixEquals(D0*A0, (D*A).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*B0, (D*B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*C0, (D*C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*D0, (D*D).impl().AsDense()));
-
-  EXPECT_TRUE(MatrixEquals(E0*C0, (E*C).impl().AsDense()));
 }
 
 TEST_F(LinearMapTest, Add) {
@@ -95,9 +92,26 @@ TEST_F(LinearMapTest, Add) {
   EXPECT_TRUE(MatrixEquals(D0+D0, (D+D).impl().AsDense()));
 }
 
-TEST_F(LinearMapTest, Apply) {
-  EXPECT_TRUE(VectorEquals(A0*x, A*x));
-  EXPECT_TRUE(VectorEquals(B0*x, B*x));
-  EXPECT_TRUE(VectorEquals(C0*x, C*x));
-  EXPECT_TRUE(VectorEquals(D0*x, D*x));
+TEST_F(LinearMapTest, Multiply_KroneckerScalar) {
+  EXPECT_TRUE(MatrixEquals(C0*E0, (C*E).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(E0*C0, (E*C).impl().AsDense()));
+}
+
+TEST_F(LinearMapTest, Add_KroneckerScalar) {
+  LinearMap K(new KroneckerProductImpl(
+      new DenseMatrixImpl(A0),
+      new ScalarMatrixImpl(3, -2.3)));
+  LinearMap L(new KroneckerProductImpl(
+      new ScalarMatrixImpl(3, 1.5),
+      new DenseMatrixImpl(A0)));
+  LinearMap S(new ScalarMatrixImpl(6, 1.3));
+
+  Eigen::MatrixXd K0 = K.impl().AsDense();
+  Eigen::MatrixXd L0 = L.impl().AsDense();
+  Eigen::MatrixXd S0 = S.impl().AsDense();
+
+  EXPECT_TRUE(MatrixEquals(K0+S0, (K+S).impl().AsDense(), 1e-8));
+  EXPECT_TRUE(MatrixEquals(S0+K0, (S+K).impl().AsDense(), 1e-8));
+  EXPECT_TRUE(MatrixEquals(L0+S0, (L+S).impl().AsDense(), 1e-8));
+  EXPECT_TRUE(MatrixEquals(S0+L0, (S+L).impl().AsDense(), 1e-8));
 }

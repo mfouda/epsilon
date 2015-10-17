@@ -25,7 +25,7 @@ class ScalarMatrixImpl final : public LinearMapImpl {
     return new ScalarMatrixImpl(n_, alpha_);
   }
   LinearMapImpl* Inverse() const override {
-    LOG(FATAL) << "Not implemented";
+    return new ScalarMatrixImpl(n_, 1/alpha_);
   }
 
   // Scalar matrix API
