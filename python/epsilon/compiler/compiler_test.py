@@ -25,20 +25,20 @@ def prox_ops(problem):
 def test_basis_pursuit():
     problem = compiler.compile(cvxpy_expr.convert_problem(
         basis_pursuit.create(m=10, n=30))[0])
-    assert_items_equal(prox_ops(problem), ["NormL1Prox", "LinearEqualityMatrixProx"])
+    assert_items_equal(prox_ops(problem), ["NormL1Prox", "LinearEqualityProx"])
     assert_equal(1, len(problem.constraint))
 
 def test_least_abs_deviations():
     problem = compiler.compile(cvxpy_expr.convert_problem(
         least_abs_dev.create(m=10, n=5))[0])
-    assert_items_equal(prox_ops(problem), ["NormL1Prox"])
+    assert_items_equal(prox_ops(problem), ["NormL1Prox", "ZeroProx"])
     assert_equal(1, len(problem.constraint))
 
 def test_tv_denoise():
     problem = compiler.compile(cvxpy_expr.convert_problem(
         tv_denoise.create(n=10, lam=1))[0])
     assert_items_equal(
-        prox_ops(problem), 3*["LeastSquaresMatrixProx"] + ["NormL1L2Prox"])
+        prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"])
     assert_equal(1, len(problem.constraint))
 
 def test_tv_1d():
