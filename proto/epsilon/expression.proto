@@ -90,6 +90,7 @@ message Expression {
     VSTACK = 25;
     TRACE = 26;
     RESHAPE = 27;
+    ZERO = 28;
 
     // Elementwise functions
     ABS = 50;

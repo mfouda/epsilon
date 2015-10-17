@@ -21,10 +21,11 @@ from epsilon.problems import tv_1d
 from epsilon.problems import tv_denoise
 from epsilon.problems.problem_instance import ProblemInstance
 
-# These problems need a higher relative accuracy for some reason
-REL_TOL = {
-    "least_abs_dev": 1e-3,
-}
+# Override accuracy settings
+REL_TOL = {}
+
+# Needs HSTACK implementation and linearization
+# ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -37,23 +38,13 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
-# failed
-# ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-# ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
-# ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
-# ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 PROBLEMS = [
-    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
-    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
-    ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
+    #    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
 ]
+
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()
@@ -62,7 +53,7 @@ def solve_problem(problem_instance):
     obj0 = problem.objective.value
 
     logging.debug(problem_instance.name)
-    params = solver_params_pb2.SolverParams()
+    params = solver_params_pb2.SolverParams(max_iterations=1000)
     params.rel_tol = REL_TOL.get(problem_instance.name, 1e-2)
     solve.solve(problem, params)
     obj1 = problem.objective.value

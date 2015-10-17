@@ -25,13 +25,13 @@ class ProxOperatorArg {
  public:
   ProxOperatorArg(
       double lambda,
-      const BlockMatrix* ATA,
+      const BlockMatrix* A,
       const Expression* f_expr,
       const VariableOffsetMap* var_map)
-      : lambda_(lambda), ATA_(ATA), f_expr_(f_expr), var_map_(var_map) {}
+      : lambda_(lambda), A_(A), f_expr_(f_expr), var_map_(var_map) {}
 
   double lambda() const { return lambda_; };
-  const BlockMatrix& ATA() const { return *ATA_; }
+  const BlockMatrix& A() const { return *A_; }
 
   // Ax+b in expression form
   const Expression& f_expr() const { return *f_expr_; }
@@ -41,7 +41,7 @@ class ProxOperatorArg {
   double lambda_;
 
   // Not owned by us
-  const BlockMatrix* ATA_;
+  const BlockMatrix* A_;
   const Expression* f_expr_;
   const VariableOffsetMap* var_map_;
 };

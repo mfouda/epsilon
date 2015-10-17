@@ -66,6 +66,7 @@ class FunctionVariable(object):
         for instance in to_replace:
             instance.CopyFrom(new_var)
 
+        self.variable = new_var_id
         return old_var, new_var
 
 def find_var_instances(f, expr):
