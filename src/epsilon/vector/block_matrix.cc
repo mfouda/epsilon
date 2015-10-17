@@ -47,6 +47,20 @@ BlockMatrix BlockMatrix::Inverse() const {
   return inv;
 }
 
+BlockMatrix BlockMatrix::LeftIdentity() const {
+  BlockMatrix C;
+  for (const auto& col_iter : data_) {
+    for (const auto& block_iter : col_iter.second) {
+      const std::string& key = block_iter.first;
+      if (C.data_.find(key) == C.data_.end()) {
+        C.InsertOrAdd(
+            key, key, LinearMap::Identity(block_iter.second.impl().m()));
+      }
+    }
+  }
+  return C;
+}
+
 BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {
   BlockMatrix C;
 
@@ -70,6 +84,30 @@ BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B) {
   }
 
   return C;
+}
+
+BlockMatrix operator+(const BlockMatrix& A, const BlockMatrix& B) {
+  BlockMatrix C = A;
+  for (const auto& col_iter : B.data_) {
+    for (const auto& block_iter : col_iter.second) {
+      C.InsertOrAdd(block_iter.first, col_iter.first, block_iter.second);
+    }
+  }
+  return C;
+}
+
+BlockMatrix operator*(double alpha, const BlockMatrix& A) {
+  BlockMatrix C;
+  for (const auto& col_iter : A.data_) {
+    for (const auto& block_iter : col_iter.second) {
+      C.InsertOrAdd(block_iter.first, col_iter.first, alpha*block_iter.second);
+    }
+  }
+  return C;
+}
+
+BlockMatrix operator*(const BlockMatrix& A, double alpha) {
+  return alpha*A;
 }
 
 BlockVector operator*(const BlockMatrix& A, const BlockVector& x) {
@@ -118,14 +156,23 @@ int BlockMatrix::n() const {
   return n;
 }
 
-std::vector<std::string> BlockMatrix::col_keys() const {
-  std::vector<std::string> retval;
-  for (auto col_iter : data_) {
-    retval.push_back(col_iter.first);
+std::set<std::string> BlockMatrix::row_keys() const {
+  std::set<std::string> retval;
+  for (const auto& col_iter : data_) {
+    for (const auto& block_iter : col_iter.second) {
+      retval.insert(block_iter.first);
+    }
   }
   return retval;
 }
 
+std::set<std::string> BlockMatrix::col_keys() const {
+  std::set<std::string> retval;
+  for (const auto& col_iter : data_) {
+    retval.insert(col_iter.first);
+  }
+  return retval;
+}
 
 const std::map<std::string, LinearMap>& BlockMatrix::col(
     const std::string& col_key) const {

@@ -75,7 +75,9 @@ class LinearMap {
 
 // Matrix-matrix multiply, add, subtract
 LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs);
+
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs);
+LinearMap operator*(double alpha, const LinearMap& A);
 
 // Matrix-vector multiply
 template<typename Scalar>

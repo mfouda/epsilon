@@ -13,6 +13,14 @@ LinearMap& LinearMap::operator+=(const LinearMap& rhs) {
 }
 
 LinearMap& LinearMap::operator*=(const LinearMap& rhs) {
-  *this = *this * rhs;
+  *this = *this*rhs;
   return *this;
+}
+
+LinearMap operator*(double alpha, const LinearMap& A) {
+  return LinearMap(new ScalarMatrixImpl(A.impl().m(), alpha))*A;
+}
+
+LinearMap operator*(const LinearMap& A, double alpha) {
+  return alpha*A;
 }

@@ -28,8 +28,7 @@ class LeastSquaresProx final : public BlockProxOperator {
       // y = (I + C*(rho*A'A)^{-1}*C')^{-1}b
       // x = rho*A'v - C'y
       BlockMatrix ATA_inv = rho*(A.Transpose()*A).Inverse();
-      BlockMatrix I = BlockMatrix::Identity(C.row_keys());
-      BlockVector y = (I + C*ATA_inv*C.Transpose()).Inverse()*b;
+      BlockVector y = (C.LeftIdentity() + C*ATA_inv*C.Transpose()).Inverse()*b;
       F_ = ATA_inv*rho*A.Transpose();
       g_ = ATA_inv*C.Transpose()*y;
     } else {
