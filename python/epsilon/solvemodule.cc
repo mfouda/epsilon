@@ -156,9 +156,12 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
   if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
     return nullptr;
 
+  // TODO(mwytock): Make this a parameter?
+  BlockMatrix A;
+
   WriteConstants(data);
   std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
-      lambda, f_expr);
+      lambda, A, f_expr);
 
   if (!setjmp(failure_buf)) {
     op->Init();
@@ -196,7 +199,7 @@ PyMODINIT_FUNC init_solve() {
       FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    google::InstallFailureFunction(&HandleFailure);
+    //google::InstallFailureFunction(&HandleFailure);
 
     initialized = true;
   }

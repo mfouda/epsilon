@@ -40,6 +40,8 @@ class BlockMatrix {
 
   LinearMap& operator()(
       const std::string& row_key, const std::string& col_key);
+  const LinearMap& operator()(
+      const std::string& row_key, const std::string& col_key) const;
 
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
@@ -49,6 +51,7 @@ class BlockMatrix {
   int n() const;
   const std::map<std::string, LinearMap>& col(
       const std::string& col_key) const;
+  std::vector<std::string> col_keys() const;
 
   BlockMatrix Transpose() const;
   BlockMatrix Inverse() const;

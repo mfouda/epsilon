@@ -14,11 +14,10 @@ public:
   void Init(const ProxOperatorArg& arg) override {
     CHECK_EQ(1, arg.f_expr().arg_size());
     affine::BuildAffineOperator(arg.f_expr().arg(0), "f", &A_, &b_);
-    AT_ = A_.Transpose();
-    AAT_inv_ = (A_*AT_).Inverse();
-
     VLOG(2) << "A:\n" << A_.DebugString();
     VLOG(2) << "b:\n" << b_.DebugString();
+    AT_ = A_.Transpose();
+    AAT_inv_ = (A_*AT_).Inverse();
   }
 
   BlockVector Apply(const BlockVector& v) override {

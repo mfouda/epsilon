@@ -9,7 +9,7 @@ class OrthoInvariantProx: public ProxOperator {
 public:
   virtual void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
-    ProxOperatorArg prox_arg(lambda_, NULL, NULL);
+    ProxOperatorArg prox_arg(lambda_, NULL, NULL, NULL);
     f_->Init(prox_arg);
   }
   OrthoInvariantProx(std::unique_ptr<ProxOperator> f, bool symm_part_=false, bool add_res=false)
@@ -26,7 +26,7 @@ class OrthoInvariantEpigraph: public ProxOperator {
 public:
   virtual void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
-    ProxOperatorArg prox_arg(lambda_, NULL, NULL);
+    ProxOperatorArg prox_arg(lambda_, NULL, NULL, NULL);
     f_->Init(prox_arg);
   }
   OrthoInvariantEpigraph(std::unique_ptr<ProxOperator> f, bool symm_part_=false)

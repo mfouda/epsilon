@@ -3,6 +3,7 @@
 
 #include "epsilon/linear/dense_matrix_impl.h"
 #include "epsilon/linear/diagonal_matrix_impl.h"
+#include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
@@ -30,13 +31,21 @@ class LinearMapTest : public testing::Test {
     D0 = static_cast<Eigen::MatrixXd>(diag);
     D = LinearMap(new DiagonalMatrixImpl(diag));
 
+    Eigen::MatrixXd E1(1,2), E2(2,1);
+    E1 << 1, 2;
+    E2 << 3, 4;
+    E = LinearMap(new KroneckerProductImpl(
+        new DenseMatrixImpl(E1),
+        new DenseMatrixImpl(E2)));
+    E0 = E.impl().AsDense();
+
     x = Eigen::VectorXd(2);
     x << 3,4;
   }
 
   Eigen::VectorXd x;
-  Eigen::MatrixXd A0, B0, C0, D0;
-  LinearMap A, B, C, D;
+  Eigen::MatrixXd A0, B0, C0, D0, E0;
+  LinearMap A, B, C, D, E;
 };
 
 TEST_F(LinearMapTest, Multiply) {
@@ -54,11 +63,14 @@ TEST_F(LinearMapTest, Multiply) {
   EXPECT_TRUE(MatrixEquals(C0*B0, (C*B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(C0*C0, (C*C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(C0*D0, (C*D).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0*E0, (C*E).impl().AsDense()));
 
   EXPECT_TRUE(MatrixEquals(D0*A0, (D*A).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*B0, (D*B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*C0, (D*C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0*D0, (D*D).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(E0*C0, (E*C).impl().AsDense()));
 }
 
 TEST_F(LinearMapTest, Add) {

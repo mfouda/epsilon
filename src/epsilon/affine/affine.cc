@@ -477,8 +477,10 @@ void BuildAffineOperatorImpl(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  VLOG(2) << "BuildLinearOperatorImpl\n" << expr.DebugString()
-          << "L:\n" << L.impl().DebugString();
+  VLOG(2) << "BuildAffineOperatorImpl\n"
+          << "L: " << L.impl().DebugString() << "\n"
+          << expr.DebugString();
+
   auto iter = kLinearFunctions.find(expr.expression_type());
   if (iter == kLinearFunctions.end()) {
     LOG(FATAL) << "No linear function for "

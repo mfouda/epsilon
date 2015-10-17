@@ -49,7 +49,8 @@ void ProxADMMSolver::InitProxOperators() {
         AiT_[i](var_id, iter.first) = iter.second.Transpose();
     }
 
-    prox_.emplace_back(CreateProxOperator(1/params_.rho(), f_expr));
+    prox_.emplace_back(CreateProxOperator(
+        1/params_.rho(), AiT_[i].Transpose(), f_expr));
     prox_.back()->Init();
   }
 }

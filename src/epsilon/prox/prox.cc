@@ -35,7 +35,7 @@ class ProxVectorOperator : public VectorOperator {
 
   void Init() override {
     Preprocess();
-    g_prox_->Init(ProxOperatorArg(alpha_*lambda_, g_expr_, &var_map_));
+    g_prox_->Init(ProxOperatorArg(alpha_*lambda_, nullptr, g_expr_, &var_map_));
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
@@ -120,9 +120,11 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
  public:
   ProxBlockVectorOperator(
       double lambda,
+      BlockMatrix A,
       const Expression& f_expr)
       : prox_vector_operator_(lambda, f_expr, var_map_),
       lambda_(lambda),
+      A_(A),
       f_expr_(f_expr) {
     var_map_.Insert(f_expr);
   }
@@ -135,8 +137,9 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
       prox_vector_operator_.Init();
     } else {
       block_vector_prox_ = true;
+      ATA_ = A_.Transpose()*A_;
       prox_ = iter->second();
-      prox_->Init(ProxOperatorArg(lambda_, &f_expr_, nullptr));
+      prox_->Init(ProxOperatorArg(lambda_, &ATA_, &f_expr_, &var_map_));
     }
   }
 
@@ -162,16 +165,19 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
  private:
   VariableOffsetMap var_map_;
   ProxVectorOperator prox_vector_operator_;
+  BlockMatrix ATA_;
 
   bool block_vector_prox_;
   double lambda_;
+  BlockMatrix A_;
   Expression f_expr_;
   std::unique_ptr<BlockProxOperator> prox_;
 };
 
 std::unique_ptr<BlockVectorOperator> CreateProxOperator(
     double lambda,
+    BlockMatrix A,
     const Expression& f_expr) {
   return std::unique_ptr<BlockVectorOperator>(new ProxBlockVectorOperator(
-      lambda, f_expr));
+      lambda, A, f_expr));
 }

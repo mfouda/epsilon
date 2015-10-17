@@ -162,10 +162,13 @@ LinearMapImpl* Multiply_ScalarMatrix_ScalarMatrix(
 LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(rhs);
+  auto const& S = static_cast<const ScalarMatrixImpl&>(lhs);
+  auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
+  ScalarMatrixImpl S1(K.A().impl().m(), S.alpha());
+  ScalarMatrixImpl S2(K.B().impl().m(), 1);
   return new KroneckerProductImpl(
-      Multiply(lhs, C.A().impl()),
-      Multiply(lhs, C.B().impl()));
+      Multiply(S1, K.A().impl()),
+      Multiply(S2, K.B().impl()));
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
@@ -189,10 +192,7 @@ LinearMapImpl* Multiply_KroneckerProduct_DiagonalMatrix(
 LinearMapImpl* Multiply_KroneckerProduct_ScalarMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(lhs);
-  return new KroneckerProductImpl(
-      Multiply(C.A().impl(), rhs),
-      Multiply(C.B().impl(), rhs));
+  return Multiply_ScalarMatrix_KroneckerProduct(rhs, lhs);
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(

@@ -17,6 +17,7 @@ std::unique_ptr<VectorOperator> CreateProxOperator(
 // argmin_x lambda*f(x) + (1/2)||Ax - v||^2
 std::unique_ptr<BlockVectorOperator> CreateProxOperator(
     double lambda,
+    BlockMatrix A,
     const Expression& f_expr);
 
 // Arguments to the proximal operator, lambda*f(A*x + b)
@@ -24,11 +25,13 @@ class ProxOperatorArg {
  public:
   ProxOperatorArg(
       double lambda,
+      const BlockMatrix* ATA,
       const Expression* f_expr,
       const VariableOffsetMap* var_map)
-      : lambda_(lambda), f_expr_(f_expr), var_map_(var_map) {}
+      : lambda_(lambda), ATA_(ATA), f_expr_(f_expr), var_map_(var_map) {}
 
   double lambda() const { return lambda_; };
+  const BlockMatrix& ATA() const { return *ATA_; }
 
   // Ax+b in expression form
   const Expression& f_expr() const { return *f_expr_; }
@@ -38,6 +41,7 @@ class ProxOperatorArg {
   double lambda_;
 
   // Not owned by us
+  const BlockMatrix* ATA_;
   const Expression* f_expr_;
   const VariableOffsetMap* var_map_;
 };

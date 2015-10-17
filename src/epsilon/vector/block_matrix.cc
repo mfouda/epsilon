@@ -10,6 +10,15 @@ LinearMap& BlockMatrix::operator()(
   return data_[col_key][row_key];
 }
 
+const LinearMap& BlockMatrix::operator()(
+    const std::string& row_key, const std::string& col_key) const {
+  auto col_iter = data_.find(col_key);
+  CHECK(col_iter != data_.end());
+  auto block_iter = col_iter->second.find(row_key);
+  CHECK(block_iter != col_iter->second.end());
+  return block_iter->second;
+}
+
 BlockMatrix BlockMatrix::Transpose() const {
   BlockMatrix transpose;
   for (const auto& col_iter : data_) {
@@ -108,6 +117,15 @@ int BlockMatrix::n() const {
   }
   return n;
 }
+
+std::vector<std::string> BlockMatrix::col_keys() const {
+  std::vector<std::string> retval;
+  for (auto col_iter : data_) {
+    retval.push_back(col_iter.first);
+  }
+  return retval;
+}
+
 
 const std::map<std::string, LinearMap>& BlockMatrix::col(
     const std::string& col_key) const {

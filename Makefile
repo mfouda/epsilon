@@ -77,6 +77,7 @@ common_cc = \
 	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

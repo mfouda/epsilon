@@ -159,6 +159,17 @@ PROX_TESTS += [
     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
 ]
 
+PROX_TESTS = [
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    # Prox("LinearEqualityProx", None, C_linear_equality),
+    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
+    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
+    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
+    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
+]
 
 def test_prox():
     def run(prox, i):
