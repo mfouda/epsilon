@@ -108,6 +108,7 @@ message Expression {
     QUAD_OVER_LIN = 101;
     LOG_SUM_EXP = 102;
     MAX_ENTRIES = 103;
+    SUM_LARGEST = 104;
 
     // Matrix functions
     LOG_DET = 200;
@@ -160,6 +161,9 @@ message Expression {
     int32 offset = 1;
   }
   StackParams stack_params = 15;
+
+  // SUM_LARGEST
+  int32 k = 16;
 }
 
 // Arbitrary convex problem of the form

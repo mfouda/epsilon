@@ -205,6 +205,12 @@ def power(x, p):
         size=x.size,
         arg=[x], p=p)
 
+def sum_largest(x, k):
+    return Expression(
+        expression_type=Expression.SUM_LARGEST,
+        size=Size(dim=[1,1]),
+        arg=[x], k=k)
+
 def abs_val(x):
     return Expression(
         expression_type=Expression.ABS,

@@ -322,6 +322,13 @@ def prox_sum_exp(expr):
         expr.proximal_operator.name = "SumExpProx"
         yield expr
 
+def prox_sum_largest(expr):
+    if (expr.expression_type == Expression.SUM_LARGEST and 
+        expr.arg[0].expression_type == Expression.VARIABLE):
+        expr = sum_largest(expr.arg[0], expr.k)
+        expr.proximal_operator.name = "SumLargestProx"
+        yield expr
+
 def prox_inv_pos(expr):
     if is_inv_pos(expr):
         expr.proximal_operator.name = "InvPosProx"
@@ -617,6 +624,7 @@ PROX_RULES = [
     prox_norm2,
     prox_norm_nuc,
     prox_sum_exp,
+    prox_sum_largest,
     prox_inv_pos,
     prox_huber,
     prox_max_entries,

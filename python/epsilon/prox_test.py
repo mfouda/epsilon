@@ -146,6 +146,7 @@ PROX_TESTS = [
     Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
     #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
     Prox("KLDivProx", lambda: cp.kl_div(p1, q1)),
+    Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
 ]
 
 # Epigraph operators
