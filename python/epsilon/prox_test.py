@@ -117,13 +117,13 @@ PROX_TESTS = [
     Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     Prox("LeastSquaresProx", f_least_squares),
     Prox("LeastSquaresProx", f_least_squares_matrix),
-    Prox("LinearEqualityGraphProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    Prox("LinearEqualityGraphProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    Prox("LinearEqualityGraphProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    Prox("LinearEqualityGraphProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
-    Prox("LinearEqualityMatrixProx", None, C_linear_equality),
-    Prox("LinearEqualityMatrixProx", None, C_linear_equality_matrix_lhs),
-    Prox("LinearEqualityMatrixProx", None, C_linear_equality_matrix_rhs),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    Prox("LinearEqualityProx", None, C_linear_equality),
+    Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
+    Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
     Prox("LinearProx", lambda: randn(n).T*x),
@@ -214,7 +214,7 @@ def test_prox():
             print 'our obj:', prob.objective.value
             for c in prob.constraints:
                 print c, c.value, map(lambda x: x.value, c.args)
-            print 
+            print
 
             raise e
 

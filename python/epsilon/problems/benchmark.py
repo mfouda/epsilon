@@ -50,6 +50,8 @@ class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
 
 Column.__new__.__defaults__ = (None, None, None, False)
 
+#  ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
@@ -63,7 +65,6 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
-    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 ]
 
 COLUMNS = [

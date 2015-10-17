@@ -255,6 +255,12 @@ def scaled_zone(x, alpha, beta, C, M):
             m=M),
         arg=[x])
 
+def zero(x):
+    return Expression(
+        expression_type=Expression.ZERO,
+        size=Size(dim=[1, 1]),
+        arg=[x])
+
 def equality_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
 

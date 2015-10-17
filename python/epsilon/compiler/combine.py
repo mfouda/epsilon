@@ -52,7 +52,11 @@ def max_overlap_function(graph, f):
     def overlap(g):
         return len(variables(g).intersection(variables_f))
 
-    h = max((g for g in graph.functions if g != f), key=overlap)
+    # TODO(mwytock): Remove temporary hack to exclude certain functions form merging
+    exclude = ["LinearEqualityProx"]
+    h = max((g for g in graph.functions
+             if g != f and g.expr.proximal_operator.name not in exclude),
+            key=overlap)
 
     # Only return a function if there is some overlap
     if overlap(h):
@@ -118,10 +122,32 @@ def separate_objective_terms(graph):
 
             graph.add_edge(f_var)
 
+def add_zero_prox(graph):
+    """Add f(x) = 0 term for variables only appearing in constraints."""
+
+    for var in graph.variables:
+        f_vars = [f_var for f_var in graph.edges_by_variable[var]
+                  if not f_var.function.constraint]
+
+        if f_vars:
+            continue
+
+        # Create the zero function and add this variable to it
+        # TODO(mwytock): ProblemGraph interface should probably be a bit better
+        # for this use case.
+        var_expr = graph.edges_by_variable[var][0].instances[0]
+        f_expr = zero(var_expr)
+        f_expr.proximal_operator.name = "ZeroProx"
+        f = Function(f_expr, constraint=False)
+        f_var = FunctionVariable(f, var, f_expr.arg[0])
+        graph.add_function(f)
+        graph.add_edge(f_var)
+
 GRAPH_TRANSFORMS = [
     move_equality_indicators,
     combine_affine_functions,
     separate_objective_terms,
+    add_zero_prox,
 ]
 
 def transform(problem):

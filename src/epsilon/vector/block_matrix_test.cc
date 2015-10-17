@@ -1,49 +1,51 @@
 
 #include <gtest/gtest.h>
 
-#include "epsilon/vector/block_vector.h"
 #include "epsilon/vector/block_matrix.h"
+#include "epsilon/vector/block_vector.h"
 #include "epsilon/vector/vector_testutil.h"
+#include "epsilon/vector/vector_util.h"
+#include "epsilon/linear/linear_map.h"
+#include "epsilon/linear/dense_matrix_impl.h"
+#include "epsilon/linear/sparse_matrix_impl.h"
 
 class BlockMatrixTest : public testing::Test {
  protected:
-  BlockMatrixTest() : dense_(3,2), sparse_(3,2) {
-    dense_ << 1, 2, 3, 4, 5, 6;
+  BlockMatrixTest() : A0_(3,2), B0_(3,2) {
+    A0_ << 1, 2, 3, 4, 5, 6;
 
-    sparse_.coeffRef(0,1) = 1;
-    sparse_.coeffRef(1,0) = -1;
+    B0_.coeffRef(0,1) = 1;
+    B0_.coeffRef(1,0) = -1;
+
+    I_ = Eigen::MatrixXd::Identity(3,3);
   }
-  Eigen::MatrixXd dense_;
-  SparseXd sparse_;
+  Eigen::MatrixXd A0_;
+  Eigen::MatrixXd I_;
+  SparseXd B0_;
 };
 
 TEST_F(BlockMatrixTest, Assignment) {
   BlockMatrix A;
-  A("row1", "col1") = MatrixVariant(dense_);
-  EXPECT_TRUE(MatrixEquals(dense_, A("row1", "col1").AsDense()));
-  A("row1", "col1") = MatrixVariant(sparse_);
-  EXPECT_TRUE(MatrixEquals(sparse_, A("row1", "col1").AsDense()));
+  A("row1", "col1") = LinearMap(new DenseMatrixImpl(A0_));
+  EXPECT_TRUE(MatrixEquals(A0_, A("row1", "col1").impl().AsDense()));
+  A("row1", "col1") = LinearMap(new SparseMatrixImpl(B0_));
+  EXPECT_TRUE(MatrixEquals(B0_, A("row1", "col1").impl().AsDense()));
 }
 
 TEST_F(BlockMatrixTest, Transpose) {
   BlockMatrix A;
-  A("0", "0") = MatrixVariant(dense_);
-  A("0", "1") = MatrixVariant(Eigen::MatrixXd::Identity(3,3).eval());
-  BlockMatrix AT = A.transpose();
+  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
+  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  BlockMatrix AT = A.Transpose();
 
-  BlockMatrix B = A.transpose();
-  EXPECT_TRUE(MatrixEquals(
-      dense_.transpose(),
-      B("0", "0").AsDense()));
-  EXPECT_TRUE(MatrixEquals(
-      Eigen::MatrixXd::Identity(3, 3),
-      B("1", "0").AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0_.transpose(), AT("0", "0").impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(I_, AT("1", "0").impl().AsDense()));
 }
 
 TEST_F(BlockMatrixTest, MultiplyVector) {
   BlockMatrix A;
-  A("0", "0") = MatrixVariant(dense_);
-  A("0", "1") = MatrixVariant(Eigen::MatrixXd::Identity(3,3).eval());
+  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
+  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
 
   Eigen::VectorXd x0(2), x1(3);
   x0 << 1, -2;
@@ -52,40 +54,40 @@ TEST_F(BlockMatrixTest, MultiplyVector) {
   x("0") = x0;
   x("1") = x1;
 
-  EXPECT_TRUE(VectorEquals(dense_*x0 + x1, (A*x)("0")));
+  EXPECT_TRUE(VectorEquals(A0_*x0 + x1, (A*x)("0")));
 }
 
 TEST_F(BlockMatrixTest, MultiplyMatrix) {
   BlockMatrix A;
-  A("0", "0") = MatrixVariant(dense_);
-  A("0", "1") = MatrixVariant(sparse_);
+  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
+  A("0", "1") = LinearMap(new SparseMatrixImpl(B0_));
 
   BlockMatrix B;
-  B("0", "3") = MatrixVariant(dense_.transpose());
-  B("1", "3") = MatrixVariant(
-      static_cast<SparseXd>(sparse_.transpose()));
+  B("0", "3") = LinearMap(new DenseMatrixImpl(A0_.transpose()));
+  B("1", "3") = LinearMap(new SparseMatrixImpl(
+      static_cast<SparseXd>(B0_.transpose())));
 
   BlockMatrix C = A*B;
-
   Eigen::MatrixXd expected = (
-      dense_*dense_.transpose() +
+      A0_*A0_.transpose() +
       static_cast<Eigen::MatrixXd>(
-          (sparse_*sparse_.transpose()).eval()));
-  EXPECT_TRUE(MatrixEquals(expected, C("0", "3").AsDense()));
+          (B0_*B0_.transpose()).eval()));
+  EXPECT_TRUE(MatrixEquals(expected, C("0", "3").impl().AsDense()));
 }
 
-// TEST_F(BlockMatrixTest, SolveSingleDense) {
-//   Eigen::MatrixXd I = Eigen::MatrixXd::Identity(3,3);
-//   BlockMatrix A;
-//   A("0", "0") = MatrixVariant(dense_);
-//   A("0", "1") = MatrixVariant(I);
-//   std::unique_ptr<BlockMatrix::Solver> solver = (A*A.transpose()).inv();
+TEST_F(BlockMatrixTest, Inverse) {
+  BlockMatrix A;
+  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
+  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  BlockMatrix AAT_inv = (A*A.Transpose()).Inverse();
 
-//   Eigen::LLT<MatrixXd> solver2;
-//   solver2.compute(dense_*dense_.transpose() + I);
+  Eigen::LLT<MatrixXd> solver2;
+  solver2.compute(A0_*A0_.transpose() + I_);
 
-//   BlockVector b;
-//   b("0") << 1, 2, 3;
+  BlockVector b;
+  b("0") = Eigen::VectorXd(3);
+  b("0") << 1, 2, 3;
 
-//   EXPECT_TRUE(VectorEquals(solver2.solve(b("0")), solver->solve(b)("0")));
-// }
+  EXPECT_TRUE(VectorEquals(
+      solver2.solve(b("0")), (AAT_inv*b)("0"), 1e-8));
+}

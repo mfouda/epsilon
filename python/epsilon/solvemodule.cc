@@ -18,43 +18,39 @@
 static jmp_buf failure_buf;
 static PyObject* SolveError;
 
-Eigen::VectorXd GetVariableVector(const VariableOffsetMap& var_map, PyObject* vars) {
-  Eigen::VectorXd x(var_map.n());
+BlockVector GetVariableVector(PyObject* vars) {
+  BlockVector x;
 
   Py_ssize_t pos = 0;
   PyObject* key;
   PyObject* value;
   while (PyDict_Next(vars, &pos, &key, &value)) {
     const char* key_str = PyString_AsString(key);
-    const char* value_str = PyString_AsString(value);
+    char* value_str;
+    Py_ssize_t value_str_len;
+    PyString_AsStringAndSize(value, &value_str, &value_str_len);
     CHECK(key_str != nullptr);
     CHECK(value_str != nullptr);
+    CHECK(value_str_len % sizeof(double) == 0);
 
-    const int i = var_map.Get(key_str);
-    const int n = var_map.Size(key_str);
-    x.segment(i, n) =
-        Eigen::Map<const Eigen::VectorXd>(
-            reinterpret_cast<const double*>(value_str), n);
+    x(key_str) = Eigen::Map<const Eigen::VectorXd>(
+        reinterpret_cast<const double*>(value_str),
+        value_str_len/sizeof(double));
   }
   return x;
 }
 
-PyObject* GetVariableMap(
-    const VariableOffsetMap& var_map, const Eigen::VectorXd& x) {
+PyObject* GetVariableMap(const BlockVector& x) {
   PyObject* vars = PyDict_New();
-  for (auto iter : var_map.offsets()) {
-    const int i = iter.second;
-    const int n = var_map.Size(iter.first);
-
+  for (auto iter : x.data()) {
     PyObject* val = PyString_FromStringAndSize(
-        reinterpret_cast<const char*>(x.segment(i, n).data()),
-        n*sizeof(double));
+        reinterpret_cast<const char*>(iter.second.data()),
+        iter.second.rows()*sizeof(double));
     PyDict_SetItemString(vars, iter.first.c_str(), val);
     Py_DECREF(val);
   }
   return vars;
 }
-
 
 extern "C" {
 
@@ -145,12 +141,12 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
   int f_expr_str_len;
   double lambda;
   PyObject* data;
-  PyObject* v;
+  PyObject* v_map;
 
   // prox(expr_str, lambda, data, v_map)
   if (!PyArg_ParseTuple(
           args, "s#dOO",
-          &f_expr_str, &f_expr_str_len, &lambda, &data, &v)) {
+          &f_expr_str, &f_expr_str_len, &lambda, &data, &v_map)) {
     // TODO(mwytock): Need to set the appropriate exceptions when passed
     // incorrect arguments.
     return nullptr;
@@ -160,17 +156,19 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
   if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
     return nullptr;
 
-  VariableOffsetMap var_map;
-  var_map.Insert(f_expr);
+  BlockMatrix A;
+  for (const Expression* var_expr : GetVariables(f_expr)) {
+    const std::string& var_id = var_expr->variable().variable_id();
+    A(var_id, var_id) = LinearMap::Identity(GetDimension(*var_expr));
+  }
 
   WriteConstants(data);
-  std::unique_ptr<VectorOperator> op = CreateProxOperator(
-      lambda, f_expr, var_map);
-
   if (!setjmp(failure_buf)) {
+    std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
+        lambda, A, f_expr);
     op->Init();
-    Eigen::VectorXd x = op->Apply(GetVariableVector(var_map, v));
-    PyObject* vars = GetVariableMap(var_map, x);
+    BlockVector x = op->Apply(GetVariableVector(v_map));
+    PyObject* vars = GetVariableMap(x);
     PyObject* retval = Py_BuildValue("O", vars);
     Py_DECREF(vars);
     return retval;

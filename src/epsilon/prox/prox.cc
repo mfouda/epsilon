@@ -21,64 +21,118 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/affine/affine.h"
 
-// TODO(mwytock): Utility functions that should likely go elsewhere
+std::unordered_map<
+  std::string,
+  std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
 
-// Generic VectorOperator which handles the generic preprocessing and delegates
-// work to ProxOperator.
-class ProxVectorOperator : public VectorOperator {
+std::unordered_map<
+  std::string,
+  std::function<std::unique_ptr<BlockProxOperator>()>>* kBlockProxOperatorMap;
+
+class ProxBlockVectorOperator final : public BlockVectorOperator {
  public:
-  ProxVectorOperator(
+  ProxBlockVectorOperator(
       double lambda,
-      const Expression& f_expr,
-      const VariableOffsetMap& var_map)
-      : lambda_(lambda), f_expr_(f_expr), var_map_(var_map) {}
+      BlockMatrix A,
+      const Expression& f_expr)
+      : lambda_(lambda),
+      A_(A),
+      f_expr_(f_expr) {
+    CHECK(kBlockProxOperatorMap != nullptr) << "No registered operators";
+    CHECK(kProxOperatorMap != nullptr) << "No registered operators";
+  }
 
   void Init() override {
     Preprocess();
-    g_prox_->Init(ProxOperatorArg(alpha_*lambda_, g_expr_, &var_map_));
+
+    auto iter = kBlockProxOperatorMap->find(g_expr_->proximal_operator().name());
+    if (iter != kBlockProxOperatorMap->end()) {
+      // New style block prox
+      block_vector_prox_ = true;
+      prox_ = iter->second();
+      prox_->Init(ProxOperatorArg(alpha_*lambda_, &A_, g_expr_, nullptr));
+    } else {
+      // Legacy vector prox
+      block_vector_prox_ = false;
+      auto iter2 = kProxOperatorMap->find(g_expr_->proximal_operator().name());
+      if (iter2 == kProxOperatorMap->end()) {
+        LOG(FATAL) << "No proximal operator for "
+                   << g_expr_->proximal_operator().name() << "\n"
+                   << g_expr_->DebugString();
+      }
+      AT_ = A_.Transpose();
+      legacy_prox_ = iter2->second();
+      var_map_.Insert(f_expr_);
+      legacy_prox_->Init(ProxOperatorArg(alpha_*lambda_, nullptr, g_expr_, &var_map_));
+    }
   }
 
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
-    return g_prox_->Apply(v - lambda_*c_);
+  virtual BlockVector Apply(const BlockVector& v) override {
+    if (block_vector_prox_) {
+      CHECK(c_.n() == 0);
+      return prox_->Apply(v);
+    }
+
+    // TODO(mwytock): Its strange that the legacy proximal operators apply to v
+    // vs the new ones, A'v. Fix this, probably by going back to parameterizing
+    // the proximal operators with ATA.
+    BlockVector v_c = AT_*v - lambda_*c_;
+
+    // Old style prox. First we have to extract vectors from BlockVector
+    Eigen::VectorXd v_vec = Eigen::VectorXd::Zero(var_map_.n());
+    for (auto iter : var_map_.offsets()) {
+      if (v_c.has_key(iter.first))
+        v_vec.segment(iter.second, var_map_.Size(iter.first)) = v_c(iter.first);
+    }
+
+    legacy_prox_->Apply(v_vec);
+    Eigen::VectorXd x_vec = legacy_prox_->Apply(v_vec);
+    BlockVector x;
+    for (auto iter : var_map_.offsets()) {
+      x(iter.first) = x_vec.segment(iter.second, var_map_.Size(iter.first));
+    }
+    return x;
   }
 
  private:
   void Preprocess();
 
-  // Original function parameters
+  // Input parameters
   double lambda_;
+  BlockMatrix A_;
+  BlockMatrix AT_;
   Expression f_expr_;
-  const VariableOffsetMap& var_map_;
+
+  // Prox function
+  std::unique_ptr<BlockProxOperator> prox_;
+
+  // Legacy prox stuff
+  bool block_vector_prox_;
+  VariableOffsetMap var_map_;
+  std::unique_ptr<ProxOperator> legacy_prox_;
 
   // Preprocessed parameters, f(x) = alpha*g(x) + c'x
   const Expression* g_expr_;
   double alpha_;
-  Eigen::VectorXd c_;
-  std::unique_ptr<ProxOperator> g_prox_;
+  BlockVector c_;
 };
-
-std::unordered_map<
-  std::string,
-  std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
 
 // Preprocess f(x) to extract f(x) = alpha*g(Ax + b) + c'x.
 // NOTE(mwytock): We assume the input expression has already undergone
 // processing and thus we dont need to handle fully general expressions here.
-void ProxVectorOperator::Preprocess() {
-  const int n  = var_map_.n();
-
+void ProxBlockVectorOperator::Preprocess() {
   // Add affine term
   g_expr_ = &f_expr_;
   if (g_expr_->expression_type() == Expression::ADD) {
     CHECK_EQ(2, f_expr_.arg_size());
     g_expr_ = &f_expr_.arg(0);
 
-    DynamicMatrix A = DynamicMatrix::Zero(1, n);
-    DynamicMatrix b = DynamicMatrix::Zero(1, 1);
-    BuildAffineOperator(f_expr_.arg(1), var_map_, &A, &b);
-    c_ = ToVector(A.AsDense());
-  } else {
-    c_ = Eigen::VectorXd::Zero(n);
+    // Extract linear function
+    BlockMatrix A;
+    BlockVector b;
+    affine::BuildAffineOperator(f_expr_.arg(1), "c", &A, &b);
+    for (const std::string& var_id : A.col_keys())
+      c_(var_id) = ToVector(A("c", var_id).impl().AsDense());
   }
 
   // Multiply scalar constant
@@ -90,24 +144,13 @@ void ProxVectorOperator::Preprocess() {
     alpha_ = 1;
   }
 
-  // Get prox function and arg
-  CHECK(kProxOperatorMap != nullptr) << "No registered operators";
-  auto iter = kProxOperatorMap->find(g_expr_->proximal_operator().name());
-  if (iter == kProxOperatorMap->end()) {
-    LOG(FATAL) << "No proximal operator for "
-               << g_expr_->proximal_operator().name() << "\n"
-               << g_expr_->DebugString();
-  }
-  g_prox_ = iter->second();
-
-  VLOG(2) << "Preprocess, alpha = " << alpha_
-          << ", c = " << VectorDebugString(c_);
+  VLOG(2) << "Preprocess, alpha = " << alpha_ << ", c = " << c_.DebugString();
 }
 
-std::unique_ptr<VectorOperator> CreateProxOperator(
+std::unique_ptr<BlockVectorOperator> CreateProxOperator(
     double lambda,
-    const Expression& f_expr,
-    const VariableOffsetMap& var_map) {
-  return std::unique_ptr<VectorOperator>(new ProxVectorOperator(
-      lambda, f_expr, var_map));
+    BlockMatrix A,
+    const Expression& f_expr) {
+  return std::unique_ptr<BlockVectorOperator>(new ProxBlockVectorOperator(
+      lambda, A, f_expr));
 }

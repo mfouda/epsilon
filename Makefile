@@ -54,9 +54,11 @@ common_cc = \
 	epsilon/expression/expression_util.cc \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
+	epsilon/linear/linear_map.cc \
+	epsilon/linear/linear_map_add.cc \
+	epsilon/linear/linear_map_multiply.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/deadzone.cc \
-	epsilon/prox/sum_exp.cc \
 	epsilon/prox/fused_lasso.cc \
 	epsilon/prox/hinge.cc \
 	epsilon/prox/inv_pos.cc \
@@ -78,14 +80,15 @@ common_cc = \
 	epsilon/prox/prox.cc \
 	epsilon/prox/quad_over_lin.cc \
 	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_largest.cc \
+	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
-	epsilon/vector/block_vector.cc \
 	epsilon/vector/block_matrix.cc \
+	epsilon/vector/block_vector.cc \
 	epsilon/vector/dynamic_matrix.cc \
-	epsilon/vector/matrix_variant.cc \
 	epsilon/vector/vector_file.cc \
 	epsilon/vector/vector_util.cc
 
@@ -109,10 +112,11 @@ tests = \
 	epsilon/affine/affine_test \
 	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
-	epsilon/prox/prox_test \
+	epsilon/linear/kronecker_product_impl_test \
+	epsilon/linear/linear_map_test \
+	epsilon/prox/least_squares_test \
 	epsilon/vector/block_matrix_test \
-	epsilon/vector/block_vector_test \
-	epsilon/vector/matrix_variant_test
+	epsilon/vector/block_vector_test
 
 binaries = \
 	epsilon/benchmark

@@ -25,34 +25,58 @@
 #ifndef EPSILON_VECTOR_BLOCK_MATRIX_H
 #define EPSILON_VECTOR_BLOCK_MATRIX_H
 
+#include <set>
+
 #include "epsilon/vector/block_vector.h"
-#include "epsilon/vector/matrix_variant.h"
+#include "epsilon/linear/linear_map.h"
 
 class BlockMatrix {
  public:
-  class Solver {
-   public:
-    virtual BlockVector solve(const BlockVector& b) = 0;
-  };
-
-  MatrixVariant& operator()(
+  LinearMap& operator()(
       const std::string& row_key, const std::string& col_key);
+  const LinearMap& operator()(
+      const std::string& row_key, const std::string& col_key) const;
 
-  friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
-  friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
+  std::string DebugString() const;
+  int m() const;
+  int n() const;
+  const std::map<std::string, LinearMap>& col(
+      const std::string& col_key) const;
 
-  BlockMatrix transpose() const;
-  std::unique_ptr<Solver> inv(double lambda = 0) const;
+  std::set<std::string> col_keys() const;
+  std::set<std::string> row_keys() const;
+
+  BlockMatrix Transpose() const;
+  BlockMatrix Inverse() const;
+
+  // Returns a matrix such that IA = A or AI = A.
+  BlockMatrix LeftIdentity() const;
+  BlockMatrix RightIdentity() const;
+
+  void InsertOrAdd(const std::string& row_key, const std::string& col_key,
+                   LinearMap value);
 
  private:
-  void InsertOrAdd(const std::string& row_key, const std::string& col_key,
-                   MatrixVariant value);
-
   // col -> row -> value
-  std::map<std::string, std::map<std::string, MatrixVariant>> data_;
+  std::map<std::string, std::map<std::string, LinearMap>> data_;
+
+  friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
+  friend BlockMatrix operator*(double alpha, const BlockMatrix& A);
+  friend BlockMatrix operator+(const BlockMatrix& A, const BlockMatrix& B);
+
+  friend BlockVector operator*(const BlockMatrix& A, const BlockVector& x);
 };
 
+// Matrix-matrix product, sum
 BlockMatrix operator*(const BlockMatrix& lhs, const BlockMatrix& rhs);
+BlockMatrix operator+(const BlockMatrix& lhs, const BlockMatrix& rhs);
+BlockMatrix operator-(const BlockMatrix& lhs, const BlockMatrix& rhs);
+
+// Matrix-matrix short hand products
+BlockMatrix operator*(double alpha, const BlockMatrix& A);
+BlockMatrix operator*(const BlockMatrix& A, double alpha);
+
+// Matrix-vector product
 BlockVector operator*(const BlockMatrix& lhs, const BlockVector& rhs);
 
 #endif  // EPSILON_VECTOR_BLOCK_MATRIX_H
