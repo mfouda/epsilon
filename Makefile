@@ -1,8 +1,6 @@
-# Makefile for epsilon
-#
-# Tested on: Mac OS X 10.10.5, Ubuntu 15.04
+# Makefile for epsilon, supports OS X and Linux
 
-# Settings
+# Optimization flags, use OPTFLAGS=-g when debugging
 OPTFLAGS = -DNDEBUG -O3
 
 # Internal directories

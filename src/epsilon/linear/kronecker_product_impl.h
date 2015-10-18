@@ -8,9 +8,7 @@
 
 class KroneckerProductImpl final : public LinearMapImpl {
  public:
-  KroneckerProductImpl(
-      LinearMapImpl* A,
-      LinearMapImpl* B)
+  KroneckerProductImpl(LinearMap A, LinearMap B)
       : LinearMapImpl(KRONECKER_PRODUCT), A_(A), B_(B) {}
 
   int m() const override { return A_.impl().m()*B_.impl().m(); }
@@ -26,15 +24,11 @@ class KroneckerProductImpl final : public LinearMapImpl {
   DenseVector Apply(const DenseVector& x) const override;
 
   LinearMapImpl* Transpose() const override {
-    return new KroneckerProductImpl(
-        A_.impl().Transpose(),
-        B_.impl().Transpose());
+    return new KroneckerProductImpl(A_.Transpose(), B_.Transpose());
   }
 
   LinearMapImpl* Inverse() const override {
-    return new KroneckerProductImpl(
-        A_.impl().Inverse(),
-        B_.impl().Inverse());
+    return new KroneckerProductImpl(A_.Inverse(), B_.Inverse());
   }
 
   // Scalar matrix API
@@ -42,8 +36,7 @@ class KroneckerProductImpl final : public LinearMapImpl {
   const LinearMap& B() const { return B_; }
 
  private:
-  LinearMap A_;
-  LinearMap B_;
+  LinearMap A_, B_;
 };
 
 #endif  // EPSILON_LINEAR_KRONECKER_PRODUCT_IMPL_H

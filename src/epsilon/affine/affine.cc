@@ -11,21 +11,14 @@
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
-#include "epsilon/linear/dense_matrix_impl.h"
-#include "epsilon/linear/diagonal_matrix_impl.h"
-#include "epsilon/linear/kronecker_product_impl.h"
-#include "epsilon/linear/scalar_matrix_impl.h"
-#include "epsilon/linear/sparse_matrix_impl.h"
 #include "epsilon/util/string.h"
 #include "epsilon/vector/vector_file.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/linear/linear_map.h"
 
-using Eigen::Map;
 using Eigen::MatrixXd;
-using Eigen::LLT;
 
 typedef Eigen::SparseMatrix<double> SparseXd;
-
 
 DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
   DynamicMatrix A;
@@ -317,15 +310,12 @@ void BuildAffineOperatorImpl(
     BlockMatrix* A,
     BlockVector* b);
 
-// Utility function used by Multiply()
-// TODO(mwytock): Should support non-dense constants.
-Eigen::MatrixXd EvalConstant(
-    const Expression& expr) {
+Eigen::MatrixXd EvalConstant(const Expression& expr) {
   BlockVector b;
   BuildAffineOperatorImpl(
       expr,
       "_",
-      LinearMap::Identity(GetDimension(expr)),
+      linear_map::Identity(GetDimension(expr)),
       nullptr,
       &b);
   return ToMatrix(b("_"), GetDimension(expr,0), GetDimension(expr,1));
@@ -337,14 +327,9 @@ void Negate(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  BuildAffineOperatorImpl(
-      GetOnlyArg(expr),
-      row_key,
-      // TODO(mwytock): We use scalar multiplication here instead of explicitly
-      // mulitplying by a linear map to handle promotion. We should instead
-      // handle this as a preprocessing step.
-      -1*L,
-      A, b);
+  const Expression& arg = GetOnlyArg(expr);
+  LinearMap N = linear_map::Negate(GetDimension(arg));
+  BuildAffineOperatorImpl(arg, row_key, L*N, A, b);
 }
 
 void Sum(
@@ -353,13 +338,18 @@ void Sum(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  BuildAffineOperatorImpl(
-      GetOnlyArg(expr),
-      row_key,
-      L*LinearMap(new DenseMatrixImpl(
-          DenseMatrixImpl::DenseMatrix::Constant(
-              1, GetDimension(GetOnlyArg(expr)), 1))),
-      A, b);
+  const Expression& arg = GetOnlyArg(expr);
+  LinearMap S = linear_map::Sum(GetDimension(arg));
+  BuildAffineOperatorImpl(arg, row_key, L*S, A, b);
+}
+
+// Get the linear map corresponding to the constant expression, handling
+// promotion if necessary for scalars.
+LinearMap MultiplyConstant(const Expression& arg, int n) {
+  Eigen::MatrixXd A = EvalConstant(arg);
+  if (A.rows() == 1 && A.cols() == 1)
+    return linear_map::Scale(n, A.coeff(0,0));
+  return linear_map::Dense(A);
 }
 
 void Multiply(
@@ -370,38 +360,22 @@ void Multiply(
     BlockVector* b) {
   CHECK_EQ(2, expr.arg_size());
 
-  if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT &&
-      GetDimension(expr, 1) == 1) {
-    // Ax, get constant, handling promotion if necessary
-    Eigen::MatrixXd C0 = EvalConstant(expr.arg(0));
-    LinearMap C;
-    if (C0.rows() == 1 && GetDimension(expr, 0) != 1) {
-      C = LinearMap(new ScalarMatrixImpl(GetDimension(expr, 0), C0(0,0)));
-    } else {
-      C = LinearMap(new DenseMatrixImpl(C0));
-    }
-    BuildAffineOperatorImpl(expr.arg(1), row_key, L*C, A, b);
-  } else if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
-    // AX
-    BuildAffineOperatorImpl(
-        expr.arg(1),
-        row_key,
-        L*LinearMap(new KroneckerProductImpl(
-            new ScalarMatrixImpl(GetDimension(expr, 1), 1),
-            new DenseMatrixImpl(EvalConstant(expr.arg(0))))),
-        A, b);
+  LinearMap M;
+  const Expression* X_expr;
+
+  const int m = GetDimension(expr, 0);
+  const int n = GetDimension(expr, 1);
+  if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
+    M = linear_map::MatrixProductLeft(MultiplyConstant(expr.arg(0), m), n);
+    X_expr = &expr.arg(1);
   } else if (expr.arg(1).curvature().curvature_type() == Curvature::CONSTANT) {
-    // XA
-    BuildAffineOperatorImpl(
-        expr.arg(0),
-        row_key,
-        L*LinearMap(new KroneckerProductImpl(
-            new DenseMatrixImpl(EvalConstant(expr.arg(1)).transpose()),
-            new ScalarMatrixImpl(GetDimension(expr, 0), 1))),
-        A, b);
+    M = linear_map::MatrixProductRight(MultiplyConstant(expr.arg(1), n), m);
+    X_expr = &expr.arg(0);
   } else {
-    LOG(FATAL) << "Multiplying two non constants";
+    LOG(FATAL) << "multiplying two non constants";
   }
+
+  BuildAffineOperatorImpl(*X_expr, row_key, L*M, A, b);
 }
 
 void MultiplyElementwise(
@@ -412,25 +386,23 @@ void MultiplyElementwise(
     BlockVector* b) {
   CHECK_EQ(2, expr.arg_size());
 
-  const Expression* C_expr;
+  LinearMap M;
   const Expression* X_expr;
   if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
-    C_expr = &expr.arg(0);
+    M = linear_map::Diagonal(ToVector(EvalConstant(expr.arg(0))));
     X_expr = &expr.arg(1);
-  } else if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
-    C_expr = &expr.arg(1);
+  } else if (expr.arg(1).curvature().curvature_type() == Curvature::CONSTANT) {
+    M = linear_map::Diagonal(ToVector(EvalConstant(expr.arg(1))));
     X_expr = &expr.arg(0);
   } else {
     LOG(FATAL) << "Multiplying two non constants";
   }
 
-  DiagonalMatrixImpl::DiagonalMatrix C(GetDimension(*C_expr));
-  C.diagonal() = ToVector(EvalConstant(*C_expr));
-  BuildAffineOperatorImpl(
-      *X_expr,
-      row_key,
-      L*LinearMap(new DiagonalMatrixImpl(C)),
-      A, b);
+  BuildAffineOperatorImpl(*X_expr, row_key, L*M, A, b);
+}
+
+LinearMap SliceIndex(const Slice& slice, int n) {
+  return linear_map::Index(slice.start(), slice.stop(), slice.step(), n);
 }
 
 void Index(
@@ -439,33 +411,17 @@ void Index(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
+  // vec(P1^T*X*P2)= kron(P2,P1) where Pi is the "truncated" permutation
+  // matrix corresponding to indexing on dimension i.
   const Expression& arg = GetOnlyArg(expr);
-  CHECK_EQ(expr.size().dim_size(), 2);
-  CHECK_EQ(2, expr.key_size());
-  const int rows = GetDimension(arg, 0);
-  const Slice& rkey = expr.key(0);
-  const Slice& ckey = expr.key(1);
-
-  SparseXd P(GetDimension(expr), GetDimension(arg));
-  {
-    std::vector<Eigen::Triplet<double> > coeffs;
-    int k = 0;
-    for (int j = ckey.start(); j < ckey.stop(); j += ckey.step()) {
-      for (int i = rkey.start(); i < rkey.stop(); i += rkey.step()) {
-        coeffs.push_back(Eigen::Triplet<double>(k++, j*rows + i, 1));
-      }
-    }
-    P.setFromTriplets(coeffs.begin(), coeffs.end());
-  }
-
-  BuildAffineOperatorImpl(
-      GetOnlyArg(expr),
-      row_key,
-      L*LinearMap(new SparseMatrixImpl(P)),
-      A, b);
+  LinearMap P = linear_map::KroneckerProduct(
+      SliceIndex(expr.key(1), GetDimension(arg, 1)),
+      SliceIndex(expr.key(0), GetDimension(arg, 0)));
+  BuildAffineOperatorImpl(arg, row_key, L*P, A, b);
 }
 
-void Add(
+// No-op transformation for RESHAPE, ADD, ...
+void Identity(
     const Expression& expr,
     const std::string& row_key,
     LinearMap L,
@@ -505,31 +461,54 @@ void Constant(
   b->InsertOrAdd(row_key, L*b_dense);
 }
 
+void HStack(
+    const Expression& expr,
+    const std::string& row_key,
+    LinearMap L,
+    BlockMatrix* A,
+    BlockVector* b) {
+  // [A B] = A[I 0] + B[0 I], with [I 0] = kron([1 0], I)
+  for (int i = expr.stack_params().offset(); i < expr.arg_size(); i++) {
+    const int m = GetDimension(expr.arg(i), 0);
+    const int n = GetDimension(expr.arg(i), 1);
+    LinearMap M =
+        linear_map::MatrixProductRight(
+            linear_map::KroneckerProduct(
+                linear_map::OneHot(i, expr.arg_size()),
+                linear_map::Identity(n)), m);
+    BuildAffineOperatorImpl(expr.arg(i), row_key, L*M, A, b);
+  }
+}
+
+void VStack(
+    const Expression& expr,
+    const std::string& row_key,
+    LinearMap L,
+    BlockMatrix* A,
+    BlockVector* b) {
+  // [A; B] = [I; 0]A + [0; I]B with [I; 0] = kron([1;0], I)
+  for (int i = expr.stack_params().offset(); i < expr.arg_size(); i++) {
+    const int m = GetDimension(expr.arg(i), 0);
+    const int n = GetDimension(expr.arg(i), 1);
+    LinearMap M =
+        linear_map::MatrixProductLeft(
+            linear_map::KroneckerProduct(
+                linear_map::OneHot(i, expr.arg_size()).Transpose(),
+                linear_map::Identity(m)), n);
+    BuildAffineOperatorImpl(expr.arg(i), row_key, L*M, A, b);
+  }
+}
+
 void Transpose(
     const Expression& expr,
     const std::string& row_key,
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  const int rows = GetDimension(expr, 0);
-  const int cols = GetDimension(expr, 1);
-
-  SparseXd T(rows*cols, rows*cols);
-  {
-    std::vector<Eigen::Triplet<double> > coeffs;
-    for (int j = 0; j < cols; j++) {
-      for (int i = 0; i < rows; i++) {
-        coeffs.push_back(Eigen::Triplet<double>(j*rows + i, i*cols + j, 1));
-      }
-    }
-    T.setFromTriplets(coeffs.begin(), coeffs.end());
-  }
-
-  BuildAffineOperatorImpl(
-      GetOnlyArg(expr),
-      row_key,
-      L*LinearMap(new SparseMatrixImpl(T)),
-      A, b);
+  const int m = GetDimension(expr, 0);
+  const int n = GetDimension(expr, 1);
+  LinearMap T = linear_map::MatrixTranspose(m, n);
+  BuildAffineOperatorImpl(GetOnlyArg(expr), row_key, L*T, A, b);
 }
 
 typedef void(*LinearFunction)(
@@ -540,17 +519,18 @@ typedef void(*LinearFunction)(
     BlockVector* b);
 
 std::unordered_map<int, LinearFunction> kLinearFunctions = {
-  //{Expression::HSTACK, &HStack},
-  //{Expression::VSTACK, &VStack},
-  {Expression::TRANSPOSE, &Transpose},
-  {Expression::ADD, &Add},
+  {Expression::ADD, &Identity},
   {Expression::CONSTANT, &Constant},
+  {Expression::HSTACK, &HStack},
   {Expression::INDEX, &Index},
   {Expression::MULTIPLY, &Multiply},
   {Expression::MULTIPLY_ELEMENTWISE, &MultiplyElementwise},
   {Expression::NEGATE, &Negate},
   {Expression::SUM, &Sum},
+  {Expression::TRANSPOSE, &Transpose},
   {Expression::VARIABLE, &Variable},
+  {Expression::VSTACK, &VStack},
+  {Expression::RESHAPE, &Identity},
 };
 
 void BuildAffineOperatorImpl(
@@ -559,6 +539,8 @@ void BuildAffineOperatorImpl(
     LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
+  // TODO(mwytock): Refactor this visitor-like pattern for traversing expression
+  // trees so we dont have to repeat this look up code N times.
   VLOG(2) << "BuildAffineOperatorImpl\n"
           << "L: " << L.impl().DebugString() << "\n"
           << expr.DebugString();
@@ -577,7 +559,7 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
-      expr, row_key, LinearMap::Identity(GetDimension(expr)), A, b);
+      expr, row_key, linear_map::Identity(GetDimension(expr)), A, b);
 }
 
 }  // affine

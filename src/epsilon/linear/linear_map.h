@@ -54,8 +54,6 @@ class LinearMap {
   LinearMap();
   explicit LinearMap(LinearMapImpl* impl) : impl_(impl) {}
 
-  static LinearMap Identity(int n);
-
   // Accessor for implementation
   const LinearMapImpl& impl() const { return *impl_; }
 
@@ -90,6 +88,32 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> operator*(
 typedef LinearMapImpl* (*LinearMapBinaryOp)(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs);
+
+
+// Linear map library
+namespace linear_map {
+
+// "Data-driven" maps
+LinearMap Dense(const LinearMap::DenseMatrix& A);
+LinearMap Diagonal(const LinearMap::DenseVector& a);
+LinearMap Sparse(const LinearMap::SparseMatrix& A);
+
+// Basic transforms
+LinearMap Identity(int n);
+LinearMap Index(int start, int stop, int step, int n);
+LinearMap MatrixTranspose(int m, int n);
+LinearMap Negate(int n);
+LinearMap OneHot(int i, int n);
+LinearMap Scale(int n, double alpha);
+LinearMap Sum(int n);
+
+// Linear maps composed of other linear maps
+LinearMap KroneckerProduct(const LinearMap& A, const LinearMap& B);
+LinearMap MatrixProductLeft(const LinearMap& A, int n);
+LinearMap MatrixProductRight(const LinearMap& A, int m);
+
+}  // namespace linear_map
+
 
 
 #endif  // EPSILON_LINEAR_LINEAR_MAP_H
