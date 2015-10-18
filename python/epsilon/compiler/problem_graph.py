@@ -14,6 +14,7 @@ from epsilon import expression
 from epsilon import expression_util
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Expression, Problem, Cone
+from epsilon.expression_str import expr_str
 
 def is_equality_indicator(f):
     return (f.expr.expression_type == Expression.INDICATOR and
@@ -106,8 +107,9 @@ class ProblemGraph(object):
 
     def problem(self):
         return Problem(
-            objective=expression.add(*(f.expr for f in self.functions)),
-            constraint=(f.expr for f in self.constraints))
+            objective=expression.add(
+                *sorted((f.expr for f in self.functions), key=expr_str)),
+            constraint=sorted((f.expr for f in self.constraints), key=expr_str))
 
     # Basic operations
     def remove_edge(self, f_var):

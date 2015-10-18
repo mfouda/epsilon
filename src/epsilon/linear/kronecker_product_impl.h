@@ -22,25 +22,8 @@ class KroneckerProductImpl final : public LinearMapImpl {
                         B_.impl().DebugString().c_str());
   }
 
-  DenseMatrix AsDense() const override {
-    DenseMatrix A = A_.impl().AsDense();
-    DenseMatrix B = B_.impl().AsDense();
-    DenseMatrix C(m(), n());
-
-    for (int i = 0; i < A.rows(); i++) {
-      for (int j = 0; j < A.cols(); j++) {
-        C.block(i*B.rows(), j*B.cols(), B.rows(), B.cols()) = A(i,j)*B;
-      }
-    }
-
-    return C;
-  }
-
-  DenseVector Apply(const DenseVector& x) const override {
-    LinearMap X(new DenseMatrixImpl(ToMatrix(x, B_.impl().n(), A_.impl().n())));
-    LinearMap Y = (A_*(B_*X).Transpose()).Transpose();
-    return ToVector(Y.impl().AsDense());
-  }
+  DenseMatrix AsDense() const override;
+  DenseVector Apply(const DenseVector& x) const override;
 
   LinearMapImpl* Transpose() const override {
     return new KroneckerProductImpl(

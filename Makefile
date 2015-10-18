@@ -3,7 +3,7 @@
 # Tested on: Mac OS X 10.10.5, Ubuntu 15.04
 
 # Settings
-OPTFLAGS = -O3
+OPTFLAGS = -DNDEBUG -O3
 
 # Internal directories
 src_dir = src
@@ -23,6 +23,9 @@ CXXFLAGS += -I$(gtest_dir)/include
 # Third-party library, glmgen
 glmgen_dir = third_party/glmgen/c_lib/glmgen
 glmgen_CFLAGS = -I$(glmgen_dir)/include
+
+# Third-party library, Google benchmark
+benchmark_LDLIBS = -lbenchmark
 
 # System-specific configuration
 SYSTEM = $(shell uname -s)
@@ -54,9 +57,14 @@ common_cc = \
 	epsilon/expression/expression_util.cc \
 	epsilon/expression/var_offset_map.cc \
 	epsilon/file/file.cc \
+	epsilon/linear/dense_matrix_impl.cc \
+	epsilon/linear/diagonal_matrix_impl.cc \
+	epsilon/linear/kronecker_product_impl.cc \
 	epsilon/linear/linear_map.cc \
 	epsilon/linear/linear_map_add.cc \
 	epsilon/linear/linear_map_multiply.cc \
+	epsilon/linear/scalar_matrix_impl.cc \
+	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/deadzone.cc \
 	epsilon/prox/fused_lasso.cc \
@@ -119,7 +127,8 @@ tests = \
 	epsilon/vector/block_vector_test
 
 binaries = \
-	epsilon/benchmark
+	epsilon/benchmark \
+	epsilon/linear/benchmarks
 
 libs = epsilon
 
@@ -174,6 +183,9 @@ endif
 
 $(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(common_obj) $(proto_obj)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
+
+$(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
+	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) -o $@
 
 # Tests
 test: $(build_tests)
