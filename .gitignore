@@ -4,3 +4,4 @@ build-cc
 *_pb2.py
 *.egg-info
 _solve.so
+.ipynb_checkpoints
