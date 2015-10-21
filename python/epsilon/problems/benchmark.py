@@ -37,6 +37,21 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
+    ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
+    ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
+    ProblemInstance("huber", huber.create, dict(m=20, n=10)),
+    ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
+    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
+    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
+    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+    ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
+]
+
 FORMATTERS = {
     "text": benchmark_format.Text,
     "html": benchmark_format.HTML,
@@ -56,7 +71,15 @@ def benchmark_cvxpy(solver, cvxpy_prob):
     if solver == cp.SCS:
         kwargs["use_indirect"] = args.scs_indirect
         kwargs["max_iters"] = 10000
-    cvxpy_prob.solve(**kwargs)
+
+    try:
+        # TODO(mwytock): Probably need to run this in a separate thread/process
+        # and kill after one hour?
+        cvxpy_prob.solve(**kwargs)
+    except cp.error.SolverError:
+        # Raised when solver cant handle a problem
+        return float("nan")
+
     return cvxpy_prob.objective.value
 
 def benchmark_cvxpy_canon(solver, cvxpy_prob):
@@ -84,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("--problem")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--format", default="text")
-    parser.add_argument("--cvxpy", action="store_true")
+    parser.add_argument("--include-cvxpy", action="store_true")
     parser.add_argument("--write")
 
     args = parser.parse_args()
@@ -112,7 +135,7 @@ if __name__ == "__main__":
     ]
 
     # Optionally add CVXPY benchmarks
-    if args.cvxpy:
+    if args.include_cvxpy:
         super_columns = [
             Column("",           15),
             Column("Epsilon",    20, right=True, colspan=2),
