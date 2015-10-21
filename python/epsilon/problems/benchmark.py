@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from collections import namedtuple
 import argparse
 import errno
 import logging
@@ -14,43 +13,14 @@ from epsilon import solve
 from epsilon import solver_params_pb2
 from epsilon.compiler import compiler
 from epsilon.expression_pb2 import Expression
-from epsilon.problems import basis_pursuit
-from epsilon.problems import covsel
-from epsilon.problems import group_lasso
-from epsilon.problems import hinge_l1
-from epsilon.problems import huber
-from epsilon.problems import lasso
-from epsilon.problems import least_abs_dev
-from epsilon.problems import logreg_l1
-from epsilon.problems import lp
-from epsilon.problems import mnist
-from epsilon.problems import quantile
-from epsilon.problems import quantile
-from epsilon.problems import tv_1d
-from epsilon.problems import tv_denoise
+from epsilon.problems import *
+from epsilon.problems import benchmark_format
+
 from epsilon.problems.problem_instance import ProblemInstance
+from epsilon.problems.benchmark_format import Column
 
-class Column(namedtuple("Column", ["name", "width", "fmt", "right"])):
-    """Columns for a Markdown appropriate text table."""
-
-    @property
-    def header(self):
-        align = "" if self.right else "-"
-        header_fmt = " %" + align + str(self.width-2) + "s "
-        return header_fmt % self.name
-
-    @property
-    def sub_header(self):
-        val = "-" * (self.width-2)
-        if self.right:
-            val = " " + val + ":"
-        else:
-            val = ":" + val + " "
-        return val
-
-Column.__new__.__defaults__ = (None, None, None, False)
-
-#  ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
+# Add back when we have convolution
+# ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -67,98 +37,49 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
-COLUMNS = [
-    Column("Problem",   15, "%-15s"),
-    Column("Time",      8,  "%7.2fs", right=True),
-    Column("Objective", 11, "%11.2e", right=True),
+PROBLEMS = [
+    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
 ]
 
-def print_header():
-    print "|".join(c.header for c in COLUMNS)
-    print "|".join(c.sub_header for c in COLUMNS)
+def cvxpy_kwargs(solver):
+    return kwargs
 
-def print_result(*args):
-    print "|".join(c.fmt % args[i] for i, c in enumerate(COLUMNS))
+def benchmark_epsilon(cvxpy_prob):
+    params = solver_params_pb2.SolverParams(rel_tol=1e-2)
+    solve.solve(cvxpy_prob, params=params)
+    return cvxpy_prob.objective.value
 
-def run_benchmarks(problems):
+def benchmark_cvxpy(solver, cvxpy_prob):
+    kwargs = {"solver": solver}
+    if solver == cp.SCS:
+        kwargs["use_indirect"] = args.scs_indirect
+        kwargs["max_iters"] = 10000
+    cvxpy_prob.solve(**kwargs)
+    return cvxpy_prob.objective.value
+
+def benchmark_cvxpy_canon(solver, cvxpy_prob):
+    cvxpy_prob.get_problem_data(solver=solver)
+
+def run_benchmarks(benchmarks, problems):
     for problem in problems:
         cvxpy_prob = problem.create()
-
-        t0 = time.time()
-        if args.scs:
-            cvxpy_prob.solve(
-                solver=cp.SCS, verbose=args.debug,
-                use_indirect=args.scs_indirect,
-                max_iters=10000)
-        elif args.ecos:
-            cvxpy_prob.solve(solver=cp.ECOS, verbose=args.debug)
-        else:
-            params = solver_params_pb2.SolverParams(rel_tol=1e-2)
-            solve.solve(cvxpy_prob, params=params)
-        t1 = time.time()
-
-        yield problem.name, t1-t0, cvxpy_prob.objective.value
-
-def print_benchmarks(problems):
-    print_header()
-    for result in run_benchmarks(problems):
-        print_result(*result)
-
-def modify_data_location(expr, f):
-    if (expr.expression_type == Expression.CONSTANT and
-        expr.constant.data_location != ""):
-        expr.constant.data_location = f(expr.constant.data_location)
-
-    for arg in expr.arg:
-        modify_data_location(arg, f)
-
-def makedirs_existok(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else: raise
-
-def write_benchmarks(problems, location):
-    mem_prefix = "/mem/"
-    file_prefix = "/local" + location + "/"
-    def rewrite_location(name):
-        assert name[:len(mem_prefix)] == mem_prefix
-        return file_prefix + name[len(mem_prefix):]
-
-    makedirs_existok(location)
-    for problem in problems:
-        prob_proto, data_map = cvxpy_expr.convert_problem(problem.create())
-        prob_proto = compiler.compile(prob_proto)
-
-        modify_data_location(prob_proto.objective, rewrite_location)
-        for constraint in prob_proto.constraint:
-            modify_data_location(constraint, rewrite_location)
-
-        with open(os.path.join(location, problem.name), "w") as f:
-            f.write(prob_proto.SerializeToString())
-
-        for name, value in data_map.items():
-            assert name[:len(mem_prefix)] == mem_prefix
-            filename = os.path.join(location, name[len(mem_prefix):])
-            makedirs_existok(os.path.dirname(filename))
-            with open(filename, "w") as f:
-                f.write(value)
+        data = [problem.name]
+        for benchmark in benchmarks:
+            t0 = time.time()
+            result = benchmark(cvxpy_prob)
+            data.append(time.time() - t0)
+            if result:
+                data.append(result)
+        yield data
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--ecos", action="store_true")
     parser.add_argument("--problem")
-    parser.add_argument("--scs", action="store_true")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--write")
 
     args = parser.parse_args()
-
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
 
     if args.problem:
         problems = [p for p in PROBLEMS if p.name == args.problem]
@@ -166,12 +87,49 @@ if __name__ == "__main__":
         problems = PROBLEMS
 
     if args.write:
-        write_benchmarks(problems, args.write)
-    else:
-        print_benchmarks(problems)
+        benchmark_util.write_benchmarks(problems, args.write)
+        sys.exit(0)
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    benchmarks = [
+        benchmark_epsilon,
+        # NOTE(mwytock): We assume that get_problem_data() times are
+        # similar for ECOS and SCS so we only include one
+        lambda p: benchmark_cvxpy_canon(cp.SCS, p),
+        lambda p: benchmark_cvxpy(cp.ECOS, p),
+        lambda p: benchmark_cvxpy(cp.SCS, p)
+    ]
+
+    super_columns = [
+        Column("",           15),
+        Column("Epsilon",    20, right=True),
+        Column("CVXPY",      8, right=True),
+        Column("CVXPY+SCS",  20, right=True, colspan=2),
+        Column("CVXPY+ECOS", 20, right=True, colspan=2)
+    ]
+
+    columns = [
+        Column("Problem",   15, "%-15s"),
+        # Epsilon
+        Column("Time",      8,  "%7.2fs", right=True),
+        Column("Objective", 11, "%11.2e", right=True),
+        # CVXPY canon
+        Column("Time",      8,  "%7.2fs", right=True),
+        # CVXPY + ECOS
+        Column("Time",      8,  "%7.2fs", right=True),
+        Column("Objective", 11, "%11.2e", right=True),
+        # CVXPY + SCS
+        Column("Time",      8,  "%7.2fs", right=True),
+        Column("Objective", 11, "%11.2e", right=True),
+    ]
+
+    formatter = benchmark_format.Text(super_columns, columns)
+    formatter.print_header()
+    for row in run_benchmarks(benchmarks, problems):
+        formatter.print_row(row)
+    formatter.print_footer()
 
 else:
     args = argparse.Namespace()
-    args.scs = False
-    args.ecos = False
-    args.problem = ""
