@@ -23,7 +23,7 @@ class Column(namedtuple("Column", ["name", "width", "fmt", "right", "colspan"]))
     def format(self, data):
         return self.fmt % data
 
-Column.__new__.__defaults__ = (None, None, None, False)
+Column.__new__.__defaults__ = (None, None, None, False, 1)
 
 class Formatter(object):
     def __init__(self, super_columns, columns):
@@ -46,7 +46,19 @@ class Text(Formatter):
         print "|".join(c.fmt % data[i] for i, c in enumerate(self.columns))
 
 class HTML(Formatter):
-    pass
+    def print_header(self):
+        print "<table>"
+        print "<tr>" + "".join('<th colspan="%d">%s</th>' % (c.colspan, c.header)
+                               for c in self.super_columns) + "</tr>"
+        print "<tr>" + "".join('<th colspan="%d">%s</th>' % (c.colspan, c.header)
+                               for c in self.columns) + "</tr>"
+
+    def print_row(self, data):
+        print "".join("<td>" + c.fmt % data[i] + "</td>"
+                      for i, c in enumerate(self.columns))
+
+    def print_footer(self):
+        print "</table>"
 
 class Latex(Formatter):
     pass

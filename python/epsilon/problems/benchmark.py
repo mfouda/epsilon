@@ -37,9 +37,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
-PROBLEMS = [
-    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
-]
+FORMATTERS = {
+    "text": benchmark_format.Text,
+    "html": benchmark_format.HTML,
+    "latex": benchmark_format.Latex,
+}
 
 def cvxpy_kwargs(solver):
     return kwargs
@@ -62,12 +64,16 @@ def benchmark_cvxpy_canon(solver, cvxpy_prob):
 
 def run_benchmarks(benchmarks, problems):
     for problem in problems:
+        logging.debug("problem %s", problem.name)
         cvxpy_prob = problem.create()
         data = [problem.name]
         for benchmark in benchmarks:
+            logging.debug("running %s", benchmark)
             t0 = time.time()
             result = benchmark(cvxpy_prob)
-            data.append(time.time() - t0)
+            t1 = time.time()
+            data.append(t1 - t0)
+            logging.debug("done %f seconds", t1-t0)
             if result:
                 data.append(result)
         yield data
@@ -77,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--problem")
     parser.add_argument("--scs-indirect", action="store_true")
+    parser.add_argument("--format", default="text")
     parser.add_argument("--write")
 
     args = parser.parse_args()
@@ -98,13 +105,13 @@ if __name__ == "__main__":
         # NOTE(mwytock): We assume that get_problem_data() times are
         # similar for ECOS and SCS so we only include one
         lambda p: benchmark_cvxpy_canon(cp.SCS, p),
-        lambda p: benchmark_cvxpy(cp.ECOS, p),
-        lambda p: benchmark_cvxpy(cp.SCS, p)
+        lambda p: benchmark_cvxpy(cp.SCS, p),
+        lambda p: benchmark_cvxpy(cp.ECOS, p)
     ]
 
     super_columns = [
         Column("",           15),
-        Column("Epsilon",    20, right=True),
+        Column("Epsilon",    20, right=True, colspan=2),
         Column("CVXPY",      8, right=True),
         Column("CVXPY+SCS",  20, right=True, colspan=2),
         Column("CVXPY+ECOS", 20, right=True, colspan=2)
@@ -125,7 +132,7 @@ if __name__ == "__main__":
         Column("Objective", 11, "%11.2e", right=True),
     ]
 
-    formatter = benchmark_format.Text(super_columns, columns)
+    formatter = FORMATTERS[args.format](super_columns, columns)
     formatter.print_header()
     for row in run_benchmarks(benchmarks, problems):
         formatter.print_row(row)
