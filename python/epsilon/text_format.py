@@ -8,6 +8,12 @@ NAMES = {
     Expression.CONSTANT: "abcdkeflmn",
 }
 
+OPERATOR_NAMES = {
+    Expression.ADD: "+",
+    Expression.MULTIPLY: "*",
+    Expression.NEGATE: "-",
+}
+
 class NameMap(object):
     def __init__(self):
         self.name_map = {}
@@ -31,7 +37,9 @@ class NameMap(object):
         return name
 
 def function_name(proto):
-    if proto.expression_type == Expression.INDICATOR:
+    if proto.expression_type in OPERATOR_NAMES:
+        return OPERATOR_NAMES[proto.expression_type]
+    elif proto.expression_type == Expression.INDICATOR:
         return Cone.Type.Name(proto.cone.cone_type).lower()
     return Expression.Type.Name(proto.expression_type).lower()
 
@@ -55,17 +63,7 @@ def format_params(proto):
     else:
         return ""
 
-def format_args(proto, name_map, prefix):
-    if (len(proto.arg) == 1 and
-        proto.arg[0].expression_type in (Expression.VARIABLE,
-                                         Expression.CONSTANT)):
-        return format_expr(proto.arg[0], name_map, prefix)
-
-    return "\n" + prefix + (",\n" + prefix).join(
-        format_expr(arg, name_map, prefix + "  ")
-        for arg in proto.arg)
-
-def format_expr(proto, name_map, prefix=""):
+def format_expr(proto, name_map):
     if proto.expression_type == Expression.CONSTANT:
         if not proto.constant.data_location:
             return "%.2f" % proto.constant.scalar
@@ -74,13 +72,24 @@ def format_expr(proto, name_map, prefix=""):
         return name_map.name(proto)
 
     return (function_name(proto) + format_params(proto) +
-            "(" + format_args(proto, name_map, prefix) + ")")
+            "(" + ", ".join(format_expr(arg, name_map)
+                            for arg in proto.arg) + ")")
 
 def format(proto):
     name_map = NameMap()
 
-    return ("problem(\n" + format_expr(proto.objective, name_map, "  ") +
-            (",\n[" +
-             ",\n".join(format_expr(c, name_map, "  ") for c in proto.constraint) +
-             "]" if proto.constraint else "") +
-            ")")
+    assert proto.objective.expression_type == Expression.ADD
+
+    output = "problem(+(\n"
+    for arg in proto.objective.arg:
+        output += "  " + format_expr(arg, name_map) + ",\n"
+
+    if proto.constraint:
+        output += "), [\n"
+        for constr in proto.constraint:
+            output += "  " + format_expr(constr, name_map) + ",\n"
+        output += "])"
+    else:
+        output += "))"
+
+    return output
