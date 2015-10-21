@@ -37,21 +37,6 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
-PROBLEMS = [
-    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
-    ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
-    ProblemInstance("huber", huber.create, dict(m=20, n=10)),
-    ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
-    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
-    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
-    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
-    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
-    ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-]
-
 FORMATTERS = {
     "text": benchmark_format.Text,
     "html": benchmark_format.HTML,
