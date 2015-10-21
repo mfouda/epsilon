@@ -7,6 +7,7 @@ from epsilon.expression_str import problem_str
 TRANSFORMS = [
     canonicalize.transform,
     combine.transform,
+    canonicalize_linear.transform,
 ]
 
 def compile(problem):
