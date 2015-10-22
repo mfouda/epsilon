@@ -47,3 +47,13 @@ def expr_vars(expr):
     for arg in expr.arg:
         retval |= expr_vars(arg)
     return retval
+
+# Helper functions
+# TODO(mwytock): Put elsewhere
+def dim(expr, index=0):
+    pass
+
+def only_arg(expr):
+    pass
+
+def is_constant(expr):
