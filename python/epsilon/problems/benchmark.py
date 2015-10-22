@@ -124,18 +124,18 @@ if __name__ == "__main__":
         super_columns = [
             Column("",           15),
             Column("Epsilon",    20, right=True, colspan=2),
-            Column("CVXPY",      8, right=True),
+            #Column("CVXPY",      8, right=True),
             Column("CVXPY+SCS",  20, right=True, colspan=2),
             Column("CVXPY+ECOS", 20, right=True, colspan=2),
         ]
 
         columns += [
             # CVXPY canon
-            Column("Time",      8,  "%7.2fs", right=True),
-            # CVXPY + ECOS
+            #Column("Time",      8,  "%7.2fs", right=True),
+            # CVXPY + SCS
             Column("Time",      8,  "%7.2fs", right=True),
             Column("Objective", 11, "%11.2e", right=True),
-            # CVXPY + SCS
+            # CVXPY + ECOS
             Column("Time",      8,  "%7.2fs", right=True),
             Column("Objective", 11, "%11.2e", right=True),
         ]
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         benchmarks += [
             # NOTE(mwytock): We assume that get_problem_data() times are
             # similar for ECOS and SCS so we only include one
-            lambda p: benchmark_cvxpy_canon(cp.SCS, p),
+            #lambda p: benchmark_cvxpy_canon(cp.SCS, p),
             lambda p: benchmark_cvxpy(cp.SCS, p),
             lambda p: benchmark_cvxpy(cp.ECOS, p)
         ]
