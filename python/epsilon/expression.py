@@ -1,6 +1,8 @@
 """Functional form of the expression operators."""
 
+from epsilon.error import ExpressionError
 from epsilon.expression_pb2 import *
+from epsilon.expression_util import *
 from epsilon.util import prod
 
 # Internal helpers
@@ -259,6 +261,15 @@ def zero(x):
     return Expression(
         expression_type=Expression.ZERO,
         size=Size(dim=[1, 1]),
+        arg=[x])
+
+def linear_map(A, x):
+    if dim(x, 1) != 1:
+        raise ExpressionError("applying linear map to non vector", x)
+
+    return Expression(
+        expression_type=Expression.LINEAR_MAP,
+        size=Size(dim=[A.m, 1]),
         arg=[x])
 
 def equality_constraint(a, b):

@@ -1,3 +1,6 @@
+
+from epsilon import error
+
 class CanonicalizeError(error.ExpressionError):
     pass
 

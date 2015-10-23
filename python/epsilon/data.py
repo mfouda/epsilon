@@ -1,14 +1,15 @@
 
-import numpy
-from scipy import sparse
+import numpy as np
+import scipy.sparse as sp
 
-from epsilon import data_pb2
+from epsilon.data_pb2 import Data
 from epsilon import expression
 
 METADATA_FILE = "metadata"
 VALUE_FILE = "value"
 
 data_map = {}
+expr_map = {}
 
 def metadata_file(prefix):
     return prefix + "/" + METADATA_FILE
@@ -16,41 +17,37 @@ def metadata_file(prefix):
 def value_file(prefix):
     return prefix + "/" + VALUE_FILE
 
-def fill_vector(value, vector):
-    vector.value_bytes = value.tobytes(order="Fortran")
-
-def fill_sparse_matrix(A, sparse_matrix):
-    sparse_matrix.m, sparse_matrix.n = A.shape
-    sparse_matrix.pr.extend(float(x) for x in A.data)
-    sparse_matrix.jc.extend(int(x) for x in A.indptr)
-    sparse_matrix.ir.extend(int(x) for x in A.indices)
-
-def dense_matrix_data(value):
-    data = data_pb2.Data()
-    data.data_type = data_pb2.Data.DENSE_MATRIX
-    data.dense_matrix.m, data.dense_matrix.n = value.shape
-    data.dense_matrix.value_bytes = value.tobytes(order="Fortran")
-    return data
-
-def dense_matrix_metadata(value):
-    data = data_pb2.Data()
-    data.data_type = data_pb2.Data.DENSE_MATRIX
-    data.dense_matrix.m, data.dense_matrix.n = value.shape
-    return data
-
 def value_location(value):
+    # TODO(mwytock): Better hash function here? Some matrices may have same
+    # tostring() but different values.
     return "/mem/data/" + str(abs(hash(value.tostring())))
 
+def store_ndarray(value, m, n, prefix):
+    data_map[metadata_file(prefix)] = Data(
+        data_type=Data.DENSE_MATRIX, m=m, n=n).SerializeToString()
+    data_map[value_file(prefix)] = value.tobytes(order="F")
+
+def store_coo_matrix(value, m, n, prefix):
+    data_map[metadata_file(prefix)] = Data(
+        data_type=Data.SPARSE_MATRIX, m=m, n=n).SerializeToString()
+    data_map[value_file(prefix)] = 0
+
 def store_constant(value):
-    assert isinstance(value, numpy.ndarray)
     prefix = value_location(value)
 
-    if data.metadata_file(prefix) not in constants:
-        data_map[data.metadata_file(prefix)] = (
-            data.dense_matrix_metadata(value).SerializeToString())
-        data_map[data.value_file(prefix)] = value.tobytes(order="F")
+    expr = expr_map.get(prefix, None)
+    if not expr:
+        m = value.shape[0]
+        n = 1 if len(value.shape) == 1 else value.shape[1]
 
-    return expression.constant(
-        m=value.shape[0],
-        n=value.shape[1],
-        data_location=prefix)
+        if isinstance(value, np.ndarray):
+             store_ndarray(value, m, n, prefix)
+        elif isinstance(value, sp.coo_matrix):
+             store_coo_matrix(value, m, n, prefix)
+        else:
+            raise ValueError("unknown value: " + str(value))
+
+        expr = expression.constant(m, n, data_location=prefix)
+        expr_map[prefix] = expr
+
+    return expr

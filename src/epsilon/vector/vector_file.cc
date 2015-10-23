@@ -21,39 +21,39 @@ std::string value_transpose_file(const std::string& location) {
 }
 
 void WriteMatrixData(const Eigen::MatrixXd& input, const std::string& location) {
-  const int m = input.rows();
-  const int n = input.cols();
+  // const int m = input.rows();
+  // const int n = input.cols();
 
-  {
-    // Write metadata
-    Data data;
-    data.set_data_type(Data::DENSE_MATRIX);
-    data.mutable_dense_matrix()->set_m(m);
-    data.mutable_dense_matrix()->set_n(n);
-    std::unique_ptr<file::File> file = file::Open(metadata_file(location), "w");
-    file->Write(data.SerializeAsString());
-    file->Close();
-  }
+  // {
+  //   // Write metadata
+  //   Data data;
+  //   data.set_data_type(Data::DENSE_MATRIX);
+  //   data.mutable_dense_matrix()->set_m(m);
+  //   data.mutable_dense_matrix()->set_n(n);
+  //   std::unique_ptr<file::File> file = file::Open(metadata_file(location), "w");
+  //   file->Write(data.SerializeAsString());
+  //   file->Close();
+  // }
 
-  {
-    // Write value
-    std::unique_ptr<file::File> file = file::Open(value_file(location), "w");
-    const std::string value_str(
-        reinterpret_cast<const char*>(input.data()), sizeof(double)*m*n);
-    file->Write(value_str);
-    file->Close();
-  }
+  // {
+  //   // Write value
+  //   std::unique_ptr<file::File> file = file::Open(value_file(location), "w");
+  //   const std::string value_str(
+  //       reinterpret_cast<const char*>(input.data()), sizeof(double)*m*n);
+  //   file->Write(value_str);
+  //   file->Close();
+  // }
 
-  {
-    // Write value transpose
-    std::unique_ptr<file::File> file = file::Open(value_transpose_file(location), "w");
-    const std::string value_str(
-        reinterpret_cast<const char*>(
-            static_cast<Eigen::MatrixXd>(input.transpose()).data()),
-        sizeof(double)*m*n);
-    file->Write(value_str);
-    file->Close();
-  }
+  // {
+  //   // Write value transpose
+  //   std::unique_ptr<file::File> file = file::Open(value_transpose_file(location), "w");
+  //   const std::string value_str(
+  //       reinterpret_cast<const char*>(
+  //           static_cast<Eigen::MatrixXd>(input.transpose()).data()),
+  //       sizeof(double)*m*n);
+  //   file->Write(value_str);
+  //   file->Close();
+  // }
 }
 
 std::unique_ptr<const Data> ReadSplitData(const std::string& location) {
@@ -76,8 +76,8 @@ std::unique_ptr<const Data> ReadSplitData(const std::string& location) {
 
 Eigen::MatrixXd GetMatrixData(const Data& data) {
   CHECK_EQ(data.data_type(), Data::DENSE_MATRIX);
-  const int m = data.dense_matrix().m();
-  const int n = data.dense_matrix().n();
+  const int m = data.m();
+  const int n = data.n();
 
   CHECK_EQ(m*n*sizeof(double), data.value().size());
   return Eigen::Map<const Eigen::MatrixXd>(

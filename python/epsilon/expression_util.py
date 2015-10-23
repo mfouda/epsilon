@@ -55,5 +55,3 @@ def dim(expr, index=0):
 
 def only_arg(expr):
     pass
-
-def is_constant(expr):

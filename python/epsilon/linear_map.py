@@ -1,9 +1,11 @@
 """Operations on LinearMaps."""
 
+import numpy as np
 import scipy.sparse as sp
 
-from epsilon.expression_pb2 import LinearMap
 from epsilon import data
+from epsilon.expression_pb2 import LinearMap
+from epsilon.expression_util import *
 
 # Atomic linear maps
 def kronecker_product(A, B):
@@ -13,25 +15,25 @@ def kronecker_product(A, B):
         n=A.n*B.n,
         A=A, B=B)
 
-def dense_matrix(constant, m, n):
+def dense_matrix(constant):
     return LinearMap(
         linear_map_type=LinearMap.DENSE_MATRIX,
-        m=m,
-        n=n,
+        m=dim(constant, 0),
+        n=dim(constant, 1),
         constant=constant)
 
 def sparse_matrix(constant, m, n):
     return LinearMap(
         linear_map_type=LinearMap.SPARSE_MATRIX,
-        m=m,
-        n=n,
+        m=dim(constant, 0),
+        n=dim(constant, 1),
         constant=constant)
 
 def diagonal_matrix(constant, n):
     return LinearMap(
         linear_map_type=LinearMap.DIAGONAL_MATRIX,
-        m=n,
-        n=n,
+        m=dim(constant),
+        n=dim(constant),
         constant=constant)
 
 def scalar(alpha, n):
@@ -58,16 +60,16 @@ def index(slice, n):
     A = sp.coo_matrix(
         np.ones(n),
         (np.arange(m), np.arange(slice.start, m, slice.step)))
-    return sparse_matrix(data.store_constant(A), A.m, A.n)
+    return sparse_matrix(data.store_constant(A))
 
 def one_hot(i, n):
     """[0, ... 0, 1, 0, ...]."""
     a = sp.coo_matrix(([1], ([0], [i])), shape=(1, n))
-    return sparse_matrix(data.store_constant(a), 1, A.n)
+    return sparse_matrix(data.store_constant(a))
 
 def sum(n):
     """All ones vector"""
-    return dense_matrix(constants.store(np.ones(n)), 1, A.n)
+    return dense_matrix(constants.store(np.ones(n)))
 
 def negate(n):
     return scalar(-1,n)
