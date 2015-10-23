@@ -1,18 +1,15 @@
 
 #include <unordered_map>
 
+#include "epsilon/linear/dense_matrix_impl.h"
+#include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
-#include "epsilon/linear/dense_matrix_impl.h"
 #include "epsilon/vector/vector_file.h"
 
 namespace linear_map {
 
 LinearMap::LinearMap() : impl_(new ScalarMatrixImpl(0, 0)) {}
-
-LinearMap LinearMap::Identity(int n) {
-  return LinearMap(new ScalarMatrixImpl(n, 1));
-}
 
 LinearMap& LinearMap::operator+=(const LinearMap& rhs) {
   *this = *this+rhs;
@@ -47,12 +44,18 @@ LinearMap Scalar(const ::LinearMap& proto) {
   return LinearMap(new ScalarMatrixImpl(proto.n(), proto.scalar()));
 }
 
+LinearMap Transpose(const ::LinearMap& proto) {
+  CHECK_EQ(1, proto.arg_size());
+  return BuildLinearMap(proto.arg(0)).Transpose();
+}
+
 typedef LinearMap(*LinearMapFunction)(const ::LinearMap&);
 
 std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
   {::LinearMap::DENSE_MATRIX, &DenseMatrix},
-  {::LinearMap::SCALAR, &Scalar},
   {::LinearMap::KRONECKER_PRODUCT, &KroneckerProduct},
+  {::LinearMap::SCALAR, &Scalar},
+  {::LinearMap::TRANSPOSE, &Transpose},
 };
 
 LinearMap BuildLinearMap(const ::LinearMap& linear_map) {
@@ -63,5 +66,10 @@ LinearMap BuildLinearMap(const ::LinearMap& linear_map) {
   }
   return iter->second(linear_map);
 }
+
+                    LinearMap Identity(int n) {
+  return LinearMap(new ScalarMatrixImpl(n, 1));
+}
+
 
 }  // namespace linear_map

@@ -48,7 +48,7 @@ def transform_multiply_generic(expr, const_transform):
     if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
         return expression.linear_map(
             linear_map.right_matrix_product(const_transform(expr.arg[1], k), m),
-            tranform_expr(expr.arg[0]))
+            transform_expr(expr.arg[0]))
 
     raise CanonicalizeError("multiplying non constants", expr)
 

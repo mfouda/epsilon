@@ -8,7 +8,7 @@
 
 namespace linear_map {
 
-LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
+LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 
 LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
@@ -270,9 +270,9 @@ LinearMapBinaryOp kMultiplyTable
   },
 };
 
-LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
   CHECK_EQ(lhs.n(), rhs.m());
-  return (*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs);
+  return LinearMap((*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs) {

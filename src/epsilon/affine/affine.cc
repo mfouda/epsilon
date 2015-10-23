@@ -88,8 +88,9 @@ typedef void(*LinearFunction)(
 std::unordered_map<int, LinearFunction> kLinearFunctions = {
   {Expression::ADD, &Add},
   {Expression::CONSTANT, &Constant},
-  {Expression::VARIABLE, &Variable},
   {Expression::LINEAR_MAP, &LinearMap},
+  {Expression::RESHAPE, &Add},  // No-op
+  {Expression::VARIABLE, &Variable},
 };
 
 void BuildAffineOperatorImpl(
@@ -116,7 +117,7 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
-      expr, row_key, linear_map::LinearMap::Identity(GetDimension(expr)), A, b);
+      expr, row_key, linear_map::Identity(GetDimension(expr)), A, b);
 }
 
 }  // affine

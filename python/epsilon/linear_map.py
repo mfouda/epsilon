@@ -51,10 +51,7 @@ def scalar(alpha, n):
 # Operations on linear maps
 def transpose(A):
     return LinearMap(
-        linear_map_type=LinearMap.TRANSPOSE,
-        m=A.n,
-        n=A.m,
-        A=A)
+        linear_map_type=LinearMap.TRANSPOSE, m=A.n, n=A.m, arg=[A])
 
 # Implementation of various linear maps in terms of atoms
 def identity(n):

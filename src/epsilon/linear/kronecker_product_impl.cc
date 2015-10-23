@@ -1,5 +1,7 @@
 #include "epsilon/linear/kronecker_product_impl.h"
 
+namespace linear_map {
+
 LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
   DenseMatrix A = A_.impl().AsDense();
   DenseMatrix B = B_.impl().AsDense();
@@ -19,3 +21,5 @@ LinearMap::DenseVector KroneckerProductImpl::Apply(const DenseVector& x) const {
   LinearMap Y = (A_*(B_*X).Transpose()).Transpose();
   return ToVector(Y.impl().AsDense());
 }
+
+}  // namespace linear_map

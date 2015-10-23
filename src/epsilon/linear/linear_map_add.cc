@@ -8,7 +8,7 @@
 
 namespace linear_map {
 
-LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
+LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 
 LinearMapImpl* Add_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
@@ -273,12 +273,12 @@ LinearMapBinaryOp kAddTable
   },
 };
 
-LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
-  return (*kAddTable[lhs.type()][rhs.type()])(lhs, rhs);
+LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+  return LinearMap((*kAddTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 
 LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs) {
-  return LinearMap(Add(lhs.impl(), rhs.impl()));
+  return Add(lhs.impl(), rhs.impl());
 }
 
 }  // namespace linear_map

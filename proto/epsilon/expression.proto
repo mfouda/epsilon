@@ -81,11 +81,16 @@ message ProximalOperator {
 message LinearMap {
   enum Type {
     UNKNOWN = 0;
+
+    // Atomic linear maps
     DENSE_MATRIX = 1;
     SPARSE_MATRIX = 2;
     DIAGONAL_MATRIX = 3;
     SCALAR = 4;
     KRONECKER_PRODUCT = 5;
+
+    // Operations on atomic linear maps
+    TRANSPOSE = 6;
   }
   Type linear_map_type = 1;
   int32 m = 2;

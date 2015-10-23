@@ -2,6 +2,8 @@
 
 #include "epsilon/util/string.h"
 
+namespace linear_map {
+
 std::string SparseMatrixImpl::DebugString() const {
   return StringPrintf(
       "sparse matrix %d x %d\n%s",
@@ -27,3 +29,5 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
   VLOG(1) << "Inverse, nnz=" << A_inv.nonZeros();
   return new SparseMatrixImpl(A_inv);
 }
+
+}  // namespace linear_map

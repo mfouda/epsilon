@@ -53,7 +53,7 @@ BlockMatrix BlockMatrix::LeftIdentity() const {
       const std::string& key = block_iter.first;
       if (C.data_.find(key) == C.data_.end()) {
         C.InsertOrAdd(
-            key, key, linear_map::LinearMap::Identity(block_iter.second.impl().m()));
+            key, key, linear_map::Identity(block_iter.second.impl().m()));
       }
     }
   }
@@ -67,7 +67,7 @@ BlockMatrix BlockMatrix::RightIdentity() const {
     const auto& block_iter = *col_iter.second.begin();
     const std::string& key = col_iter.first;
     C.InsertOrAdd(
-        key, key, linear_map::LinearMap::Identity(block_iter.second.impl().n()));
+        key, key, linear_map::Identity(block_iter.second.impl().n()));
   }
   return C;
 }
