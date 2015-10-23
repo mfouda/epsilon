@@ -313,7 +313,7 @@ namespace affine {
 void BuildAffineOperatorImpl(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b);
 
@@ -325,7 +325,7 @@ Eigen::MatrixXd EvalConstant(
   BuildAffineOperatorImpl(
       expr,
       "_",
-      LinearMap::Identity(GetDimension(expr)),
+      linear_map::LinearMap::Identity(GetDimension(expr)),
       nullptr,
       &b);
   return ToMatrix(b("_"), GetDimension(expr,0), GetDimension(expr,1));
@@ -334,7 +334,7 @@ Eigen::MatrixXd EvalConstant(
 void Negate(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
@@ -350,14 +350,14 @@ void Negate(
 void Sum(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
       GetOnlyArg(expr),
       row_key,
-      L*LinearMap(new DenseMatrixImpl(
-          DenseMatrixImpl::DenseMatrix::Constant(
+      L*linear_map::LinearMap(new linear_map::DenseMatrixImpl(
+          linear_map::DenseMatrixImpl::DenseMatrix::Constant(
               1, GetDimension(GetOnlyArg(expr)), 1))),
       A, b);
 }
@@ -365,7 +365,7 @@ void Sum(
 void Multiply(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   CHECK_EQ(2, expr.arg_size());
@@ -374,11 +374,11 @@ void Multiply(
       GetDimension(expr, 1) == 1) {
     // Ax, get constant, handling promotion if necessary
     Eigen::MatrixXd C0 = EvalConstant(expr.arg(0));
-    LinearMap C;
+    linear_map::LinearMap C;
     if (C0.rows() == 1 && GetDimension(expr, 0) != 1) {
-      C = LinearMap(new ScalarMatrixImpl(GetDimension(expr, 0), C0(0,0)));
+      C = linear_map::LinearMap(new linear_map::ScalarMatrixImpl(GetDimension(expr, 0), C0(0,0)));
     } else {
-      C = LinearMap(new DenseMatrixImpl(C0));
+      C = linear_map::LinearMap(new linear_map::DenseMatrixImpl(C0));
     }
     BuildAffineOperatorImpl(expr.arg(1), row_key, L*C, A, b);
   } else if (expr.arg(0).curvature().curvature_type() == Curvature::CONSTANT) {
@@ -386,18 +386,18 @@ void Multiply(
     BuildAffineOperatorImpl(
         expr.arg(1),
         row_key,
-        L*LinearMap(new KroneckerProductImpl(
-            new ScalarMatrixImpl(GetDimension(expr, 1), 1),
-            new DenseMatrixImpl(EvalConstant(expr.arg(0))))),
+        L*linear_map::LinearMap(new linear_map::KroneckerProductImpl(
+            new linear_map::ScalarMatrixImpl(GetDimension(expr, 1), 1),
+            new linear_map::DenseMatrixImpl(EvalConstant(expr.arg(0))))),
         A, b);
   } else if (expr.arg(1).curvature().curvature_type() == Curvature::CONSTANT) {
     // XA
     BuildAffineOperatorImpl(
         expr.arg(0),
         row_key,
-        L*LinearMap(new KroneckerProductImpl(
-            new DenseMatrixImpl(EvalConstant(expr.arg(1)).transpose()),
-            new ScalarMatrixImpl(GetDimension(expr, 0), 1))),
+        L*linear_map::LinearMap(new linear_map::KroneckerProductImpl(
+            new linear_map::DenseMatrixImpl(EvalConstant(expr.arg(1)).transpose()),
+            new linear_map::ScalarMatrixImpl(GetDimension(expr, 0), 1))),
         A, b);
   } else {
     LOG(FATAL) << "Multiplying two non constants";
@@ -407,7 +407,7 @@ void Multiply(
 void MultiplyElementwise(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   CHECK_EQ(2, expr.arg_size());
@@ -424,19 +424,19 @@ void MultiplyElementwise(
     LOG(FATAL) << "Multiplying two non constants";
   }
 
-  DiagonalMatrixImpl::DiagonalMatrix C(GetDimension(*C_expr));
+  linear_map::DiagonalMatrixImpl::DiagonalMatrix C(GetDimension(*C_expr));
   C.diagonal() = ToVector(EvalConstant(*C_expr));
   BuildAffineOperatorImpl(
       *X_expr,
       row_key,
-      L*LinearMap(new DiagonalMatrixImpl(C)),
+      L*linear_map::LinearMap(new linear_map::DiagonalMatrixImpl(C)),
       A, b);
 }
 
 void Index(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   const Expression& arg = GetOnlyArg(expr);
@@ -461,14 +461,14 @@ void Index(
   BuildAffineOperatorImpl(
       GetOnlyArg(expr),
       row_key,
-      L*LinearMap(new SparseMatrixImpl(P)),
+      L*linear_map::LinearMap(new linear_map::SparseMatrixImpl(P)),
       A, b);
 }
 
 void Add(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   for (const Expression& arg : expr.arg())
@@ -478,7 +478,7 @@ void Add(
 void Variable(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   A->InsertOrAdd(row_key, expr.variable().variable_id(), L);
@@ -487,7 +487,7 @@ void Variable(
 void Constant(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   Eigen::VectorXd b_dense;
@@ -508,7 +508,7 @@ void Constant(
 void Transpose(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   const int rows = GetDimension(expr, 0);
@@ -528,14 +528,14 @@ void Transpose(
   BuildAffineOperatorImpl(
       GetOnlyArg(expr),
       row_key,
-      L*LinearMap(new SparseMatrixImpl(T)),
+      L*linear_map::LinearMap(new linear_map::SparseMatrixImpl(T)),
       A, b);
 }
 
 typedef void(*LinearFunction)(
     const Expression&,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b);
 
@@ -556,7 +556,7 @@ std::unordered_map<int, LinearFunction> kLinearFunctions = {
 void BuildAffineOperatorImpl(
     const Expression& expr,
     const std::string& row_key,
-    LinearMap L,
+    linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   VLOG(2) << "BuildAffineOperatorImpl\n"
@@ -577,7 +577,7 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
-      expr, row_key, LinearMap::Identity(GetDimension(expr)), A, b);
+      expr, row_key, linear_map::LinearMap::Identity(GetDimension(expr)), A, b);
 }
 
 }  // affine
