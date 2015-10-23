@@ -34,13 +34,13 @@ def transform_multiply_generic(expr, f_const):
         return expression.linear_map(
             linear_map.left_matrix_product(
                 f_const(transform_expr(expr.arg[0])),
-                ...),
+                dim(expr.arg[1], 1)),
             transform_expr(expr.arg(1)))
     elif expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
         return expression.linear_map(
             linear_map.right_matrix_product(
                 f_const(transform_expr(expr.arg(1))),
-                ...),
+                dim(expr.arg[0], 0)),
             transform_expr(expr.arg(0)))
 
     raise CanonicalizeError("multiplying two non constants", expr)
@@ -48,7 +48,7 @@ def transform_multiply_generic(expr, f_const):
 def constant_multiply(expr):
     leaf = only_leaf(expr)
     leaf.CopyFrom(
-        expression.linear_map(linear_map.dense(leaf.constant))
+        expression.linear_map(linear_map.dense(leaf.constant)))
     return expr
 
 def transform_multiply(expr):

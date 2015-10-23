@@ -159,7 +159,7 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
   BlockMatrix A;
   for (const Expression* var_expr : GetVariables(f_expr)) {
     const std::string& var_id = var_expr->variable().variable_id();
-    A(var_id, var_id) = LinearMap::Identity(GetDimension(*var_expr));
+    A(var_id, var_id) = linear_map::LinearMap::Identity(GetDimension(*var_expr));
   }
 
   WriteConstants(data);
