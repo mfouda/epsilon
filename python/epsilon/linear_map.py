@@ -15,26 +15,28 @@ def kronecker_product(A, B):
         n=A.n*B.n,
         A=A, B=B)
 
-def dense_matrix(constant):
+def dense_matrix(constant_expr):
     return LinearMap(
         linear_map_type=LinearMap.DENSE_MATRIX,
-        m=dim(constant, 0),
-        n=dim(constant, 1),
-        constant=constant)
+        m=dim(constant_expr, 0),
+        n=dim(constant_expr, 1),
+        constant=constant_expr.constant)
 
-def sparse_matrix(constant, m, n):
+def sparse_matrix(constant_expr):
+    print "sparse_matrix"
+    print constant_expr
     return LinearMap(
         linear_map_type=LinearMap.SPARSE_MATRIX,
-        m=dim(constant, 0),
-        n=dim(constant, 1),
-        constant=constant)
+        m=dim(constant_expr, 0),
+        n=dim(constant_expr, 1),
+        constant=constant_expr.constant)
 
-def diagonal_matrix(constant, n):
+def diagonal_matrix(constant_expr):
     return LinearMap(
         linear_map_type=LinearMap.DIAGONAL_MATRIX,
-        m=dim(constant),
-        n=dim(constant),
-        constant=constant)
+        m=dim(constant_expr),
+        n=dim(constant_expr),
+        constant=constant_expr.constant)
 
 def scalar(alpha, n):
     return LinearMap(

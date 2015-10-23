@@ -142,6 +142,10 @@ message Expression {
     NORM_NUC = 204;
     LAMBDA_MAX = 205;
     MATRIX_FRAC = 206;
+
+    // Atomic expressions
+    LINEAR_MAP = 300;
+    PROX_FUNCTION = 301;
   }
   Type expression_type = 1;
   Size size = 2;

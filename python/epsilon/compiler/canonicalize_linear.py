@@ -2,7 +2,7 @@
 
 from epsilon import expression
 from epsilon import linear_map
-from epsilon.compiler.canonicalize_util import *
+from epsilon.expression_util import *
 
 # Transforms on the AST
 def transform_variable(expr):

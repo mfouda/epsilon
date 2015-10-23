@@ -51,4 +51,6 @@ def store_constant(value):
     data_map[metadata_file(prefix)] = metadata.SerializeToString()
     data_map[value_file(prefix)] = value_bytes
     return expression.constant(
-        metadata.m, metadata.m, data_location=prefix)
+        m=metadata.m,
+        n=metadata.n,
+        data_location=prefix)
