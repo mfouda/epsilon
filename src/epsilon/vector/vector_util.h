@@ -6,8 +6,6 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
-#include "epsilon/data.pb.h"
-
 using Eigen::CwiseNullaryOp;
 using Eigen::EigenBase;
 using Eigen::MatrixXd;

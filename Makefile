@@ -46,8 +46,6 @@ endif
 
 common_cc = \
 	epsilon/affine/affine.cc \
-	epsilon/affine/affine_matrix.cc \
-	epsilon/affine/split.cc \
 	epsilon/algorithms/prox_admm.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
@@ -102,15 +100,12 @@ common_test_cc = \
 	epsilon/vector/vector_testutil.cc
 
 proto = \
-	epsilon/data.proto \
 	epsilon/expression.proto \
 	epsilon/solver.proto \
 	epsilon/solver_params.proto
 
 tests = \
-	epsilon/affine/affine_matrix_test \
 	epsilon/affine/affine_test \
-	epsilon/affine/split_test \
 	epsilon/algorithms/prox_admm_test \
 	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/linear_map_test \

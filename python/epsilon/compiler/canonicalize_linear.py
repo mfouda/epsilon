@@ -3,12 +3,14 @@
 from epsilon import expression
 from epsilon import linear_map
 from epsilon.compiler import validate
-from epsilon.expression_pb2 import Problem
+from epsilon.expression_pb2 import Problem, Constant
 from epsilon.expression_util import *
 
 # Transforms on the AST
 def transform_variable(expr):
-    return expr
+    if dim(expr,1) == 1:
+        return expr
+    return expression.reshape(expr, dim(expr), 1)
 
 def transform_constant(expr):
     if dim(expr,1) == 1:
@@ -34,24 +36,35 @@ def transform_multiply_generic(expr, const_transform):
     if len(expr.arg) != 2:
         raise CanonicalizeError("wrong number of args", expr)
 
+    m = dim(expr, 0)
+    n = dim(expr, 1)
+    k = dim(expr.arg[0], 1)
+
     if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
-        return expression.multiply(
-            const_transform(expr.arg[0]),
+        return expression.linear_map(
+            linear_map.left_matrix_product(const_transform(expr.arg[0], k), n),
             transform_expr(expr.arg[1]))
 
-    elif expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
-        # TODO(mwytock): Move constants to LHS.
-        return expression.multiply(
-            transform_expr(expr.arg[0]),
-            transform_expr(expr.arg[1]))
+    if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
+        return expression.linear_map(
+            linear_map.right_matrix_product(const_transform(expr.arg[1], k), m),
+            tranform_expr(expr.arg[0]))
 
-    raise CanonicalizeError("multiplying two non constants", expr)
+    raise CanonicalizeError("multiplying non constants", expr)
 
-def multiply_const_transform(expr):
-    return expression.reshape(
-        transform_expr(expr),
-        dim(expr, 0),
-        dim(expr, 1))
+def multiply_const_transform(expr, n):
+    # TODO(mwytock): Handle this case
+    if expr.expression_type != Expression.CONSTANT:
+        raise CanonicalizeError("multiply constant is not leaf", expr)
+
+    if expr.constant.constant_type == Constant.SCALAR:
+        return linear_map.scalar(expr.constant.scalar, n)
+    if expr.constant.constant_type == Constant.DENSE_MATRIX:
+        return linear_map.dense_matrix(expr.constant)
+    if expr.constant.constant_type == Constant.SPARSE_MATRIX:
+        return linear_map.sparse_matrix(expr.constant)
+
+    raise CanonicalizeError("unknown constant type", expr)
 
 def transform_multiply(expr):
     return transform_multiply_generic(expr, multiply_const_transform)

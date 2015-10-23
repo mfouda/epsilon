@@ -7,7 +7,6 @@
 
 #include <Eigen/SparseCore>
 
-#include "epsilon/affine/split.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
@@ -29,18 +28,19 @@ typedef Eigen::SparseMatrix<double> SparseXd;
 
 DynamicMatrix ReadConstant(DynamicMatrix L, const Constant& c) {
   DynamicMatrix A;
-  if (c.data_location() == "") {
-    A = DynamicMatrix::FromDense(VectorXd::Constant(L.cols(), c.scalar()));
-  } else {
-    VLOG(2) << "Read: " << c.data_location();
-    std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
-    VLOG(2) << "Read done: " << c.data_location();
-    A = DynamicMatrix::FromDense(GetMatrixData(*d));
-    A.ToVector();
-  }
+  // if (c.data_location() == "") {
+  //   A = DynamicMatrix::FromDense(VectorXd::Constant(L.cols(), c.scalar()));
+  // } else {
+  //   VLOG(2) << "Read: " << c.data_location();
+  //   std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
+  //   VLOG(2) << "Read done: " << c.data_location();
+  //   A = DynamicMatrix::FromDense(GetMatrixData(*d));
+  //   A.ToVector();
+  // }
 
-  L.RightMultiply(A);
-  return L;
+  // L.RightMultiply(A);
+  // return L;
+  return A;
 }
 
 DynamicMatrix ScalarMatrix(int n, double val) {
@@ -496,10 +496,7 @@ void Constant(
     // Handle promotion if necessary by using L
     b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
-    VLOG(1) << "Read: " << c.data_location();
-    std::unique_ptr<const Data> d = ReadSplitData(c.data_location());
-    VLOG(1) << "Read done: " << c.data_location();
-    b_dense = ToVector(GetMatrixData(*d));
+    //b_dense = ToVector(GetMatrixData(c));
   }
 
   b->InsertOrAdd(row_key, L*b_dense);

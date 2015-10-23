@@ -2,8 +2,23 @@
 syntax = "proto3";
 
 message Constant {
-  string data_location = 1;
+  enum Type {
+    DENSE_MATRIX = 0;
+    SPARSE_MATRIX = 1;
+    SCALAR = 2;
+  }
+  Type constant_type = 1;
+
+  // SCALAR
   double scalar = 2;
+
+  // DENSE_MATRIX/SPARSE_MATRIX
+  int32 m = 3;
+  int32 n = 4;
+  int32 nnz = 5;
+
+  string data_location = 6;
+  bytes data_value = 7;
 }
 
 message Variable {

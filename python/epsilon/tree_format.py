@@ -6,13 +6,21 @@ def key_str(expr):
         "%d:%d%s" % (k.start, k.stop, "" if k.step == 1 else ":%d" % k.step)
         for k in expr.key]) + "]"
 
+LINEAR_MAP_NAMES = {
+    LinearMap.DENSE_MATRIX: "dense",
+    LinearMap.KRONECKER_PRODUCT: "kron",
+    LinearMap.SPARSE_MATRIX: "sparse",
+}
 def format_linear_map(linear_map):
-    name = LinearMap.Type.Name(linear_map.linear_map_type).lower()
+    name = LINEAR_MAP_NAMES.get(
+        linear_map.linear_map_type,
+        LinearMap.Type.Name(linear_map.linear_map_type).lower())
+
     if linear_map.arg:
         args = [format_linear_map(arg) for arg in linear_map.arg]
     else:
         if linear_map.linear_map_type == LinearMap.SCALAR:
-            args = ["%f" % linear_map.scalar, str(linear_map.n)]
+            args = ["%.2f" % linear_map.scalar, str(linear_map.n)]
         else:
             args = [str(linear_map.m), str(linear_map.n)]
 

@@ -175,13 +175,11 @@ def variable(m, n, variable_id):
             elementwise=True,
             scalar_multiple=True))
 
-def constant(m, n, scalar=None, data_location=None):
+def constant(m, n, scalar=None, constant=None):
     if scalar is not None:
         constant = Constant(scalar=scalar)
-    elif data_location is not None:
-        constant = Constant(data_location=data_location)
-    else:
-        raise ValueError("need either scalar or data_location")
+    elif constant is None:
+        raise ValueError("need either scalar or constant")
 
     return Expression(
         expression_type=Expression.CONSTANT,
