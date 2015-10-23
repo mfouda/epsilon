@@ -9,11 +9,16 @@ from epsilon.expression_util import *
 
 # Atomic linear maps
 def kronecker_product(A, B):
+    if A.m*A.n == 1:
+        return B
+    if B*m*B*n == 1:
+        return A
+
     return LinearMap(
         linear_map_type=LinearMap.KRONECKER_PRODUCT,
         m=A.m*B.m,
         n=A.n*B.n,
-        A=A, B=B)
+        arg=[A, B])
 
 def dense_matrix(constant_expr):
     return LinearMap(
@@ -23,8 +28,6 @@ def dense_matrix(constant_expr):
         constant=constant_expr.constant)
 
 def sparse_matrix(constant_expr):
-    print "sparse_matrix"
-    print constant_expr
     return LinearMap(
         linear_map_type=LinearMap.SPARSE_MATRIX,
         m=dim(constant_expr, 0),
@@ -77,11 +80,7 @@ def negate(n):
     return scalar(-1,n)
 
 def left_matrix_product(A, n):
-    if n==1:
-        return A
     return kronecker_product(identity(n), A)
 
 def right_matrix_product(B, m):
-    if m==1:
-        return transpose(B)
     return kronecker_product(transpose(B), identity(m))

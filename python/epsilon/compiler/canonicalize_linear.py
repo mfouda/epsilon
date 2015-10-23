@@ -74,11 +74,11 @@ def transform_sum(expr):
         transform_expr(only_arg(expr)))
 
 def transform_linear_expr(expr):
-    transform = locals()["transform_" + expr.expression_type().lower()]
-    return transform(expr)
+    f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
+    return globals()[f_name](expr)
 
 def transform_expr(expr):
-    if expr.curvature.curvature_type == Curvature.AFFINE:
+    if expr.curvature.curvature_type in (Curvature.AFFINE, Curvature.CONSTANT):
         return transform_linear_expr(expr)
     else:
         for arg in expr.arg:

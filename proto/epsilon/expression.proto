@@ -83,8 +83,7 @@ message LinearMap {
   double scalar = 5;
 
   // KRONECKER_PRODUCT
-  LinearMap A = 6;
-  LinearMap B = 7;
+  repeated LinearMap arg = 6;
 }
 
 message Expression {
@@ -192,6 +191,9 @@ message Expression {
 
   // SUM_LARGEST
   int32 k = 16;
+
+  // LINEAR_MAP
+  LinearMap linear_map = 17;
 }
 
 // Arbitrary convex problem of the form

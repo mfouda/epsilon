@@ -270,6 +270,7 @@ def linear_map(A, x):
     return Expression(
         expression_type=Expression.LINEAR_MAP,
         size=Size(dim=[A.m, 1]),
+        linear_map=A,
         arg=[x])
 
 def equality_constraint(a, b):

@@ -23,6 +23,10 @@ def node_contents_str(expr):
         c += ["k: " + str(expr.k)]
     elif expr.expression_type == Expression.INDICATOR:
         c += ["cone: " + Cone.Type.Name(expr.cone.cone_type)]
+    elif expr.expression_type == Expression.LINEAR_MAP:
+        lm = expr.linear_map
+        c += [LinearMap.Type.Name(lm.linear_map_type).lower() +
+              "(" + str(lm.m) + ", " + str(lm.n) + ")"]
 
     if expr.proximal_operator.name != "":
         c += ["prox: " + expr.proximal_operator.name]
