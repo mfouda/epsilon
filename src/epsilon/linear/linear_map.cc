@@ -32,6 +32,13 @@ LinearMap operator*(const LinearMap& A, double alpha) {
   return alpha*A;
 }
 
+LinearMap KroneckerProduct(const ::LinearMap& proto) {
+  CHECK_EQ(2, proto.arg_size());
+  return LinearMap(new KroneckerProductImpl(
+      BuildLinearMap(proto.arg(0)),
+      BuildLinearMap(proto.arg(1))));
+}
+
 LinearMap DenseMatrix(const ::LinearMap& proto) {
   return LinearMap(new DenseMatrixImpl(ReadMatrixData(proto.constant())));
 }
@@ -45,6 +52,7 @@ typedef LinearMap(*LinearMapFunction)(const ::LinearMap&);
 std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
   {::LinearMap::DENSE_MATRIX, &DenseMatrix},
   {::LinearMap::SCALAR, &Scalar},
+  {::LinearMap::KRONECKER_PRODUCT, &KroneckerProduct},
 };
 
 LinearMap BuildLinearMap(const ::LinearMap& linear_map) {
