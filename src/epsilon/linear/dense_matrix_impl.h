@@ -12,19 +12,16 @@ class DenseMatrixImpl final : public LinearMapImpl {
  public:
   DenseMatrixImpl(DenseMatrix A) : LinearMapImpl(DENSE_MATRIX), A_(A) {}
 
-  virtual int m() const { return A_.rows(); }
-  virtual int n() const { return A_.cols(); }
-  virtual std::string DebugString() const { return MatrixDebugString(A_); }
-  virtual DenseMatrix AsDense() const { return A_; }
-  virtual DenseVector Apply(const DenseVector& x) const { return A_*x; }
+  int m() const override { return A_.rows(); }
+  int n() const override { return A_.cols(); }
+  std::string DebugString() const override { return MatrixDebugString(A_); }
+  DenseMatrix AsDense() const override { return A_; }
+  DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
-  virtual LinearMapImpl* Transpose() const {
+  LinearMapImpl* Transpose() const override {
     return new DenseMatrixImpl(A_.transpose());
   }
-  virtual LinearMapImpl* Inverse() const {
-    // TODO(mwytock): LLT method may be faster?
-    return new DenseMatrixImpl(A_.inverse());
-  }
+  LinearMapImpl* Inverse() const override;
 
   // Dense matrix API
   const DenseMatrix& dense() const { return A_; }

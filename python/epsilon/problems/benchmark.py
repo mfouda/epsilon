@@ -56,7 +56,15 @@ def benchmark_cvxpy(solver, cvxpy_prob):
     if solver == cp.SCS:
         kwargs["use_indirect"] = args.scs_indirect
         kwargs["max_iters"] = 10000
-    cvxpy_prob.solve(**kwargs)
+
+    try:
+        # TODO(mwytock): Probably need to run this in a separate thread/process
+        # and kill after one hour?
+        cvxpy_prob.solve(**kwargs)
+    except cp.error.SolverError:
+        # Raised when solver cant handle a problem
+        return float("nan")
+
     return cvxpy_prob.objective.value
 
 def benchmark_cvxpy_canon(solver, cvxpy_prob):
@@ -84,6 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("--problem")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--format", default="text")
+    parser.add_argument("--include-cvxpy", action="store_true")
     parser.add_argument("--write")
 
     args = parser.parse_args()
@@ -100,37 +109,44 @@ if __name__ == "__main__":
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    benchmarks = [
-        benchmark_epsilon,
-        # NOTE(mwytock): We assume that get_problem_data() times are
-        # similar for ECOS and SCS so we only include one
-        lambda p: benchmark_cvxpy_canon(cp.SCS, p),
-        lambda p: benchmark_cvxpy(cp.SCS, p),
-        lambda p: benchmark_cvxpy(cp.ECOS, p)
-    ]
-
-    super_columns = [
-        Column("",           15),
-        Column("Epsilon",    20, right=True, colspan=2),
-        Column("CVXPY",      8, right=True),
-        Column("CVXPY+SCS",  20, right=True, colspan=2),
-        Column("CVXPY+ECOS", 20, right=True, colspan=2)
-    ]
-
+    # Epsilon benchmarks
+    benchmarks = [benchmark_epsilon]
+    super_columns = []
     columns = [
         Column("Problem",   15, "%-15s"),
         # Epsilon
         Column("Time",      8,  "%7.2fs", right=True),
         Column("Objective", 11, "%11.2e", right=True),
-        # CVXPY canon
-        Column("Time",      8,  "%7.2fs", right=True),
-        # CVXPY + ECOS
-        Column("Time",      8,  "%7.2fs", right=True),
-        Column("Objective", 11, "%11.2e", right=True),
-        # CVXPY + SCS
-        Column("Time",      8,  "%7.2fs", right=True),
-        Column("Objective", 11, "%11.2e", right=True),
     ]
+
+    # Optionally add CVXPY benchmarks
+    if args.include_cvxpy:
+        super_columns = [
+            Column("",           15),
+            Column("Epsilon",    20, right=True, colspan=2),
+            #Column("CVXPY",      8, right=True),
+            Column("CVXPY+SCS",  20, right=True, colspan=2),
+            Column("CVXPY+ECOS", 20, right=True, colspan=2),
+        ]
+
+        columns += [
+            # CVXPY canon
+            #Column("Time",      8,  "%7.2fs", right=True),
+            # CVXPY + SCS
+            Column("Time",      8,  "%7.2fs", right=True),
+            Column("Objective", 11, "%11.2e", right=True),
+            # CVXPY + ECOS
+            Column("Time",      8,  "%7.2fs", right=True),
+            Column("Objective", 11, "%11.2e", right=True),
+        ]
+
+        benchmarks += [
+            # NOTE(mwytock): We assume that get_problem_data() times are
+            # similar for ECOS and SCS so we only include one
+            #lambda p: benchmark_cvxpy_canon(cp.SCS, p),
+            lambda p: benchmark_cvxpy(cp.SCS, p),
+            lambda p: benchmark_cvxpy(cp.ECOS, p)
+        ]
 
     formatter = FORMATTERS[args.format](super_columns, columns)
     formatter.print_header()

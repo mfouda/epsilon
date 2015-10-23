@@ -60,5 +60,37 @@ class HTML(Formatter):
     def print_footer(self):
         print "</table>"
 
+def format_sci_latex(s):
+    if "e+" in s or "e-" in s:
+        k, exp = s.split("e")
+        if exp[1].strip() == '0':
+            exp = exp[0] + exp[2]
+        if exp[0] == '+':
+            exp = exp[1:]
+        return r"$%s \times 10^{%s}$" % (k, exp)
+    else:
+        return s
+
 class Latex(Formatter):
-    pass
+    def print_header(self):
+        print r"\begin{tabular}"
+        print "&".join("\multicolumn{%d}{c}{%s}" % (c.colspan, c.header)
+                       if c.colspan != 1
+                       else c.header
+                       for c in self.super_columns) + r" \\"
+
+        print "&".join("\multicolumn{%d}{c}{%s}" % (c.colspan, c.header)
+                       if c.colspan != 1
+                       else c.header
+                       for c in self.columns) + r" \\"
+
+
+    def print_row(self, data):
+        print ("&".join(
+            [r"\texttt{%s}" % data[0].replace("_", "\_")] +
+            [format_sci_latex(c.fmt % data[i+1])
+             for i, c in enumerate(self.columns[1:])])
+        + r" \\")
+
+    def print_footer(self):
+        print r"\end{tabular}"
