@@ -2,7 +2,6 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/ortho_invariant.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
 // max_i x_i
@@ -24,7 +23,7 @@ public:
 
     // lambda = \sum_i (v_i-t)_+ = \sum_{vi>=t} (v_i-t)
     //    x_i = min(t, v_i)
-    
+
     double t = 0;
     double acc = -lambda_, div = 0;
     for(int i=0; i<n; i++){

@@ -3,9 +3,8 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/dynamic_matrix.h"
+#include "epsilon/util/string.h"
 #include "epsilon/vector/vector_util.h"
-#include <cassert>
 
 bool abs_cmp_descending(const double &x, const double &y)
 {
@@ -31,7 +30,7 @@ void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
     const int n = GetDimension(arg.f_expr().arg(0));
     a_.resize(n);
     b_.resize(n);
-    GetDiagonalAffineOperator(arg.f_expr().arg(0), arg.var_map(), &a_, &b_);
+    //GetDiagonalAffineOperator(arg.f_expr().arg(0), arg.var_map(), &a_, &b_);
   }
 }
 

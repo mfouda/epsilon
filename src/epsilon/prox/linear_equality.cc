@@ -1,6 +1,5 @@
 
 #include "epsilon/affine/affine.h"
-#include "epsilon/affine/affine_matrix.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/block_matrix.h"

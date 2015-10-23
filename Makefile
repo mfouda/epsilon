@@ -86,7 +86,6 @@ common_cc = \
 	epsilon/util/time.cc \
 	epsilon/vector/block_matrix.cc \
 	epsilon/vector/block_vector.cc \
-	epsilon/vector/dynamic_matrix.cc \
 	epsilon/vector/vector_file.cc \
 	epsilon/vector/vector_util.cc
 
@@ -105,11 +104,8 @@ proto = \
 	epsilon/solver_params.proto
 
 tests = \
-	epsilon/affine/affine_test \
-	epsilon/algorithms/prox_admm_test \
 	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/linear_map_test \
-	epsilon/prox/least_squares_test \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test
 

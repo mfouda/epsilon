@@ -3,12 +3,25 @@
 
 #include <gflags/gflags.h>
 
-#include "epsilon/data.pb.h"
+#include "epsilon/file/file.h"
 #include "epsilon/util/string.h"
 #include "epsilon/vector/vector_file.h"
 
 DEFINE_string(test_data_prefix, "/mem/test",
 	      "prefix for storing test data");
+
+void WriteMatrixData(const Eigen::MatrixXd& input, const std::string& location) {
+  const int m = input.rows();
+  const int n = input.cols();
+
+  // Write value
+  std::unique_ptr<file::File> file = file::Open(location, "w");
+  const std::string value_str(
+      reinterpret_cast<const char*>(input.data()), sizeof(double)*m*n);
+  file->Write(value_str);
+  file->Close();
+}
+
 
 Expression TestConstant(const Eigen::MatrixXd& A) {
   std::string loc = StringPrintf(

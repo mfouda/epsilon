@@ -3,7 +3,6 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/newton.h"
 #include "epsilon/prox/ortho_invariant.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
@@ -59,8 +58,8 @@ public:
 
     for(int i=0; i<n; i++) {
       double xi = LargestRealCubicRoot(
-          4*lambda_-v(i), 
-          4*lambda_*(lambda_-v(i)), 
+          4*lambda_-v(i),
+          4*lambda_*(lambda_-v(i)),
           -lambda_*(4*lambda_*v(i)+q(i)*q(i)));
       double pi =  q(i) / (1+2*lambda_/xi);
 
@@ -90,7 +89,7 @@ public:
   virtual void Init(const ProxOperatorArg& arg) override {
     QuadOverLinProx::Init(arg);
   }
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& qY) override { 
+  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& qY) override {
     int n = std::lround(-1+std::sqrt(1.+4*qY.rows()))/2; // n*(n+1) = #, n = (-1+(1+4*#)^0.5)/2
 
     Eigen::VectorXd q = qY.head(n);

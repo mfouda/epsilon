@@ -1,9 +1,7 @@
 
 #include "epsilon/affine/affine.h"
-#include "epsilon/affine/affine_matrix.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
 // lam*||Cx + b||_2^2 + (1/2)||Ax - v||

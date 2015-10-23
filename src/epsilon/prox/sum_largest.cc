@@ -1,7 +1,6 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
 class SumLargestProx : public ProxOperator {
@@ -21,7 +20,7 @@ class SumLargestProx : public ProxOperator {
     //     / #{q <= y_i < q+lam}
     // inside: the window of [q, q+lam)
     // initialize with nothing inside
-    double q = 0; 
+    double q = 0;
     double acc = - k_*lambda_;
     int inside = 0;
     int i=0, j=0;

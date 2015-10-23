@@ -1,7 +1,6 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 
 class KLDivProx : public ProxOperator {
@@ -27,7 +26,7 @@ public:
           q(i) = std::max(v(i)-lambda_ + eps, eps);
         double f = q(i)*(q(i)-v(i)+lambda_)/lambda_ - u(i)
           + lambda_*( std::log(q(i)-v(i)+lambda_) - std::log(lambda_));
-        double F = (2*q(i)-v(i)+lambda_)/lambda_ 
+        double F = (2*q(i)-v(i)+lambda_)/lambda_
           + lambda_/(q(i)-v(i)+lambda_);
         res = f;
         if(std::abs(res) < eps and q(i) > 0)

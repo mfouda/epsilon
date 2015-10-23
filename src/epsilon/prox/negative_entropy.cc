@@ -5,7 +5,6 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/newton.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
@@ -51,7 +50,7 @@ REGISTER_PROX_OPERATOR(NegativeEntropyProx);
 // I(\sum_i xi log xi <= t)
 class NegativeEntropyEpigraph final : public ImplicitNewtonEpigraph {
 public:
-  NegativeEntropyEpigraph() 
+  NegativeEntropyEpigraph()
     : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
 };
 REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);

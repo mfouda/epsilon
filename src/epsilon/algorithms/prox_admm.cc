@@ -5,8 +5,6 @@
 #include <Eigen/SparseQR>
 
 #include "epsilon/affine/affine.h"
-#include "epsilon/affine/affine_matrix.h"
-#include "epsilon/affine/split.h"
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"

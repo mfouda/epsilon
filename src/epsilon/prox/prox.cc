@@ -20,6 +20,7 @@
 
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/affine/affine.h"
+#include "epsilon/vector/vector_util.h"
 
 std::unordered_map<
   std::string,

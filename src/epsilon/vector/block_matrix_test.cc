@@ -26,16 +26,16 @@ class BlockMatrixTest : public testing::Test {
 
 TEST_F(BlockMatrixTest, Assignment) {
   BlockMatrix A;
-  A("row1", "col1") = LinearMap(new DenseMatrixImpl(A0_));
+  A("row1", "col1") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_));
   EXPECT_TRUE(MatrixEquals(A0_, A("row1", "col1").impl().AsDense()));
-  A("row1", "col1") = LinearMap(new SparseMatrixImpl(B0_));
+  A("row1", "col1") = linear_map::LinearMap(new linear_map::SparseMatrixImpl(B0_));
   EXPECT_TRUE(MatrixEquals(B0_, A("row1", "col1").impl().AsDense()));
 }
 
 TEST_F(BlockMatrixTest, Transpose) {
   BlockMatrix A;
-  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
-  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  A("0", "0") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_));
+  A("0", "1") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(I_));
   BlockMatrix AT = A.Transpose();
 
   EXPECT_TRUE(MatrixEquals(A0_.transpose(), AT("0", "0").impl().AsDense()));
@@ -44,8 +44,8 @@ TEST_F(BlockMatrixTest, Transpose) {
 
 TEST_F(BlockMatrixTest, MultiplyVector) {
   BlockMatrix A;
-  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
-  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  A("0", "0") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_));
+  A("0", "1") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(I_));
 
   Eigen::VectorXd x0(2), x1(3);
   x0 << 1, -2;
@@ -59,12 +59,12 @@ TEST_F(BlockMatrixTest, MultiplyVector) {
 
 TEST_F(BlockMatrixTest, MultiplyMatrix) {
   BlockMatrix A;
-  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
-  A("0", "1") = LinearMap(new SparseMatrixImpl(B0_));
+  A("0", "0") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_));
+  A("0", "1") = linear_map::LinearMap(new linear_map::SparseMatrixImpl(B0_));
 
   BlockMatrix B;
-  B("0", "3") = LinearMap(new DenseMatrixImpl(A0_.transpose()));
-  B("1", "3") = LinearMap(new SparseMatrixImpl(
+  B("0", "3") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_.transpose()));
+  B("1", "3") = linear_map::LinearMap(new linear_map::SparseMatrixImpl(
       static_cast<SparseXd>(B0_.transpose())));
 
   BlockMatrix C = A*B;
@@ -77,8 +77,8 @@ TEST_F(BlockMatrixTest, MultiplyMatrix) {
 
 TEST_F(BlockMatrixTest, Inverse) {
   BlockMatrix A;
-  A("0", "0") = LinearMap(new DenseMatrixImpl(A0_));
-  A("0", "1") = LinearMap(new DenseMatrixImpl(I_));
+  A("0", "0") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(A0_));
+  A("0", "1") = linear_map::LinearMap(new linear_map::DenseMatrixImpl(I_));
   BlockMatrix AAT_inv = (A*A.Transpose()).Inverse();
 
   Eigen::LLT<MatrixXd> solver2;

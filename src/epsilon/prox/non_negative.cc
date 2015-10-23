@@ -1,7 +1,6 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/dynamic_matrix.h"
 #include "epsilon/prox/ortho_invariant.h"
 
 // I(alpha*x + b >= 0)
@@ -12,7 +11,7 @@
 class NonNegativeProx final : public ProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
-    GetScalarAffineOperator(arg.f_expr().arg(0), arg.var_map(), &alpha_, &b_);
+    //GetScalarAffineOperator(arg.f_expr().arg(0), arg.var_map(), &alpha_, &b_);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
