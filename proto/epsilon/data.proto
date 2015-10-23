@@ -10,8 +10,9 @@ message Data {
   Type data_type = 1;
   bytes value = 2;
 
-  // DENSE_MATRIX/SPARSE_MATRIX
   int32 m = 3;
   int32 n = 4;
 
+  // SPARSE_MATRIX
+  int32 nnz = 5;
 }
