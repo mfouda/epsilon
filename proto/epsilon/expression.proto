@@ -59,9 +59,32 @@ message Cone {
   Type cone_type = 1;
 }
 
-
 message ProximalOperator {
   string name = 1;
+}
+
+message LinearMap {
+  enum Type {
+    UNKNOWN = 0;
+    DENSE_MATRIX = 1;
+    SPARSE_MATRIX = 2;
+    DIAGONAL_MATRIX = 3;
+    SCALAR = 4;
+    KRONECKER_PRODUCT = 5;
+  }
+  Type linear_map_type = 1;
+  int32 m = 2;
+  int32 n = 3;
+
+  // DENSE/SPARSE/DIAGONAL
+  Constant constant = 4;
+
+  // SCALAR
+  double scalar = 5;
+
+  // KRONECKER_PRODUCT
+  LinearMap A = 6;
+  LinearMap B = 7;
 }
 
 message Expression {
