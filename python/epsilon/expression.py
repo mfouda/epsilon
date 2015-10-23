@@ -266,6 +266,8 @@ def zero(x):
 def linear_map(A, x):
     if dim(x, 1) != 1:
         raise ExpressionError("applying linear map to non vector", x)
+    if A.n != dim(x):
+        raise ExpressionError("linear map has wrong size")
 
     return Expression(
         expression_type=Expression.LINEAR_MAP,

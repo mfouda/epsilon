@@ -11,8 +11,11 @@ from epsilon.expression_util import *
 def kronecker_product(A, B):
     if A.m*A.n == 1:
         return B
-    if B*m*B*n == 1:
+    if B.m*B.n == 1:
         return A
+
+    print A
+    print B
 
     return LinearMap(
         linear_map_type=LinearMap.KRONECKER_PRODUCT,
@@ -63,8 +66,9 @@ def identity(n):
 def index(slice, n):
     m = slice.stop - slice.start
     A = sp.coo_matrix(
-        np.ones(n),
-        (np.arange(m), np.arange(slice.start, m, slice.step)))
+        (np.ones(m),
+         (np.arange(m), np.arange(slice.start, slice.stop, slice.step))),
+        shape=(m, n))
     return sparse_matrix(data.store_constant(A))
 
 def one_hot(i, n):

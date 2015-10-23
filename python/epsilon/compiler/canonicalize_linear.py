@@ -9,7 +9,9 @@ def transform_variable(expr):
     return expr
 
 def transform_constant(expr):
-    return expr
+    if dim(expr,1) == 1:
+        return expr
+    return expression.reshape(expr, dim(expr), 1)
 
 def transform_add(expr):
     return expression.add(*(transform_expr(e) for e in expr.arg))
