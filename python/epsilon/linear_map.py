@@ -66,13 +66,14 @@ def index(slice, n):
     return sparse_matrix(constant.store(A))
 
 def one_hot(i, n):
-    """[0, ... 0, 1, 0, ...]."""
-    a = sp.coo_matrix(([1], ([0], [i])), shape=(1, n))
-    return sparse_matrix(constant.store(a))
+    return sparse_matrix(
+        constant.store(sp.coo_matrix(([1], ([0], [i])), shape=(1,n))))
 
 def sum(n):
-    """All ones vector"""
-    return dense_matrix(constant.store(np.ones(n)))
+    return dense_matrix(constant.store(np.ones((1,n))))
+
+def promote(n):
+    return dense_matrix(constant.store(np.ones((n,1))))
 
 def negate(n):
     return scalar(-1,n)

@@ -177,7 +177,9 @@ def variable(m, n, variable_id):
 
 def constant(m, n, scalar=None, constant=None):
     if scalar is not None:
-        constant = Constant(scalar=scalar)
+        constant = Constant(
+            constant_type=Constant.SCALAR,
+            scalar=scalar)
     elif constant is None:
         raise ValueError("need either scalar or constant")
 
@@ -272,7 +274,7 @@ def linear_map(A, x):
     if dim(x, 1) != 1:
         raise ExpressionError("applying linear map to non vector", x)
     if A.n != dim(x):
-        raise ExpressionError("linear map has wrong size")
+        raise ExpressionError("linear map has wrong size: %s" % A, x)
 
     return Expression(
         expression_type=Expression.LINEAR_MAP,

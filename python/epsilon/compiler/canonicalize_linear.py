@@ -17,8 +17,16 @@ def transform_constant(expr):
         return expr
     return expression.reshape(expr, dim(expr), 1)
 
+def maybe_promote(dim_sum, expr):
+    if dim(expr) == 1 and dim_sum != 1:
+        return expression.linear_map(linear_map.promote(dim_sum), expr)
+    else:
+        return expr
+
 def transform_add(expr):
-    return expression.add(*(transform_expr(e) for e in expr.arg))
+    dim_sum = dim(expr)
+    return expression.add(
+        *(maybe_promote(dim_sum, transform_expr(e)) for e in expr.arg))
 
 def transform_transpose(expr):
     return expression.linear_map(
@@ -38,16 +46,14 @@ def transform_multiply_generic(expr, const_transform):
 
     m = dim(expr, 0)
     n = dim(expr, 1)
-    k = dim(expr.arg[0], 1)
-
     if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
         return expression.linear_map(
-            linear_map.left_matrix_product(const_transform(expr.arg[0], k), n),
+            linear_map.left_matrix_product(const_transform(expr.arg[0], m), n),
             transform_expr(expr.arg[1]))
 
     if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
         return expression.linear_map(
-            linear_map.right_matrix_product(const_transform(expr.arg[1], k), m),
+            linear_map.right_matrix_product(const_transform(expr.arg[1], n), m),
             transform_expr(expr.arg[0]))
 
     raise CanonicalizeError("multiplying non constants", expr)

@@ -169,16 +169,6 @@ PROX_TESTS += [
     Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
 
-PROX_TESTS = [
-    Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
-    Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
-]
-
-
-# PROX_TESTS = [
-#     Prox("LeastSquaresProx", f_least_squares),
-# ]
-
 def test_prox():
     def run(prox, i):
         np.random.seed(i)

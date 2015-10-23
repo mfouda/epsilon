@@ -3,9 +3,10 @@ syntax = "proto3";
 
 message Constant {
   enum Type {
-    DENSE_MATRIX = 0;
-    SPARSE_MATRIX = 1;
-    SCALAR = 2;
+    UNKNOWN = 0;
+    DENSE_MATRIX = 1;
+    SPARSE_MATRIX = 2;
+    SCALAR = 3;
   }
   Type constant_type = 1;
 
