@@ -8,6 +8,8 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
+namespace linear_map {
+
 enum LinearMapImplType {
   DENSE_MATRIX,
   SPARSE_MATRIX,
@@ -91,5 +93,6 @@ typedef LinearMapImpl* (*LinearMapBinaryOp)(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs);
 
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_LINEAR_MAP_H

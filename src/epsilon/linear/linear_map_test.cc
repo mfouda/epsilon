@@ -9,6 +9,8 @@
 #include "epsilon/linear/sparse_matrix_impl.h"
 #include "epsilon/vector/vector_testutil.h"
 
+namespace linear_map {
+
 class LinearMapTest : public testing::Test {
  protected:
   LinearMapTest() {
@@ -115,3 +117,5 @@ TEST_F(LinearMapTest, Add_KroneckerScalar) {
   EXPECT_TRUE(MatrixEquals(L0+S0, (L+S).impl().AsDense(), 1e-8));
   EXPECT_TRUE(MatrixEquals(S0+L0, (S+L).impl().AsDense(), 1e-8));
 }
+
+}  // namespace linear_map

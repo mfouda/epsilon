@@ -5,6 +5,8 @@
 #include "epsilon/vector/vector_util.h"
 #include "epsilon/util/string.h"
 
+namespace linear_map {
+
 class ScalarMatrixImpl final : public LinearMapImpl {
  public:
   ScalarMatrixImpl(int n, double alpha)
@@ -35,5 +37,7 @@ class ScalarMatrixImpl final : public LinearMapImpl {
   int n_;
   double alpha_;
 };
+
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_SCALAR_MATRIX_IMPL_H

@@ -6,6 +6,8 @@
 #include "epsilon/util/string.h"
 #include "epsilon/vector/vector_util.h"
 
+namespace linear_map {
+
 class KroneckerProductImpl final : public LinearMapImpl {
  public:
   KroneckerProductImpl(
@@ -62,5 +64,7 @@ class KroneckerProductImpl final : public LinearMapImpl {
   LinearMap A_;
   LinearMap B_;
 };
+
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_KRONECKER_PRODUCT_IMPL_H

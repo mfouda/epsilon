@@ -6,6 +6,8 @@
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/vector/vector_util.h"
 
+namespace linear_map {
+
 class DenseMatrixImpl final : public LinearMapImpl {
  public:
   DenseMatrixImpl(DenseMatrix A) : LinearMapImpl(DENSE_MATRIX), A_(A) {}
@@ -30,5 +32,7 @@ class DenseMatrixImpl final : public LinearMapImpl {
  private:
   DenseMatrix A_;
 };
+
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_DENSE_MATRIX_IMPL_H

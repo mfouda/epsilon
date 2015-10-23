@@ -32,15 +32,15 @@
 
 class BlockMatrix {
  public:
-  LinearMap& operator()(
+  linear_map::LinearMap& operator()(
       const std::string& row_key, const std::string& col_key);
-  const LinearMap& operator()(
+  const linear_map::LinearMap& operator()(
       const std::string& row_key, const std::string& col_key) const;
 
   std::string DebugString() const;
   int m() const;
   int n() const;
-  const std::map<std::string, LinearMap>& col(
+  const std::map<std::string, linear_map::LinearMap>& col(
       const std::string& col_key) const;
 
   std::set<std::string> col_keys() const;
@@ -54,11 +54,11 @@ class BlockMatrix {
   BlockMatrix RightIdentity() const;
 
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
-                   LinearMap value);
+                   linear_map::LinearMap value);
 
  private:
   // col -> row -> value
-  std::map<std::string, std::map<std::string, LinearMap>> data_;
+  std::map<std::string, std::map<std::string, linear_map::LinearMap>> data_;
 
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
   friend BlockMatrix operator*(double alpha, const BlockMatrix& A);

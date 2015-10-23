@@ -49,9 +49,6 @@ def index_value(index, size):
 def variable_id(expr):
     return "cvxpy:" + str(expr.id)
 
-def value_location(value):
-    return "/mem/data/" + str(abs(hash(value.tostring())))
-
 def convert_variable(expr):
     m, n = expr.size
     return expression.variable(m, n, variable_id(expr))
@@ -60,8 +57,7 @@ def convert_constant(expr):
     m, n = expr.size
     if isinstance(expr.value, (int, long, float)):
         return expression.constant(m, n, scalar=expr.value)
-    assert isinstance(expr.value, numpy.ndarray)
-    return expression.constant(m, n, data_location=value_location(expr.value))
+    return data.store_constant(expr.value)
 
 def convert_generic(expression_type, expr):
     return Expression(
@@ -175,29 +171,8 @@ def convert_constraint(constraint):
 
     raise RuntimeError("Unknown constraint: %s" % type(constraint))
 
-def add_expression_data(expr, data_map):
-    if isinstance(expr, Constant) and isinstance(expr.value, numpy.ndarray):
-        prefix = value_location(expr.value)
-        data_map[data.metadata_file(prefix)] = (
-            data.dense_matrix_metadata(expr.value).SerializeToString())
-        data_map[data.value_file(prefix)] = expr.value.tobytes(order="F")
-
-    for arg in getattr(expr, "args", []):
-        add_expression_data(arg, data_map)
-
-def extract_data(problem):
-    data_map = {}
-    for arg in problem.objective.args:
-        add_expression_data(arg, data_map)
-    for constraint in problem.constraints:
-        for arg in constraint.args:
-            add_expression_data(arg, data_map)
-    return data_map
-
 # TODO(mwytock): Assumes minimize, handle maximize()
 def convert_problem(problem):
-    proto = Problem(
+    return Problem(
         objective=convert_expression(problem.objective.args[0]),
         constraint=[convert_constraint(c) for c in problem.constraints])
-    data_map = extract_data(problem)
-    return proto, data_map

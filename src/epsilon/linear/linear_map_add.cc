@@ -6,6 +6,8 @@
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
 
+namespace linear_map {
+
 LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 
 LinearMapImpl* Add_DenseMatrix_DenseMatrix(
@@ -278,3 +280,5 @@ LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
 LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs) {
   return LinearMap(Add(lhs.impl(), rhs.impl()));
 }
+
+}  // namespace linear_map

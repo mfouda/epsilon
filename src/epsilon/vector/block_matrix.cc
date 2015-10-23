@@ -5,12 +5,12 @@
 
 #include "epsilon/vector/block_matrix.h"
 
-LinearMap& BlockMatrix::operator()(
+linear_map::LinearMap& BlockMatrix::operator()(
     const std::string& row_key, const std::string& col_key) {
   return data_[col_key][row_key];
 }
 
-const LinearMap& BlockMatrix::operator()(
+const linear_map::LinearMap& BlockMatrix::operator()(
     const std::string& row_key, const std::string& col_key) const {
   auto col_iter = data_.find(col_key);
   CHECK(col_iter != data_.end());
@@ -53,7 +53,7 @@ BlockMatrix BlockMatrix::LeftIdentity() const {
       const std::string& key = block_iter.first;
       if (C.data_.find(key) == C.data_.end()) {
         C.InsertOrAdd(
-            key, key, LinearMap::Identity(block_iter.second.impl().m()));
+            key, key, linear_map::LinearMap::Identity(block_iter.second.impl().m()));
       }
     }
   }
@@ -67,7 +67,7 @@ BlockMatrix BlockMatrix::RightIdentity() const {
     const auto& block_iter = *col_iter.second.begin();
     const std::string& key = col_iter.first;
     C.InsertOrAdd(
-        key, key, LinearMap::Identity(block_iter.second.impl().n()));
+        key, key, linear_map::LinearMap::Identity(block_iter.second.impl().n()));
   }
   return C;
 }
@@ -143,7 +143,7 @@ BlockVector operator*(const BlockMatrix& A, const BlockVector& x) {
 void BlockMatrix::InsertOrAdd(
     const std::string& row_key,
     const std::string& col_key,
-    LinearMap value) {
+    linear_map::LinearMap value) {
   auto res = data_[col_key].insert(std::make_pair(row_key, value));
   if (!res.second) (res.first)->second += value;
 }
@@ -189,7 +189,7 @@ std::set<std::string> BlockMatrix::col_keys() const {
   return retval;
 }
 
-const std::map<std::string, LinearMap>& BlockMatrix::col(
+const std::map<std::string, linear_map::LinearMap>& BlockMatrix::col(
     const std::string& col_key) const {
   auto iter = data_.find(col_key);
   CHECK(iter != data_.end());

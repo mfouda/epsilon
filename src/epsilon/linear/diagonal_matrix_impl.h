@@ -6,6 +6,8 @@
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/vector/vector_util.h"
 
+namespace linear_map {
+
 class DiagonalMatrixImpl final : public LinearMapImpl {
  public:
   typedef Eigen::DiagonalMatrix<Scalar, Eigen::Dynamic> DiagonalMatrix;
@@ -32,5 +34,7 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
  private:
   DiagonalMatrix A_;
 };
+
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_DIAGONAL_MATRIX_IMPL_H

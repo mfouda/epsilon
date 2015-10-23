@@ -3,7 +3,7 @@
 import scipy.sparse as sp
 
 from epsilon.expression_pb2 import LinearMap
-from epsilon import constants
+from epsilon import data
 
 # Atomic linear maps
 def kronecker_product(A, B):
@@ -58,12 +58,12 @@ def index(slice, n):
     A = sp.coo_matrix(
         np.ones(n),
         (np.arange(m), np.arange(slice.start, m, slice.step)))
-    return sparse_matrix(constants.store(A), A.m, A.n)
+    return sparse_matrix(data.store_constant(A), A.m, A.n)
 
 def one_hot(i, n):
     """[0, ... 0, 1, 0, ...]."""
     a = sp.coo_matrix(([1], ([0], [i])), shape=(1, n))
-    return sparse_matrix(constants.store(a), 1, A.n)
+    return sparse_matrix(data.store_constant(a), 1, A.n)
 
 def sum(n):
     """All ones vector"""

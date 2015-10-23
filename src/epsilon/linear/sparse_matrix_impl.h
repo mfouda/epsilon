@@ -7,6 +7,8 @@
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/vector/vector_util.h"
 
+namespace linear_map {
+
 class SparseMatrixImpl final : public LinearMapImpl {
  public:
   SparseMatrixImpl(SparseMatrix A)
@@ -38,5 +40,7 @@ class SparseMatrixImpl final : public LinearMapImpl {
  private:
   SparseMatrix A_;
 };
+
+}  // namespace linear_map
 
 #endif  // EPSILON_LINEAR_SPARSE_MATRIX_IMPL_H

@@ -4,6 +4,8 @@
 #include "epsilon/vector/vector_testutil.h"
 #include "epsilon/linear/kronecker_product_impl.h"
 
+namespace linear_map {
+
 TEST(KroneckerProductImplTest, Apply) {
   srand(0);
   Eigen::MatrixXd A = Eigen::MatrixXd::Random(2,3);
@@ -16,3 +18,5 @@ TEST(KroneckerProductImplTest, Apply) {
   EXPECT_TRUE(VectorEquals(
       ToVector(B*X*A.transpose()), C.impl().Apply(ToVector(X))));
 }
+
+}  // namespace linear_map

@@ -1,6 +1,8 @@
 
 #include "epsilon/linear/scalar_matrix_impl.h"
 
+namespace linear_map {
+
 LinearMap::LinearMap() : impl_(new ScalarMatrixImpl(0, 0)) {}
 
 LinearMap LinearMap::Identity(int n) {
@@ -24,3 +26,5 @@ LinearMap operator*(double alpha, const LinearMap& A) {
 LinearMap operator*(const LinearMap& A, double alpha) {
   return alpha*A;
 }
+
+}  // namespace linear_map
