@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 10
+PROX_TRIALS = 1
 
 # Common variable
 n = 10
@@ -168,6 +168,10 @@ PROX_TESTS += [
     Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
+
+# PROX_TESTS = [
+#     Prox("LeastSquaresProx", f_least_squares),
+# ]
 
 def test_prox():
     def run(prox, i):

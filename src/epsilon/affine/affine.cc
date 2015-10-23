@@ -59,7 +59,7 @@ void Constant(
     // Handle promotion if necessary by using L
     b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
-    //b_dense = ToVector(GetMatrixData(c));
+    b_dense = ToVector(ReadMatrixData(c));
   }
 
   b->InsertOrAdd(row_key, L*b_dense);

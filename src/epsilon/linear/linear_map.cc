@@ -3,6 +3,8 @@
 
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
+#include "epsilon/linear/dense_matrix_impl.h"
+#include "epsilon/vector/vector_file.h"
 
 namespace linear_map {
 
@@ -31,7 +33,7 @@ LinearMap operator*(const LinearMap& A, double alpha) {
 }
 
 LinearMap DenseMatrix(const ::LinearMap& proto) {
-  LOG(FATAL) << "Not implemented";
+  return LinearMap(new DenseMatrixImpl(ReadMatrixData(proto.constant())));
 }
 
 LinearMap Scalar(const ::LinearMap& proto) {

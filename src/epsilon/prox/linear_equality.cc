@@ -16,6 +16,10 @@ public:
     BlockVector b;
     affine::BuildAffineOperator(arg.f_expr().arg(0), "f", &C, &b);
 
+    VLOG(2) << "A: " << A.DebugString();
+    VLOG(2) << "C: " << C.DebugString();
+    VLOG(2) << "b: " << b.DebugString();
+
     BlockMatrix AT = A.Transpose();
     BlockMatrix CT = C.Transpose();
 

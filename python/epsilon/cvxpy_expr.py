@@ -37,7 +37,7 @@ from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
 
-from epsilon import data
+from epsilon import constant
 from epsilon import expression
 from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature
 
@@ -57,7 +57,8 @@ def convert_constant(expr):
     m, n = expr.size
     if isinstance(expr.value, (int, long, float)):
         return expression.constant(m, n, scalar=expr.value)
-    return data.store_constant(expr.value)
+    return expression.constant(m, n, constant=constant.store(expr.value))
+
 
 def convert_generic(expression_type, expr):
     return Expression(

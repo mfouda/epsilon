@@ -9,6 +9,6 @@
 #include "epsilon/expression.pb.h"
 
 // Read path is broken up in to two steps currently
-Eigen::MatrixXd GetMatrixData(const Constant& constant);
+Eigen::MatrixXd ReadMatrixData(const Constant& constant);
 
 #endif  // EPSILON_UTIL_VECTOR_FILE_H
