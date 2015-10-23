@@ -14,9 +14,6 @@ def kronecker_product(A, B):
     if B.m*B.n == 1:
         return A
 
-    print A
-    print B
-
     return LinearMap(
         linear_map_type=LinearMap.KRONECKER_PRODUCT,
         m=A.m*B.m,

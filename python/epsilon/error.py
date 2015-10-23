@@ -10,10 +10,10 @@ class ProblemError(Exception):
                 problem_str(self.problem))
 
 class ExpressionError(Exception):
-    def __init__(self, message, expr):
+    def __init__(self, message, *expr_args):
         super(ExpressionError, self).__init__(message)
-        self.expr = expr
+        self.expr_args = expr_args
 
     def __str__(self):
         return (super(ExpressionError, self).__str__() + "\n" +
-                expr_str(self.expr))
+                "\n".join(expr_str(expr) for expr in self.expr_args))

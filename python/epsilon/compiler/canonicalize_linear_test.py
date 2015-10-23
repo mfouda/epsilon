@@ -13,6 +13,9 @@ from epsilon.expression_testutil import assert_expr_equal
 c = data.store_constant(np.array([1,2,3]))
 C = data.store_constant(np.array([[1,2,3],[4,5,6]]))
 
+x = expression.variable(3, 1, "x")
+X = expression.variable(3, 4, "X")
+
 TESTS = [
     ("index_constant",
      expression.index(c, 1, 2),
@@ -23,7 +26,13 @@ TESTS = [
          linear_map.kronecker_product(
              linear_map.index(slice(0, 2), 3),
              linear_map.index(slice(0, 1), 2)),
-         expression.reshape(C, 6, 1)))
+         expression.reshape(C, 6, 1))),
+    ("multiply_vector",
+     expression.multiply(C, x),
+     expression.multiply(C, x)),
+    ("multiply_matrix",
+     expression.multiply(C, X),
+     expression.multiply(C, X)),
 ]
 
 def _test(name, expr, expected):

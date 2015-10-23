@@ -43,7 +43,7 @@ def _multiply_binary(a, b, elemwise=False):
     elif elemwise and a.size == b.size:
         size = a.size
     else:
-        raise ValueError("multiplying incompatible sizes")
+        raise ExpressionError("multiplying incompatible sizes", a, b)
 
     curvature = Curvature()
     if a.curvature.curvature_type == Curvature.CONSTANT:
@@ -132,7 +132,14 @@ def vstack(*args):
     return e
 
 def reshape(arg, m, n):
-    assert m*n == prod(arg.size.dim)
+    if m*n != prod(arg.size.dim):
+        raise ExpressionError("cant reshape to %d x %d" % (m, n), arg)
+
+    # If we have two reshapes that "undo" each other, cancel them out
+    if (arg.expression_type == Expression.RESHAPE and
+        dim(arg.arg[0], 0) == m and
+        dim(arg.arg[0], 1) == n):
+        return arg.arg[0]
 
     return Expression(
         expression_type=Expression.RESHAPE,

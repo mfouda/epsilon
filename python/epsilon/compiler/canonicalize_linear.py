@@ -28,42 +28,31 @@ def transform_index(expr):
             linear_map.index(expr.key[0], dim(only_arg(expr),0))),
         transform_expr(only_arg(expr)))
 
-def transform_multiply_generic(expr, f_const):
+def transform_multiply_generic(expr, const_transform):
     if len(expr.arg) != 2:
         raise CanonicalizeError("wrong number of args", expr)
 
     if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
-        return expression.linear_map(
-            linear_map.left_matrix_product(
-                f_const(transform_expr(expr.arg[0])),
-                dim(expr.arg[1], 1)),
-            transform_expr(expr.arg(1)))
+        return expression.multiply(
+            const_transform(expr.arg[0]),
+            transform_expr(expr.arg[1]))
+
     elif expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
-        return expression.linear_map(
-            linear_map.right_matrix_product(
-                f_const(transform_expr(expr.arg(1))),
-                dim(expr.arg[0], 0)),
-            transform_expr(expr.arg(0)))
+        # TODO(mwytock): Move constants to LHS.
+        return expression.multiply(
+            transform_expr(expr.arg[0]),
+            transform_expr(expr.arg[1]))
 
     raise CanonicalizeError("multiplying two non constants", expr)
 
-def constant_multiply(expr):
-    leaf = only_leaf(expr)
-    leaf.CopyFrom(
-        expression.linear_map(linear_map.dense(leaf.constant)))
-    return expr
+def multiply_const_transform(expr):
+    return expression.reshape(
+        transform_expr(expr),
+        dim(expr, 0),
+        dim(expr, 1))
 
 def transform_multiply(expr):
-    return transform_multiply_generic(expr, constant_multiply)
-
-def constant_multiply_elementwise(expr):
-    leaf = only_leaf(expr)
-    leaf.CopyFrom(
-        expression.linear_map(linear_map.diagonal(leaf.constant)))
-    return expr
-
-def transform_multiply_elementwise(expr):
-    return transform_multiply_generic(expr, constant_multiply_elementwise)
+    return transform_multiply_generic(expr, multiply_const_transform)
 
 def transform_negate(expr):
     return expression.linear_map(
