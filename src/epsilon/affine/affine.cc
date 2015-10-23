@@ -532,6 +532,19 @@ void Transpose(
       A, b);
 }
 
+void LinearMap(
+    const Expression& expr,
+    const std::string& row_key,
+    linear_map::LinearMap L,
+    BlockMatrix* A,
+    BlockVector* b) {
+  BuildAffineOperatorImpl(
+      GetOnlyArg(expr),
+      row_key,
+      L*linear_map::BuildLinearMap(expr.linear_map()),
+      A, b);
+}
+
 typedef void(*LinearFunction)(
     const Expression&,
     const std::string& row_key,
@@ -542,15 +555,11 @@ typedef void(*LinearFunction)(
 std::unordered_map<int, LinearFunction> kLinearFunctions = {
   //{Expression::HSTACK, &HStack},
   //{Expression::VSTACK, &VStack},
-  {Expression::TRANSPOSE, &Transpose},
   {Expression::ADD, &Add},
   {Expression::CONSTANT, &Constant},
-  {Expression::INDEX, &Index},
   {Expression::MULTIPLY, &Multiply},
-  {Expression::MULTIPLY_ELEMENTWISE, &MultiplyElementwise},
-  {Expression::NEGATE, &Negate},
-  {Expression::SUM, &Sum},
   {Expression::VARIABLE, &Variable},
+  {Expression::LINEAR_MAP, &LinearMap},
 };
 
 void BuildAffineOperatorImpl(

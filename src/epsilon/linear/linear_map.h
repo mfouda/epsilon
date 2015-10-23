@@ -8,6 +8,8 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
+#include "epsilon/expression.pb.h"
+
 namespace linear_map {
 
 enum LinearMapImplType {
@@ -92,6 +94,8 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> operator*(
 typedef LinearMapImpl* (*LinearMapBinaryOp)(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs);
+
+LinearMap BuildLinearMap(const ::LinearMap& linear_map);
 
 }  // namespace linear_map
 

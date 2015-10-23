@@ -1,4 +1,4 @@
-from epsilon.expression_str import problem_str, expr_str
+from epsilon.tree_format import format_problem, format_expr
 
 class ProblemError(Exception):
     def __init__(self, message, problem):
@@ -7,7 +7,7 @@ class ProblemError(Exception):
 
     def __str__(self):
         return (super(ProblemError, self).__str__() + "\n" +
-                problem_str(self.problem))
+                format_problem(self.problem))
 
 class ExpressionError(Exception):
     def __init__(self, message, *expr_args):
@@ -16,4 +16,4 @@ class ExpressionError(Exception):
 
     def __str__(self):
         return (super(ExpressionError, self).__str__() + "\n" +
-                "\n".join(expr_str(expr) for expr in self.expr_args))
+                "\n".join(format_expr(expr) for expr in self.expr_args))

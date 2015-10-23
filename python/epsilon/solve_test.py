@@ -42,6 +42,10 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
+]
+
 def solve_problem(problem_instance):
     problem = problem_instance.create()
 

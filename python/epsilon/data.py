@@ -6,7 +6,7 @@ from epsilon.data_pb2 import Data
 from epsilon import expression
 
 # Global store of all constants
-data_map = {}
+global_data_map = {}
 
 METADATA_FILE = "metadata"
 VALUE_FILE = "value"
@@ -48,8 +48,8 @@ def value_data(value):
 def store_constant(value):
     metadata, value_bytes = value_data(value)
     prefix = value_location(value_bytes)
-    data_map[metadata_file(prefix)] = metadata.SerializeToString()
-    data_map[value_file(prefix)] = value_bytes
+    global_data_map[metadata_file(prefix)] = metadata.SerializeToString()
+    global_data_map[value_file(prefix)] = value_bytes
     return expression.constant(
         m=metadata.m,
         n=metadata.n,

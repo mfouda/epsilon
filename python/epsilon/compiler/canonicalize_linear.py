@@ -2,6 +2,8 @@
 
 from epsilon import expression
 from epsilon import linear_map
+from epsilon.compiler import validate
+from epsilon.expression_pb2 import Problem
 from epsilon.expression_util import *
 
 # Transforms on the AST
@@ -80,4 +82,4 @@ def transform_problem(problem):
     validate.check_sum_of_prox(problem)
     f = [transform_expr(e) for e in problem.objective.arg]
     C = [transform_expr(e) for e in problem.constraint]
-    return Problem(objective=add(f), constraint=C)
+    return Problem(objective=expression.add(*f), constraint=C)

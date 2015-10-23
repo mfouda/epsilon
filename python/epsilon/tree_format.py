@@ -11,7 +11,11 @@ def format_linear_map(linear_map):
     if linear_map.arg:
         args = [format_linear_map(arg) for arg in linear_map.arg]
     else:
-        args = [str(linear_map.m), str(linear_map.n)]
+        if linear_map.linear_map_type == LinearMap.SCALAR:
+            args = ["%f" % linear_map.scalar, str(linear_map.n)]
+        else:
+            args = [str(linear_map.m), str(linear_map.n)]
+
     return name + "(" + ", ".join(args) + ")"
 
 def node_contents_str(expr):

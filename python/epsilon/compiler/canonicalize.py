@@ -15,7 +15,6 @@ from collections import defaultdict
 from epsilon import error
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
-from epsilon.expression_str import expr_str
 from epsilon.expression_util import fp_expr, expr_vars
 from epsilon.util import prod
 
@@ -322,7 +321,7 @@ def prox_sum_exp(expr):
         yield expr
 
 def prox_sum_largest(expr):
-    if (expr.expression_type == Expression.SUM_LARGEST and 
+    if (expr.expression_type == Expression.SUM_LARGEST and
         expr.arg[0].expression_type == Expression.VARIABLE):
         expr = sum_largest(expr.arg[0], expr.k)
         expr.proximal_operator.name = "SumLargestProx"
