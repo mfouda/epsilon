@@ -116,8 +116,7 @@ tests = \
 	epsilon/vector/block_vector_test
 
 binaries = \
-	epsilon/benchmark \
-	epsilon/linear/benchmarks
+	epsilon/benchmark
 
 libs = epsilon
 
