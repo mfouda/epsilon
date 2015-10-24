@@ -21,6 +21,9 @@ from epsilon.problems.benchmark_format import Column
 # Add back when we have convolution
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 
+# Need to fix
+# ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
@@ -32,7 +35,6 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 

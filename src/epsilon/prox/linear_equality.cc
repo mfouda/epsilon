@@ -12,33 +12,32 @@ class LinearEqualityProx final : public BlockProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
     const BlockMatrix& A = arg.A();
-    BlockMatrix C;
     BlockVector b;
-    affine::BuildAffineOperator(arg.f_expr().arg(0), "f", &C, &b);
+    affine::BuildAffineOperator(arg.f_expr().arg(0), "f", &C_, &b);
 
     VLOG(2) << "A: " << A.DebugString();
-    VLOG(2) << "C: " << C.DebugString();
+    VLOG(2) << "C: " << C_.DebugString();
     VLOG(2) << "b: " << b.DebugString();
 
-    BlockMatrix AT = A.Transpose();
-    BlockMatrix CT = C.Transpose();
+    AT_ = A.Transpose();
+    CT_ = C_.Transpose();
 
     // Use Gaussian elimination to solve the system:
     //
     // [ A'A  C' ][ x ] = [  A'v ]
     // [ C    0  ][ y ]   [ -b   ]
-    BlockMatrix D_inv = (AT*A).Inverse();
-    BlockMatrix H_inv = (C*D_inv*CT).Inverse();
-    F_ = D_inv*(C.RightIdentity() - CT*H_inv*C*D_inv)*AT;
-    g_ = D_inv*(CT*(H_inv*b));
+    D_inv_ = (AT_*A).Inverse();
+    H_inv_ = (C_*D_inv_*CT_).Inverse();
+    g_ = D_inv_*(CT_*(H_inv_*b));
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return F_*v - g_;
+    BlockVector w = D_inv_*(AT_*v);
+    return w - CT_*(H_inv_*(C_*w)) - g_;
   }
 
 private:
-  BlockMatrix F_;
+  BlockMatrix D_inv_, H_inv_, AT_, C_, CT_;
   BlockVector g_;
 };
 REGISTER_BLOCK_PROX_OPERATOR(LinearEqualityProx);
