@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
   libc-dev \
   libgflags-dev \
   libgoogle-glog-dev \
+  libgoogle-perftools-dev \
   libgtest-dev \
   libopenblas-dev \
   libquadmath0 \

@@ -7,30 +7,34 @@ import argparse
 import json
 
 from epsilon import cvxpy_expr
-from epsilon import expression_str
 from epsilon import text_format
-from epsilon.compiler import canonicalize
-from epsilon.compiler import combine
+from epsilon import tree_format
+from epsilon.compiler import compiler
 from epsilon.problems import *
+
+FORMATTERS = {
+    "text": text_format.format_problem,
+    "tree": tree_format.format_problem,
+}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("problem")
     parser.add_argument("kwargs", help="Problem arg, e.g. {\"m\": 10}")
+    parser.add_argument("--format", default="text")
     args = parser.parse_args()
 
+    formatter = FORMATTERS[args.format]
+
     cvxpy_prob = locals()[args.problem].create(**json.loads(args.kwargs))
-    problem = cvxpy_expr.convert_problem(cvxpy_prob)[0]
+    problem = cvxpy_expr.convert_problem(cvxpy_prob)
 
-    print "Original:"
-    print text_format.format(problem)
+    print "original:"
+    print formatter(problem)
 
-    problem = canonicalize.transform(problem)
-    print
-    print "Canonicalization:"
-    print text_format.format(problem)
+    for transform in compiler.TRANSFORMS:
+        problem = transform(problem)
 
-    problem = combine.transform(problem)
-    print
-    print "Separation:"
-    print text_format.format(problem)
+        print
+        print ".".join((transform.__module__, transform.__name__)) + ":"
+        print formatter(problem)

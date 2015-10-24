@@ -23,16 +23,12 @@ def has_data_constant(expr):
 
     return False
 
-def is_sparse_equality_constraint(f):
-    if not is_equality_indicator(f):
-        return False
-    return not has_data_constant(f.expr)
-
 def is_prox_friendly_constraint(graph, f):
     """Returns true if f represents a prox-friendly equality constraint.
 
     In other words, one that can be treated as a constraint without interfering
     with the proximal operators for the other objective terms."""
+
     if not is_equality_indicator(f):
         return False
 
@@ -90,8 +86,7 @@ def combine_affine_functions(graph):
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
     for function in graph.functions:
-        if (is_sparse_equality_constraint(function) or
-            is_prox_friendly_constraint(graph, function)):
+        if (is_prox_friendly_constraint(graph, function)):
             function.constraint = True
 
 def separate_objective_terms(graph):

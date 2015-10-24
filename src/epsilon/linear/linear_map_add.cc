@@ -218,10 +218,8 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
 
   if (K1.A() == K2.A()) {
-    LOG(INFO) << "Adding kronecker, A equal";
     return new KroneckerProductImpl(K1.A(), K1.B() + K2.B());
   } else if (K1.B() == K2.B()) {
-    LOG(INFO) << "Adding kronecker, B equal";
     return new KroneckerProductImpl(K1.A() + K2.A(), K1.B());
   } else {
     LOG(FATAL) << "Adding incompatible kronecker products\n"

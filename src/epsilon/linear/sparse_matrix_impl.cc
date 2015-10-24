@@ -17,9 +17,11 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
 
   VLOG(1) << "Factoring " << A_.rows() << " x " << A_.cols()
           << ", nnz=" << A_.nonZeros();
+
   Eigen::SimplicialLDLT<LinearMap::SparseMatrix> ldlt_;
   ldlt_.compute(A_);
-  CHECK_EQ(Eigen::Success, ldlt_.info());
+  CHECK_EQ(Eigen::Success, ldlt_.info())
+      << "Failed to factor\n" << DebugString();
 
   // TODO(mwytock): This should probably do something different like form a
   // LinearMap implementation based on backsolves. Maybe a subclass of

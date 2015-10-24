@@ -75,7 +75,7 @@ def format_expr(proto, name_map):
             "(" + ", ".join(format_expr(arg, name_map)
                             for arg in proto.arg) + ")")
 
-def format(proto):
+def format_problem(proto):
     name_map = NameMap()
 
     assert proto.objective.expression_type == Expression.ADD
