@@ -5,10 +5,11 @@
 // c'x
 class LinearProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
-    // DynamicMatrix A = DynamicMatrix::Zero(1, arg.var_map().n());
-    // DynamicMatrix b = DynamicMatrix::Zero(1, 1);
-    // BuildAffineOperator(arg.f_expr(), arg.var_map(), &A, &b);
-    // c_ = arg.lambda()*A.AsDense().transpose();
+    BlockMatrix A;
+    BlockVector b;
+    affine::BuildAffineOperator(arg.f_expr(), "_", &A, &b);
+    CHECK_EQ(1, A.col_keys().size());
+    c_ = arg.lambda()*A("_", *A.col_keys().begin()).impl().AsDense();
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {

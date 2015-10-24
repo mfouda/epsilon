@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # Common variable
 n = 10
@@ -112,7 +112,7 @@ def C_non_negative_scaled():
 
 # Proximal operators
 PROX_TESTS = [
-    Prox("DeadZoneProx", f_dead_zone),
+    #Prox("DeadZoneProx", f_dead_zone),
     Prox("FusedLassoProx", lambda: cp.tv(x)),
     Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     Prox("LeastSquaresProx", f_least_squares),
@@ -126,7 +126,7 @@ PROX_TESTS = [
     Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
-    Prox("LinearProx", lambda: randn(n).T*x),
+    #Prox("LinearProx", lambda: randn(n).T*x),
     Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     Prox("NegativeLogDetProx", lambda: -cp.log_det(X)),
@@ -151,7 +151,7 @@ PROX_TESTS = [
 
 # Epigraph operators
 PROX_TESTS += [
-    Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
+    #Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
     Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
     Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
@@ -168,6 +168,11 @@ PROX_TESTS += [
     Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
+
+#PROX_TESTS = [
+    #Prox("DeadZoneProx", f_dead_zone),
+    #Prox("LinearProx", lambda: randn(n).T*x),
+#]
 
 def test_prox():
     def run(prox, i):

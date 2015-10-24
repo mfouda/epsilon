@@ -11,7 +11,7 @@
 class NonNegativeProx final : public ProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
-    //GetScalarAffineOperator(arg.f_expr().arg(0), arg.var_map(), &alpha_, &b_);
+    affine::BuildScalarAffineOperator(arg.f_expr().arg(0), &alpha_, &b_);
   }
 
   Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {

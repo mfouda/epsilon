@@ -1,10 +1,14 @@
 """Implements the linear canonicalize transforms on the AST."""
 
+from epsilon import error
 from epsilon import expression
 from epsilon import linear_map
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Problem, Constant
 from epsilon.expression_util import *
+
+class CanonicalizeError(error.ExpressionError):
+    pass
 
 # Transforms on the AST
 def transform_variable(expr):
@@ -26,7 +30,7 @@ def maybe_promote(dim_sum, expr):
 def transform_add(expr):
     dim_sum = dim(expr)
     return expression.add(
-        *(maybe_promote(dim_sum, transform_expr(e)) for e in expr.arg))
+        *[maybe_promote(dim_sum, transform_expr(e)) for e in expr.arg])
 
 def transform_transpose(expr):
     return expression.linear_map(
@@ -72,8 +76,22 @@ def multiply_const_transform(expr, n):
 
     raise CanonicalizeError("unknown constant type", expr)
 
+def multiply_elementwise_const_transform(expr, n):
+    # TODO(mwytock): Handle this case
+    if expr.expression_type != Expression.CONSTANT:
+        raise CanonicalizeError("multiply constant is not leaf", expr)
+
+    if expr.constant.constant_type == Constant.DENSE_MATRIX:
+        return linear_map.diagonal_matrix(expr.constant)
+
+    raise CanonicalizeError("unknown constant type", expr)
+
 def transform_multiply(expr):
     return transform_multiply_generic(expr, multiply_const_transform)
+
+def transform_multiply_elementwise(expr):
+    return transform_multiply_generic(
+        expr, multiply_elementwise_const_transform)
 
 def transform_negate(expr):
     return expression.linear_map(

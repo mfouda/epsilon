@@ -96,6 +96,8 @@ typedef LinearMapImpl* (*LinearMapBinaryOp)(
 LinearMap Identity(int n);
 LinearMap BuildLinearMap(const ::LinearMap& linear_map);
 
+Eigen::VectorXd GetDiagonal(const LinearMap& linear_map);
+double GetScalar(const LinearMap& linear_map);
 
 }  // namespace linear_map
 

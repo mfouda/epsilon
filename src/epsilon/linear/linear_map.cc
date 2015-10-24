@@ -2,6 +2,7 @@
 #include <unordered_map>
 
 #include "epsilon/linear/dense_matrix_impl.h"
+#include "epsilon/linear/diagonal_matrix_impl.h"
 #include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
@@ -40,6 +41,11 @@ LinearMap DenseMatrix(const ::LinearMap& proto) {
   return LinearMap(new DenseMatrixImpl(ReadMatrixData(proto.constant())));
 }
 
+LinearMap DiagonalMatrix(const ::LinearMap& proto) {
+  return LinearMap(new DiagonalMatrixImpl(
+      ToVector(ReadMatrixData(proto.constant())).asDiagonal()));
+}
+
 LinearMap Scalar(const ::LinearMap& proto) {
   return LinearMap(new ScalarMatrixImpl(proto.n(), proto.scalar()));
 }
@@ -53,6 +59,7 @@ typedef LinearMap(*LinearMapFunction)(const ::LinearMap&);
 
 std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
   {::LinearMap::DENSE_MATRIX, &DenseMatrix},
+  {::LinearMap::DIAGONAL_MATRIX, &DiagonalMatrix},
   {::LinearMap::KRONECKER_PRODUCT, &KroneckerProduct},
   {::LinearMap::SCALAR, &Scalar},
   {::LinearMap::TRANSPOSE, &Transpose},
@@ -71,5 +78,27 @@ LinearMap BuildLinearMap(const ::LinearMap& linear_map) {
   return LinearMap(new ScalarMatrixImpl(n, 1));
 }
 
+Eigen::VectorXd GetDiagonal(const LinearMap& linear_map) {
+  const LinearMapImpl& impl = linear_map.impl();
+  if (impl.type() == SCALAR_MATRIX) {
+    const ScalarMatrixImpl& S = static_cast<const ScalarMatrixImpl&>(impl);
+    return Eigen::VectorXd::Constant(S.n(), S.alpha());
+  } else if (impl.type() == DIAGONAL_MATRIX) {
+    const DiagonalMatrixImpl& D = static_cast<const DiagonalMatrixImpl&>(impl);
+    return D.diagonal().diagonal();
+  } else {
+    LOG(FATAL) << "Non-diagonal linear map " << impl.type();
+  }
+}
+
+double GetScalar(const LinearMap& linear_map) {
+  const LinearMapImpl& impl = linear_map.impl();
+  if (impl.type() == SCALAR_MATRIX) {
+    const ScalarMatrixImpl& S = static_cast<const ScalarMatrixImpl&>(impl);
+    return S.alpha();
+  } else {
+    LOG(FATAL) << "Non-scalar matrix " << impl.type();
+  }
+}
 
 }  // namespace linear_map

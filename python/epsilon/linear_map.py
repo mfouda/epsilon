@@ -34,12 +34,10 @@ def sparse_matrix(constant):
         n=constant.n,
         constant=constant)
 
-def diagonal_matrix(constant_expr):
+def diagonal_matrix(constant):
+    n = constant.m*constant.n
     return LinearMap(
-        linear_map_type=LinearMap.DIAGONAL_MATRIX,
-        m=dim(constant_expr),
-        n=dim(constant_expr),
-        constant=constant_expr.constant)
+        linear_map_type=LinearMap.DIAGONAL_MATRIX, m=n, n=n, constant=constant)
 
 def scalar(alpha, n):
     return LinearMap(

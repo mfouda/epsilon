@@ -26,11 +26,7 @@ void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
     beta_ = arg.f_expr().scaled_zone_params().beta();
     C_ = arg.f_expr().scaled_zone_params().c();
     M_ = arg.f_expr().scaled_zone_params().m();
-
-    const int n = GetDimension(arg.f_expr().arg(0));
-    a_.resize(n);
-    b_.resize(n);
-    //GetDiagonalAffineOperator(arg.f_expr().arg(0), arg.var_map(), &a_, &b_);
+    affine::BuildDiagonalAffineOperator(arg.f_expr().arg(0), &a_, &b_);
   }
 }
 

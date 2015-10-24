@@ -21,6 +21,17 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b);
 
+void BuildDiagonalAffineOperator(
+    const Expression& expr,
+    Eigen::VectorXd* a,
+    Eigen::VectorXd* b);
+
+void BuildScalarAffineOperator(
+    const Expression& expr,
+    double* alpha,
+    Eigen::VectorXd* b);
+
+
 }  // namespace affine
 
 #endif  // EPSILON_OPERATORS_AFFINE_H
