@@ -201,7 +201,7 @@ PyMODINIT_FUNC init_solve() {
       FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    google::InstallFailureFunction(&HandleFailure);
+    //google::InstallFailureFunction(&HandleFailure);
 
     initialized = true;
   }

@@ -22,4 +22,15 @@ LinearMap::DenseVector KroneckerProductImpl::Apply(const DenseVector& x) const {
   return ToVector(Y.impl().AsDense());
 }
 
+bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {
+  if (other.type() != KRONECKER_PRODUCT ||
+      other.m() != m() ||
+      other.n() != n())
+    return false;
+
+  auto const& K = static_cast<const KroneckerProductImpl&>(other);
+  return K.A() == A() && K.B() == B();
+}
+
+
 }  // namespace linear_map

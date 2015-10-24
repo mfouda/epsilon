@@ -28,6 +28,8 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
     LOG(FATAL) << "Not implemented";
   }
 
+  bool operator==(const LinearMapImpl& other) const override;
+
   // Diagonal matrix API
   const DiagonalMatrix& diagonal() const { return A_; }
 

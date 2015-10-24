@@ -4,7 +4,6 @@
 #include <glog/logging.h>
 
 #include "epsilon/linear/linear_map.h"
-#include "epsilon/vector/vector_util.h"
 
 namespace linear_map {
 
@@ -14,7 +13,7 @@ class DenseMatrixImpl final : public LinearMapImpl {
 
   int m() const override { return A_.rows(); }
   int n() const override { return A_.cols(); }
-  std::string DebugString() const override { return MatrixDebugString(A_); }
+  std::string DebugString() const override;
   DenseMatrix AsDense() const override { return A_; }
   DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
@@ -22,6 +21,8 @@ class DenseMatrixImpl final : public LinearMapImpl {
     return new DenseMatrixImpl(A_.transpose());
   }
   LinearMapImpl* Inverse() const override;
+
+  bool operator==(const LinearMapImpl& other) const override;
 
   // Dense matrix API
   const DenseMatrix& dense() const { return A_; }

@@ -27,6 +27,8 @@ class SparseMatrixImpl final : public LinearMapImpl {
   }
   LinearMapImpl* Inverse() const override;
 
+  bool operator==(const LinearMapImpl& other) const override;
+
   // Sparse matrix API
   const SparseMatrix& sparse() const { return A_; }
 

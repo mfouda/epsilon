@@ -33,6 +33,8 @@ class KroneckerProductImpl final : public LinearMapImpl {
     return new KroneckerProductImpl(A_.Inverse(), B_.Inverse());
   }
 
+  bool operator==(const LinearMapImpl& other) const override;
+
   // Scalar matrix API
   const LinearMap& A() const { return A_; }
   const LinearMap& B() const { return B_; }

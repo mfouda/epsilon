@@ -4,13 +4,13 @@ import cvxpy as cp
 import numpy as np
 
 from epsilon import cvxpy_expr
-from epsilon import expression_str
+from epsilon import tree_format
 from epsilon.compiler import canonicalize
 from epsilon.expression_pb2 import Expression
 
 def transform(cvxpy_problem):
-    input = cvxpy_expr.convert_problem(cvxpy_problem)[0]
-    logging.debug("Input:\n%s", expression_str.problem_str(input))
+    input = cvxpy_expr.convert_problem(cvxpy_problem)
+    logging.debug("Input:\n%s", tree_format.format_problem(input))
     return canonicalize.transform(input)
 
 def test_composite_epigraph():

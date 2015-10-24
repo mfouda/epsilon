@@ -30,6 +30,8 @@ class ScalarMatrixImpl final : public LinearMapImpl {
     return new ScalarMatrixImpl(n_, 1/alpha_);
   }
 
+  bool operator==(const LinearMapImpl& other) const override;
+
   // Scalar matrix API
   double alpha() const { return alpha_; }
 

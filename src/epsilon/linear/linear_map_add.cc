@@ -181,7 +181,9 @@ LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
         Add(S1, K.A().impl()),
         Add(S2, K.B().impl()));
   } else {
-    LOG(FATAL) << "Not implemented";
+    LOG(FATAL) << "Not implemented\n"
+               << "K:" << K.DebugString() << "\n"
+               << "S:" << S.DebugString();
   }
 }
 
@@ -215,12 +217,17 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   auto const& K1 = static_cast<const KroneckerProductImpl&>(lhs);
   auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
 
-  LOG(INFO) << (&K1.A().impl() == &K2.A().impl());
-  LOG(INFO) << (&K1.B().impl() == &K2.B().impl());;
-
-  LOG(INFO) << lhs.DebugString();
-  LOG(INFO) << rhs.DebugString();
-  LOG(FATAL) << "Not implemented";
+  if (K1.A() == K2.A()) {
+    LOG(INFO) << "Adding kronecker, A equal";
+    return new KroneckerProductImpl(K1.A(), K1.B() + K2.B());
+  } else if (K1.B() == K2.B()) {
+    LOG(INFO) << "Adding kronecker, B equal";
+    return new KroneckerProductImpl(K1.A() + K2.A(), K1.B());
+  } else {
+    LOG(FATAL) << "Adding incompatible kronecker products\n"
+               << "K1: " << K1.DebugString() << "\n"
+               << "K2: " << K2.DebugString();
+  }
 }
 
 LinearMapImpl* Add_NotImplemented(

@@ -30,4 +30,15 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
   return new SparseMatrixImpl(A_inv);
 }
 
+bool SparseMatrixImpl::operator==(const LinearMapImpl& other) const {
+  if (other.type() != SPARSE_MATRIX ||
+      other.m() != m() ||
+      other.n() != n())
+    return false;
+
+  // Sparse matrix equality not implemented in Eigen?
+  // TODO(mwytock): Fix this
+  return false;
+}
+
 }  // namespace linear_map

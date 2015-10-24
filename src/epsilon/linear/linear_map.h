@@ -41,6 +41,7 @@ class LinearMapImpl {
   virtual DenseVector Apply(const DenseVector& x) const = 0;
   virtual LinearMapImpl* Transpose() const = 0;
   virtual LinearMapImpl* Inverse() const = 0;
+  virtual bool operator==(const LinearMapImpl& other) const = 0;
 
  private:
   LinearMapImplType type_;
@@ -80,6 +81,8 @@ LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs);
 
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs);
 LinearMap operator*(double alpha, const LinearMap& A);
+
+bool operator==(const LinearMap& lhs, const LinearMap& rhs);
 
 // Matrix-vector multiply
 template<typename Scalar>

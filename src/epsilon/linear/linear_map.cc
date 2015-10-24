@@ -23,6 +23,12 @@ LinearMap& LinearMap::operator*=(const LinearMap& rhs) {
   return *this;
 }
 
+bool operator==(const LinearMap& lhs, const LinearMap& rhs) {
+  // TODO(mwytock): If we had caching of LinearMaps we could just compare
+  // pointers here?
+  return lhs.impl() == rhs.impl();
+}
+
 LinearMap operator*(double alpha, const LinearMap& A) {
   return LinearMap(new ScalarMatrixImpl(A.impl().m(), alpha))*A;
 }
