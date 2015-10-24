@@ -212,6 +212,14 @@ LinearMapImpl* Add_KroneckerProduct_ScalarMatrix(
 LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
+  auto const& K1 = static_cast<const KroneckerProductImpl&>(lhs);
+  auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
+
+  LOG(INFO) << (&K1.A().impl() == &K2.A().impl());
+  LOG(INFO) << (&K1.B().impl() == &K2.B().impl());;
+
+  LOG(INFO) << lhs.DebugString();
+  LOG(INFO) << rhs.DebugString();
   LOG(FATAL) << "Not implemented";
 }
 

@@ -46,15 +46,15 @@ def transform_index(expr):
 
 def multiply_constant(expr, n):
     # TODO(mwytock): Handle this case
-    if expr.expression_type != Expression.CONSTANT:
-        raise CanonicalizeError("multiply constant is not leaf", expr)
-
-    if expr.constant.constant_type == Constant.SCALAR:
-        return linear_map.scalar(expr.constant.scalar, n)
-    if expr.constant.constant_type == Constant.DENSE_MATRIX:
-        return linear_map.dense_matrix(expr.constant)
-    if expr.constant.constant_type == Constant.SPARSE_MATRIX:
-        return linear_map.sparse_matrix(expr.constant)
+    if expr.expression_type == Expression.CONSTANT:
+        if expr.constant.constant_type == Constant.SCALAR:
+            return linear_map.scalar(expr.constant.scalar, n)
+        if expr.constant.constant_type == Constant.DENSE_MATRIX:
+            return linear_map.dense_matrix(expr.constant)
+        if expr.constant.constant_type == Constant.SPARSE_MATRIX:
+            return linear_map.sparse_matrix(expr.constant)
+    elif expr.expression_type == Expression.TRANSPOSE:
+        return linear_map.transpose(multiply_constant(only_arg(expr), n))
 
     raise CanonicalizeError("unknown constant type", expr)
 
@@ -121,7 +121,10 @@ def transform_linear_expr(expr):
 
 def transform_expr(expr):
     if expr.curvature.curvature_type in (Curvature.AFFINE, Curvature.CONSTANT):
-        return transform_linear_expr(expr)
+        prox = expr.proximal_operator
+        expr = transform_linear_expr(expr)
+        expr.proximal_operator.CopyFrom(prox)
+        return expr
     else:
         for arg in expr.arg:
             arg.CopyFrom(transform_expr(arg))

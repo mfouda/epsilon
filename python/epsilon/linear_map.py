@@ -57,6 +57,9 @@ def identity(n):
 
 def index(slice, n):
     m = slice.stop - slice.start
+    if m == n:
+        return identity(n)
+
     A = sp.coo_matrix(
         (np.ones(m),
          (np.arange(m), np.arange(slice.start, slice.stop, slice.step))),

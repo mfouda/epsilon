@@ -41,8 +41,8 @@ REL_TOL = {}
 # ]
 
 PROBLEMS = [
-    #ProblemInstance("lp", lp.create, dict(m=10, n=20)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
+    #ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
 ]
 
 def solve_problem(problem_instance):

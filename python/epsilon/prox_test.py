@@ -126,7 +126,7 @@ PROX_TESTS = [
     Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
-    #Prox("LinearProx", lambda: randn(n).T*x),
+    Prox("LinearProx", lambda: randn(n).T*x),
     Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     Prox("NegativeLogDetProx", lambda: -cp.log_det(X)),
