@@ -5,8 +5,12 @@
 namespace linear_map {
 
 LinearMapImpl* DenseMatrixImpl::Inverse() const {
-  // TODO(mwytock): LLT method may be faster?
-  return new DenseMatrixImpl(A_.inverse());
+  // NOTE(mwytock): This assumes matrix is symmetric, do we need non-symmetric?
+  CHECK_EQ(m(), n());
+  Eigen::LLT<DenseMatrix> llt;
+  llt.compute(A_);
+  CHECK_EQ(Eigen::Success, llt.info());
+  return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
 }
 
 std::string DenseMatrixImpl::DebugString() const {

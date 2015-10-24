@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-import errno
 import logging
-import os
 import time
+import sys
 
 import cvxpy as cp
 
@@ -12,9 +11,9 @@ from epsilon import cvxpy_expr
 from epsilon import solve
 from epsilon import solver_params_pb2
 from epsilon.compiler import compiler
-from epsilon.expression_pb2 import Expression
 from epsilon.problems import *
 from epsilon.problems import benchmark_format
+from epsilon.problems import benchmark_util
 
 from epsilon.problems.problem_instance import ProblemInstance
 from epsilon.problems.benchmark_format import Column
@@ -47,7 +46,7 @@ def cvxpy_kwargs(solver):
     return kwargs
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-2)
+    params = solver_params_pb2.SolverParams(rel_tol=1e-3)
     solve.solve(cvxpy_prob, params=params)
     return cvxpy_prob.objective.value
 
@@ -103,7 +102,7 @@ if __name__ == "__main__":
         problems = PROBLEMS
 
     if args.write:
-        benchmark_util.write_benchmarks(problems, args.write)
+        benchmark_util.write_problems(problems, args.write)
         sys.exit(0)
 
     if args.debug:

@@ -1,8 +1,26 @@
 
+import errno
+import os
+
+from epsilon import cvxpy_expr
+from epsilon import constant
+from epsilon.compiler import compiler
+from epsilon.expression_pb2 import Expression
+
+def modify_data_location_linear_map(linear_map, f):
+    if linear_map.constant.data_location != "":
+        linear_map.constant.data_location = f(linear_map.constant.data_location)
+
+    for arg in linear_map.arg:
+        modify_data_location_linear_map(arg, f)
+
 def modify_data_location(expr, f):
     if (expr.expression_type == Expression.CONSTANT and
         expr.constant.data_location != ""):
         expr.constant.data_location = f(expr.constant.data_location)
+
+    if expr.expression_type == Expression.LINEAR_MAP:
+        modify_data_location_linear_map(expr.linear_map, f)
 
     for arg in expr.arg:
         modify_data_location(arg, f)
@@ -26,8 +44,8 @@ def write_problems(problems, location):
 
     makedirs_existok(location)
     for problem in problems:
-        prob_proto, data_map = cvxpy_expr.convert_problem(problem.create())
-        prob_proto = compiler.compile(prob_proto)
+        prob_proto = cvxpy_expr.convert_problem(problem.create())
+        prob_proto = compiler.compile_problem(prob_proto)
 
         modify_data_location(prob_proto.objective, rewrite_location)
         for constraint in prob_proto.constraint:
@@ -36,7 +54,7 @@ def write_problems(problems, location):
         with open(os.path.join(location, problem.name), "w") as f:
             f.write(prob_proto.SerializeToString())
 
-        for name, value in data_map.items():
+        for name, value in constant.global_data_map.items():
             assert name[:len(mem_prefix)] == mem_prefix
             filename = os.path.join(location, name[len(mem_prefix):])
             makedirs_existok(os.path.dirname(filename))
