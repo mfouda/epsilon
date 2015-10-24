@@ -1,6 +1,9 @@
+#include "epsilon/linear/dense_matrix_impl.h"
+#include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
 
 #include "epsilon/util/string.h"
+#include "epsilon/vector/vector_util.h"
 
 namespace linear_map {
 
@@ -23,13 +26,16 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
   CHECK_EQ(Eigen::Success, ldlt_.info())
       << "Failed to factor\n" << DebugString();
 
-  // TODO(mwytock): This should probably do something different like form a
-  // LinearMap implementation based on backsolves. Maybe a subclass of
-  // SparseMatrixImpl?
-  VLOG(1) << "Forming inverse explicitly";
-  LinearMap::SparseMatrix A_inv = ldlt_.solve(SparseIdentity(A_.rows()));
-  VLOG(1) << "Inverse, nnz=" << A_inv.nonZeros();
-  return new SparseMatrixImpl(A_inv);
+  double alpha;
+  if (IsScalarMatrix(A_, &alpha)) {
+    // Convert to scalar matrix
+    std::unique_ptr<LinearMapImpl> impl(new ScalarMatrixImpl(n(), alpha));
+    return impl->Inverse();
+  } else {
+    // Convert to dense matrix
+    std::unique_ptr<LinearMapImpl> impl(new DenseMatrixImpl(A_));
+    return impl->Inverse();
+  }
 }
 
 bool SparseMatrixImpl::operator==(const LinearMapImpl& other) const {

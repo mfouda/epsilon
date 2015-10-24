@@ -10,13 +10,13 @@ LinearMapImpl* DenseMatrixImpl::Inverse() const {
   Eigen::LLT<DenseMatrix> llt;
   llt.compute(A_);
 
-  if (llt.info() == Eigen::Success) {
+  if (llt.info() == Eigen::Success)
     return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
-  }
 
-  // fall back
-  // TODO(mwytock): Better way to choose between these methods?
-  return new DenseMatrixImpl(A_.inverse());
+  // Try adding some regularization
+  llt.compute(A_ + DenseMatrix::Identity(n(), n()));
+  CHECK_EQ(llt.info(), Eigen::Success);
+  return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
 }
 
 std::string DenseMatrixImpl::DebugString() const {

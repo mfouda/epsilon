@@ -21,7 +21,7 @@ from epsilon.problems.benchmark_format import Column
 # Add back when we have convolution
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=400, lam=1)),
 
-# Need to fix
+# Need better method to deal with ill-conditioned inputs
 # ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
 
 PROBLEMS = [
