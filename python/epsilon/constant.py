@@ -26,9 +26,10 @@ def value_data(value):
             m=value.shape[0],
             n=1 if len(value.shape) == 1 else value.shape[1],
             nnz=value.nnz)
-        value_bytes = (csc.data.tobytes("F") +
+
+        value_bytes = (csc.indptr.tobytes("F") +
                        csc.indices.tobytes("F") +
-                       csc.indptr.tobytes("F"))
+                       csc.data.tobytes("F"))
 
     else:
         raise ValueError("unknown value type " + str(value))
@@ -39,6 +40,5 @@ def store(value):
     constant, value_bytes = value_data(value)
     location = value_location(value_bytes)
     global_data_map[location] = value_bytes
-
     constant.data_location = location
     return constant

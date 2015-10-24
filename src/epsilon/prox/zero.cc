@@ -13,8 +13,6 @@ public:
   void Init(const ProxOperatorArg& arg) override {
     const BlockMatrix& A = arg.A();
     BlockMatrix AT = A.Transpose();
-    LOG(INFO) << A.DebugString();
-    LOG(INFO) << (AT*A).DebugString();
     F_ = (AT*A).Inverse()*AT;
   }
 

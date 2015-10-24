@@ -44,25 +44,7 @@ def transform_index(expr):
             linear_map.index(expr.key[0], dim(only_arg(expr),0))),
         transform_expr(only_arg(expr)))
 
-def transform_multiply_generic(expr, const_transform):
-    if len(expr.arg) != 2:
-        raise CanonicalizeError("wrong number of args", expr)
-
-    m = dim(expr, 0)
-    n = dim(expr, 1)
-    if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
-        return expression.linear_map(
-            linear_map.left_matrix_product(const_transform(expr.arg[0], m), n),
-            transform_expr(expr.arg[1]))
-
-    if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
-        return expression.linear_map(
-            linear_map.right_matrix_product(const_transform(expr.arg[1], n), m),
-            transform_expr(expr.arg[0]))
-
-    raise CanonicalizeError("multiplying non constants", expr)
-
-def multiply_const_transform(expr, n):
+def multiply_constant(expr, n):
     # TODO(mwytock): Handle this case
     if expr.expression_type != Expression.CONSTANT:
         raise CanonicalizeError("multiply constant is not leaf", expr)
@@ -76,7 +58,27 @@ def multiply_const_transform(expr, n):
 
     raise CanonicalizeError("unknown constant type", expr)
 
-def multiply_elementwise_const_transform(expr, n):
+def transform_multiply(expr):
+    if len(expr.arg) != 2:
+        raise CanonicalizeError("wrong number of args", expr)
+
+    m = dim(expr, 0)
+    n = dim(expr, 1)
+    if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
+        return expression.linear_map(
+            linear_map.left_matrix_product(
+                multiply_constant(expr.arg[0], m), n),
+            transform_expr(expr.arg[1]))
+
+    if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
+        return expression.linear_map(
+            linear_map.right_matrix_product(
+                multiply_constant(expr.arg[1], n), m),
+            transform_expr(expr.arg[0]))
+
+    raise CanonicalizeError("multiplying non constants", expr)
+
+def multiply_elementwise_constant(expr):
     # TODO(mwytock): Handle this case
     if expr.expression_type != Expression.CONSTANT:
         raise CanonicalizeError("multiply constant is not leaf", expr)
@@ -86,12 +88,22 @@ def multiply_elementwise_const_transform(expr, n):
 
     raise CanonicalizeError("unknown constant type", expr)
 
-def transform_multiply(expr):
-    return transform_multiply_generic(expr, multiply_const_transform)
-
 def transform_multiply_elementwise(expr):
-    return transform_multiply_generic(
-        expr, multiply_elementwise_const_transform)
+    if len(expr.arg) != 2:
+        raise CanonicalizeError("wrong number of args", expr)
+
+    if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
+        c_expr = expr.arg[0]
+        x_expr = expr.arg[1]
+    elif expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
+        c_expr = expr.arg[1]
+        x_expr = expr.arg[0]
+    else:
+        raise CanonicalizeError("multiply non constants", expr)
+
+    return expression.linear_map(
+        multiply_elementwise_constant(c_expr),
+        transform_expr(x_expr))
 
 def transform_negate(expr):
     return expression.linear_map(
@@ -100,7 +112,7 @@ def transform_negate(expr):
 
 def transform_sum(expr):
     return expression.linear_map(
-        linear_map.sum(dim(expr)),
+        linear_map.sum(dim(only_arg(expr))),
         transform_expr(only_arg(expr)))
 
 def transform_linear_expr(expr):

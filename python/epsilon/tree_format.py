@@ -21,6 +21,8 @@ def format_linear_map(linear_map):
     else:
         if linear_map.linear_map_type == LinearMap.SCALAR:
             args = ["%.2f" % linear_map.scalar, str(linear_map.n)]
+        elif linear_map.linear_map_type == LinearMap.DIAGONAL_MATRIX:
+            args = [str(linear_map.n)]
         else:
             args = [str(linear_map.m), str(linear_map.n)]
 

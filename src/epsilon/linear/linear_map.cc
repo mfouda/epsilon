@@ -6,6 +6,7 @@
 #include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
+#include "epsilon/linear/sparse_matrix_impl.h"
 #include "epsilon/vector/vector_file.h"
 
 namespace linear_map {
@@ -55,6 +56,10 @@ LinearMap Transpose(const ::LinearMap& proto) {
   return BuildLinearMap(proto.arg(0)).Transpose();
 }
 
+LinearMap SparseMatrix(const ::LinearMap& proto) {
+  return LinearMap(new SparseMatrixImpl(ReadSparseMatrixData(proto.constant())));
+}
+
 typedef LinearMap(*LinearMapFunction)(const ::LinearMap&);
 
 std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
@@ -62,6 +67,7 @@ std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
   {::LinearMap::DIAGONAL_MATRIX, &DiagonalMatrix},
   {::LinearMap::KRONECKER_PRODUCT, &KroneckerProduct},
   {::LinearMap::SCALAR, &Scalar},
+  {::LinearMap::SPARSE_MATRIX, &SparseMatrix},
   {::LinearMap::TRANSPOSE, &Transpose},
 };
 
@@ -74,7 +80,7 @@ LinearMap BuildLinearMap(const ::LinearMap& linear_map) {
   return iter->second(linear_map);
 }
 
-                    LinearMap Identity(int n) {
+LinearMap Identity(int n) {
   return LinearMap(new ScalarMatrixImpl(n, 1));
 }
 

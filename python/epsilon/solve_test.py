@@ -27,23 +27,23 @@ REL_TOL = {}
 # Needs HSTACK implementation and linearization
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 
-PROBLEMS = [
-    ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
-    ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
-    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
-    ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
-    ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-]
+# PROBLEMS = [
+#     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
+#     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
+#     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+#     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
+#     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
+#     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
+#     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+#     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
+#    ProblemInstance("huber", huber.create, dict(m=20, n=10)),
+#    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+# ]
 
-#PROBLEMS = [
-    #ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
-    #ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
-    #ProblemInstance("huber", huber.create, dict(m=20, n=10)),
-    #ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+PROBLEMS = [
     #ProblemInstance("lp", lp.create, dict(m=10, n=20)),
-    #ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
-#]
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

@@ -11,7 +11,7 @@ public:
 
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
-    M_ = arg.f_expr().arg(0).arg(0).arg(0).arg(1).arg(0).constant().scalar();
+    M_ = arg.f_expr().arg(0).arg(0).arg(0).arg(1).arg(0).arg(0).constant().scalar();
     VLOG(1) << "Deadzone Prox : M = " << M_ << "\n";
   }
 };
@@ -42,7 +42,7 @@ public:
 
   void Init(const ProxOperatorArg& arg) override {
     lambda_ = arg.lambda();
-    M_ = arg.f_expr().arg(0).arg(1).arg(0).arg(0).arg(0).arg(0).arg(1).arg(0).constant().scalar();
+    M_ = arg.f_expr().arg(0).arg(1).arg(0).arg(0).arg(0).arg(0).arg(1).arg(0).arg(0).constant().scalar();
     VLOG(1) << "Deadzone Epigraph : M = " << M_ << "\n";
   }
 };
