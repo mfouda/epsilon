@@ -16,7 +16,9 @@ C = expression.constant(
     2, 3, constant=constant.store(np.array([[1,2,3],[4,5,6]])))
 
 x = expression.variable(3, 1, "x")
+y = expression.variable(3, 1, "y")
 X = expression.variable(3, 4, "X")
+Y = expression.variable(3, 2, "Y")
 
 TESTS = [
     ("index_constant",
@@ -41,6 +43,28 @@ TESTS = [
              linear_map.identity(4),
              linear_map.dense_matrix(C.constant)),
          expression.reshape(X, 12, 1))),
+    ("hstack_vector",
+     expression.hstack(x, y),
+     expression.add(
+         expression.linear_map(
+             linear_map.right_matrix_product(
+                 linear_map.index(slice(0, 1), 2), 3),
+             x),
+         expression.linear_map(
+             linear_map.right_matrix_product(
+                 linear_map.index(slice(1, 2), 2), 3),
+             y))),
+    ("hstack_matrix",
+     expression.hstack(X, Y),
+     expression.add(
+         expression.linear_map(
+             linear_map.right_matrix_product(
+                 linear_map.index(slice(0, 4), 6), 3),
+             expression.reshape(X, 12, 1)),
+         expression.linear_map(
+             linear_map.right_matrix_product(
+                 linear_map.index(slice(4, 6), 6), 3),
+             expression.reshape(Y, 6, 1)))),
 ]
 
 def _test(name, expr, expected):

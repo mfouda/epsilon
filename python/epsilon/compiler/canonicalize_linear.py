@@ -115,16 +115,31 @@ def transform_sum(expr):
         linear_map.sum(dim(only_arg(expr))),
         transform_expr(only_arg(expr)))
 
+def transform_hstack(expr):
+    m = dim(expr, 0)
+    n = dim(expr, 1)
+    offset = 0
+    add_args = []
+    for arg in expr.arg:
+        ni = dim(arg, 1)
+        add_args.append(
+            expression.linear_map(
+                linear_map.right_matrix_product(
+                    linear_map.index(slice(offset, offset+ni), n), m),
+                transform_expr(arg)))
+        offset += ni
+    return expression.add(*add_args)
+
 def transform_linear_expr(expr):
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)
 
 def transform_expr(expr):
     if expr.curvature.curvature_type in (Curvature.AFFINE, Curvature.CONSTANT):
-        prox = expr.proximal_operator
-        expr = transform_linear_expr(expr)
-        expr.proximal_operator.CopyFrom(prox)
-        return expr
+        out_expr = transform_linear_expr(expr)
+        if expr.HasField("proximal_operator"):
+            out_expr.proximal_operator.CopyFrom(expr.proximal_operator)
+        return out_expr
     else:
         for arg in expr.arg:
             arg.CopyFrom(transform_expr(arg))

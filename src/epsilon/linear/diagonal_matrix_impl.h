@@ -24,9 +24,7 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
   LinearMapImpl* Transpose() const override {
     return new DiagonalMatrixImpl(A_);
   }
-  LinearMapImpl* Inverse() const override {
-    LOG(FATAL) << "Not implemented";
-  }
+  LinearMapImpl* Inverse() const override;
 
   bool operator==(const LinearMapImpl& other) const override;
 

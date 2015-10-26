@@ -597,9 +597,7 @@ def prox_epigraph(expr):
         yield equality_constraint(add(*ti_exprs), t_expr)
 
 PROX_RULES = [
-    prox_scalar_multiply,
-    prox_negate,
-    prox_add,
+    # Prox rules
     prox_affine,
     prox_fused_lasso,
     prox_kl_div,
@@ -624,9 +622,16 @@ PROX_RULES = [
     prox_norm_l1_asymmetric_single_max,
     prox_matrix_frac,
     prox_max_elementwise,
-    prox_epigraph_atomic,
     prox_linear_equality,
     prox_non_negative,
+
+    # General rewrites
+    prox_negate,
+    prox_scalar_multiply,
+    prox_add,
+
+    # Epigraph rules
+    prox_epigraph_atomic,
     prox_linear_epigraph,
     prox_epigraph,
 ]

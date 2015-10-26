@@ -12,4 +12,9 @@ bool DiagonalMatrixImpl::operator==(const LinearMapImpl& other) const {
           diagonal().diagonal());
 }
 
+LinearMapImpl* DiagonalMatrixImpl::Inverse() const {
+  return new DiagonalMatrixImpl(A_.inverse());
+}
+
+
 }  // namespace linear_map

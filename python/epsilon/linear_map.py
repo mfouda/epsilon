@@ -68,7 +68,7 @@ def index(slice, n):
 
 def one_hot(i, n):
     return sparse_matrix(
-        constant.store(sp.coo_matrix(([1], ([0], [i])), shape=(1,n))))
+        constant.store(sp.coo_matrix(([1], ([i], [0])), shape=(n,1))))
 
 def sum(n):
     return dense_matrix(constant.store(np.ones((1,n))))
