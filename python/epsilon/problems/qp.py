@@ -21,6 +21,6 @@ def create(n):
     ub = np.maximum(l,u);
 
     x = cp.Variable(n)
-    f = cp.Minimize(0.5*cp.quad_form(x, P) + q.T*x + r)
+    f = 0.5*cp.quad_form(x, P) + q.T*x + r
     C = [lb <= x, x <= ub]
-    return cp.Problem(f, C)
+    return cp.Problem(cp.Minimize(f), C)
