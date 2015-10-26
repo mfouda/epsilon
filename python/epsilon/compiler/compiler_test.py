@@ -38,8 +38,8 @@ def test_tv_denoise():
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
         tv_denoise.create(n=10, lam=1)))
     assert_items_equal(
-        prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"])
-    assert_equal(1, len(problem.constraint))
+        prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"] + ["LinearEqualityProx"])
+    assert_equal(4, len(problem.constraint))
 
 def test_tv_1d():
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(

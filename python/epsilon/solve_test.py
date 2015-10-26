@@ -15,10 +15,10 @@ REL_TOL = {}
 # Need convolution operators
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 #
-# Huge expression tree. Better way to do graph problems?
+# Huge expression tree. consider way to do graph problems?
 # ProblemInstance("map_inference", map_inference.create, dict(n=10)),
 #
-# Need to fix ScaledZoneProx family functions
+# Need to fix ScaledZoneProx family functions to make canonicalize robust
 # ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
 #
 # TODO, sparse examples:
