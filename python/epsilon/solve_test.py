@@ -18,6 +18,9 @@ REL_TOL = {}
 # Huge expression tree. Better way to do graph problems?
 # ProblemInstance("map_inference", map_inference.create, dict(n=10)),
 #
+# Need to fix ScaledZoneProx family functions
+# ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
+#
 # TODO, sparse examples:
 #
 # group_lasso_sparse
@@ -50,8 +53,7 @@ PROBLEMS = [
 ]
 
 PROBLEMS = [
-#    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
-#    ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
+    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
 ]
 
 def solve_problem(problem_instance):

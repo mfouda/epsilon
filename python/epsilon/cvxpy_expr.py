@@ -26,8 +26,8 @@ from cvxpy.atoms.kl_div import kl_div
 from cvxpy.atoms.lambda_max import lambda_max
 from cvxpy.atoms.log_det import log_det
 from cvxpy.atoms.log_sum_exp import log_sum_exp
-from cvxpy.atoms.max_entries import max_entries
 from cvxpy.atoms.matrix_frac import matrix_frac
+from cvxpy.atoms.max_entries import max_entries
 from cvxpy.atoms.norm_nuc import normNuc
 from cvxpy.atoms.pnorm import pnorm
 from cvxpy.atoms.quad_over_lin import quad_over_lin
@@ -36,6 +36,7 @@ from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
+from cvxpy.problems import objective
 
 from epsilon import constant
 from epsilon import expression
@@ -172,8 +173,15 @@ def convert_constraint(constraint):
 
     raise RuntimeError("Unknown constraint: %s" % type(constraint))
 
-# TODO(mwytock): Assumes minimize, handle maximize()
 def convert_problem(problem):
+    # NOTE(mwytock): Maximize inherits from Minimize so this clause first!
+    if isinstance(problem.objective, objective.Maximize):
+        obj_expr = -problem.objective.args[0]
+    elif isinstance(problem.objective, objective.Minimize):
+        obj_expr = problem.objective.args[0]
+    else:
+        raise RuntimeError("Unknown objective: %s" % type(problem.objective))
+
     return Problem(
-        objective=convert_expression(problem.objective.args[0]),
+        objective=convert_expression(obj_expr),
         constraint=[convert_constraint(c) for c in problem.constraints])

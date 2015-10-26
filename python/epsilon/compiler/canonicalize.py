@@ -212,11 +212,23 @@ def prox_scalar_multiply(expr):
             prox_args = get_scalar_multiply(prox_expr)
             if prox_args:
                 beta, prox_expr = prox_args
-                yield expression.multiply(
-                    expression.scalar_constant(alpha*beta), prox_expr)
+                if alpha*beta == 1:
+                    yield prox_expr
+                else:
+                    yield expression.multiply(
+                        expression.scalar_constant(alpha*beta), prox_expr)
             else:
                 yield expression.multiply(
                     expression.scalar_constant(alpha), prox_expr)
+
+def prox_negate(expr):
+    if expr.expression_type != Expression.NEGATE:
+        return
+
+    negate_arg = expression.multiply(
+        expression.scalar_constant(-1), only_arg(expr))
+    for prox_expr in transform_expr(negate_arg):
+        yield prox_expr
 
 def prox_add(expr):
     if expr.expression_type == Expression.ADD:
@@ -586,6 +598,7 @@ def prox_epigraph(expr):
 
 PROX_RULES = [
     prox_scalar_multiply,
+    prox_negate,
     prox_add,
     prox_affine,
     prox_fused_lasso,
