@@ -11,14 +11,12 @@ def create(n, r=10, density=0.1):
 
     S0 = sp.rand(n, n, density)
     S0.data = 10*np.random.randn(len(S0.data))
-
     M = L0 + S0
-    kap = np.abs(S0).sum()
+    lam = 0.1
 
     L = cp.Variable(n, n)
     S = cp.Variable(n, n)
-    f = cp.norm_nuc.normNuc(L)
-    C = [cp.norm1(S) <= kap,
-         L + S == M]
+    f = cp.norm(L, "nuc") + lam*cp.norm1(S)
+    C = [L + S == M]
 
     return cp.Problem(cp.Minimize(f), C)
