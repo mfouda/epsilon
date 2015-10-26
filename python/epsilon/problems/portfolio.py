@@ -5,14 +5,14 @@ import scipy.sparse as sp
 def create(m, n, density=0.1):
     mu = np.exp(0.01*np.random.randn(n))-1  # returns
     D = np.random.rand(n)/10;               # idiosyncratic risk
-    F = sp.randn(n,m,density)               # factor model
+    F = sp.rand(n,m,density)                # factor model
     F.data = np.random.randn(len(F.data))/10
     gamma = 1
     B = 1
 
     x = cp.Variable(n)
-    f = mu.T*x - gamma*(cp.sum_square(F.T.dot(x)) +
-                        cp.sum_square(cp.mul_elemwise(D, x)))
+    f = mu.T*x - gamma*(cp.sum_squares(F.T.dot(x)) +
+                        cp.sum_squares(cp.mul_elemwise(D, x)))
     C = [cp.sum_entries(x) == B,
          x >= 0]
 

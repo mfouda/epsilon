@@ -1,5 +1,6 @@
 """Standard form QP."""
 
+import cvxpy as cp
 import numpy as np
 import numpy.linalg as LA
 
@@ -22,5 +23,6 @@ def create(n):
 
     x = cp.Variable(n)
     f = 0.5*cp.quad_form(x, P) + q.T*x + r
-    C = [lb <= x, x <= ub]
+    C = [x >= lb,
+         x <= ub]
     return cp.Problem(cp.Minimize(f), C)

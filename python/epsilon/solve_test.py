@@ -6,35 +6,37 @@ import numpy as np
 
 from epsilon import solve
 from epsilon import solver_params_pb2
-from epsilon.problems import basis_pursuit
-from epsilon.problems import covsel
-from epsilon.problems import group_lasso
-from epsilon.problems import hinge_l1
-from epsilon.problems import huber
-from epsilon.problems import lasso
-from epsilon.problems import least_abs_dev
-from epsilon.problems import logreg_l1
-from epsilon.problems import lp
-from epsilon.problems import mnist
-from epsilon.problems import quantile
-from epsilon.problems import tv_1d
-from epsilon.problems import tv_denoise
+from epsilon.problems import *
 from epsilon.problems.problem_instance import ProblemInstance
 
 # Override accuracy settings
 REL_TOL = {}
 
-# Needs convolution
+# Needs convolution lineaar operator?
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-
-# Need to fix LinearEquality to be more general
-# ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+#
+# Huge expression tree. Better way to do graph problems?
+# ProblemInstance("map_inference", map_inference.create, dict(n=10)),
+#
+# TODO, sparse examples:
+#
+# group_lasso_sparse
+# hinge_l1_sparse
+# hinge_l2_sparse
+# lasso_sparse
+# logreg_l1_sparse
+#
+# TODO, convolution examples
+#
+# conv_1d
+# conv_2d
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10)),
+    ProblemInstance("hinge_l2", hinge_l2.create, dict(m=20, n=10)),
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=10)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
@@ -43,6 +45,13 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
+]
+
+PROBLEMS = [
+#    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
+    ProblemInstance("qp", qp.create, dict(n=10)),
+#    ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
+#    ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
 ]
 
 def solve_problem(problem_instance):
