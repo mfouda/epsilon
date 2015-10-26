@@ -175,6 +175,15 @@ def variable(m, n, variable_id):
             elementwise=True,
             scalar_multiple=True))
 
+def scalar_constant(scalar):
+    return Expression(
+        expression_type=Expression.CONSTANT,
+        size=Size(dim=[1, 1]),
+        constant=Constant(
+            constant_type=Constant.SCALAR,
+            scalar=scalar),
+        curvature=Curvature(curvature_type=Curvature.CONSTANT))
+
 def constant(m, n, scalar=None, constant=None):
     if scalar is not None:
         constant = Constant(

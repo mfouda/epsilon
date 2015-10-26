@@ -43,16 +43,16 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+    ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
-PROBLEMS = [
+#PROBLEMS = [
 #    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
-    ProblemInstance("qp", qp.create, dict(n=10)),
 #    ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
 #    ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
-]
+#]
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

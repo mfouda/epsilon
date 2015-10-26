@@ -13,10 +13,10 @@ transformation which is handled in transform_expr_epigraph().
 from collections import defaultdict
 
 from epsilon import error
+from epsilon import expression
 from epsilon.expression import *
 from epsilon.expression_pb2 import Expression, Problem, Curvature, Variable
-from epsilon.expression_util import fp_expr, expr_vars
-from epsilon.util import prod
+from epsilon.expression_util import *
 
 class CanonicalizeError(error.ExpressionError):
     pass
@@ -37,6 +37,18 @@ def get_epigraph(expr):
     t_expr = expr.arg[0].arg[0]
     f_expr = expr.arg[0].arg[1].arg[0]
     return f_expr, t_expr
+
+def get_scalar_multiply(expr):
+    if not (expr.expression_type == Expression.MULTIPLY and len(expr.arg) == 2):
+        return False
+
+    for i, arg in enumerate(expr.arg):
+        if arg.curvature.curvature_type == Curvature.CONSTANT and dim(arg) == 1:
+            if arg.expression_type != Expression.CONSTANT:
+                raise CanonicalizeError("unexpected scalar constant", arg)
+            return arg.constant.scalar, expr.arg[1-i]
+
+    return False
 
 LINEAR_EXPRESSION_TYPES = set([
     Expression.INDEX,
@@ -187,15 +199,24 @@ def get_function(expr):
 # src/epsilon/operators/prox.cc
 
 # General rules for dealing with additional and scalar multiplication
-def prox_multiply_scalar(expr):
-    if (expr.expression_type == Expression.MULTIPLY and
-        expr.arg[0].curvature.curvature_type == Curvature.CONSTANT and
-        prod(expr.arg[0].size.dim) == 1):
-        for prox_expr in transform_expr(expr.arg[1]):
-            if prox_expr.expression_type == Expression.INDICATOR:
-                yield prox_expr
+def prox_scalar_multiply(expr):
+    args = get_scalar_multiply(expr)
+    if not args:
+        return
+
+    alpha, expr = args
+    for prox_expr in transform_expr(expr):
+        if prox_expr.expression_type == Expression.INDICATOR:
+            yield prox_expr
+        else:
+            prox_args = get_scalar_multiply(prox_expr)
+            if prox_args:
+                beta, prox_expr = prox_args
+                yield expression.multiply(
+                    expression.scalar_constant(alpha*beta), prox_expr)
             else:
-                yield multiply(expr.arg[0], prox_expr)
+                yield expression.multiply(
+                    expression.scalar_constant(alpha), prox_expr)
 
 def prox_add(expr):
     if expr.expression_type == Expression.ADD:
@@ -358,7 +379,7 @@ def prox_norm12(expr):
         expr.arg[0].expression_type == Expression.NORM_2_ELEMENTWISE):
 
         # Rewrite this as l1/l2 norm using reshape() and hstack()
-        m = prod(expr.arg[0].arg[0].size.dim)
+        m = dim(expr.arg[0].arg[0])
         arg = hstack(*(reshape(arg, m, 1) for arg in expr.arg[0].arg))
         expr = norm_pq(arg, 1, 2)
 
@@ -500,16 +521,6 @@ def prox_non_negative(expr):
     if (expr.expression_type == Expression.INDICATOR and
         expr.cone.cone_type == Cone.NON_NEGATIVE):
 
-        if (expr.arg[0].expression_type == Expression.ADD and
-            expr.arg[0].arg[0].expression_type == Expression.CONSTANT and
-            expr.arg[0].arg[0].constant.scalar == 0. and
-            expr.arg[0].arg[1].expression_type == Expression.NEGATE and
-            expr.arg[0].arg[1].arg[0].expression_type == Expression.VARIABLE and
-            prod(expr.arg[0].arg[1].arg[0].size.dim) != 1):
-            expr.proximal_operator.name = "SemidefiniteProx"
-            yield expr
-            raise StopIteration
-
         expr.proximal_operator.name = "NonNegativeProx"
         if all(arg.curvature.scalar_multiple for arg in expr.arg):
             yield expr
@@ -574,7 +585,7 @@ def prox_epigraph(expr):
         yield equality_constraint(add(*ti_exprs), t_expr)
 
 PROX_RULES = [
-    prox_multiply_scalar,
+    prox_scalar_multiply,
     prox_add,
     prox_affine,
     prox_fused_lasso,
