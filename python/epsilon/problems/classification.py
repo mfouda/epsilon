@@ -3,6 +3,9 @@ import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
 
+def hinge(x):
+    return cp.sum_entries(cp.max_elemwise(x,0))
+
 def create_dense(m, n):
     np.random.seed(0)
     if n < 100:

@@ -5,6 +5,8 @@ import random
 import numpy as np
 
 def create(n):
+    np.random.seed(0)
+
     G = nx.connected_watts_strogatz_graph(n,4,0.5)
     domain = ['A','B','C','D','E']
 
