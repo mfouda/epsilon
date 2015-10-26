@@ -10,7 +10,6 @@ from epsilon.problems import lasso
 from epsilon.problems import least_abs_dev
 from epsilon.problems import logreg_l1
 from epsilon.problems import lp
-from epsilon.problems import map_inference
 from epsilon.problems import mnist
 from epsilon.problems import portfolio
 from epsilon.problems import qp
