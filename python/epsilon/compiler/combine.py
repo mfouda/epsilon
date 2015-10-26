@@ -23,6 +23,13 @@ def has_data_constant(expr):
 
     return False
 
+def prox_op(expr):
+    if expr.expression_type == Expression.ADD:
+        return prox_op(expr.arg[0])
+    if expr.expression_type == Expression.MULTIPLY:
+        return prox_op(expr.arg[1])
+    return expr.proximal_operator.name
+
 def is_prox_friendly_constraint(graph, f):
     """Returns true if f represents a prox-friendly equality constraint.
 
@@ -52,7 +59,7 @@ def max_overlap_function(graph, f):
     exclude = ["LinearEqualityProx",
                "LeastSquaresProx"]
     h = max((g for g in graph.functions
-             if g != f and g.expr.proximal_operator.name not in exclude),
+             if g != f and prox_op(g.expr) not in exclude),
             key=overlap)
 
     # Only return a function if there is some overlap

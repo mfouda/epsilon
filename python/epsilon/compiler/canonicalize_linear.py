@@ -130,6 +130,12 @@ def transform_hstack(expr):
         offset += ni
     return expression.add(*add_args)
 
+def transform_reshape(expr):
+    return expression.reshape(
+        transform_expr(only_arg(expr)),
+        dim(expr, 0),
+        dim(expr, 1))
+
 def transform_linear_expr(expr):
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)

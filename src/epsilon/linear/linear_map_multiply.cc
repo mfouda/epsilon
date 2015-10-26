@@ -209,7 +209,10 @@ LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
       Multiply(C.B().impl(), D.B().impl()));
   }
 
-  LOG(FATAL) << "Not implemented";
+  LOG(FATAL) << "Not implemented: "
+             << "C: " << C.DebugString() << "\n"
+             << "D: " << D.DebugString();
+
 }
 
 LinearMapImpl* Multiply_NotImplemented(

@@ -34,6 +34,7 @@ from cvxpy.atoms.quad_over_lin import quad_over_lin
 from cvxpy.atoms.sum_largest import sum_largest
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
+from cvxpy.constraints.psd_constraint import PSDConstraint
 from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
 from cvxpy.problems import objective
@@ -166,7 +167,11 @@ def convert_constraint(constraint):
         return expression.equality_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))
-    if isinstance(constraint, LeqConstraint):
+    elif isinstance(constraint, PSDConstraint):
+        return expression.psd_constraint(
+            convert_expression(constraint.args[0]),
+            convert_expression(constraint.args[1]))
+    elif isinstance(constraint, LeqConstraint):
         return expression.leq_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))

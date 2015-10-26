@@ -529,11 +529,17 @@ def prox_linear_equality(expr):
         yield expr
 
 
-def prox_non_negative(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.NON_NEGATIVE):
+CONE_PROX = {
+    Cone.NON_NEGATIVE: "NonNegativeProx",
+    Cone.SEMIDEFINITE: "SemidefiniteProx",
+}
 
-        expr.proximal_operator.name = "NonNegativeProx"
+def prox_cone(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type in CONE_PROX):
+
+        expr.proximal_operator.name = CONE_PROX[expr.cone.cone_type]
+
         if all(arg.curvature.scalar_multiple for arg in expr.arg):
             yield expr
         elif all(arg.curvature.curvature_type == Curvature.AFFINE or
@@ -542,9 +548,10 @@ def prox_non_negative(expr):
 
             add_expr = add(expr.arg[0], *(negate(arg) for arg in expr.arg[1:]))
             m, n = add_expr.size.dim
-            y = variable(m, n, "canonicalize:non_negative:" + fp_expr(add_expr))
+            y = variable(m, n, "canonicalize:cone:" + fp_expr(add_expr))
 
-            exprs = [non_negative(y), equality_constraint(y, add_expr)]
+            exprs = [indicator(expr.cone.cone_type, y),
+                     equality_constraint(y, add_expr)]
             for expr in exprs:
                 for prox_expr in transform_expr(expr):
                     yield prox_expr
@@ -623,7 +630,7 @@ PROX_RULES = [
     prox_matrix_frac,
     prox_max_elementwise,
     prox_linear_equality,
-    prox_non_negative,
+    prox_cone,
 
     # General rewrites
     prox_negate,

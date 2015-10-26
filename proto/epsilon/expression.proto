@@ -68,9 +68,9 @@ message Curvature {
 message Cone {
   enum Type {
     UNKNOWN = 0;
-    ZERO = 1;           // s == 0
-    NON_NEGATIVE = 2;   // s >= 0
-    SEMI_DEFINITE = 3;  // S >= 0
+    ZERO = 1;          // s == 0
+    NON_NEGATIVE = 2;  // s >= 0
+    SEMIDEFINITE = 3;  // S >> 0
   }
   Type cone_type = 1;
 }

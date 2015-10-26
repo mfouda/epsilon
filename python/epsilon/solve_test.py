@@ -12,6 +12,9 @@ from epsilon.problems.problem_instance import ProblemInstance
 # Override accuracy settings
 REL_TOL = {}
 
+# Need convolution operators
+# ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
+#
 # Huge expression tree. Better way to do graph problems?
 # ProblemInstance("map_inference", map_inference.create, dict(n=10)),
 #
@@ -48,10 +51,6 @@ PROBLEMS = [
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
-]
-
-PROBLEMS = [
-    ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
 def solve_problem(problem_instance):
