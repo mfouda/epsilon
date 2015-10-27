@@ -51,7 +51,7 @@ def cvxpy_kwargs(solver):
     return kwargs
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-3)
+    params = solver_params_pb2.SolverParams(rel_tol=1e-2)
     solve.solve(cvxpy_prob, params=params)
     return cvxpy_prob.objective.value
 
