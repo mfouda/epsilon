@@ -11,5 +11,5 @@ def create(m, n):
 
     x = cp.Variable(n)
     y_p = sp.diags([b.ravel()], [0])*A*x
-    f = hinge(y_p) + lam*cp.norm1(x)
+    f = hinge(1-y_p) + lam*cp.norm1(x)
     return cp.Problem(cp.Minimize(f))
