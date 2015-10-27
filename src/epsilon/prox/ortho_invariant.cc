@@ -19,7 +19,8 @@ Eigen::VectorXd OrthoInvariantProx::Apply(const Eigen::VectorXd& y) {
     V = solver.eigenvectors();
     U = V;
   } else {
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y.transpose()*Y);
+    Eigen::MatrixXd EPS = Eigen::VectorXd::Constant(n, 1e-15).asDiagonal();
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y.transpose()*Y + EPS);
     CHECK_EQ(solver.info(), Eigen::Success);
     d = solver.eigenvalues();
     V = solver.eigenvectors();
@@ -54,7 +55,8 @@ Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
       U = solver.eigenvectors();
       V = U;
     } else {
-      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y.transpose()*Y);
+      Eigen::MatrixXd EPS = Eigen::VectorXd::Constant(n, 1e-15).asDiagonal();
+      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y.transpose()*Y + EPS);
       CHECK_EQ(solver.info(), Eigen::Success);
       d = solver.eigenvalues();
       V = solver.eigenvectors();
