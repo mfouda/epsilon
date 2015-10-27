@@ -23,6 +23,7 @@ public:
     CT_ = C_.Transpose();
 
     // Use Gaussian elimination to solve the system:
+    // TODO(mwytock): This can be inefficient depending on the shape of C.
     //
     // [ A'A  C' ][ x ] = [  A'v ]
     // [ C    0  ][ y ]   [ -b   ]

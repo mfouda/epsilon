@@ -3,6 +3,8 @@ import numpy as np
 import scipy.sparse as sp
 
 def create(m, n, lam):
+    np.random.seed(0)
+
     m = int(n)
     n = int(n)
     lam = float(lam)

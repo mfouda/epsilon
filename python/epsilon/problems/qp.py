@@ -14,7 +14,7 @@ def create(n):
     P = (V*(1+np.random.rand(n))).dot(V.T);
 
     q = np.random.randn(n);
-    r = np.random.randn();
+    r = np.random.randn() + 10;
 
     l = np.random.randn(n);
     u = np.random.randn(n);
