@@ -19,10 +19,13 @@ Eigen::VectorXd OrthoInvariantProx::Apply(const Eigen::VectorXd& y) {
     V = solver.eigenvectors();
     U = V;
   } else {
-    Eigen::JacobiSVD<Eigen::MatrixXd> solver(Y, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    d = solver.singularValues();
-    U = solver.matrixU();
-    V = solver.matrixV();
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y*Y.transpose());
+    CHECK_EQ(solver.info(), Eigen::Success);
+    d = solver.eigenvalues();
+    U = solver.eigenvectors();
+    d = d.cwiseSqrt();
+    V = d.asDiagonal().inverse() * U.transpose()*Y;
+    V.transposeInPlace();
   }
 
   VLOG(2) << "\nD = " << VectorDebugString(d) << "\n";
@@ -52,10 +55,13 @@ Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
       U = solver.eigenvectors();
       V = U;
     } else {
-      Eigen::JacobiSVD<Eigen::MatrixXd> solver(Y, Eigen::ComputeThinU | Eigen::ComputeThinV);
-      d = solver.singularValues();
-      U = solver.matrixU();
-      V = solver.matrixV();
+      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y*Y.transpose());
+      CHECK_EQ(solver.info(), Eigen::Success);
+      d = solver.eigenvalues();
+      U = solver.eigenvectors();
+      d = d.cwiseSqrt();
+      V = d.asDiagonal().inverse() * U.transpose()*Y;
+      V.transposeInPlace();
     }
 
     VLOG(2) << "\nD = " << VectorDebugString(d) << "\n";
