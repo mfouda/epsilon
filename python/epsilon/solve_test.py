@@ -23,6 +23,9 @@ REL_TOL = {}
 # Need to fix ScaledZoneProx family functions to make canonicalize robust
 # ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
 #
+# Need to fix case where ATA is not identity
+# ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
+#
 # TODO, sparse examples:
 #
 # group_lasso_sparse
@@ -49,12 +52,12 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", mv_lasso.create, dict(m=5, n=10, k=2)),
-    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
+
 
 def solve_problem(problem_instance):
     problem = problem_instance.create()

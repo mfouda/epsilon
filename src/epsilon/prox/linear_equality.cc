@@ -32,9 +32,14 @@ public:
 
   BlockVector Apply(const BlockVector& v) override {
     if (graph_form_) {
+      Eigen::VectorXd v_y = (
+          v.has_key(y_) ? v(y_) : Eigen::VectorXd::Zero(B_.impl().m()));
+      Eigen::VectorXd v_x = (
+          v.has_key(y_) ? v(x_) : Eigen::VectorXd::Zero(B_.impl().n()));
+
       BlockVector x;
-      Eigen::VectorXd z = alpha_*v(y_) + c_;
-      Eigen::VectorXd w = alpha_*alpha_*v(x_) - BT_*z;
+      Eigen::VectorXd z = alpha_*v_y + c_;
+      Eigen::VectorXd w = alpha_*alpha_*v_x - BT_*z;
       x(x_) = BTB_inv_*w;
       x(y_) = -(1/alpha_)*(B_*x(x_) + c_);
       return x;

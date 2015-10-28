@@ -44,9 +44,11 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   }
 
   void Init() override {
-    Preprocess();
-
     AT_ = A_.Transpose();
+
+    Preprocess();
+    InitScaling();
+
     auto iter = kBlockProxOperatorMap->find(g_expr_->proximal_operator().name());
     if (iter != kBlockProxOperatorMap->end()) {
       // New style block prox
@@ -91,6 +93,7 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
 
  private:
   void Preprocess();
+  void InitScaling();
 
   // Input parameters
   double lambda_;
@@ -140,6 +143,15 @@ void ProxBlockVectorOperator::Preprocess() {
   }
 
   VLOG(2) << "Preprocess, alpha = " << alpha_ << ", c = " << c_.DebugString();
+}
+
+void ProxBlockVectorOperator::InitScaling() {
+  // BlockMatrix ATA = AT_*A_;
+  // for (const auto& col_iter : ATA.data()) {
+  //   CHECK(col_iter.second.size() == 1 &&
+  //         col_iter.first == col_iter.second.begin()->first)
+  //       << "Trying to invert non block diagonal matrix\n" << DebugString();
+  //   const std::string& key = col_iter.first;
 }
 
 std::unique_ptr<BlockVectorOperator> CreateProxOperator(
