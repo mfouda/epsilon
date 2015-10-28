@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 10
+PROX_TRIALS = 1
 
 # Common variable
 n = 10
@@ -38,11 +38,10 @@ def f_dead_zone():
 def f_hinge():
     return cp.sum_entries(cp.max_elemwise(1-x, 0))
 
-def f_least_squares():
-    m = 20
+def f_least_squares(m):
     A = np.random.randn(m, n)
     b = np.random.randn(m)
-    return  cp.sum_squares(A*x  - b)
+    return cp.sum_squares(A*x - b)
 
 def f_least_squares_matrix():
     m = 20
@@ -168,6 +167,19 @@ PROX_TESTS += [
     Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
+
+PROX_TESTS = [
+    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    Prox("LinearEqualityProx", None, C_linear_equality),
+    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
+    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
+    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
+    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
+]
+
 
 def test_prox():
     def run(prox, i):

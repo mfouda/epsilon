@@ -12,6 +12,23 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
+class LeastSquaresOperator : public BlockVectorOperator {
+ public:
+  explicit LeastSquaresOperator(BlockMatrix A) : A_(A) {}
+
+  void Init() override {
+    AT_ = A_.Transpose();
+    ATA_inv_ = (AT_*A_).Inverse();
+  }
+
+  BlockVector Apply(const BlockVector& v) override {
+    return ATA_inv_*(AT_*v);
+  }
+
+ private:
+  BlockMatrix A_, AT_, ATA_inv_;
+};
+
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
     const SolverParams& params,
@@ -47,8 +64,18 @@ void ProxADMMSolver::InitProxOperators() {
         AiT_[i](var_id, iter.first) = iter.second.Transpose();
     }
 
-    prox_.emplace_back(CreateProxOperator(
-        1/params_.rho(), AiT_[i].Transpose(), f_expr));
+    // TODO(mwytock): A bit of a hack, this should likely be specified slightly
+    // differently, perhaps by making the ADMM operations more explicit as part
+    // of the IR.
+
+    if (f_expr.proximal_operator().name() == "ZeroProx") {
+      prox_.emplace_back(std::make_unique<LeastSquaresOperator>(
+          AiT_[i].Transpose()));
+    } else {
+      prox_.emplace_back(CreateProxOperator(
+          1/params_.rho(), AiT_[i].Transpose(), f_expr));
+    }
+
     prox_.back()->Init();
   }
 }

@@ -86,7 +86,6 @@ common_cc = \
 	epsilon/prox/scaled_zone.cc \
 	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_largest.cc \
-	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

@@ -24,7 +24,7 @@ REL_TOL = {
 # Need to fix ScaledZoneProx family functions to make canonicalize robust
 # ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
 #
-# TODO, sparse examples:
+a# TODO, sparse examples:
 #
 # group_lasso_sparse
 # hinge_l1_sparse
