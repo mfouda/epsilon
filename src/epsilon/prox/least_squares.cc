@@ -30,13 +30,13 @@ class LeastSquaresProx final : public BlockProxOperator {
     if (A.m() <= A.n()) {
       fat_ = true;
       AAT_inv_ = (A*AT + rho_*A.LeftIdentity()).Inverse();
-      q_ = AT*AAT_inv_*b;
+      q_ = AT*(AAT_inv_*b);
       A_ = A;
       AT_ = AT;
     } else {
       fat_ = false;
       ATA_inv_ = (AT*A + rho_*A.RightIdentity()).Inverse();
-      q_ = ATA_inv_*AT*b;
+      q_ = ATA_inv_*(AT*b);
     }
   }
 
