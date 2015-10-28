@@ -34,6 +34,7 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
+    ProblemInstance("mv_lasso", mv_lasso.create, dict(m=1500, n=5000, k=10)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),

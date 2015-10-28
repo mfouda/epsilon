@@ -10,8 +10,11 @@ from epsilon.problems import *
 from epsilon.problems.problem_instance import ProblemInstance
 
 # Override accuracy settings
-REL_TOL = {}
+REL_TOL = {
+}
 
+# Add a multiclass classification problem w/ hinge loss
+#
 # Need convolution operators
 # ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 #
@@ -46,6 +49,7 @@ PROBLEMS = [
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
+    ProblemInstance("mv_lasso", mv_lasso.create, dict(m=5, n=10, k=2)),
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
