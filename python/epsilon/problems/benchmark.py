@@ -18,11 +18,9 @@ from epsilon.problems import benchmark_util
 from epsilon.problems.problem_instance import ProblemInstance
 from epsilon.problems.benchmark_format import Column
 
-# Need better method to deal with ill-conditioned inputs
-# ProblemInstance("quantile", quantile.create, dict(m=400, n=20, k=100)),
-
 # Need faster sparse matrix ops
 # ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
+
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -37,6 +35,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
