@@ -76,7 +76,6 @@ class LinearMap {
   std::shared_ptr<const LinearMapImpl> impl_;
 };
 
-// Matrix-matrix multiply, add, subtract
 LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs);
 
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs);
@@ -92,6 +91,7 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> operator*(
   return lhs.impl().Apply(rhs);
 }
 
+// Matrix-matrix multiply, add, subtract
 typedef LinearMapImpl* (*LinearMapBinaryOp)(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs);

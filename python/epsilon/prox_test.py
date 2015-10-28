@@ -7,7 +7,7 @@ from numpy.random import randn, rand
 
 from epsilon import solve
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # Common variable
 n = 10
@@ -73,6 +73,11 @@ def C_linear_equality_matrix_rhs():
     B = np.random.randn(n, k).dot(A)
     return [X*A == B]
 
+def C_linear_equality_graph(m):
+    A = np.random.randn(m, n)
+    y = cp.Variable(m)
+    return [y == A*x]
+
 def C_linear_equality_graph_lhs(m, n):
     k = 3
     A = np.random.randn(m, n)
@@ -111,40 +116,43 @@ def C_non_negative_scaled():
 
 # Proximal operators
 PROX_TESTS = [
+    #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
     Prox("DeadZoneProx", f_dead_zone),
     Prox("FusedLassoProx", lambda: cp.tv(x)),
     Prox("HingeProx", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    Prox("LeastSquaresProx", f_least_squares),
+    Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
+    Prox("KLDivProx", lambda: cp.kl_div(p1, q1)),
+    Prox("LambdaMaxProx", lambda: cp.lambda_max(X)),
+    Prox("LeastSquaresProx", lambda: f_least_squares(5)),
+    Prox("LeastSquaresProx", lambda: f_least_squares(20)),
     Prox("LeastSquaresProx", f_least_squares_matrix),
-    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
     Prox("LinearEqualityProx", None, C_linear_equality),
     Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
     Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
     Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph(20)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph(5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
     Prox("LinearProx", lambda: randn(n).T*x),
     Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
+    Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
     Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     Prox("NegativeLogDetProx", lambda: -cp.log_det(X)),
     Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
     Prox("NonNegativeProx", None, C_non_negative_scaled),
     Prox("NonNegativeProx", None, lambda: [x >= 0]),
+    Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
     Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     Prox("NormL1Prox", lambda: cp.norm1(x)),
     Prox("NormL2Prox", lambda: cp.norm2(x)),
     Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     Prox("ScaledZoneProx", f_scaled_zone_single_max),
-    Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
-    Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
-    Prox("LambdaMaxProx", lambda: cp.lambda_max(X)),
     Prox("SemidefiniteProx", None, lambda: [X >> 0]),
     Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
-    Prox("InvPosProx", lambda: cp.sum_entries(cp.inv_pos(x))),
-    #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
-    Prox("KLDivProx", lambda: cp.kl_div(p1, q1)),
     Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
 ]
 
@@ -152,34 +160,21 @@ PROX_TESTS = [
 PROX_TESTS += [
     Prox("DeadZoneEpigraph", None, lambda: [f_dead_zone() <= t]),
     Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
+    Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
+    Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
+    Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
     Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
+    Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
+    Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
+    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
+    Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
+    Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
-    Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
-    Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
-    Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
-    Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
-    Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
-    Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
     Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
-    Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
-    Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
 ]
-
-PROX_TESTS = [
-    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    # Prox("LinearEqualityProx", None, lambda: C_linear_equality_graph_rhs(5, 10)),
-    Prox("LinearEqualityProx", None, C_linear_equality),
-    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_lhs),
-    # Prox("LinearEqualityProx", None, C_linear_equality_matrix_rhs),
-    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate),
-    # Prox("LinearEqualityProx", None, C_linear_equality_multivariate2),
-]
-
 
 def test_prox():
     def run(prox, i):
