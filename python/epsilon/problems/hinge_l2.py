@@ -3,13 +3,12 @@
 import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
-from epsilon.problems.classification import create_dense, hinge
+from epsilon.problems import problem_util
 
-def create(m, n):
-    A, b = create_dense(m, n)
-    lam = 0.1*np.sqrt(n)
+def create(**kwargs):
+    A, b = problem_util.create_classification(**kwargs)
+    lam = 1
 
-    x = cp.Variable(n)
-    y_p = sp.diags([b.ravel()], [0])*A*x
-    f = hinge(1-y_p) + lam*cp.sum_squares(x)
+    x = cp.Variable(A.shape[1])
+    f = problem_util.hinge(1-sp.diags([b],[0])*A*x) + lam*cp.sum_squares(x)
     return cp.Problem(cp.Minimize(f))

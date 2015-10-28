@@ -2,14 +2,12 @@
 import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
+from epsilon.problems import problem_util
 
-from epsilon.problems import classification
+def create(**kwargs):
+    A, b = problem_util.create_classification(**kwargs)
+    lam = 1
 
-def create(m, n):
-    A, b = classification.create_dense(m, n)
-    lam = 0.1*np.sqrt(n)
-
-    x = cp.Variable(n)
-    y_p = sp.diags([b.ravel()], [0])*A*x
-    f = cp.sum_entries(cp.logistic(-y_p)) + lam*cp.norm1(x)
+    x = cp.Variable(kwargs["n"])
+    f = cp.sum_entries(cp.logistic(-sp.diags([b],[0])*A*x)) + lam*cp.norm1(x)
     return cp.Problem(cp.Minimize(f))
