@@ -42,10 +42,10 @@ Eigen::VectorXd NewtonProx::Apply(const Eigen::VectorXd &v) {
     }
 
     if(x_res < eps) {
-      VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
+      VLOG(2) << "Using " << iter+1 << " Newton iteration.\n";
       break;
     } else if(iter == MAX_ITER-1) {
-      VLOG(1) << "Newton Method won't converge for prox, lam = " << lambda_ << ", xres = " << x_res << "\n";
+      VLOG(2) << "Newton Method won't converge for prox, lam = " << lambda_ << ", xres = " << x_res << "\n";
     }
   }
   return x;

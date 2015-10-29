@@ -6,6 +6,7 @@ import time
 import sys
 
 import cvxpy as cp
+import numpy as np
 
 from epsilon import cvxpy_expr
 from epsilon import solve
@@ -55,7 +56,7 @@ def cvxpy_kwargs(solver):
     return kwargs
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-2)
+    params = solver_params_pb2.SolverParams()
     solve.solve(cvxpy_prob, params=params)
     return cvxpy_prob.objective.value
 
@@ -83,6 +84,7 @@ def run_benchmarks(benchmarks, problems):
     for problem in problems:
         logging.debug("problem %s", problem.name)
         t0 = time.time()
+        np.random.seed(0)
         cvxpy_prob = problem.create()
         t1 = time.time()
         logging.debug("creation time %f seconds", t1-t0)
