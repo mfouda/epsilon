@@ -6,15 +6,11 @@ import numpy.linalg as LA
 
 def create(n):
     np.random.seed(0)
-
-    # Generate a well-conditioned positive definite matrix
+    
     P = np.random.rand(n,n);
-    P = P + P.T;
-    D, V = LA.eig(P);
-    P = (V*(1+10*np.random.rand(n))).dot(V.T);
-
+    P = P.T.dot(P) + np.eye(n)
     q = np.random.randn(n);
-    r = np.random.randn() + 10;
+    r = np.random.randn();
 
     l = np.random.randn(n);
     u = np.random.randn(n);
@@ -26,3 +22,4 @@ def create(n):
     C = [x >= lb,
          x <= ub]
     return cp.Problem(cp.Minimize(f), C)
+    

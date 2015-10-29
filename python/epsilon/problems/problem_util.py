@@ -16,8 +16,8 @@ def normalized_data_matrix(m, n, mu):
         A = sp.rand(m, n, mu)
         A.data = np.random.randn(A.nnz)
         N = A.copy()
-        N.data = np.sqrt(N.data**2)
-        A = A*sp.diags([1 / np.ravel(N.sum(axis=0))], [0])
+        N.data = N.data**2
+        A = A*sp.diags([1 / np.sqrt(np.ravel(N.sum(axis=0)))], [0])
 
     return A
 
