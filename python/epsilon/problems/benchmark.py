@@ -18,23 +18,27 @@ from epsilon.problems import benchmark_util
 from epsilon.problems.problem_instance import ProblemInstance
 from epsilon.problems.benchmark_format import Column
 
-# Need faster sparse matrix ops
+# Need to fix ATA, maybe faster sparse matrix ops?
 # ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
-
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.1)),
+    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
+    ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
+    ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=10000, n=1500, mu=0.1)),
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
-    ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.1)),
+    ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.01)),
+    ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
-    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000, rho=0.1)),
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000, rho=0.01)),
+    ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
-    ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.1)),
+    ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
+    ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=1500, n=50000, k=10, rho=0.01, mu=0.1)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
@@ -63,7 +67,7 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         kwargs["max_iters"] = 10000
 
     try:
-        # TODO(mwytock): Probably need to run this in a separate thread/process
+        # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
         # and kill after one hour?
         cvxpy_prob.solve(**kwargs)
     except cp.error.SolverError:
@@ -120,8 +124,8 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     benchmarks = []
-    super_columns = [Column("",           15)]
-    columns = [Column("Problem",   15, "%-15s")]
+    super_columns = [Column("",           18)]
+    columns = [Column("Problem",   18, "%-18s")]
 
     if not args.exclude_epsilon:
         benchmarks += [benchmark_epsilon]

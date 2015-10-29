@@ -21,11 +21,6 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
   VLOG(1) << "Factoring " << A_.rows() << " x " << A_.cols()
           << ", nnz=" << A_.nonZeros();
 
-  Eigen::SimplicialLDLT<LinearMap::SparseMatrix> ldlt_;
-  ldlt_.compute(A_);
-  CHECK_EQ(Eigen::Success, ldlt_.info())
-      << "Failed to factor\n" << DebugString();
-
   double alpha;
   if (IsScalarMatrix(A_, &alpha)) {
     // Convert to scalar matrix
