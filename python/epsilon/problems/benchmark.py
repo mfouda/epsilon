@@ -23,12 +23,21 @@ from epsilon.problems.benchmark_format import Column
 # Need to fix ATA, maybe faster sparse matrix ops?
 # ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
 
+# Slow, maybe consider a smaller version?
+# ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=1500, n=50000, k=10, rho=0.01, mu=0.1)),
+
+# Verify choice of lambda
+#ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
+#ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
+
+# Need to imporve convergence
+# ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
+
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
-    ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
-    ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=10000, n=1500, mu=0.1)),
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
@@ -40,9 +49,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
-    ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=1500, n=50000, k=10, rho=0.01, mu=0.1)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
@@ -59,7 +66,6 @@ def cvxpy_kwargs(solver):
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
     solve.solve(cvxpy_prob, params=params)
-    return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):
     kwargs = {"solver": solver,
@@ -76,8 +82,6 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         # Raised when solver cant handle a problem
         return float("nan")
 
-    return cvxpy_prob.objective.value
-
 def benchmark_cvxpy_canon(solver, cvxpy_prob):
     cvxpy_prob.get_problem_data(solver=solver)
 
@@ -92,6 +96,7 @@ def run_benchmarks_problem(benchmarks, problem):
     for benchmark in benchmarks:
         logging.debug("running %s", benchmark)
         t0 = time.time()
+<<<<<<< HEAD
         result = benchmark(cvxpy_prob)
         t1 = time.time()
         data.append(t1 - t0)
@@ -107,6 +112,25 @@ def run_benchmarks(benchmarks, problems):
     for result in results:
         # TODO(mwytock): Add a timeout mechanism
         yield result.get()
+=======
+        np.random.seed(0)
+        cvxpy_prob = problem.create()
+            
+        t1 = time.time()
+        logging.debug("creation time %f seconds", t1-t0)
+        data = [problem.name]
+        for benchmark in benchmarks:
+            logging.debug("running %s", benchmark)
+            t0 = time.time()
+            benchmark(cvxpy_prob)
+            result = cvxpy_prob.objective.value
+            t1 = time.time()
+            data.append(t1 - t0)
+            logging.debug("done %f seconds", t1-t0)
+            if result:
+                data.append(result)
+        yield data
+>>>>>>> 129c60aab04900d278a7f26011d50dea694b8d89
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
