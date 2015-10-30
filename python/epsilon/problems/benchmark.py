@@ -102,7 +102,8 @@ def run_benchmarks_problem(benchmarks, problem):
 
 def run_benchmarks(benchmarks, problems):
     pool = multiprocessing.Pool(processes=args.parallel)
-    results = [pool.apply_async(f, [benchmarks, p]) for p in problems]
+    results = [pool.apply_async(run_benchmarks_problem, [benchmarks, p])
+               for p in problems]
     for result in results:
         # TODO(mwytock): Add a timeout mechanism
         yield result.get()
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("--include-scs", action="store_true")
     parser.add_argument("--include-ecos", action="store_true")
     parser.add_argument("--exclude-epsilon", action="store_true")
-    parser.add_argument("--parallel", default=1)
+    parser.add_argument("--parallel", default=1, type=int)
     parser.add_argument("--write")
 
     args = parser.parse_args()
@@ -182,3 +183,4 @@ if __name__ == "__main__":
 
 else:
     args = argparse.Namespace()
+    args.parallel = 1
