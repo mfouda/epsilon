@@ -146,7 +146,8 @@ void ProxBlockVectorOperator::Preprocess() {
 }
 
 void ProxBlockVectorOperator::InitScaling() {
-  // BlockMatrix ATA = AT_*A_;
+  BlockMatrix ATA = AT_*A_;
+  VLOG(1) << "ATA: " << ATA.DebugString();
   // for (const auto& col_iter : ATA.data()) {
   //   CHECK(col_iter.second.size() == 1 &&
   //         col_iter.first == col_iter.second.begin()->first)

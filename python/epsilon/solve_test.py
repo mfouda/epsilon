@@ -11,7 +11,9 @@ from epsilon.problems import *
 from epsilon.problems.problem_instance import ProblemInstance
 
 # Override accuracy settings
-REL_TOL = {}
+REL_TOL = {
+    "mv_lasso": 1e-3
+}
 
 # Add a multiclass classification problem w/ hinge loss
 #
@@ -24,13 +26,13 @@ REL_TOL = {}
 # Need to fix ScaledZoneProx family functions to make canonicalize robust
 # ProblemInstance("robust_svm", robust_svm.create, dict(m=20, n=10, k=3)),
 #
-# Need to fix case where ATA is not identity
-# ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
+# LeastSquaresProx should tolerate "prox" operator with non-scalar A
+# ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+#
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=20, rho=0.1)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=5, n=10, rho=0.1, mu=0.5)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=20, n=10, rho=1)),
@@ -45,6 +47,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=5, n=20, k=2, rho=0.1)),
     ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=5, n=10, k=2, rho=0.1, mu=0.5)),
+    ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
@@ -59,7 +62,7 @@ def solve_problem(problem_instance):
     obj0 = problem.objective.value
 
     logging.debug(problem_instance.name)
-    params = solver_params_pb2.SolverParams()
+    params = solver_params_pb2.SolverParams(abs_tol=0)
     params.rel_tol = REL_TOL.get(problem_instance.name, 1e-2)
     solve.solve(problem, params)
     obj1 = problem.objective.value
