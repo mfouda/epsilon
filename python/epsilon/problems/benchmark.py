@@ -2,9 +2,8 @@
 
 import argparse
 import logging
-import multiprocessing
-import sys
 import time
+import sys
 
 import cvxpy as cp
 import numpy as np
@@ -31,11 +30,13 @@ from epsilon.problems.benchmark_format import Column
 # Need to imporve convergence
 # ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
 
+# Fix general A for least squares
+# ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
+
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
@@ -66,7 +67,6 @@ def cvxpy_kwargs(solver):
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
     solve.solve(cvxpy_prob, params=params)
-    return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):
     kwargs = {"solver": solver,
@@ -79,7 +79,6 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
         # and kill after one hour?
         cvxpy_prob.solve(**kwargs)
-        return cvxpy_prob.objective.value
     except cp.error.SolverError:
         # Raised when solver cant handle a problem
         return float("nan")
@@ -87,32 +86,27 @@ def benchmark_cvxpy(solver, cvxpy_prob):
 def benchmark_cvxpy_canon(solver, cvxpy_prob):
     cvxpy_prob.get_problem_data(solver=solver)
 
-def run_benchmarks_problem(benchmarks, problem):
-    logging.debug("problem %s", problem.name)
-    t0 = time.time()
-    np.random.seed(0)
-    cvxpy_prob = problem.create()
-    t1 = time.time()
-    logging.debug("creation time %f seconds", t1-t0)
-    data = [problem.name]
-    for benchmark in benchmarks:
-        logging.debug("running %s", benchmark)
-        t0 = time.time()
-        result = benchmark(cvxpy_prob)
-        t1 = time.time()
-        data.append(t1 - t0)
-        logging.debug("done %f seconds", t1-t0)
-        if result:
-            data.append(result)
-    return data
-
 def run_benchmarks(benchmarks, problems):
-    pool = multiprocessing.Pool(processes=args.parallel)
-    results = [pool.apply_async(run_benchmarks_problem, [benchmarks, p])
-               for p in problems]
-    for result in results:
-        # TODO(mwytock): Add a timeout mechanism
-        yield result.get()
+    for problem in problems:
+        logging.debug("problem %s", problem.name)
+        t0 = time.time()
+        np.random.seed(0)
+        cvxpy_prob = problem.create()
+            
+        t1 = time.time()
+        logging.debug("creation time %f seconds", t1-t0)
+        data = [problem.name]
+        for benchmark in benchmarks:
+            logging.debug("running %s", benchmark)
+            t0 = time.time()
+            benchmark(cvxpy_prob)
+            result = cvxpy_prob.objective.value
+            t1 = time.time()
+            data.append(t1 - t0)
+            logging.debug("done %f seconds", t1-t0)
+            if result:
+                data.append(result)
+        yield data
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -123,8 +117,9 @@ if __name__ == "__main__":
     parser.add_argument("--include-scs", action="store_true")
     parser.add_argument("--include-ecos", action="store_true")
     parser.add_argument("--exclude-epsilon", action="store_true")
-    parser.add_argument("--parallel", default=1, type=int)
+    parser.add_argument("--no-header", action="store_true")
     parser.add_argument("--write")
+    parser.add_argument("--list", action="store_true")
 
     args = parser.parse_args()
 
@@ -135,6 +130,11 @@ if __name__ == "__main__":
 
     if args.write:
         benchmark_util.write_problems(problems, args.write)
+        sys.exit(0)
+
+    if args.list:
+        for problem in problems:
+            print problem.name
         sys.exit(0)
 
     if args.debug:
@@ -182,11 +182,15 @@ if __name__ == "__main__":
         ]
 
     formatter = FORMATTERS[args.format](super_columns, columns)
-    formatter.print_header()
+
+    if not args.no_header:
+        formatter.print_header()
+        
     for row in run_benchmarks(benchmarks, problems):
         formatter.print_row(row)
-    formatter.print_footer()
+
+    if not args.no_header:
+        formatter.print_footer()
 
 else:
     args = argparse.Namespace()
-    args.parallel = 1
