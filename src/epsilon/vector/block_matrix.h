@@ -42,6 +42,8 @@ class BlockMatrix {
   int n() const;
   const std::map<std::string, linear_map::LinearMap>& col(
       const std::string& col_key) const;
+  const std::map<std::string, std::map<std::string, linear_map::LinearMap>>&
+      data() const { return data_; }
 
   std::set<std::string> col_keys() const;
   std::set<std::string> row_keys() const;

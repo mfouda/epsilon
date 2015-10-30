@@ -2,8 +2,9 @@
 
 import argparse
 import logging
-import time
+import multiprocessing
 import sys
+import time
 
 import cvxpy as cp
 import numpy as np
@@ -65,6 +66,7 @@ def cvxpy_kwargs(solver):
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
     solve.solve(cvxpy_prob, params=params)
+    return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):
     kwargs = {"solver": solver,
@@ -77,6 +79,7 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
         # and kill after one hour?
         cvxpy_prob.solve(**kwargs)
+        return cvxpy_prob.objective.value
     except cp.error.SolverError:
         # Raised when solver cant handle a problem
         return float("nan")
@@ -84,27 +87,32 @@ def benchmark_cvxpy(solver, cvxpy_prob):
 def benchmark_cvxpy_canon(solver, cvxpy_prob):
     cvxpy_prob.get_problem_data(solver=solver)
 
-def run_benchmarks(benchmarks, problems):
-    for problem in problems:
-        logging.debug("problem %s", problem.name)
+def run_benchmarks_problem(benchmarks, problem):
+    logging.debug("problem %s", problem.name)
+    t0 = time.time()
+    np.random.seed(0)
+    cvxpy_prob = problem.create()
+    t1 = time.time()
+    logging.debug("creation time %f seconds", t1-t0)
+    data = [problem.name]
+    for benchmark in benchmarks:
+        logging.debug("running %s", benchmark)
         t0 = time.time()
-        np.random.seed(0)
-        cvxpy_prob = problem.create()
-            
+        result = benchmark(cvxpy_prob)
         t1 = time.time()
-        logging.debug("creation time %f seconds", t1-t0)
-        data = [problem.name]
-        for benchmark in benchmarks:
-            logging.debug("running %s", benchmark)
-            t0 = time.time()
-            benchmark(cvxpy_prob)
-            result = cvxpy_prob.objective.value
-            t1 = time.time()
-            data.append(t1 - t0)
-            logging.debug("done %f seconds", t1-t0)
-            if result:
-                data.append(result)
-        yield data
+        data.append(t1 - t0)
+        logging.debug("done %f seconds", t1-t0)
+        if result:
+            data.append(result)
+    return data
+
+def run_benchmarks(benchmarks, problems):
+    pool = multiprocessing.Pool(processes=args.parallel)
+    results = [pool.apply_async(run_benchmarks_problem, [benchmarks, p])
+               for p in problems]
+    for result in results:
+        # TODO(mwytock): Add a timeout mechanism
+        yield result.get()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -115,6 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("--include-scs", action="store_true")
     parser.add_argument("--include-ecos", action="store_true")
     parser.add_argument("--exclude-epsilon", action="store_true")
+    parser.add_argument("--parallel", default=1, type=int)
     parser.add_argument("--write")
 
     args = parser.parse_args()
@@ -180,3 +189,4 @@ if __name__ == "__main__":
 
 else:
     args = argparse.Namespace()
+    args.parallel = 1

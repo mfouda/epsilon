@@ -51,31 +51,57 @@ void ProxADMMSolver::InitConstraints() {
   n_ = A_.n();
 }
 
+double GetBlockDiagonalScalar(const BlockMatrix& A) {
+  double alpha;
+  bool first = true;
+
+  for (const auto& col_iter : A.data()) {
+    CHECK(col_iter.second.size() == 1 &&
+          col_iter.first == col_iter.second.begin()->first)
+        << "Matrix not block diagonal\n" << A.DebugString();
+
+    auto const& Aii = col_iter.second.begin()->second;
+    const double alpha_i = linear_map::GetScalar(Aii);
+
+    if (first) {
+      alpha = alpha_i;
+      first = false;
+    } else {
+      CHECK_EQ(alpha_i, alpha);
+    }
+  }
+
+  return alpha;
+}
+
 void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
-  AiT_.resize(N_);
   x_.resize(N_);
+
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
-    for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
+    BlockMatrix A;
+    for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
-      for (auto iter : A_.col(var_id))
-        AiT_[i](var_id, iter.first) = iter.second.Transpose();
+      for (auto iter : A_.col(var_id)) {
+        A(iter.first, var_id) = iter.second;
+      }
     }
 
     // TODO(mwytock): A bit of a hack, this should likely be specified slightly
     // differently, perhaps by making the ADMM operations more explicit as part
     // of the IR.
-
     if (f_expr.proximal_operator().name() == "ZeroProx") {
-      prox_.emplace_back(std::make_unique<LeastSquaresOperator>(
-          AiT_[i].Transpose()));
+      prox_.emplace_back(std::make_unique<LeastSquaresOperator>(A));
     } else {
+      const double alpha = GetBlockDiagonalScalar(A.Transpose()*A);
+      VLOG(1) << "ATA, alpha = " << alpha;
       prox_.emplace_back(CreateProxOperator(
-          1/params_.rho(), AiT_[i].Transpose(), f_expr));
+          1/params_.rho()/alpha, (1/alpha)*A, f_expr));
     }
 
+    AiT_.push_back(A.Transpose());
     prox_.back()->Init();
   }
 }
