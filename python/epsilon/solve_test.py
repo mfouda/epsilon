@@ -62,7 +62,7 @@ def solve_problem(problem_instance):
     obj0 = problem.objective.value
 
     logging.debug(problem_instance.name)
-    params = solver_params_pb2.SolverParams(abs_tol=0)
+    params = solver_params_pb2.SolverParams(abs_tol=1e-5)
     params.rel_tol = REL_TOL.get(problem_instance.name, 1e-2)
     solve.solve(problem, params)
     obj1 = problem.objective.value
