@@ -1,6 +1,9 @@
 
+import sys
+import argparse
 
 from collections import namedtuple
+
 
 class Column(namedtuple("Column", ["name", "width", "fmt", "right", "colspan"])):
     """Columns for a Markdown appropriate text table."""
@@ -26,8 +29,7 @@ class Column(namedtuple("Column", ["name", "width", "fmt", "right", "colspan"]))
 Column.__new__.__defaults__ = (None, None, None, False, 1)
 
 class Formatter(object):
-    def __init__(self, super_columns, columns):
-        self.super_columns = super_columns
+    def __init__(self, columns):
         self.columns = columns
 
     def print_header(self):
@@ -38,7 +40,6 @@ class Formatter(object):
 
 class Text(Formatter):
     def print_header(self):
-        print "|".join(c.header for c in self.super_columns)
         print "|".join(c.header for c in self.columns)
         print "|".join(c.sub_header for c in self.columns)
 
@@ -48,8 +49,6 @@ class Text(Formatter):
 class HTML(Formatter):
     def print_header(self):
         print "<table>"
-        print "<tr>" + "".join('<th colspan="%d">%s</th>' % (c.colspan, c.header)
-                               for c in self.super_columns) + "</tr>"
         print "<tr>" + "".join('<th colspan="%d">%s</th>' % (c.colspan, c.header)
                                for c in self.columns) + "</tr>"
 
@@ -77,11 +76,6 @@ class Latex(Formatter):
         print "&".join("\multicolumn{%d}{c}{%s}" % (c.colspan, c.header)
                        if c.colspan != 1
                        else c.header
-                       for c in self.super_columns) + r" \\"
-
-        print "&".join("\multicolumn{%d}{c}{%s}" % (c.colspan, c.header)
-                       if c.colspan != 1
-                       else c.header
                        for c in self.columns) + r" \\"
 
 
@@ -97,9 +91,9 @@ class Latex(Formatter):
 
 
 FORMATTERS = {
-    "text": benchmark_format.Text,
-    "html": benchmark_format.HTML,
-    "latex": benchmark_format.Latex,
+    "text": Text,
+    "html": HTML,
+    "latex": Latex,
 }
 
 
@@ -108,48 +102,32 @@ if __name__ == "__main__":
     parser.add_argument("--format", default="text")
     args = parser.parse_args()
 
+    results = {}
 
-    super_columns = [Column("",           18)]
+    for line in sys.stdin:
+        benchmark, problem, time, value = line.split()
+        results[(problem, benchmark)] = (float(time), float(value))
+
+    problems = set(k[0] for k in results)
+    benchmarks = set(k[1] for k in results)
+
     columns = [Column("Problem",   18, "%-18s")]
-
-    if not args.exclude_epsilon:
-        benchmarks += [benchmark_epsilon]
-
-        super_columns += [
-            Column("Epsilon",    20, right=True, colspan=2),
-        ]
-
-        columns += [
-            # Epsilon
-            Column("Time",      8,  "%7.2fs", right=True),
-            Column("Objective", 11, "%11.2e", right=True),
-        ]
-
-    if args.include_scs:
-        benchmarks += [lambda p: benchmark_cvxpy(cp.SCS, p)]
-
-        super_columns += [
-            Column("CVXPY+SCS",  20, right=True, colspan=2),
-        ]
-
+    for benchmark in benchmarks:
         columns += [
             Column("Time",      8,  "%7.2fs", right=True),
             Column("Objective", 11, "%11.2e", right=True),
         ]
 
-    if args.include_ecos:
-        benchmarks += [lambda p: benchmark_cvxpy(cp.ECOS, p)]
+    formatter = FORMATTERS[args.format](columns)
+    formatter.print_header()
 
-        super_columns += [
-            Column("CVXPY+ECOS",  20, right=True, colspan=2),
-        ]
+    for problem in sorted(problems):
+        row = [problem]
+        for benchmark in ["epsilon", "scs", "ecos"]:
+            if benchmark not in benchmarks:
+                continue
+            row += results.get(
+                (problem, benchmark), (float("nan"), (float("nan"))))
 
-        columns += [
-            Column("Time",      8,  "%7.2fs", right=True),
-            Column("Objective", 11, "%11.2e", right=True),
-        ]
-
-    formatter = FORMATTERS[args.format](super_columns, columns)
-
-        if not args.no_header:
-        formatter.print_header()
+        formatter.print_row(row)
+    formatter.print_footer()
