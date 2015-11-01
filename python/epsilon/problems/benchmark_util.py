@@ -1,6 +1,7 @@
 
 import errno
 import os
+import resource
 
 from epsilon import cvxpy_expr
 from epsilon import constant
@@ -60,3 +61,6 @@ def write_problems(problems, location):
             makedirs_existok(os.path.dirname(filename))
             with open(filename, "w") as f:
                 f.write(value)
+
+def cpu_time():
+    return resource.getrusage(resource.RUSAGE_SELF).ru_utime

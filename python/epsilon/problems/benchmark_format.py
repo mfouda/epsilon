@@ -94,3 +94,62 @@ class Latex(Formatter):
 
     def print_footer(self):
         print r"\end{tabular}"
+
+
+FORMATTERS = {
+    "text": benchmark_format.Text,
+    "html": benchmark_format.HTML,
+    "latex": benchmark_format.Latex,
+}
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--format", default="text")
+    args = parser.parse_args()
+
+
+    super_columns = [Column("",           18)]
+    columns = [Column("Problem",   18, "%-18s")]
+
+    if not args.exclude_epsilon:
+        benchmarks += [benchmark_epsilon]
+
+        super_columns += [
+            Column("Epsilon",    20, right=True, colspan=2),
+        ]
+
+        columns += [
+            # Epsilon
+            Column("Time",      8,  "%7.2fs", right=True),
+            Column("Objective", 11, "%11.2e", right=True),
+        ]
+
+    if args.include_scs:
+        benchmarks += [lambda p: benchmark_cvxpy(cp.SCS, p)]
+
+        super_columns += [
+            Column("CVXPY+SCS",  20, right=True, colspan=2),
+        ]
+
+        columns += [
+            Column("Time",      8,  "%7.2fs", right=True),
+            Column("Objective", 11, "%11.2e", right=True),
+        ]
+
+    if args.include_ecos:
+        benchmarks += [lambda p: benchmark_cvxpy(cp.ECOS, p)]
+
+        super_columns += [
+            Column("CVXPY+ECOS",  20, right=True, colspan=2),
+        ]
+
+        columns += [
+            Column("Time",      8,  "%7.2fs", right=True),
+            Column("Objective", 11, "%11.2e", right=True),
+        ]
+
+    formatter = FORMATTERS[args.format](super_columns, columns)
+
+        if not args.no_header:
+        formatter.print_header()
