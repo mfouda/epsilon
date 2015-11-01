@@ -16,7 +16,8 @@ time=3600
 # backend to numpy can be.
 export OPENBLAS_NUM_THREADS=1
 
-parallel timelimit -t$time $benchmark \
-	 --benchmark {1} \
-	 --problem {2} \
-	 ::: $names ::: $problems
+for problem in $problems; do
+    for name in $names; do
+	timelimit -t$time $benchmark --benchmark $name --problem $problem
+    done
+done
