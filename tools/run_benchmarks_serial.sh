@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash -u
 #
 # Run Epsilon benchmarks using GNU parallel. 
 
