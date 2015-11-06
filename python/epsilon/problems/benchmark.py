@@ -34,6 +34,7 @@ from epsilon.problems.problem_instance import ProblemInstance
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
+    ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
@@ -58,6 +59,11 @@ PROBLEMS_SCALE += [ProblemInstance(
     lasso.create,
     dict(m=int(m), n=3*int(m), rho=1 if m < 50 else 0.01))
     for m in np.logspace(1, np.log10(3000), 10)]
+PROBLEMS_SCALE += [ProblemInstance(
+    "fused_lasso_%d" % int(m),
+    fused_lasso.create,
+    dict(m=int(m), ni=10, k=int(m)))
+    for m in np.logspace(1, 3, 10)]
 
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
@@ -131,7 +137,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.problem:
-        problems = [p for p in problems if p.name == args.problem]
+        problems = [p for p in problems if p.name.startswith(args.problem)]
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)

@@ -52,6 +52,12 @@ PyObject* GetVariableMap(const BlockVector& x) {
   return vars;
 }
 
+void InitLogging() {
+  const char* v = getenv("EPSILON_VLOG");
+  if (v != nullptr)
+    FLAGS_v = atoi(v);
+}
+
 extern "C" {
 
 void WriteConstants(PyObject* data) {
@@ -99,6 +105,7 @@ static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
   if (!params.ParseFromArray(params_str, params_str_len))
     return nullptr;
 
+  InitLogging();
   WriteConstants(data);
   ProxADMMSolver solver(
       problem, params,
@@ -162,6 +169,7 @@ static PyObject* Prox(PyObject* self, PyObject* args) {
     A(var_id, var_id) = linear_map::Identity(GetDimension(*var_expr));
   }
 
+  InitLogging();
   WriteConstants(data);
   if (!setjmp(failure_buf)) {
     std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
@@ -196,9 +204,6 @@ static bool initialized = false;
 PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
   if (!initialized) {
-    const char* v = getenv("EPSILON_VLOG");
-    if (v != nullptr)
-      FLAGS_v = atoi(v);
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
     google::InstallFailureFunction(&HandleFailure);
