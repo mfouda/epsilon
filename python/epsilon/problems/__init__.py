@@ -2,6 +2,7 @@
 
 from epsilon.problems import basis_pursuit
 from epsilon.problems import covsel
+from epsilon.problems import fused_lasso
 from epsilon.problems import group_lasso
 from epsilon.problems import hinge_l1
 from epsilon.problems import hinge_l2

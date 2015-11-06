@@ -33,6 +33,7 @@ REL_TOL = {
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
+    ProblemInstance("fused_lasso", fused_lasso.create, dict(m=5, n=10)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=20, rho=0.1)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=5, n=10, rho=0.1, mu=0.5)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=20, n=10, rho=1)),
