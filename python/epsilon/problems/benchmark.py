@@ -52,6 +52,13 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
+PROBLEMS_SCALE = []
+PROBLEMS_SCALE += [ProblemInstance(
+    "lasso_%d" % int(m),
+    lasso.create,
+    dict(m=int(m), n=3*int(m), rho=1 if m < 50 else 0.01))
+    for m in np.logspace(1, np.log10(3000), 10)]
+
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
     solve.solve(cvxpy_prob, params=params)
@@ -79,9 +86,6 @@ BENCHMARKS = {
     "ecos": lambda p: benchmark_cvxpy(cp.ECOS, p),
 }
 
-def benchmark_cvxpy_canon(solver, cvxpy_prob):
-    cvxpy_prob.get_problem_data(solver=solver)
-
 def run_benchmarks(benchmarks, problems):
     for problem in problems:
         logging.debug("problem %s", problem.name)
@@ -105,17 +109,19 @@ def run_benchmarks(benchmarks, problems):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--problem")
     parser.add_argument("--benchmark", default="epsilon")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--list-benchmarks", action="store_true")
+    parser.add_argument("--list-problems", action="store_true")
+    parser.add_argument("--problem")
+    parser.add_argument("--problem-set", default="PROBLEMS")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--write")
-    parser.add_argument("--list-problems", action="store_true")
-    parser.add_argument("--list-benchmarks", action="store_true")
     args = parser.parse_args()
 
+    problems = locals()[args.problem_set]
     if args.list_problems:
-        for problem in PROBLEMS:
+        for problem in problems:
             print problem.name
         sys.exit(0)
 
@@ -125,9 +131,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.problem:
-        problems = [p for p in PROBLEMS if p.name == args.problem]
-    else:
-        problems = PROBLEMS
+        problems = [p for p in problems if p.name == args.problem]
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
