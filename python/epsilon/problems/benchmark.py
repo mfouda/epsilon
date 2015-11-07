@@ -126,6 +126,7 @@ if __name__ == "__main__":
     parser.add_argument("--list-benchmarks", action="store_true")
     parser.add_argument("--list-problems", action="store_true")
     parser.add_argument("--problem")
+    parser.add_argument("--problem-match")
     parser.add_argument("--problem-set", default="PROBLEMS")
     parser.add_argument("--scs-indirect", action="store_true")
     parser.add_argument("--write")
@@ -143,7 +144,10 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.problem:
-        problems = [p for p in problems if p.name.startswith(args.problem)]
+        problems = [p for p in problems if p.name == args.problem]
+    elif args.problem_match:
+        problems = [
+            p for p in problems if p.name.startswith(args.problem_match)]
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)

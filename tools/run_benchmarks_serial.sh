@@ -1,14 +1,10 @@
 #!/bin/bash -u
-#
-# Run Epsilon benchmarks using GNU parallel. 
 
 cmd="python -m epsilon.problems.benchmark $*"
 
 benchmarks=$($cmd --list-benchmarks)
 problems=$($cmd --list-problems)
 time=3600
-
-echo $problems
 
 # Epsilon is not multi-threaded (yet) but BLAS implementations used as a
 # backend to numpy can be.
