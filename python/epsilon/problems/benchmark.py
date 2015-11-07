@@ -53,13 +53,23 @@ PROBLEMS_SCALE = []
 PROBLEMS_SCALE += [ProblemInstance(
     "lasso_%d" % int(m),
     lasso.create,
-    dict(m=int(m), n=3*int(m), rho=1 if m < 50 else 0.01))
-    for m in np.logspace(1, np.log10(3000), 10)]
+    dict(m=int(m), n=10*int(m), rho=1 if m < 50 else 0.01))
+    for m in np.logspace(1, np.log10(5000), 20)]
+PROBLEMS_SCALE += [ProblemInstance(
+    "mv_lasso_%d" % int(m),
+    lasso.create,
+    dict(m=int(m), n=10*int(m), k=10, rho=1 if m < 50 else 0.01))
+    for m in np.logspace(1, np.log10(5000), 20)]
 PROBLEMS_SCALE += [ProblemInstance(
     "fused_lasso_%d" % int(m),
     fused_lasso.create,
     dict(m=int(m), ni=10, k=int(m)))
-    for m in np.logspace(1, 3, 10)]
+    for m in np.logspace(1, 3, 20)]
+PROBLEMS_SCALE += [ProblemInstance(
+    "hinge_l2_%d" % int(n),
+    hinge_l2.create,
+    dict(m=10*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(5000), 20)]
 
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-4)
