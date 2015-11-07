@@ -55,6 +55,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3, p=1)),
+]
+
+
 def solve_problem(problem_instance):
     np.random.seed(0)
     problem = problem_instance.create()

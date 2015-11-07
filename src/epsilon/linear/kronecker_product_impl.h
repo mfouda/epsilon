@@ -23,7 +23,7 @@ class KroneckerProductImpl final : public LinearMapImpl {
   }
 
   DenseMatrix AsDense() const override;
-  DenseVector Apply(const DenseVector& x) const override;
+  DenseMatrix Apply(const DenseMatrix& x) const override;
 
   LinearMapImpl* Transpose() const override {
     return new KroneckerProductImpl(A_.Transpose(), B_.Transpose());
@@ -34,7 +34,6 @@ class KroneckerProductImpl final : public LinearMapImpl {
   }
 
   bool operator==(const LinearMapImpl& other) const override;
-
   // Scalar matrix API
   const LinearMap& A() const { return A_; }
   const LinearMap& B() const { return B_; }

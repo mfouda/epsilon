@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
   CHECK(problem.ParseFromString(ReadStringFromFile(FLAGS_problem)));
 
   SolverParams params;
+  params.set_rel_tol(1e-3);
   ProxADMMSolver solver(
       problem, params,
       std::unique_ptr<ParameterService>(new LocalParameterService));

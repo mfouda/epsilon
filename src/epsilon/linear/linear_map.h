@@ -27,7 +27,6 @@ class LinearMapImpl {
  public:
   typedef double Scalar;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> DenseMatrix;
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
   LinearMapImpl(LinearMapImplType type) : type_(type) {}
@@ -38,7 +37,7 @@ class LinearMapImpl {
   virtual int n() const = 0;
   virtual std::string DebugString() const = 0;
   virtual DenseMatrix AsDense() const = 0;
-  virtual DenseVector Apply(const DenseVector& x) const = 0;
+  virtual DenseMatrix Apply(const DenseMatrix& x) const = 0;
   virtual LinearMapImpl* Transpose() const = 0;
   virtual LinearMapImpl* Inverse() const = 0;
   virtual bool operator==(const LinearMapImpl& other) const = 0;
@@ -53,7 +52,6 @@ class LinearMap {
  public:
   typedef double Scalar;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> DenseMatrix;
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
   LinearMap();

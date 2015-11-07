@@ -1,3 +1,6 @@
+
+#include <Eigen/SparseCholesky>
+
 #include "epsilon/linear/dense_matrix_impl.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
@@ -6,6 +9,45 @@
 #include "epsilon/vector/vector_util.h"
 
 namespace linear_map {
+
+class SparseLDLImpl final : public LinearMapImpl {
+public:
+  SparseLDLImpl(SparseMatrix A)
+      : LinearMapImpl(BASIC),
+      solver_(A),
+      transpose_(false) {
+    CHECK_EQ(solver_.info(), Eigen::Success);
+  }
+
+  int m() const override { return solver_.matrixL().rows(); }
+  int n() const override { return solver_.matrixL().rows(); }
+  std::string DebugString() const override { return "SparseLDLImpl"; }
+
+  DenseMatrix AsDense() const override {
+    LOG(FATAL) << "Not implemented";
+  }
+  DenseMatrix Apply(const DenseMatrix& x) const override {
+    if (transpose_)
+      LOG(FATAL) << "Not implemented";
+    return solver_.solve(x);
+  }
+
+  LinearMapImpl* Transpose() const override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+  LinearMapImpl* Inverse() const override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+  bool operator==(const LinearMapImpl& other) const override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+private:
+  Eigen::SimplicialLDLT<SparseMatrix> solver_;
+  bool transpose_;
+};
 
 std::string SparseMatrixImpl::DebugString() const {
   return StringPrintf(
@@ -27,9 +69,7 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
     std::unique_ptr<LinearMapImpl> impl(new ScalarMatrixImpl(n(), alpha));
     return impl->Inverse();
   } else {
-    // Convert to dense matrix
-    std::unique_ptr<LinearMapImpl> impl(new DenseMatrixImpl(A_));
-    return impl->Inverse();
+    return new SparseLDLImpl(A_);
   }
 }
 

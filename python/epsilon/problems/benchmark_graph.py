@@ -32,6 +32,6 @@ if __name__ == "__main__":
     plt.legend(loc="upper left")
     plt.ylabel("Running time (seconds)")
     plt.xlabel("Number of variables")
-    plt.grid(b=True, which="major", linestyle="-")
-    plt.grid(b=True, which="minor", linestyle="--")
+    plt.grid(b=True, which="major", linestyle="-.", alpha=0.7)
+    plt.grid(b=True, which="minor", linestyle=":", alpha=0.3)
     plt.savefig(sys.stdout, format="pdf")

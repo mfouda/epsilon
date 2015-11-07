@@ -24,8 +24,7 @@ from epsilon.problems.problem_instance import ProblemInstance
 
 # Verify choice of lambda
 
-# Need to imporve convergence
-# ProblemInstance("quantile", quantile.create, dict(m=400, n=5, k=100)),
+
 
 # Fix general A for least squares
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
@@ -49,6 +48,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
+    ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=50, p=1)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
@@ -66,7 +66,7 @@ PROBLEMS_SCALE += [ProblemInstance(
     for m in np.logspace(1, 3, 10)]
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
+    params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-4)
     solve.solve(cvxpy_prob, params=params)
     return cvxpy_prob.objective.value
 
