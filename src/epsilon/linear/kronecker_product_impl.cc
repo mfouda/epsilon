@@ -20,8 +20,8 @@ LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
   DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
   return ToVector(
-      A_.impl().Apply(
-          B_.impl().Apply(X).transpose()).transpose());
+      A_.impl().ApplyMatrix(
+          B_.impl().ApplyMatrix(X).transpose()).transpose());
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {
