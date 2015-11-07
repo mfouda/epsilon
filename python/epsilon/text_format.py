@@ -1,17 +1,12 @@
 
 
-from epsilon.expression_pb2 import Expression, Cone
 from epsilon import expression_util
+from epsilon.compiler import validate
+from epsilon.expression_pb2 import Expression, Cone, LinearMap
 
 NAMES = {
     Expression.VARIABLE: "xyzwvutsrq",
     Expression.CONSTANT: "abcdkeflmn",
-}
-
-OPERATOR_NAMES = {
-    Expression.ADD: "+",
-    Expression.MULTIPLY: "*",
-    Expression.NEGATE: "-",
 }
 
 class NameMap(object):
@@ -22,24 +17,34 @@ class NameMap(object):
             Expression.CONSTANT: 0,
         }
 
-    def name(self, proto):
-        fp = expression_util.fp_expr(proto)
-        if fp in self.name_map:
-            return self.name_map[fp]
+    def constant_name(self, constant):
+        assert constant.data_location
+        return self.name(
+            constant.data_location,
+            Expression.CONSTANT,
+            constant.n != 1)
 
-        t = proto.expression_type
-        name = NAMES[t][self.count[t] % len(NAMES[t])]
-        if proto.size.dim[1] != 1:
+    def variable_name(self, var_expr):
+        assert var_expr.variable.variable_id
+        return self.name(
+            var_expr.variable.variable_id,
+            Expression.VARIABLE,
+            var_expr.size.dim[1] != 1)
+
+    def name(self, name_id, name_type, is_matrix):
+        if name_id in self.name_map:
+            return self.name_map[name_id]
+
+        name = NAMES[name_type][self.count[name_type] % len(NAMES[name_type])]
+        if is_matrix:
             name = name.upper()
 
-        self.name_map[fp] = name
-        self.count[t] += 1
+        self.name_map[name_id] = name
+        self.count[name_type] += 1
         return name
 
 def function_name(proto):
-    if proto.expression_type in OPERATOR_NAMES:
-        return OPERATOR_NAMES[proto.expression_type]
-    elif proto.expression_type == Expression.INDICATOR:
+    if proto.expression_type == Expression.INDICATOR:
         return Cone.Type.Name(proto.cone.cone_type).lower()
     return Expression.Type.Name(proto.expression_type).lower()
 
@@ -63,33 +68,57 @@ def format_params(proto):
     else:
         return ""
 
-def format_expr(proto, name_map):
-    if proto.expression_type == Expression.CONSTANT:
-        if not proto.constant.data_location:
-            return "%.2f" % proto.constant.scalar
-        return name_map.name(proto)
-    if proto.expression_type == Expression.VARIABLE:
-        return name_map.name(proto)
+def linear_map_name(linear_map, name_map):
+    if linear_map.linear_map_type == LinearMap.DENSE_MATRIX:
+        return "dense(" + name_map.constant_name(linear_map.constant) + ")"
+    elif linear_map.linear_map_type == LinearMap.SPARSE_MATRIX:
+        return "sparse(" + nam_map.constant_name(linear_map.constant) + ")"
+    elif linear_map.linear_map_type == LinearMap.DIAGONAL_MATRIX:
+        return "diag(" + name_map.constant_name(linear_map.constant) + ")"
+    elif linear_map.linear_map_type == LinearMap.SCALAR:
+        return "scalar(%.2f)" % linear_map.scalar
+    elif linear_map.linear_map_type == LinearMap.KRONECKER_PRODUCT:
+        assert len(linear_map.arg) == 2
+        return "kron(" + ", ".join(linear_map_name(arg, name_map)
+                                   for arg in linear_map.arg) + ")"
 
-    return (function_name(proto) + format_params(proto) +
+    raise ValueError("unknown linear map type: %d" % linear_map.linear_map_type)
+
+def format_linear_map(expr, name_map):
+    assert len(expr.arg) == 1
+    return (linear_map_name(expr.linear_map, name_map) + "*" +
+            format_expr(expr.arg[0], name_map))
+
+def format_expr(expr, name_map):
+    if expr.expression_type == Expression.CONSTANT:
+        if not expr.constant.data_location:
+            return "%.2f" % expr.constant.scalar
+        return "const(" + name_map.constant_name(expr.constant) + ")"
+    elif expr.expression_type == Expression.VARIABLE:
+        return "var(" + name_map.variable_name(expr) + ")"
+    elif expr.expression_type == Expression.LINEAR_MAP:
+        return format_linear_map(expr, name_map)
+    elif expr.expression_type == Expression.RESHAPE:
+        assert len(expr.arg) == 1
+        return format_expr(expr.arg[0], name_map)
+
+    return (function_name(expr) + format_params(expr) +
             "(" + ", ".join(format_expr(arg, name_map)
-                            for arg in proto.arg) + ")")
+                            for arg in expr.arg) + ")")
 
-def format_problem(proto):
+def format_problem(problem):
     name_map = NameMap()
+    validate.check_sum_of_prox(problem)
 
-    assert proto.objective.expression_type == Expression.ADD
+    output = "objective:\n"
+    output += ("  add(\n    " +
+               ",\n    ".join(
+                   format_expr(arg, name_map) for arg in problem.objective.arg) +
+               ")\n")
 
-    output = "problem(+(\n"
-    for arg in proto.objective.arg:
-        output += "  " + format_expr(arg, name_map) + ",\n"
-
-    if proto.constraint:
-        output += "), [\n"
-        for constr in proto.constraint:
-            output += "  " + format_expr(constr, name_map) + ",\n"
-        output += "])"
-    else:
-        output += "))"
+    if problem.constraint:
+        output += "\nconstraints:\n"
+        output += "".join("  " + format_expr(constr, name_map) + "\n"
+                          for constr in problem.constraint)
 
     return output
