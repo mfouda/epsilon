@@ -22,13 +22,10 @@ from epsilon.problems.problem_instance import ProblemInstance
 # Slow, maybe consider a smaller version?
 # ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=1500, n=50000, k=10, rho=0.01, mu=0.1)),
 
-# Verify choice of lambda
-
-
-
 # Fix general A for least squares
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
 
+# ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=50, p=1)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -48,7 +45,6 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
-    ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=50, p=1)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]

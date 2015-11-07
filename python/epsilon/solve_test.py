@@ -29,6 +29,9 @@ REL_TOL = {
 # LeastSquaresProx should tolerate "prox" operator with non-scalar A
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
 #
+# Generalize proximal operator rules for scaled zone prox
+# ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -50,15 +53,9 @@ PROBLEMS = [
     ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=5, n=10, k=2, rho=0.1, mu=0.5)),
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
-
-PROBLEMS = [
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3, p=1)),
-]
-
 
 def solve_problem(problem_instance):
     np.random.seed(0)

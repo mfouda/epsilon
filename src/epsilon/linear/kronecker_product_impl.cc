@@ -16,15 +16,12 @@ LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
   return C;
 }
 
-LinearMap::DenseMatrix KroneckerProductImpl::Apply(const DenseMatrix& X) const {
-  LOG(INFO) << "Apply: " << DebugString();
-
-  // TODO(mwytock): Support this case if needed
-  CHECK_EQ(1, X.cols());
-  DenseMatrix X_mat = ToMatrix(X, B_.impl().n(), A_.impl().n());
+LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
+    const LinearMapImpl::DenseVector& x) const {
+  DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
   return ToVector(
       A_.impl().Apply(
-          B_.impl().Apply(X_mat).transpose()).transpose());
+          B_.impl().Apply(X).transpose()).transpose());
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {

@@ -19,7 +19,9 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
   int n() const override { return A_.cols(); }
   std::string DebugString() const override { return MatrixDebugString(A_); }
   DenseMatrix AsDense() const override { return static_cast<DenseMatrix>(A_); }
-  DenseMatrix Apply(const DenseMatrix& X) const override { return A_*X; }
+
+  DenseMatrix ApplyMatrix(const DenseMatrix& X) const override { return A_*X; }
+  DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
   LinearMapImpl* Transpose() const override {
     return new DiagonalMatrixImpl(A_);

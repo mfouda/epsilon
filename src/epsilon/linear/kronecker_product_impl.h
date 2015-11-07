@@ -23,7 +23,10 @@ class KroneckerProductImpl final : public LinearMapImpl {
   }
 
   DenseMatrix AsDense() const override;
-  DenseMatrix Apply(const DenseMatrix& x) const override;
+  DenseVector Apply(const DenseVector& x) const override;
+  DenseMatrix ApplyMatrix(const DenseMatrix& X) const override {
+    LOG(FATAL) << "Not implemented";
+  }
 
   LinearMapImpl* Transpose() const override {
     return new KroneckerProductImpl(A_.Transpose(), B_.Transpose());
