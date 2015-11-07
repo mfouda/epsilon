@@ -72,7 +72,7 @@ def linear_map_name(linear_map, name_map):
     if linear_map.linear_map_type == LinearMap.DENSE_MATRIX:
         return "dense(" + name_map.constant_name(linear_map.constant) + ")"
     elif linear_map.linear_map_type == LinearMap.SPARSE_MATRIX:
-        return "sparse(" + nam_map.constant_name(linear_map.constant) + ")"
+        return "sparse(" + name_map.constant_name(linear_map.constant) + ")"
     elif linear_map.linear_map_type == LinearMap.DIAGONAL_MATRIX:
         return "diag(" + name_map.constant_name(linear_map.constant) + ")"
     elif linear_map.linear_map_type == LinearMap.SCALAR:
