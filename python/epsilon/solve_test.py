@@ -10,10 +10,7 @@ from epsilon import solver_params_pb2
 from epsilon.problems import *
 from epsilon.problems.problem_instance import ProblemInstance
 
-# Override accuracy settings
-REL_TOL = {
-    "mv_lasso": 1e-3
-}
+REL_TOL = {}
 
 # Add a multiclass classification problem w/ hinge loss
 #

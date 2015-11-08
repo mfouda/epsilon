@@ -87,9 +87,9 @@ def transform_epigraph(f_expr, g_expr):
     epi_g_expr = epigraph(g_expr, t_expr)
     g_expr.CopyFrom(t_expr)
 
-    yield f_expr
     for prox_expr in transform_expr(epi_g_expr):
         yield prox_expr
+    yield f_expr
 
 # Piecewise Linear Family
 # TODO(mwytock): Replace these with a single ScaledZone function which is what
@@ -652,7 +652,8 @@ def transform_expr(expr):
     raise CanonicalizeError("No prox rule", expr)
 
 def transform(input):
-    prox_exprs = list(transform_expr(input.objective))
+    prox_exprs = []
     for constr in input.constraint:
         prox_exprs += list(transform_expr(constr))
+    prox_exprs += list(transform_expr(input.objective))
     return Problem(objective=add(*prox_exprs))

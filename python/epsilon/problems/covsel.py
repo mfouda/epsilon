@@ -18,6 +18,6 @@ def create(m, n, lam):
 
     Theta = cp.Variable(n,n)
     return cp.Problem(cp.Minimize(
-        -cp.log_det(Theta) +
-        cp.sum_entries(cp.mul_elemwise(S,Theta)) +
-        lam*cp.norm1(cp.mul_elemwise(W,Theta))))
+        lam*cp.norm1(cp.mul_elemwise(W,Theta)) +
+        cp.sum_entries(cp.mul_elemwise(S,Theta)) -
+        cp.log_det(Theta)))

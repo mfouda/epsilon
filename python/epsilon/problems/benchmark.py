@@ -72,7 +72,7 @@ PROBLEMS_SCALE += [ProblemInstance(
     for n in np.logspace(1, np.log10(5000), 20)]
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-4)
+    params = solver_params_pb2.SolverParams(rel_tol=1e-3, abs_tol=1e-5)
     solve.solve(cvxpy_prob, params=params)
     return cvxpy_prob.objective.value
 

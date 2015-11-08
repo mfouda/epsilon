@@ -96,6 +96,7 @@ def find_var_instances(f, expr):
 
 class ProblemGraph(object):
     def __init__(self, problem):
+        self.functions = []
         self.edges_by_variable = defaultdict(list)
         self.edges_by_function = defaultdict(list)
 
@@ -107,9 +108,8 @@ class ProblemGraph(object):
 
     def problem(self):
         return Problem(
-            objective=expression.add(
-                *sorted((f.expr for f in self.functions), key=str)),
-            constraint=sorted((f.expr for f in self.constraints), key=str))
+            objective=expression.add(*(f.expr for f in self.obj_terms)),
+            constraint=[f.expr for f in self.constraints])
 
     # Basic operations
     def remove_edge(self, f_var):
@@ -121,12 +121,18 @@ class ProblemGraph(object):
         self.edges_by_function[f_var.function].append(f_var)
 
     def remove_function(self, f):
+        self.functions.remove(f)
         for f_var in self.edges_by_function[f]:
             self.edges_by_variable[f_var.variable].remove(f_var)
         del self.edges_by_function[f]
 
     def add_function(self, f):
-        for f_var in find_var_instances(f, f.expr).itervalues():
+        f_vars = find_var_instances(f, f.expr)
+        if not f_vars:
+            return
+
+        self.functions.append(f)
+        for f_var in f_vars.itervalues():
             self.add_edge(f_var)
 
         # Add curvature attributes for equality indicator functions
@@ -138,12 +144,12 @@ class ProblemGraph(object):
 
     # Accessors for nodes
     @property
-    def functions(self):
-        return [f for f in self.edges_by_function.keys() if not f.constraint]
+    def obj_terms(self):
+        return [f for f in self.functions if not f.constraint]
 
     @property
     def constraints(self):
-        return [f for f in self.edges_by_function.keys() if f.constraint]
+        return [f for f in self.functions if f.constraint]
 
     @property
     def variables(self):

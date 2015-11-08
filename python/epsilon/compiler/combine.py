@@ -55,7 +55,7 @@ def max_overlap_function(graph, f):
     def overlap(g):
         return len(variables(g).intersection(variables_f))
 
-    h = max((g for g in graph.functions if g != f), key=overlap)
+    h = max((g for g in graph.obj_terms if g != f), key=overlap)
 
     # Only return a function if there is some overlap
     if overlap(h):
@@ -71,7 +71,7 @@ def separate_var(f_var):
 
 def combine_affine_functions(graph):
     """Combine affine functions with other objective terms."""
-    for f in graph.functions:
+    for f in graph.obj_terms:
         if not is_affine(f):
             continue
 
@@ -88,7 +88,7 @@ def combine_affine_functions(graph):
 
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
-    for function in graph.functions:
+    for function in graph.obj_terms:
         if (is_prox_friendly_constraint(graph, function)):
             function.constraint = True
 
@@ -104,7 +104,7 @@ def separate_objective_terms(graph):
                   if not f_var.function.constraint]
 
         skipped_one = False
-        for f_var in f_vars:
+        for f_var in reversed(f_vars):
             # Skip first one, rename the rest
             if not f_var.has_linops() and not skipped_one:
                 skipped_one = True
