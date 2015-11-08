@@ -135,6 +135,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     problems = locals()[args.problem_set]
+    if args.problem:
+        problems = [p for p in problems if p.name == args.problem]
+    elif args.problem_match:
+        problems = [
+            p for p in problems if p.name.startswith(args.problem_match)]
+
     if args.list_problems:
         for problem in problems:
             print problem.name
@@ -144,12 +150,6 @@ if __name__ == "__main__":
         for benchmark in BENCHMARKS:
             print benchmark
         sys.exit(0)
-
-    if args.problem:
-        problems = [p for p in problems if p.name == args.problem]
-    elif args.problem_match:
-        problems = [
-            p for p in problems if p.name.startswith(args.problem_match)]
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
