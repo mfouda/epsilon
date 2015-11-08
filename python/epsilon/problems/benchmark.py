@@ -27,10 +27,12 @@ from epsilon.problems.problem_instance import ProblemInstance
 
 # ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=50, p=1)),
 
+# Convergence issues?
+# ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-    ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
