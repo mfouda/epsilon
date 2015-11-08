@@ -7,6 +7,8 @@ from epsilon.problems import problem_util
 
 def create(m, ni, k, rho=0.05, sigma=0.05):
     A = np.random.randn(m, ni*k)
+    A /= np.sqrt(np.sum(A**2, 0))
+
     x0 = np.zeros(ni*k)
     for i in range(k):
         if np.random.rand() < rho:
