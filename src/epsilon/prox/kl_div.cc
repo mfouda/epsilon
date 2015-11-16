@@ -10,7 +10,7 @@ public:
   }
   Eigen::VectorXd Apply(const Eigen::VectorXd& uv) override {
     VLOG(2) << "lambda = " << lambda_ << "\n";
-    double eps = 1e-12;
+    double eps = 1e-13;
     int n = uv.rows()/2;
     Eigen::VectorXd u = uv.head(n);
     Eigen::VectorXd v = uv.tail(n);
@@ -20,30 +20,45 @@ public:
     for(int i=0; i<n; i++) {
       int iter = 0, max_iter=1000;
       double res = 0;
-      q(i) = 0.5;
+      double qhat = std::max((0.5+lambda_-v(i))/lambda_, eps);
+      if(std::abs(u(i)) < eps*eps and std::abs(v(i)) < eps*eps){
+        p(i) = u(i);
+        q(i) = v(i);
+        continue;
+      }
+      // Solve: 
+      //   q(lam-v+q)/lam-u+lam*log(lam-v+q)/lam = 0
+      // Let qhat = (lam-v+q)/lam, then
+      //   lam*qhat*qhat-(1-v/lam)qhat-u+lam*log(qhat)=0
       for(; iter < max_iter; iter++) {
-        if(q(i)-v(i)+lambda_ < eps)
-          q(i) = std::max(v(i)-lambda_ + eps, eps);
-        double f = q(i)*(q(i)-v(i)+lambda_)/lambda_ - u(i)
-          + lambda_*( std::log(q(i)-v(i)+lambda_) - std::log(lambda_));
-        double F = (2*q(i)-v(i)+lambda_)/lambda_
-          + lambda_/(q(i)-v(i)+lambda_);
-        res = f;
-        if(std::abs(res) < eps and q(i) > 0)
+        double f = lambda_*qhat*qhat + (v(i)-lambda_)*qhat - u(i)
+            + lambda_*std::log(qhat);
+        double F = 2*lambda_*qhat + (v(i)-lambda_) + lambda_/qhat;
+        res = f/F;
+        if(std::abs(res) < eps or (qhat <= eps*2 and f/F > 0) or (lambda_*qhat+v(i)-lambda_ <= eps*2 and f/F > 0))
           break;
 
-        if(std::abs(F) <= eps)
-          F = 1e-6 * (F>0?1:-1);
-        q(i) = q(i) - f/F;
-        if(q(i) < eps)
-          q(i) = eps;
+        /*
+        if(std::abs(F) < eps)
+          F = eps * (F>0?1:-1);
+        */
+        qhat = qhat - f/F;
+        if(qhat < eps)
+          qhat = eps;
+        if(lambda_*qhat+v(i)-lambda_ < eps)
+          qhat = (eps+lambda_-v(i))/lambda_;
       }
       if(iter == max_iter)
         VLOG(2) << "Newton does not converge for kl_div prox\n";
       VLOG(2) << "newton_iter = " << iter << ", f = " << res << "\n";
-      p(i) = q(i)*(q(i)-v(i))/lambda_ + q(i);
+      q(i) = lambda_*qhat + v(i)-lambda_;
+      p(i) = q(i)*qhat;
+      /*
       if(p(i) < eps)
         p(i) = eps;
+      if(q(i) < eps)
+        q(i) = eps;
+      */
     }
 
     Eigen::VectorXd pq(2*n);
@@ -93,11 +108,11 @@ public:
         hlam -= (g.transpose() * h.inverse() * g);
       }
       res = glam;
-      if(std::abs(res) <= eps)
+      if(std::abs(res) < eps or (lambda_<=eps*2 and glam/hlam > 0))
         break;
       lambda_ = lambda_ - glam/hlam;
       if(lambda_ < eps)
-        lambda_ = 1e-6;
+        lambda_ = eps;
     }
     if(iter == max_iter)
       VLOG(2) << "Newton method won't converge for implicit kl_div\n";
