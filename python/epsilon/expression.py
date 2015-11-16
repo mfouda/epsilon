@@ -297,5 +297,8 @@ def equality_constraint(a, b):
 def leq_constraint(a, b):
     return indicator(Cone.NON_NEGATIVE, add(b, negate(a)))
 
+def soc_constraint(t, x):
+    return indicator(Cone.SECOND_ORDER, t, x)
+
 def psd_constraint(a, b):
     return indicator(Cone.SEMIDEFINITE, add(b, negate(a)))

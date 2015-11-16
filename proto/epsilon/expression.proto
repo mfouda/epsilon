@@ -68,9 +68,12 @@ message Curvature {
 message Cone {
   enum Type {
     UNKNOWN = 0;
-    ZERO = 1;          // s == 0
-    NON_NEGATIVE = 2;  // s >= 0
-    SEMIDEFINITE = 3;  // S >> 0
+    ZERO = 1;                      // x == 0
+    NON_NEGATIVE = 2;              // x >= 0
+    SECOND_ORDER = 3;              // (t, x) s.t. ||x||_2 <= t
+    SECOND_ORDER_ELEMENTWISE = 4;  // (t, x) s.t. ||x1_i, x2_i, ... ||_2 <= t_i
+    EXPONENTIAL = 5;               // (x,y,z) s.t. y*exp(x/y) <= z, y >0
+    SEMIDEFINITE = 6;              // X >> 0
   }
   Type cone_type = 1;
 }
@@ -105,6 +108,20 @@ message LinearMap {
 
   // KRONECKER_PRODUCT
   repeated LinearMap arg = 6;
+}
+
+message ProxFunction {
+  enum Type {
+    UNKNOWN = 0;
+
+    // Cones
+    ZERO = 1;
+    NON_NEGATIVE = 2;
+    SECOND_ORDER_CONE = 3;
+  }
+  Type prox_function_type = 1;
+
+  bool elementwise = 2;
 }
 
 message Expression {
