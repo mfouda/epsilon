@@ -3,6 +3,8 @@
 import logging
 import numpy
 
+from cvxpy.settings import OPTIMAL
+
 from epsilon import _solve
 from epsilon import cvxpy_expr
 from epsilon import constant
@@ -12,26 +14,38 @@ from epsilon.compiler import compiler
 
 EPSILON = "epsilon"
 
-def solve(prob, params=solver_params_pb2.SolverParams()):
-    """Solve optimziation problem."""
+class SolverError(Exception):
+    pass
 
-    prob_proto = cvxpy_expr.convert_problem(prob)
-    prob_proto = compiler.compile_problem(prob_proto)
-
-    status_str, values = _solve.prox_admm_solve(
-        prob_proto.SerializeToString(),
-        params.SerializeToString(),
-        constant.global_data_map)
-
+def set_solution(prob, values):
     for var in prob.variables():
         var_id = cvxpy_expr.variable_id(var)
         assert var_id in values
         x = numpy.fromstring(values[var_id], dtype=numpy.double)
         var.value = x.reshape(var.size[1], var.size[0]).transpose()
 
-    return solver_pb2.SolverStatus.FromString(status_str)
+def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
+    """Solve optimziation problem."""
 
-def validate
+    if not prob.variables():
+        return OPTIMAL, prob.objective.value
+
+    prob_proto = cvxpy_expr.convert_problem(prob)
+    prob_proto = compiler.compile_problem(prob_proto)
+
+    params = solver_params_pb2.SolverParams(
+        rel_tol=rel_tol, abs_tol=abs_tol)
+    status_str, values = _solve.prox_admm_solve(
+        prob_proto.SerializeToString(),
+        params.SerializeToString(),
+        constant.global_data_map)
+
+    # TODO(mwytock): Handle not optimal solutions
+    set_solution(prob, values)
+    return OPTIMAL, prob.objective.value
+
+def validate_solver(constraints):
+    return True
 
 # def prox(cvxpy_prob, v_map, lam=1):
 #     """Evaluate a single proximal operator."""

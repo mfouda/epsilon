@@ -41,7 +41,7 @@ from cvxpy.problems import objective
 
 from epsilon import constant
 from epsilon import expression
-from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature, Monotonicity
+from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature
 
 def index_value(index, size):
     if index < 0:
@@ -61,19 +61,15 @@ def convert_constant(expr):
         return expression.constant(m, n, scalar=expr.value)
     return expression.constant(m, n, constant=constant.store(expr.value))
 
+
 def convert_generic(expression_type, expr):
     return Expression(
         expression_type=expression_type,
         size=Size(dim=expr.size),
         curvature=Curvature(
-            curvature_type=Curvature.Type.Value(
-                expr.func_curvature().curvature_str)),
+            curvature_type=Curvature.Type.Value(expr.curvature)),
         sign=Sign(
             sign_type=Sign.Type.Value(expr.sign)),
-        arg_monotonicity=[
-            Monotonicity(
-                monotonicity_type=Monotonicity.Type.Value(m))
-            for m in expr.monotonicity()],
         arg=(convert_expression(arg) for arg in expr.args))
 
 def convert_binary(f, expr):
@@ -127,6 +123,7 @@ EXPRESSION_TYPES = (
     (MulExpression, lambda e: convert_binary(expression.multiply, e)),
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
     (Variable, convert_variable),
+    (cvxpy.abs, lambda e: convert_generic(Expression.ABS, e)),
     (exp, lambda e: convert_generic(Expression.EXP, e)),
     (entr, lambda e: convert_generic(Expression.ENTR, e)),
     (hstack, lambda e: convert_generic(Expression.HSTACK, e)),
@@ -168,7 +165,7 @@ def convert_expression(expr):
 
 def convert_constraint(constraint):
     if isinstance(constraint, EqConstraint):
-        return expression.eq_constraint(
+        return expression.equality_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))
     elif isinstance(constraint, PSDConstraint):
