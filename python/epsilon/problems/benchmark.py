@@ -48,6 +48,7 @@ PROBLEMS = [
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
+    ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
@@ -72,6 +73,11 @@ PROBLEMS_SCALE += [ProblemInstance(
     hinge_l2.create,
     dict(m=10*int(n), n=int(n)))
     for n in np.logspace(1, np.log10(5000), 20)]
+PROBLEMS_SCALE += [ProblemInstance(
+    "robust_svm_%d" % int(n),
+    robust_svm.create,
+    dict(m=3*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(1500), 20)]
 
 def benchmark_epsilon(cvxpy_prob):
     params = solver_params_pb2.SolverParams(rel_tol=1e-2, abs_tol=1e-4)
