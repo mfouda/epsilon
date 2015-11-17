@@ -41,7 +41,7 @@ from cvxpy.problems import objective
 
 from epsilon import constant
 from epsilon import expression
-from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature
+from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature, Monotonicity
 
 def index_value(index, size):
     if index < 0:
@@ -61,15 +61,19 @@ def convert_constant(expr):
         return expression.constant(m, n, scalar=expr.value)
     return expression.constant(m, n, constant=constant.store(expr.value))
 
-
 def convert_generic(expression_type, expr):
     return Expression(
         expression_type=expression_type,
         size=Size(dim=expr.size),
         curvature=Curvature(
-            curvature_type=Curvature.Type.Value(expr.curvature)),
+            curvature_type=Curvature.Type.Value(
+                expr.func_curvature().curvature_str)),
         sign=Sign(
             sign_type=Sign.Type.Value(expr.sign)),
+        arg_monotonicity=[
+            Monotonicity(
+                monotonicity_type=Monotonicity.Type.Value(m))
+            for m in expr.monotonicity()],
         arg=(convert_expression(arg) for arg in expr.args))
 
 def convert_binary(f, expr):

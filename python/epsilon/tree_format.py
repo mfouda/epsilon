@@ -47,6 +47,9 @@ def node_contents_str(expr):
         c += ["cone: " + Cone.Type.Name(expr.cone.cone_type)]
     elif expr.expression_type == Expression.LINEAR_MAP:
         c += [format_linear_map(expr.linear_map)]
+    elif expr.expression_type == Expression.PROX_FUNCTION:
+        c += ["prox: " + ProxFunction.Type.Name(
+            expr.prox_function.prox_function_type)]
 
     if expr.proximal_operator.name != "":
         c += ["prox: " + expr.proximal_operator.name]

@@ -5,6 +5,12 @@ from epsilon.expression_pb2 import *
 from epsilon.expression_util import *
 from epsilon.util import prod
 
+# Shorthand convenience
+SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
+
+AFFINE = Curvature(curvature_type=Curvature.AFFINE)
+
+
 # Internal helpers
 
 def _add_binary(a, b):
@@ -148,22 +154,16 @@ def reshape(arg, m, n):
         curvature=arg.curvature,
         sign=arg.sign)
 
-def negate(arg):
-    NEGATE_CURVATURE = {
-        Curvature.UNKNOWN: Curvature.UNKNOWN,
-        Curvature.AFFINE: Curvature.AFFINE,
-        Curvature.CONVEX: Curvature.CONCAVE,
-        Curvature.CONCAVE: Curvature.CONVEX,
-        Curvature.CONSTANT: Curvature.CONSTANT,
-    }
+def negate(x):
+    # Automatically reduce negate(negate(x)) to x
+    if x.expression_type == Expression.NEGATE:
+        return only_arg(x)
+
     return Expression(
         expression_type=Expression.NEGATE,
-        arg=[arg],
-        size=arg.size,
-        curvature=Curvature(
-            curvature_type=NEGATE_CURVATURE[arg.curvature.curvature_type],
-            elementwise=arg.curvature.elementwise,
-            scalar_multiple=arg.curvature.scalar_multiple))
+        arg=[x],
+        size=x.size,
+        curvature=AFFINE)
 
 def variable(m, n, variable_id):
     return Expression(
@@ -232,6 +232,7 @@ def sum_largest(x, k):
 def abs_val(x):
     return Expression(
         expression_type=Expression.ABS,
+        arg_monotonicity=[SIGNED],
         size=x.size,
         arg=[x])
 
@@ -239,6 +240,7 @@ def sum_entries(x):
     return Expression(
         expression_type=Expression.SUM,
         size=Size(dim=[1, 1]),
+        curvature=AFFINE,
         arg=[x])
 
 def transpose(x):
@@ -302,3 +304,10 @@ def soc_constraint(t, x):
 
 def psd_constraint(a, b):
     return indicator(Cone.SEMIDEFINITE, add(b, negate(a)))
+
+def prox_function(f, *args):
+    return Expression(
+        expression_type=Expression.PROX_FUNCTION,
+        size=Size(dim=[1, 1]),
+        prox_function=f,
+        arg=args)

@@ -2,6 +2,8 @@
 import struct
 
 from epsilon import error
+from epsilon import expression
+from epsilon.expression_pb2 import Expression
 
 class TransformError(error.ExpressionError):
     pass
@@ -10,7 +12,7 @@ def fp_expr(expr):
     return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
 
 def validate_args(expr, count):
-    if len(expr.args) != count:
+    if len(expr.arg) != count:
         raise TransformError(
             "invalid args %d != %d" % (len(expr.args), count),
             expr)
@@ -37,3 +39,8 @@ def epi_var(expr, name, size=None):
         size = expr.size.dim
     name += ":" + fp_expr(expr)
     return expression.variable(size[0], size[1], name)
+
+def is_affine(expr):
+    c = curvature.get(expr)
+    return (c.curvature_type == Curvature.AFFINE or
+            c.curvature_type == Curvature.CONSTANT)

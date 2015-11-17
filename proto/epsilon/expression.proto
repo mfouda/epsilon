@@ -65,6 +65,17 @@ message Curvature {
   bool scalar_multiple = 3;
 }
 
+message Monotonicity {
+  enum Type {
+    UNKNOWN = 0;
+    INCREASING = 1;
+    DECREASING = 2;
+    SIGNED = 3;
+    NONMONOTONIC = 4;
+  }
+  Type monotonicity_type = 1;
+}
+
 message Cone {
   enum Type {
     UNKNOWN = 0;
@@ -114,10 +125,13 @@ message ProxFunction {
   enum Type {
     UNKNOWN = 0;
 
+    // Affine function a'x + b
+    AFFINE = 1;
+
     // Cones
-    ZERO = 1;
-    NON_NEGATIVE = 2;
-    SECOND_ORDER_CONE = 3;
+    ZERO = 10;
+    NON_NEGATIVE = 11;
+    SECOND_ORDER_CONE = 12;
   }
   Type prox_function_type = 1;
 
@@ -136,12 +150,12 @@ message Expression {
     CONSTANT = 2;
     VARIABLE = 3;
 
-    // Add/multiply operators
+    // Binary operators
     ADD = 10;
     MULTIPLY = 11;
     MULTIPLY_ELEMENTWISE = 12;
 
-    // Linear operators
+    // Linear functions
     INDEX = 20;
     NEGATE = 21;
     SUM = 22;
@@ -150,7 +164,6 @@ message Expression {
     VSTACK = 25;
     TRACE = 26;
     RESHAPE = 27;
-    ZERO = 28;
 
     // Elementwise functions
     ABS = 50;
@@ -191,25 +204,26 @@ message Expression {
   // DCP attributes
   Sign sign = 4;
   Curvature curvature = 5;
+  repeated Monotonicity arg_monotonicity = 6;
 
-  ProximalOperator proximal_operator = 6;
+  ProximalOperator proximal_operator = 7;
 
   // CONSTANT, VARIABLE
-  Constant constant = 7;
-  Variable variable = 8;
+  Constant constant = 8;
+  Variable variable = 9;
 
   // INDEX
-  repeated Slice key = 9;
+  repeated Slice key = 10;
 
   // NORM_P, NORM_P_Q and POWER
-  double p = 10;
-  double q = 11;
+  double p = 11;
+  double q = 12;
 
   // INDICATOR
-  Cone cone = 12;
+  Cone cone = 13;
 
   // HUBER
-  double M = 13;
+  double M = 14;
 
   // SCALED_ZONE
   message ScaledZoneParams {
@@ -218,20 +232,23 @@ message Expression {
     double c = 3;
     double m = 4;
   }
-  ScaledZoneParams scaled_zone_params = 14;
+  ScaledZoneParams scaled_zone_params = 15;
 
   // HSTACK/VSTACK
   message StackParams {
     // Used when we split a *STACK() operator
     int32 offset = 1;
   }
-  StackParams stack_params = 15;
+  StackParams stack_params = 16;
 
   // SUM_LARGEST
-  int32 k = 16;
+  int32 k = 17;
 
   // LINEAR_MAP
-  LinearMap linear_map = 17;
+  LinearMap linear_map = 18;
+
+  // PROX_FUNCTION
+  ProxFunction prox_function = 19;
 }
 
 // Arbitrary convex problem of the form

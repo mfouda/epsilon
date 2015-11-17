@@ -1,10 +1,14 @@
 """Transform a problem to prox-affine form."""
 
+import logging
 from collections import namedtuple
 
+from epsilon import dcp
 from epsilon import expression
+from epsilon import tree_format
 from epsilon.compiler.transforms import conic
-from epsilon.expression import Cone, Expression, ProxFunction
+from epsilon.compiler.transforms import linear
+from epsilon.expression import Cone, Expression, ProxFunction, Problem
 
 ProxRule = namedtuple("ProxRule", ["match", "convert_args", "create"])
 
@@ -14,37 +18,34 @@ RULES = []
 Prox = ProxFunction
 
 def any_args(expr):
-    return expr.arg
+    return [linear.transform_expr(arg) for arg in expr.arg], []
 
 def diagonal_args(expr):
     # TODO(mwytock): Verify elementwise
-    return expr.arg
+    return any_args(expr)
 
 def scalar_args(expr):
     # TODO(mwytock): Verify scalar
-    return expr.arg
+    return any_args(expr)
 
-def cone_rule(cone_type, prox_function_type, convert_args, elementwise=False):
+def create(prox_function_type, **kwargs):
+    def create():
+        kwargs["prox_function_type"] = prox_function_type
+        return ProxFunction(**kwargs)
+    return create
+
+def match_indicator(cone_type):
     def match(expr):
         return (expr.expression_type == Expression.INDICATOR and
                 expr.cone.cone_type == cone_type)
+    return match
 
-    def create(args):
-        return ProxFunction(
-            prox_function_type=prox_function_type,
-            elementwise=elementwise)
-
-    return ProxRule(match, convert_args, create)
-
-# Cone rules
+# Linear cone rules
 RULES += [
-    cone_rule(Cone.ZERO, Prox.ZERO, any_args),
-    cone_rule(Cone.NON_NEGATIVE, Prox.NON_NEGATIVE, diagonal_args),
-    cone_rule(Cone.SECOND_ORDER, Prox.SECOND_ORDER_CONE, scalar_args),
-    cone_rule(Cone.SECOND_ORDER_ELEMENTWISE,
-              Prox.SECOND_ORDER_CONE,
-              diagonal_args,
-              elementwise=True)
+    ProxRule(dcp.is_affine, any_args, create(Prox.AFFINE)),
+    ProxRule(match_indicator(Cone.ZERO), any_args, create(Prox.ZERO)),
+    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
+             create(Prox.NON_NEGATIVE)),
 ]
 
 def merge_add(a, b):
@@ -54,17 +55,32 @@ def merge_add(a, b):
     return expression.add(*args)
 
 def transform_prox_expr(rule, expr):
-    args, indicators = rule.convert_args(expr)
+    logging.debug("transform_prox_expr:\n%s", tree_format.format_expr(expr))
+    args, constrs = rule.convert_args(expr)
+    f = rule.create()
     expr = expression.prox_function(rule.create(), *args)
-    for indicator in indicators:
-        expr = merge_add(expr, transform_expr(indicator))
+    for constr in constrs:
+        expr = merge_add(expr, transform_expr(constr))
+    logging.debug(
+        "transform_prox_expr done:\n%s", tree_format.format_expr(expr))
+    return expr
+
+def transform_cone_expr(expr):
+    logging.debug("transform_cone_expr:\n%s", tree_format.format_expr(expr))
+    expr, constrs = conic.transform_expr(expr)
+    expr = transform_expr(expr)
+    for constr in constrs:
+        expr = merge_add(expr, transform_expr(constr))
+    logging.debug(
+        "transform_cone_expr done:\n%s", tree_format.format_expr(expr))
     return expr
 
 def transform_expr(expr):
+    logging.debug("transform_expr:\n%s", tree_format.format_expr(expr))
     for rule in RULES:
         if rule.match(expr):
             return transform_prox_expr(rule, expr)
-    return conic.transform_expr(expr)
+    return transform_cone_expr(expr)
 
 def transform_problem(problem):
     expr = transform_expr(problem.objective)
