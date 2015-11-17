@@ -3,12 +3,14 @@
 import logging
 from collections import namedtuple
 
+from epsilon import affine
 from epsilon import dcp
 from epsilon import expression
 from epsilon import tree_format
 from epsilon.compiler.transforms import conic
 from epsilon.compiler.transforms import linear
-from epsilon.expression import Cone, Expression, ProxFunction, Problem
+from epsilon.compiler.transforms.transform_util import *
+from epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem
 
 ProxRule = namedtuple("ProxRule", ["match", "convert_args", "create"])
 
@@ -17,16 +19,33 @@ RULES = []
 # Shorthand convenience
 Prox = ProxFunction
 
-def any_args(expr):
-    return [linear.transform_expr(arg) for arg in expr.arg], []
+def affine_args(expr):
+    args = []
+    constr = []
 
-def diagonal_args(expr):
-    # TODO(mwytock): Verify elementwise
-    return any_args(expr)
+    for arg in expr.arg:
+        if dcp.is_affine(arg):
+            args.append(linear.transform_expr(arg))
+        else:
+            t, epi_f = epi_transform(arg, "affine")
+            args.append(t)
+            constr.append(epi_f)
 
-def scalar_args(expr):
-    # TODO(mwytock): Verify scalar
-    return any_args(expr)
+    return args, constr
+
+def diagonal_affine_args(expr):
+    args_affine, constr = affine_args(expr)
+
+    args = []
+    for arg in args_affine:
+        if affine.is_diagonal(arg):
+            args.append(arg)
+        else:
+            t, epi_f = epi_transform(arg, "diagonal")
+            args.append(t)
+            constr.append(epi_f)
+
+    return args, constr
 
 def create(prox_function_type, **kwargs):
     def create():
@@ -42,9 +61,9 @@ def match_indicator(cone_type):
 
 # Linear cone rules
 RULES += [
-    ProxRule(dcp.is_affine, any_args, create(Prox.AFFINE)),
-    ProxRule(match_indicator(Cone.ZERO), any_args, create(Prox.ZERO)),
-    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
+    ProxRule(dcp.is_affine, affine_args, create(Prox.AFFINE)),
+    ProxRule(match_indicator(Cone.ZERO), affine_args, create(Prox.ZERO)),
+    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_affine_args,
              create(Prox.NON_NEGATIVE)),
 ]
 

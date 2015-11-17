@@ -135,6 +135,9 @@ def transform_reshape(expr):
         dim(expr, 0),
         dim(expr, 1))
 
+def transform_linear_map(expr):
+    return expr
+
 def transform_linear_expr(expr):
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)

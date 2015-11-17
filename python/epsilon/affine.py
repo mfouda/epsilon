@@ -42,7 +42,6 @@ class LinearMapType(object):
             self.linear_map.linear_map_type = other.linear_map.linear_map_type
 
     def __add__(self, B):
-        print "LinearMapType __add__"
         assert isinstance(B, LinearMapType)
 
         C = self.copy()
@@ -50,7 +49,6 @@ class LinearMapType(object):
         return C
 
     def __mul__(self, B):
-        print "LinearMapType __mul__"
         if isinstance(B, AffineExpression):
             return B.__rmul__(self)
         assert isinstance(B, LinearMapType)
@@ -75,8 +73,6 @@ class AffineExpression(object):
 
     def __rmul__(self, A):
         assert isinstance(A, LinearMapType)
-
-        print "AffineExpression __rmul__"
         C = AffineExpression(self.linear_maps.copy())
         for var_id, Bi in self.linear_maps.items():
             C.linear_maps[var_id] = A*Bi
@@ -84,8 +80,6 @@ class AffineExpression(object):
 
     def __add__(self, B):
         assert isinstance(B, AffineExpression)
-
-        print "AffineExpression __add__"
         C = AffineExpression(self.linear_maps.copy())
         for var_id, Bi in B.linear_maps.items():
             if var_id not in self.linear_maps:

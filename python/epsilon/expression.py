@@ -23,21 +23,7 @@ def _add_binary(a, b):
     else:
         raise ValueError("adding incompatible sizes")
 
-    curvature = Curvature()
-    if a.curvature.curvature_type == Curvature.CONSTANT:
-        curvature = b.curvature
-    elif b.curvature.curvature_type == Curvature.CONSTANT:
-        curvature = a.curvature
-    elif a.curvature.curvature_type == Curvature.AFFINE:
-        curvature.curvature_type = b.curvature.curvature_type
-    elif b.curvature.curvature_type == Curvature.AFFINE:
-        curvature.curvature_type = a.curvature.curvature_type
-    elif a.curvature.curvature_type == b.curvature.curvature_type:
-        curvature.curvature_type = a.curvature.curvature_type
-    else:
-        curvature.curvature_type = Curvature.UNKNOWN
-
-    return Expression(curvature=curvature, size=size)
+    return Expression(size=size)
 
 def _multiply_binary(a, b, elemwise=False):
     if prod(a.size.dim) == 1:
@@ -51,19 +37,7 @@ def _multiply_binary(a, b, elemwise=False):
     else:
         raise ExpressionError("multiplying incompatible sizes", a, b)
 
-    curvature = Curvature()
-    if a.curvature.curvature_type == Curvature.CONSTANT:
-        curvature.curvature_type = b.curvature.curvature_type
-        curvature.scalar_multiple = prod(a.size.dim) == 1
-        curvature.elementwise = curvature.scalar_multiple or elemwise
-    elif b.curvature.curvature_type == Curvature.CONSTANT:
-        curvature.curvature_type = a.curvature.curvature_type
-        curvature.scalar_multiple = prod(b.size.dim) == 1
-        curvature.elementwise = curvature.scalar_multiple or elemwise
-    else:
-        curvature.curvature_type = Curvature.UNKNOWN
-
-    return Expression(curvature=curvature, size=size)
+    return Expression(size=size)
 
 def _multiply(args, elemwise=False):
     if not args:
@@ -78,7 +52,7 @@ def _multiply(args, elemwise=False):
                          Expression.MULTIPLY),
         arg=args,
         size=a.size,
-        curvature=a.curvature)
+        curvature=AFFINE)
 
 # Expressions
 
@@ -94,7 +68,7 @@ def add(*args):
         expression_type=Expression.ADD,
         arg=args,
         size=a.size,
-        curvature=a.curvature)
+        curvature=AFFINE)
 
 def multiply(*args):
     return _multiply(args, elemwise=False)
@@ -290,10 +264,11 @@ def linear_map(A, x):
     return Expression(
         expression_type=Expression.LINEAR_MAP,
         size=Size(dim=[A.m, 1]),
+        curvature=AFFINE,
         linear_map=A,
         arg=[x])
 
-def equality_constraint(a, b):
+def eq_constraint(a, b):
     return indicator(Cone.ZERO, add(a, negate(b)))
 
 def leq_constraint(a, b):

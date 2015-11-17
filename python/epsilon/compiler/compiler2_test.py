@@ -13,8 +13,8 @@ from epsilon.expression_pb2 import Expression, ProxFunction
 Prox = ProxFunction
 
 # temporary debugging
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def prox_ops(expr):
@@ -33,11 +33,13 @@ def test_basis_pursuit():
         [Prox.ZERO, Prox.AFFINE] + 2*[Prox.NON_NEGATIVE])
     assert_equal(0, len(problem.constraint))
 
-# def test_least_abs_deviations():
-#     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
-#         least_abs_dev.create(m=10, n=5)))
-#     assert_items_equal(prox_ops(problem), ["NormL1Prox", "ZeroProx"])
-#     assert_equal(1, len(problem.constraint))
+def test_least_abs_deviations():
+    problem = compiler.compile_problem(cvxpy_expr.convert_problem(
+        least_abs_dev.create(m=10, n=5)))
+    assert_items_equal(
+        prox_ops(problem.objective),
+        [Prox.AFFINE] + [Prox.NON_NEGATIVE, Prox.ZERO]*2)
+    assert_equal(0, len(problem.constraint))
 
 # def test_tv_denoise():
 #     problem = compiler.compile_problem(cvxpy_expr.convert_problem(

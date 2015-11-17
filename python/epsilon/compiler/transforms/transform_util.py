@@ -3,7 +3,8 @@ import struct
 
 from epsilon import error
 from epsilon import expression
-from epsilon.expression_pb2 import Expression
+from epsilon import dcp
+from epsilon.expression_pb2 import Expression, Curvature
 
 class TransformError(error.ExpressionError):
     pass
@@ -34,13 +35,32 @@ def dim(expr, index=None):
     else:
         return expr.size.dim[index]
 
+def epi(f_expr, t_expr):
+    """An expression for an epigraph constraint.
+
+    The constraint depends on the curvature of f:
+      - f convex,  I(f(x) <= t)
+      - f concave, I(f(x) >= t)
+      - f affine,  I(f(x) == t)
+    """
+    f_curvature = dcp.get_curvature(f_expr)
+
+    if f_curvature.curvature_type == Curvature.CONVEX:
+        return expression.leq_constraint(f_expr, t_expr)
+    elif f_curvature.curvature_type == Curvature.CONCAVE:
+        return expression.leq_constraint(negate(f_expr), negate(t_expr))
+    elif f_curvature.curvature_type == Curvature.AFFINE:
+        return expression.eq_constraint(f_expr, t_expr);
+
+    raise TransformError("Unknown curvature", f_expr)
+
 def epi_var(expr, name, size=None):
     if size is None:
         size = expr.size.dim
     name += ":" + fp_expr(expr)
     return expression.variable(size[0], size[1], name)
 
-def is_affine(expr):
-    c = curvature.get(expr)
-    return (c.curvature_type == Curvature.AFFINE or
-            c.curvature_type == Curvature.CONSTANT)
+def epi_transform(f_expr, name):
+    t_expr = epi_var(f_expr, name)
+    epi_f_expr = epi(f_expr, t_expr)
+    return t_expr, epi_f_expr

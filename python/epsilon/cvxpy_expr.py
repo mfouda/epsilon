@@ -168,7 +168,7 @@ def convert_expression(expr):
 
 def convert_constraint(constraint):
     if isinstance(constraint, EqConstraint):
-        return expression.equality_constraint(
+        return expression.eq_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))
     elif isinstance(constraint, PSDConstraint):
