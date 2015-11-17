@@ -1,19 +1,22 @@
 import logging
 
-from epsilon.compiler import canonicalize
-from epsilon.compiler import canonicalize_linear
-from epsilon.compiler import combine
+from epsilon.compiler.transforms import linear
+from epsilon.compiler.transforms import prox
 from epsilon import tree_format
 
 TRANSFORMS = [
-    canonicalize.transform,
-    combine.transform,
-    canonicalize_linear.transform_problem,
+    prox.transform_problem,
 ]
 
+def transform_name(transform):
+    return ".".join((transform.__module__, transform.__name__))
+
 def compile_problem(problem):
-    logging.debug("Compiler input:\n%s", tree_format.format_problem(problem))
+    logging.debug("input:\n%s", tree_format.format_problem(problem))
     for transform in TRANSFORMS:
         problem = transform(problem)
-        logging.debug("Intermediate:\n%s", tree_format.format_problem(problem))
+        logging.debug(
+            "%s:\n%s",
+            transform_name(transform),
+            tree_format.format_problem(problem))
     return problem
