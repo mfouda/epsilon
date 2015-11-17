@@ -18,11 +18,6 @@ def validate_args(expr, count):
             "invalid args %d != %d" % (len(expr.args), count),
             expr)
 
-def validate_size(expr, size):
-    if expr.size.dim != size:
-        raise TransformError(
-            "invalid arg size %s != %s" % (expr.size.dim, size))
-
 def only_arg(expr):
     validate_args(expr, 1)
     return expr.arg[0]

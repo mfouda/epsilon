@@ -47,6 +47,21 @@ def diagonal_affine_args(expr):
 
     return args, constr
 
+def scalar_affine_args(expr):
+    args_affine, constr = affine_args(expr)
+
+    args = []
+    for arg in args_affine:
+        if affine.is_scalar(arg):
+            args.append(arg)
+        else:
+            t, epi_f = epi_transform(arg, "scalar")
+            args.append(t)
+            constr.append(epi_f)
+
+    return args, constr
+
+
 def create(prox_function_type, **kwargs):
     def create():
         kwargs["prox_function_type"] = prox_function_type
@@ -65,6 +80,8 @@ RULES += [
     ProxRule(match_indicator(Cone.ZERO), affine_args, create(Prox.ZERO)),
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_affine_args,
              create(Prox.NON_NEGATIVE)),
+    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_affine_args,
+             create(Prox.SECOND_ORDER_CONE)),
 ]
 
 def merge_add(a, b):

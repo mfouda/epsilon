@@ -77,28 +77,25 @@ def multiply_elemwise(*args):
     return _multiply(args, elemwise=True)
 
 def hstack(*args):
-    e = Expression(expression_type=Expression.HSTACK)
+    e = Expression(
+        expression_type=Expression.HSTACK,
+        curvature=AFFINE)
 
     for i, arg in enumerate(args):
         if i == 0:
             e.size.dim.extend(arg.size.dim)
-            e.curvature.curvature_type = arg.curvature.curvature_type
-            e.sign.sign_type = arg.sign.sign_type
         else:
             assert e.size.dim[0] == arg.size.dim[0]
             e.size.dim[1] += arg.size.dim[1]
-
-            if arg.curvature.curvature_type != e.curvature.curvature_type:
-                e.curvature.curvature_type = Curvature.UNKNOWN
-            if arg.sign.sign_type != e.sign.sign_type:
-                e.sign.sign_type = Sign.UNKNOWN
 
         e.arg.add().CopyFrom(arg)
 
     return e
 
 def vstack(*args):
-    e = Expression(expression_type=Expression.VSTACK)
+    e = Expression(
+        expression_type=Expression.VSTACK,
+        curvature=AFFINE)
 
     for i, arg in enumerate(args):
         if i == 0:

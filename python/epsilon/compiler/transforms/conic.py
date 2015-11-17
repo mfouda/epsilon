@@ -29,14 +29,17 @@ def transform_soc_elemwise(expr):
 def transform_quad_over_lin(expr):
     validate_args(expr, 2)
     x, y = expr.arg
-    validate_size(y, (1,1))
+    if dim(y) != 1:
+        raise TransformError("quad_over_lin expects scalar y", expr)
+
     t = epi_var(expr, "qol", size=(1,1))
     return t, [
         expression.soc_constraint(
             expression.add(y, t),
-            expression.add(y, expression.negate(t)),
-            expression.mulitply(expression.constant(1, 1, scalar=2), x)),
-        expression.leq_constraint(0, y)]
+            expression.vstack(
+                expression.add(y, expression.negate(t)),
+                expression.multiply(expression.constant(1, 1, scalar=2), x))),
+        expression.leq_constraint(expression.constant(1, 1, scalar=0), y)]
 
 def transform_norm_p(expr):
     if expr.p == 1:

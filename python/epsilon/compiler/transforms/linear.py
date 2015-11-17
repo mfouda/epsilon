@@ -129,6 +129,24 @@ def transform_hstack(expr):
         offset += ni
     return expression.add(*add_args)
 
+def transform_vstack(expr):
+    m = dim(expr, 0)
+    n = dim(expr, 1)
+    offset = 0
+    add_args = []
+    for arg in expr.arg:
+        mi = dim(arg, 0)
+
+        add_args.append(
+            expression.linear_map(
+                linear_map.left_matrix_product(
+                    linear_map.transpose(
+                        linear_map.index(slice(offset, offset+mi), m)),
+                    n),
+                transform_expr(arg)))
+        offset += mi
+    return expression.add(*add_args)
+
 def transform_reshape(expr):
     return expression.reshape(
         transform_expr(only_arg(expr)),

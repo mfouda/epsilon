@@ -2,7 +2,7 @@
 from nose.tools import assert_items_equal, assert_equal
 
 from epsilon import cvxpy_expr
-from epsilon.compiler import compiler2 as compiler
+from epsilon.compiler import compiler
 from epsilon.compiler import validate
 from epsilon.problems import basis_pursuit
 from epsilon.problems import least_abs_dev
@@ -15,7 +15,6 @@ Prox = ProxFunction
 # temporary debugging
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
-
 
 def prox_ops(expr):
     retval = []
@@ -45,12 +44,15 @@ def test_least_abs_deviations():
 #     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
 #         tv_denoise.create(n=10, lam=1)))
 #     assert_items_equal(
-#         prox_ops(problem), 3*["LeastSquaresProx"] + ["NormL1L2Prox"] + ["LinearEqualityProx"])
+#         prox_ops(problem.objective),
+#         3*["LeastSquaresProx"] + ["NormL1L2Prox"] + ["LinearEqualityProx"])
 #     assert_equal(4, len(problem.constraint))
 
-# def test_tv_1d():
-#     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
-#         tv_1d.create(n=10)))
-#     assert_items_equal(
-#         prox_ops(problem), ["LeastSquaresProx", "FusedLassoProx"])
-#     assert_equal(1, len(problem.constraint))
+def test_tv_1d():
+    problem = compiler.compile_problem(cvxpy_expr.convert_problem(
+        tv_1d.create(n=10)))
+    assert_items_equal(
+        prox_ops(problem.objective),
+        [Prox.ZERO]*3 + [Prox.AFFINE,  Prox.NON_NEGATIVE]*2 +
+        [Prox.SECOND_ORDER_CONE])
+    assert_equal(0, len(problem.constraint))

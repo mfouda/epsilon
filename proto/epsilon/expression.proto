@@ -117,7 +117,7 @@ message LinearMap {
   // SCALAR
   double scalar = 5;
 
-  // KRONECKER_PRODUCT
+  // KRONECKER_PRODUCT, TRANSPOSE
   repeated LinearMap arg = 6;
 }
 

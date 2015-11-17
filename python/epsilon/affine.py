@@ -30,6 +30,12 @@ class LinearMapType(object):
     def scalar(self):
         return self.linear_map.linear_map_type == LinearMap.SCALAR
 
+    def eval_ops(self):
+        if self.linear_map.linear_map_type == LinearMap.TRANSPOSE:
+            A = LinearMapType(self.linear_map.arg[0])
+            return A.eval_ops()
+        return self
+
     def copy(self):
         linear_map = LinearMap()
         linear_map.CopyFrom(self.linear_map)
@@ -40,23 +46,25 @@ class LinearMapType(object):
         assert other.basic
         if self.linear_map.linear_map_type > other.linear_map.linear_map_type:
             self.linear_map.linear_map_type = other.linear_map.linear_map_type
+        return self
 
     def __add__(self, B):
         assert isinstance(B, LinearMapType)
 
-        C = self.copy()
-        C.promote(B)
-        return C
+        if self.basic and B.basic:
+            return self.copy().promote(B)
+
+        raise ValueError("not implemented A:\n%sB:\n%s" % (self.linear_map, B.linear_map))
 
     def __mul__(self, B):
         if isinstance(B, AffineExpression):
             return B.__rmul__(self)
         assert isinstance(B, LinearMapType)
 
-        C = self.copy()
-        C.promote(B)
-        return C
+        if self.basic and B.basic:
+            return self.copy().promote(B)
 
+        raise ValueError("not implemented A:\n%sB:\n%s" % (self.linear_map, B.linear_map))
 
 CONSTANT = "constant"
 class AffineExpression(object):
@@ -65,11 +73,13 @@ class AffineExpression(object):
 
     @property
     def diagonal(self):
-        return all(A.diagonal for A in self.linear_maps.values())
+        return all(A.diagonal for var_id, A in self.linear_maps.items()
+                   if var_id != CONSTANT)
 
     @property
     def scalar(self):
-        return all(A.scalar for A in self.linear_maps.values())
+        return all(A.scalar for var_id, A in self.linear_maps.items()
+                   if var_id != CONSTANT)
 
     def __rmul__(self, A):
         assert isinstance(A, LinearMapType)
@@ -103,6 +113,7 @@ def get_affine_expr(expr):
 
     elif expr.expression_type == Expression.LINEAR_MAP:
         A = LinearMapType(expr.linear_map)
+        A = A.eval_ops()
         return A*get_affine_expr(only_arg(expr))
 
     raise ExpressionError("unkonwn expr type", expr)
