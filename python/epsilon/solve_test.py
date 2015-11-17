@@ -51,6 +51,7 @@ PROBLEMS = [
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
+    ProblemInstance("robust_svm", robust_svm.create, dict(m=50, n=2)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
