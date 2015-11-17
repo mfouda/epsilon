@@ -1,11 +1,12 @@
 import logging
 
-from epsilon.compiler.transforms import linear
 from epsilon.compiler.transforms import prox
+from epsilon.compiler.transforms import separate
 from epsilon import tree_format
 
 TRANSFORMS = [
     prox.transform_problem,
+    separate.transform_problem,
 ]
 
 def transform_name(transform):
