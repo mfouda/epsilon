@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # Common variable
 n = 10
@@ -138,14 +138,14 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
-    Prox("AFFINE", lambda: randn(n).T*x),
+    # Prox("AFFINE", lambda: randn(n).T*x),
     # Prox("LogisticProx", lambda: cp.sum_entries(cp.logistic(x))),
     # Prox("MaxEntriesProx", lambda: cp.max_entries(x)),
     # Prox("NegativeEntropyProx", lambda: -cp.sum_entries(cp.entr(x))),
     # Prox("NegativeLogDetProx", lambda: -cp.log_det(X)),
     # Prox("NegativeLogProx", lambda: -cp.sum_entries(cp.log(x))),
-    Prox("NON_NEGATIVE", None, C_non_negative_scaled),
-    Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
+    # Prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    # Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
     # Prox("NormFrobeniusProx", lambda: cp.norm(X, "fro")),
     # Prox("NormL1AsymmetricProx", f_norm_l1_asymmetric),
     # Prox("NormL1Prox", lambda: cp.norm1(x)),
@@ -155,10 +155,6 @@ PROX_TESTS = [
     # Prox("SemidefiniteProx", None, lambda: [X >> 0]),
     # Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     # Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
-]
-
-PROX_TESTS = [
-    Prox("ZERO", None, C_linear_equality),
 ]
 
 
