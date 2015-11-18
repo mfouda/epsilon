@@ -59,7 +59,11 @@ def max_overlap_function(graph, f):
     def overlap(g):
         return len(variables(g).intersection(variables_f))
 
-    h = max((g for g in graph.obj_terms if g != f), key=overlap)
+    candidates = [g for g in graph.obj_terms if g != f]
+    if not candidates:
+        return
+
+    h = max(candidates, key=overlap)
 
     # Only return a function if there is some overlap
     if overlap(h):

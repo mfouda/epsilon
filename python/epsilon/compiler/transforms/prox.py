@@ -107,7 +107,7 @@ def transform_prox_expr(rule, expr):
     logging.debug("transform_prox_expr:\n%s", tree_format.format_expr(expr))
     args, constrs = rule.convert_args(expr)
     f = rule.create()
-    expr = expression.prox_function(rule.create(), *args)
+    expr = expression.add(expression.prox_function(rule.create(), *args))
     for constr in constrs:
         expr = merge_add(expr, transform_expr(constr))
     logging.debug(

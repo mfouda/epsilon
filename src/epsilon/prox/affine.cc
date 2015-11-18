@@ -6,11 +6,20 @@
 // a'x + b
 class AffineProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
-    // BlockMatrix A;
-    // BlockVector b;
-    // affine::BuildAffineOperator(arg.f_expr(), "_", &A, &b);
-    // CHECK_EQ(1, A.col_keys().size());
-    // c_ = arg.lambda()*ToVector(A("_", *A.col_keys().begin()).impl().AsDense());
+    CHECK_EQ(1, GetDimension(arg.f_expr()));
+    CHECK_EQ(1, arg.f_expr().arg_size());
+
+    BlockMatrix A;
+    BlockVector b;
+    affine::BuildAffineOperator(arg.f_expr().arg(0), "_", &A, &b);
+
+    // Get the coefficients of the linear function
+    for (const auto& col_iter : A.data()) {
+      for (const auto& row_iter : col_iter.second) {
+        a_(col_iter.first) = row_iter.second.impl().AsDense();
+      }
+    }
+    a_ *= arg.lambda();
   }
 
   BlockVector Apply(const BlockVector& v) override {

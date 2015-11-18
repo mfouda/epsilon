@@ -8,15 +8,19 @@ class NonNegativeProx final : public ProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
     CHECK_EQ(1, arg.f_expr().arg_size());
-    affine::BuildDiagonalAffineOperator(arg.f_expr().arg(0), &a_, &b_);
+    affine::GetDiagonalCoefficients(arg.f_expr().arg(0), &a_, &b_, &key_);
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return v; // (1/alpha_)*((alpha_*v + b_).eval().cwiseMax(0) - b_);
+    BlockVector x;
+    x(key_) = ((a_.cwiseProduct(v(key_)) + b_).cwiseMax(0) - b_)
+              .cwiseQuotient(a_);
+    return x;
   }
 
 private:
-  BlockVector a_, b_;
+  Eigen::VectorXd a_, b_;
+  std::string key_;
 };
 REGISTER_PROX_OPERATOR(ProxFunction::NON_NEGATIVE, NonNegativeProx);
 

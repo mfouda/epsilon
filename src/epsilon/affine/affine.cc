@@ -124,13 +124,6 @@ void BuildDiagonalAffineOperator(
     const Expression& expr,
     BlockVector* a,
     BlockVector* b) {
-  // BlockMatrix A;
-  // BlockVector b0;
-  // BuildAffineOperator(expr, "_", &A, &b0);
-  // CHECK_EQ(1, A.col_keys().size());
-  // a->resize(GetDimension(expr));
-  // *a = linear_map::GetDiagonal(A("_", *A.col_keys().begin()));
-  // *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
 }
 
 void BuildScalarAffineOperator(
@@ -144,5 +137,21 @@ void BuildScalarAffineOperator(
   // *alpha = linear_map::GetScalar(A("_", *A.col_keys().begin()));
   // *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
 }
+
+void GetDiagonalCoefficients(
+    const Expression& expr,
+    Eigen::VectorXd* a,
+    Eigen::VectorXd* b,
+    std::string* key) {
+  BlockMatrix A;
+  BlockVector b0;
+  BuildAffineOperator(expr, "_", &A, &b0);
+  CHECK_EQ(1, A.col_keys().size());
+  a->resize(GetDimension(expr));
+  *key = *A.col_keys().begin();
+  *a = linear_map::GetDiagonal(A("_", *key));
+  *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+}
+
 
 }  // affine
