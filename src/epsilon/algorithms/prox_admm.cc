@@ -40,8 +40,8 @@ ProxADMMSolver::ProxADMMSolver(
 void ProxADMMSolver::InitConstraints() {
   for (int i = 0; i < problem_.constraint_size(); i++) {
     const Expression& constr = problem_.constraint(i);
-    CHECK_EQ(Expression::INDICATOR, constr.expression_type());
-    CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
+    CHECK_EQ(Expression::PROX_FUNCTION, constr.expression_type());
+    CHECK_EQ(ProxFunction::ZERO, constr.prox_function().prox_function_type());
     CHECK_EQ(1, constr.arg_size());
     affine::BuildAffineOperator(
         problem_.constraint(i).arg(0), std::to_string(i), &A_, &b_);
@@ -89,10 +89,11 @@ void ProxADMMSolver::InitProxOperators() {
       }
     }
 
-    // TODO(mwytock): A bit of a hack, this should likely be specified slightly
-    // differently, perhaps by making the ADMM operations more explicit as part
-    // of the IR.
-    if (f_expr.proximal_operator().name() == "ZeroProx") {
+    VLOG(1) << "A[" << i << "]: " << A.DebugString();
+
+    // TODO(mwytock): Likely want to go back to proximal operators being able to
+    // take any A, in which case we wouldnt have to treat this differently.
+    if (f_expr.prox_function().prox_function_type() == ProxFunction::CONSTANT) {
       prox_.emplace_back(std::make_unique<LeastSquaresOperator>(A));
     } else {
       const double alpha = GetBlockDiagonalScalar(A.Transpose()*A);

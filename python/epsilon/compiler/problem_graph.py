@@ -16,10 +16,6 @@ from epsilon.compiler import validate
 from epsilon.expression_pb2 import Expression, Problem, Cone
 from epsilon import tree_format
 
-def is_equality_indicator(f):
-    return (f.expr.expression_type == Expression.INDICATOR and
-            f.expr.cone.cone_type == Cone.ZERO)
-
 class Function(object):
     """Function node."""
     def __init__(self, expr, constraint):
@@ -128,19 +124,9 @@ class ProblemGraph(object):
 
     def add_function(self, f):
         f_vars = find_var_instances(f, f.expr)
-        if not f_vars:
-            return
-
         self.functions.append(f)
         for f_var in f_vars.itervalues():
             self.add_edge(f_var)
-
-        # Add curvature attributes for equality indicator functions
-        if is_equality_indicator(f):
-            var_curvature = expression_util.compute_variable_curvature(
-                f.expr.arg[0])
-            for f_var in self.edges_by_function[f]:
-                f_var.curvature = var_curvature[f_var.variable]
 
     # Accessors for nodes
     @property

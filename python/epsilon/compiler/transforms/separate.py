@@ -3,14 +3,15 @@
 from collections import defaultdict
 from collections import namedtuple
 
-from epsilon.compiler import validate
+from epsilon import affine
+from epsilon import expression
 from epsilon.compiler.problem_graph import *
-from epsilon.expression import *
+from epsilon.compiler import validate
+from epsilon.compiler.transforms import prox
+from epsilon.expression_pb2 import Expression, ProxFunction
 from epsilon.expression_util import fp_expr
-from epsilon.expression_pb2 import Expression
 
-def is_affine(f):
-    return f.expr.curvature.curvature_type == Curvature.AFFINE
+Prox = ProxFunction
 
 def has_data_constant(expr):
     if (expr.expression_type == Expression.CONSTANT and
@@ -36,12 +37,15 @@ def is_prox_friendly_constraint(graph, f):
     In other words, one that can be treated as a constraint without interfering
     with the proximal operators for the other objective terms."""
 
-    if not is_equality_indicator(f):
+    if not f.expr.prox_function.prox_function_type == Prox.ZERO:
         return False
 
+    assert len(f.expr.arg) == 1
+    affine_expr = affine.get_affine_expr(f.expr.arg[0])
     for f_var in graph.edges_by_function[f]:
         edges = graph.edges_by_variable[f_var.variable]
-        if len(edges) > 1 and not f_var.curvature.scalar_multiple:
+        if (len(edges) > 1 and
+            not affine_expr.linear_maps[f_var.variable].scalar):
             return False
 
     return True
@@ -72,7 +76,7 @@ def separate_var(f_var):
 def combine_affine_functions(graph):
     """Combine affine functions with other objective terms."""
     for f in graph.obj_terms:
-        if not is_affine(f):
+        if not f.expr.prox_function.prox_function_type == Prox.AFFINE:
             continue
 
         g = max_overlap_function(graph, f)
@@ -115,12 +119,13 @@ def separate_objective_terms(graph):
             new_var_id = "separate:%s:%s" % (
                 f_var.variable, fp_expr(f_var.function.expr))
             old_var, new_var = f_var.replace_variable(new_var_id)
-            graph.add_function(Function(equality_constraint(old_var, new_var),
-                                        constraint=True))
-
+            graph.add_function(Function(
+                linear.transform_expr(
+                    expression.eq_constraint(old_var, new_var)),
+                constraint=True))
             graph.add_edge(f_var)
 
-def add_zero_prox(graph):
+def add_null_prox(graph):
     """Add f(x) = 0 term for variables only appearing in constraints."""
 
     for var in graph.variables:
@@ -130,25 +135,20 @@ def add_zero_prox(graph):
         if f_vars:
             continue
 
-        # Create the zero function and add this variable to it
-        # TODO(mwytock): ProblemGraph interface should probably be a bit better
-        # for this use case.
         var_expr = graph.edges_by_variable[var][0].instances[0]
-        f_expr = zero(var_expr)
-        f_expr.proximal_operator.name = "ZeroProx"
-        f = Function(f_expr, constraint=False)
-        f_var = FunctionVariable(f, var, f_expr.arg[0])
-        graph.add_function(f)
-        graph.add_edge(f_var)
+        f_expr = expression.prox_function(
+            ProxFunction(prox_function_type=Prox.CONSTANT), var_expr)
+        graph.add_function(Function(f_expr, constraint=False))
+
 
 GRAPH_TRANSFORMS = [
     move_equality_indicators,
     combine_affine_functions,
     separate_objective_terms,
-    add_zero_prox,
+    add_null_prox,
 ]
 
-def transform(problem):
+def transform_problem(problem):
     graph = ProblemGraph(problem)
     for f in GRAPH_TRANSFORMS:
         f(graph)

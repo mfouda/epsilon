@@ -20,44 +20,57 @@ RULES = []
 Prox = ProxFunction
 
 def affine_args(expr):
+    return [linear.transform_expr(expr)], []
+
+def least_squares_args(expr):
     args = []
     constr = []
 
     for arg in expr.arg:
         if dcp.is_affine(arg):
             args.append(linear.transform_expr(arg))
-        else:
-            t, epi_f = epi_transform(arg, "affine")
-            args.append(t)
-            constr.append(epi_f)
+            continue
+
+        logging.debug("not affine, adding epigraph")
+        t, epi_f = epi_transform(arg, "affine")
+        args.append(t)
+        constr.append(epi_f)
 
     return args, constr
 
-def diagonal_affine_args(expr):
-    args_affine, constr = affine_args(expr)
-
+def diagonal_args(expr):
     args = []
-    for arg in args_affine:
-        if affine.is_diagonal(arg):
-            args.append(arg)
-        else:
-            t, epi_f = epi_transform(arg, "diagonal")
-            args.append(t)
-            constr.append(epi_f)
+    constr = []
+
+    for arg in expr.arg:
+        if dcp.is_affine(arg):
+            arg_linear = linear.transform_expr(arg)
+            if affine.is_diagonal(arg_linear):
+                args.append(arg_linear)
+                continue
+
+        logging.debug("not diagonal, adding epigraph")
+        t, epi_f = epi_transform(arg, "diagonal")
+        args.append(t)
+        constr.append(epi_f)
 
     return args, constr
 
-def scalar_affine_args(expr):
-    args_affine, constr = affine_args(expr)
-
+def scalar_args(expr):
     args = []
-    for arg in args_affine:
-        if affine.is_scalar(arg):
-            args.append(arg)
-        else:
-            t, epi_f = epi_transform(arg, "scalar")
-            args.append(t)
-            constr.append(epi_f)
+    constr = []
+
+    for arg in expr.arg:
+        if dcp.is_affine(arg):
+            arg_linear = linear.transform_expr(arg)
+            if affine.is_scalar(arg_linear):
+                args.append(arg_linear)
+                continue
+
+        logging.debug("not scalar, adding epigraph")
+        t, epi_f = epi_transform(arg, "scalar")
+        args.append(t)
+        constr.append(epi_f)
 
     return args, constr
 
@@ -77,10 +90,10 @@ def match_indicator(cone_type):
 # Linear cone rules
 RULES += [
     ProxRule(dcp.is_affine, affine_args, create(Prox.AFFINE)),
-    ProxRule(match_indicator(Cone.ZERO), affine_args, create(Prox.ZERO)),
-    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_affine_args,
+    ProxRule(match_indicator(Cone.ZERO), least_squares_args, create(Prox.ZERO)),
+    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
              create(Prox.NON_NEGATIVE)),
-    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_affine_args,
+    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
              create(Prox.SECOND_ORDER_CONE)),
 ]
 

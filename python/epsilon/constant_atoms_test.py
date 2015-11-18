@@ -225,8 +225,8 @@ def run_atom(atom, problem, obj_val, solver):
 def test_atom():
     for atom_list, objective_type in atoms:
         for atom, size, args, obj_val in atom_list:
-            for row in range(size[0]):
-                for col in range(size[1]):
+            for row in range(1): #size[0]):
+                for col in range(1): #size[1]):
                     for solver in SOLVERS_TO_TRY:
                         # Atoms with Constant arguments.
                         const_args = [Constant(arg) for arg in args]

@@ -66,20 +66,19 @@ class LinearMapType(object):
 
         raise ValueError("not implemented A:\n%sB:\n%s" % (self.linear_map, B.linear_map))
 
-CONSTANT = "constant"
 class AffineExpression(object):
     def __init__(self, linear_maps):
         self.linear_maps = linear_maps
 
     @property
     def diagonal(self):
-        return all(A.diagonal for var_id, A in self.linear_maps.items()
-                   if var_id != CONSTANT)
+        return (len(self.linear_maps) == 1 and
+                self.linear_maps.values()[0].diagonal)
 
     @property
     def scalar(self):
-        return all(A.scalar for var_id, A in self.linear_maps.items()
-                   if var_id != CONSTANT)
+        return (len(self.linear_maps) == 1 and
+                self.linear_maps.values()[0].scalar)
 
     def __rmul__(self, A):
         assert isinstance(A, LinearMapType)
@@ -100,12 +99,14 @@ class AffineExpression(object):
 
 # TODO(mwytock): memoize
 def get_affine_expr(expr):
-    if (expr.expression_type == Expression.CONSTANT or
-        expr.expression_type == Expression.VARIABLE):
-        var_id = (CONSTANT if expr.expression_type == Expression.CONSTANT else
-                  expr.variable.variable_id)
+    if expr.expression_type == Expression.CONSTANT:
+        # TODO(mwytock): Keep track of constant terms if needed
+        return AffineExpression({})
+
+    elif expr.expression_type == Expression.VARIABLE:
         return AffineExpression({
-            var_id: LinearMapType(linear_map.identity(dim(expr)))})
+            expr.variable.variable_id:
+            LinearMapType(linear_map.identity(dim(expr)))})
 
     elif expr.expression_type == Expression.ADD:
         return reduce(lambda A,B: A+B,
@@ -116,7 +117,10 @@ def get_affine_expr(expr):
         A = A.eval_ops()
         return A*get_affine_expr(only_arg(expr))
 
-    raise ExpressionError("unkonwn expr type", expr)
+    elif expr.expression_type == Expression.RESHAPE:
+        return get_affine_expr(only_arg(expr))
+
+    raise ExpressionError("Unkonwn expression type", expr)
 
 
 def is_diagonal(expr):

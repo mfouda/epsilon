@@ -148,6 +148,7 @@ def transform_vstack(expr):
     return expression.add(*add_args)
 
 def transform_reshape(expr):
+
     return expression.reshape(
         transform_expr(only_arg(expr)),
         dim(expr, 0),

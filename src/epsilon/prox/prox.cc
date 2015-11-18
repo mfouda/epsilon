@@ -23,12 +23,8 @@
 #include "epsilon/vector/vector_util.h"
 
 std::unordered_map<
-  std::string,
+  ProxFunction::Type,
   std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
-
-std::unordered_map<
-  std::string,
-  std::function<std::unique_ptr<BlockProxOperator>()>>* kBlockProxOperatorMap;
 
 class ProxBlockVectorOperator final : public BlockVectorOperator {
  public:
@@ -39,7 +35,6 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
       : lambda_(lambda),
       A_(A),
       f_expr_(f_expr) {
-    CHECK(kBlockProxOperatorMap != nullptr) << "No registered operators";
     CHECK(kProxOperatorMap != nullptr) << "No registered operators";
   }
 
@@ -48,47 +43,21 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
 
     Preprocess();
     InitScaling();
-
-    auto iter = kBlockProxOperatorMap->find(g_expr_->proximal_operator().name());
-    if (iter != kBlockProxOperatorMap->end()) {
-      // New style block prox
-      block_vector_prox_ = true;
-      prox_ = iter->second();
-      prox_->Init(ProxOperatorArg(alpha_*lambda_, &A_, g_expr_, nullptr));
-    } else {
-      // Legacy vector prox
-      block_vector_prox_ = false;
-      auto iter2 = kProxOperatorMap->find(g_expr_->proximal_operator().name());
-      if (iter2 == kProxOperatorMap->end()) {
+    CHECK_EQ(Expression::PROX_FUNCTION, g_expr_->expression_type());
+    ProxFunction::Type type = g_expr_->prox_function().prox_function_type();
+    auto iter = kProxOperatorMap->find(type);
+    if (iter == kProxOperatorMap->end()) {
         LOG(FATAL) << "No proximal operator for "
-                   << g_expr_->proximal_operator().name() << "\n"
-                   << g_expr_->DebugString();
-      }
-      legacy_prox_ = iter2->second();
-      var_map_.Insert(f_expr_);
-      legacy_prox_->Init(ProxOperatorArg(alpha_*lambda_, nullptr, g_expr_, &var_map_));
+                   << ProxFunction::Type_Name(type);
     }
+
+    prox_ = iter->second();
+    prox_->Init(ProxOperatorArg(alpha_*lambda_, &A_, g_expr_, nullptr));
   }
 
   virtual BlockVector Apply(const BlockVector& v) override {
     BlockVector v_c = AT_*v - lambda_*c_;
-    if (block_vector_prox_)
-      return prox_->Apply(v_c);
-
-    // Old style prox. First we have to extract vectors from BlockVector
-    Eigen::VectorXd v_vec = Eigen::VectorXd::Zero(var_map_.n());
-    for (auto iter : var_map_.offsets()) {
-      if (v_c.has_key(iter.first))
-        v_vec.segment(iter.second, var_map_.Size(iter.first)) = v_c(iter.first);
-    }
-
-    legacy_prox_->Apply(v_vec);
-    Eigen::VectorXd x_vec = legacy_prox_->Apply(v_vec);
-    BlockVector x;
-    for (auto iter : var_map_.offsets()) {
-      x(iter.first) = x_vec.segment(iter.second, var_map_.Size(iter.first));
-    }
-    return x;
+    return prox_->Apply(v_c);
   }
 
  private:
@@ -102,12 +71,7 @@ class ProxBlockVectorOperator final : public BlockVectorOperator {
   Expression f_expr_;
 
   // Prox function
-  std::unique_ptr<BlockProxOperator> prox_;
-
-  // Legacy prox stuff
-  bool block_vector_prox_;
-  VariableOffsetMap var_map_;
-  std::unique_ptr<ProxOperator> legacy_prox_;
+  std::unique_ptr<ProxOperator> prox_;
 
   // Preprocessed parameters, f(x) = alpha*g(x) + c'x
   const Expression* g_expr_;

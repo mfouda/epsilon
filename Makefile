@@ -48,6 +48,29 @@ LDLIBS += `pkg-config --libs $(LIBS)`
 CXXFLAGS += `pkg-config --cflags $(LIBS)`
 endif
 
+# 	epsilon/prox/deadzone.cc \
+# 	epsilon/prox/fused_lasso.cc \
+# 	epsilon/prox/hinge.cc \
+# 	epsilon/prox/inv_pos.cc \
+# 	epsilon/prox/kl_div.cc \
+# 	epsilon/prox/least_squares.cc
+
+#  	epsilon/prox/linear_equality.cc \
+# 	epsilon/prox/logistic.cc \
+# 	epsilon/prox/max_entries.cc \
+# 	epsilon/prox/negative_entropy.cc \
+# 	epsilon/prox/negative_log.cc \
+# 	epsilon/prox/newton.cc \
+# 	epsilon/prox/norm_l1.cc \
+# 	epsilon/prox/norm_l1_asymmetric.cc \
+# 	epsilon/prox/norm_l1_l2.cc \
+# 	epsilon/prox/norm_l2.cc \
+# 	epsilon/prox/ortho_invariant.cc \
+# 	epsilon/prox/quad_over_lin.cc \
+# 	epsilon/prox/scaled_zone.cc \
+# 	epsilon/prox/sum_exp.cc \
+# 	epsilon/prox/sum_largest.cc
+
 common_cc = \
 	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
@@ -65,30 +88,10 @@ common_cc = \
 	epsilon/linear/scalar_matrix_impl.cc \
 	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/parameters/local_parameter_service.cc \
-	epsilon/prox/deadzone.cc \
-	epsilon/prox/fused_lasso.cc \
-	epsilon/prox/hinge.cc \
-	epsilon/prox/inv_pos.cc \
-	epsilon/prox/kl_div.cc \
-	epsilon/prox/least_squares.cc \
-	epsilon/prox/linear.cc \
-	epsilon/prox/linear_equality.cc \
-	epsilon/prox/logistic.cc \
-	epsilon/prox/max_entries.cc \
-	epsilon/prox/negative_entropy.cc \
-	epsilon/prox/negative_log.cc \
-	epsilon/prox/newton.cc \
+	epsilon/prox/affine.cc \
 	epsilon/prox/non_negative.cc \
-	epsilon/prox/norm_l1.cc \
-	epsilon/prox/norm_l1_asymmetric.cc \
-	epsilon/prox/norm_l1_l2.cc \
-	epsilon/prox/norm_l2.cc \
-	epsilon/prox/ortho_invariant.cc \
+	epsilon/prox/zero.cc \
 	epsilon/prox/prox.cc \
-	epsilon/prox/quad_over_lin.cc \
-	epsilon/prox/scaled_zone.cc \
-	epsilon/prox/sum_exp.cc \
-	epsilon/prox/sum_largest.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

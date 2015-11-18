@@ -230,7 +230,7 @@ def index(x, start_i, stop_i, start_j=None, stop_j=None):
     return Expression(
         expression_type=Expression.INDEX,
         size=Size(dim=[stop_i-start_i, stop_j-start_j]),
-        curvature=x.curvature,
+        curvature=AFFINE,
         key=[Slice(start=start_i, stop=stop_i, step=1),
              Slice(start=start_j, stop=stop_j, step=1)],
         arg=[x])

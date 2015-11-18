@@ -3,8 +3,8 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 
-// c'x
-class LinearProx final : public ProxOperator {
+// a'x + b
+class AffineProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
     // BlockMatrix A;
     // BlockVector b;
@@ -14,10 +14,10 @@ class LinearProx final : public ProxOperator {
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return v - c_;
+    return v - a_;
   }
 
 private:
-  BlockVector c_;
+  BlockVector a_;
 };
-REGISTER_PROX_OPERATOR(ProxFunction::AFFINE, LinearProx);
+REGISTER_PROX_OPERATOR(ProxFunction::AFFINE, AffineProx);

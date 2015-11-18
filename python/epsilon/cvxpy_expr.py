@@ -1,37 +1,16 @@
 """Convert CVXPY expressions into Expression trees."""
 
-import cvxpy
 import numpy
 
+from cvxpy.atoms import *
+
 from cvxpy import utilities as u
+from cvxpy.atoms.affine.index import index
+from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.add_expr import AddExpression
 from cvxpy.atoms.affine.binary_operators import MulExpression
-from cvxpy.atoms.affine.hstack import hstack
-from cvxpy.atoms.affine.index import index
-from cvxpy.atoms.affine.mul_elemwise import mul_elemwise
-from cvxpy.atoms.affine.sum_entries import sum_entries
-from cvxpy.atoms.affine.trace import trace
-from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
-from cvxpy.atoms.affine.vstack import vstack
-from cvxpy.atoms.elementwise.entr import entr
-from cvxpy.atoms.elementwise.exp import exp
-from cvxpy.atoms.elementwise.huber import huber
-from cvxpy.atoms.elementwise.log import log
-from cvxpy.atoms.elementwise.logistic import logistic
-from cvxpy.atoms.elementwise.max_elemwise import max_elemwise
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
-from cvxpy.atoms.elementwise.power import power
-from cvxpy.atoms.kl_div import kl_div
-from cvxpy.atoms.lambda_max import lambda_max
-from cvxpy.atoms.log_det import log_det
-from cvxpy.atoms.log_sum_exp import log_sum_exp
-from cvxpy.atoms.matrix_frac import matrix_frac
-from cvxpy.atoms.max_entries import max_entries
-from cvxpy.atoms.norm_nuc import normNuc
-from cvxpy.atoms.pnorm import pnorm
-from cvxpy.atoms.quad_over_lin import quad_over_lin
-from cvxpy.atoms.sum_largest import sum_largest
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.constraints.psd_constraint import PSDConstraint
@@ -41,7 +20,7 @@ from cvxpy.problems import objective
 
 from epsilon import constant
 from epsilon import expression
-from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature
+from epsilon.expression_pb2 import Expression, Size, Problem, Sign, Curvature, Monotonicity
 
 def index_value(index, size):
     if index < 0:
@@ -61,15 +40,19 @@ def convert_constant(expr):
         return expression.constant(m, n, scalar=expr.value)
     return expression.constant(m, n, constant=constant.store(expr.value))
 
-
 def convert_generic(expression_type, expr):
     return Expression(
         expression_type=expression_type,
         size=Size(dim=expr.size),
         curvature=Curvature(
-            curvature_type=Curvature.Type.Value(expr.curvature)),
+            curvature_type=Curvature.Type.Value(
+                expr.func_curvature().curvature_str)),
         sign=Sign(
             sign_type=Sign.Type.Value(expr.sign)),
+        arg_monotonicity=[
+            Monotonicity(
+                monotonicity_type=Monotonicity.Type.Value(m))
+            for m in expr.monotonicity()],
         arg=(convert_expression(arg) for arg in expr.args))
 
 def convert_binary(f, expr):
@@ -123,7 +106,7 @@ EXPRESSION_TYPES = (
     (MulExpression, lambda e: convert_binary(expression.multiply, e)),
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
     (Variable, convert_variable),
-    (cvxpy.abs, lambda e: convert_generic(Expression.ABS, e)),
+    (abs, lambda e: convert_generic(Expression.ABS, e)),
     (exp, lambda e: convert_generic(Expression.EXP, e)),
     (entr, lambda e: convert_generic(Expression.ENTR, e)),
     (hstack, lambda e: convert_generic(Expression.HSTACK, e)),
@@ -165,7 +148,7 @@ def convert_expression(expr):
 
 def convert_constraint(constraint):
     if isinstance(constraint, EqConstraint):
-        return expression.equality_constraint(
+        return expression.eq_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))
     elif isinstance(constraint, PSDConstraint):

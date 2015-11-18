@@ -23,13 +23,13 @@ void BuildAffineOperator(
 
 void BuildDiagonalAffineOperator(
     const Expression& expr,
-    Eigen::VectorXd* a,
-    Eigen::VectorXd* b);
+    BlockVector* a,
+    BlockVector* b);
 
 void BuildScalarAffineOperator(
     const Expression& expr,
     double* alpha,
-    Eigen::VectorXd* b);
+    BlockVector* b);
 
 
 }  // namespace affine
