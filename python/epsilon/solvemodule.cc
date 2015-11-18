@@ -143,47 +143,47 @@ static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
   return nullptr;
 }
 
-static PyObject* Prox(PyObject* self, PyObject* args) {
-  // const char* f_expr_str;
-  // int f_expr_str_len;
-  // double lambda;
-  // PyObject* data;
-  // PyObject* v_map;
+static PyObject* EvalProx(PyObject* self, PyObject* args) {
+  const char* f_expr_str;
+  int f_expr_str_len;
+  double lambda;
+  PyObject* data;
+  PyObject* v_map;
 
-  // // prox(expr_str, lambda, data, v_map)
-  // if (!PyArg_ParseTuple(
-  //         args, "s#dOO",
-  //         &f_expr_str, &f_expr_str_len, &lambda, &data, &v_map)) {
-  //   // TODO(mwytock): Need to set the appropriate exceptions when passed
-  //   // incorrect arguments.
-  //   return nullptr;
-  // }
+  // prox(expr_str, lambda, data, v_map)
+  if (!PyArg_ParseTuple(
+          args, "s#dOO",
+          &f_expr_str, &f_expr_str_len, &lambda, &data, &v_map)) {
+    // TODO(mwytock): Need to set the appropriate exceptions when passed
+    // incorrect arguments.
+    return nullptr;
+  }
 
-  // Expression f_expr;
-  // if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
-  //   return nullptr;
+  Expression f_expr;
+  if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
+    return nullptr;
 
-  // BlockMatrix A;
-  // for (const Expression* var_expr : GetVariables(f_expr)) {
-  //   const std::string& var_id = var_expr->variable().variable_id();
-  //   A(var_id, var_id) = linear_map::Identity(GetDimension(*var_expr));
-  // }
+  BlockMatrix A;
+  for (const Expression* var_expr : GetVariables(f_expr)) {
+    const std::string& var_id = var_expr->variable().variable_id();
+    A(var_id, var_id) = linear_map::Identity(GetDimension(*var_expr));
+  }
 
-  // InitLogging();
-  // WriteConstants(data);
-  // if (!setjmp(failure_buf)) {
-  //   std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
-  //       lambda, A, f_expr);
-  //   op->Init();
-  //   BlockVector x = op->Apply(GetVariableVector(v_map));
-  //   PyObject* vars = GetVariableMap(x);
-  //   PyObject* retval = Py_BuildValue("O", vars);
-  //   Py_DECREF(vars);
-  //   return retval;
-  // }
+  InitLogging();
+  WriteConstants(data);
+  if (!setjmp(failure_buf)) {
+    std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
+        lambda, A, f_expr);
+    op->Init();
+    BlockVector x = op->Apply(GetVariableVector(v_map));
+    PyObject* vars = GetVariableMap(x);
+    PyObject* retval = Py_BuildValue("O", vars);
+    Py_DECREF(vars);
+    return retval;
+  }
 
-  // PyErr_SetString(SolveError, "CHECK failed");
-  // return nullptr;
+  PyErr_SetString(SolveError, "CHECK failed");
+  return nullptr;
 }
 
 
@@ -195,7 +195,7 @@ void HandleFailure() {
 static PyMethodDef SolveMethods[] = {
   {"prox_admm_solve", ProxADMMSolve, METH_VARARGS,
    "Solve a problem with epsilon."},
-  {"prox", Prox, METH_VARARGS,
+  {"eval_prox", EvalProx, METH_VARARGS,
    "Test a proximal operator."},
   {nullptr, nullptr, 0, nullptr}
 };

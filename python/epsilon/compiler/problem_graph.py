@@ -124,6 +124,11 @@ class ProblemGraph(object):
 
     def add_function(self, f):
         f_vars = find_var_instances(f, f.expr)
+
+        # ignore constant functions
+        if not f_vars:
+            return
+
         self.functions.append(f)
         for f_var in f_vars.itervalues():
             self.add_edge(f_var)

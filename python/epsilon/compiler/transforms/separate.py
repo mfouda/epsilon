@@ -79,6 +79,9 @@ def combine_affine_functions(graph):
         if not f.expr.prox_function.prox_function_type == Prox.AFFINE:
             continue
 
+        if not graph.edges_by_function[f]:
+            continue
+
         g = max_overlap_function(graph, f)
         if not g:
             continue
@@ -92,6 +95,10 @@ def combine_affine_functions(graph):
 
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
+    # Single prox case, dont move it
+    if len(graph.obj_terms) == 1:
+        return
+
     for function in graph.obj_terms:
         if (is_prox_friendly_constraint(graph, function)):
             function.constraint = True
