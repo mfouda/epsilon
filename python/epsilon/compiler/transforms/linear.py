@@ -1,14 +1,12 @@
 """Transforms for linear functions."""
 
+from epsilon import dcp
 from epsilon import error
 from epsilon import expression
 from epsilon import linear_map
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Problem, Constant
-from epsilon.expression_util import *
-
-class CanonicalizeError(error.ExpressionError):
-    pass
+from epsilon.compiler.transforms.transform_util import *
 
 def transform_variable(expr):
     if dim(expr,1) == 1:
@@ -55,11 +53,11 @@ def multiply_constant(expr, n):
     elif expr.expression_type == Expression.TRANSPOSE:
         return linear_map.transpose(multiply_constant(only_arg(expr), n))
 
-    raise CanonicalizeError("unknown constant type", expr)
+    raise TransformError("unknown constant type", expr)
 
 def transform_multiply(expr):
     if len(expr.arg) != 2:
-        raise CanonicalizeError("wrong number of args", expr)
+        raise TransformError("wrong number of args", expr)
 
     m = dim(expr, 0)
     n = dim(expr, 1)
@@ -75,21 +73,35 @@ def transform_multiply(expr):
                 multiply_constant(expr.arg[1], n), m),
             transform_expr(expr.arg[0]))
 
-    raise CanonicalizeError("multiplying non constants", expr)
+    raise TransformError("multiplying non constants", expr)
+
+def transform_kron(expr):
+    if len(expr.arg) != 2:
+        raise TransformError("Wrong number of arguments", expr)
+
+    if not dcp.is_constant(expr.arg[0]):
+        raise TransformError("First arg is not constant", expr)
+
+    return expression.linear_map(
+        linear_map.kronecker_product_single_arg(
+            multiply_constant(expr.arg[0], 1),
+            dim(expr.arg[1], 0),
+            dim(expr.arg[1], 1)),
+        transform_expr(expr.arg[1]))
 
 def multiply_elementwise_constant(expr):
     # TODO(mwytock): Handle this case
     if expr.expression_type != Expression.CONSTANT:
-        raise CanonicalizeError("multiply constant is not leaf", expr)
+        raise TransformError("multiply constant is not leaf", expr)
 
     if expr.constant.constant_type == Constant.DENSE_MATRIX:
         return linear_map.diagonal_matrix(expr.constant)
 
-    raise CanonicalizeError("unknown constant type", expr)
+    raise TransformError("unknown constant type", expr)
 
 def transform_multiply_elementwise(expr):
     if len(expr.arg) != 2:
-        raise CanonicalizeError("wrong number of args", expr)
+        raise TransformError("wrong number of args", expr)
 
     if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
         c_expr = expr.arg[0]
@@ -98,7 +110,7 @@ def transform_multiply_elementwise(expr):
         c_expr = expr.arg[1]
         x_expr = expr.arg[0]
     else:
-        raise CanonicalizeError("multiply non constants", expr)
+        raise TransformError("multiply non constants", expr)
 
     return expression.linear_map(
         multiply_elementwise_constant(c_expr),
@@ -148,7 +160,6 @@ def transform_vstack(expr):
     return expression.add(*add_args)
 
 def transform_reshape(expr):
-
     return expression.reshape(
         transform_expr(only_arg(expr)),
         dim(expr, 0),
@@ -156,6 +167,26 @@ def transform_reshape(expr):
 
 def transform_linear_map(expr):
     return expr
+
+def transform_diag_mat(expr):
+    return expression.linear_map(
+        linear_map.diag_mat(dim(expr)),
+        transform_expr(only_arg(expr)))
+
+def transform_diag_vec(expr):
+    return expression.linear_map(
+        linear_map.diag_vec(dim(expr, 0)),
+        transform_expr(only_arg(expr)))
+
+def transform_upper_tri(expr):
+    return expression.linear_map(
+        linear_map.upper_tri(dim(expr, 0)),
+        transform_expr(only_arg(expr)))
+
+def transform_trace(expr):
+    return expression.linear_map(
+        linear_map.trace(dim(expr, 0)),
+        transform_expr(only_arg(expr)))
 
 def transform_linear_expr(expr):
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()

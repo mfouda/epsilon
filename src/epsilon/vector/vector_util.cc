@@ -226,6 +226,17 @@ void AppendBlockTriplets(
   }
 }
 
+void AppendBlockTriplets(
+    const Eigen::MatrixXd& A, int i_offset, int j_offset,
+    std::vector<Eigen::Triplet<double> >* coeffs) {
+  for (int i = 0; i < A.rows(); i++) {
+    for (int j = 0; j < A.cols(); j++) {
+      coeffs->push_back(
+          Eigen::Triplet<double>(i_offset+i, j_offset+j, A(i,j)));
+    }
+  }
+}
+
 SparseXd BuildSparseMatrix(
     int m, int n, const std::vector<Eigen::Triplet<double>>& coeffs) {
   SparseXd A(m, n);

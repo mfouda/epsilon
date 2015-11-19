@@ -83,7 +83,9 @@ LinearMapImpl* Multiply_SparseMatrix_ScalarMatrix(
 LinearMapImpl* Multiply_SparseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const SparseMatrixImpl&>(lhs).sparse()*
+      static_cast<const KroneckerProductImpl&>(rhs).AsSparse());
 }
 
 LinearMapImpl* Multiply_DiagonalMatrix_DenseMatrix(
@@ -182,7 +184,9 @@ LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
 LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const KroneckerProductImpl&>(lhs).AsSparse()*
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_DiagonalMatrix(

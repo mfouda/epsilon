@@ -9,6 +9,7 @@ from cvxpy.atoms.affine.index import index
 from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.add_expr import AddExpression
 from cvxpy.atoms.affine.binary_operators import MulExpression
+from cvxpy.atoms.affine.diag import diag_mat, diag_vec
 from cvxpy.atoms.affine.unary_operators import NegExpression
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.constraints.eq_constraint import EqConstraint
@@ -107,20 +108,23 @@ EXPRESSION_TYPES = (
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
     (Variable, convert_variable),
     (abs, lambda e: convert_generic(Expression.ABS, e)),
-    (exp, lambda e: convert_generic(Expression.EXP, e)),
+    (diag_mat, lambda e: convert_generic(Expression.DIAG_MAT, e)),
+    (diag_vec, lambda e: convert_generic(Expression.DIAG_VEC, e)),
     (entr, lambda e: convert_generic(Expression.ENTR, e)),
+    (exp, lambda e: convert_generic(Expression.EXP, e)),
     (hstack, lambda e: convert_generic(Expression.HSTACK, e)),
     (huber, convert_huber),
     (index, convert_index),
     (kl_div, lambda e: convert_generic(Expression.KL_DIV, e)),
+    (kron, lambda e: convert_generic(Expression.KRON, e)),
     (lambda_max, lambda e: convert_generic(Expression.LAMBDA_MAX, e)),
     (log, lambda e: convert_generic(Expression.LOG, e)),
     (log_det, lambda e: convert_generic(Expression.LOG_DET, e)),
     (log_sum_exp, lambda e: convert_generic(Expression.LOG_SUM_EXP, e)),
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
+    (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
     (max_entries, lambda e: convert_generic(Expression.MAX_ENTRIES, e)),
-    (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
     (normNuc, lambda e: convert_generic(Expression.NORM_NUC, e)),

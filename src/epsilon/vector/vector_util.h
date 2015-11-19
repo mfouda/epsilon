@@ -52,6 +52,9 @@ std::string SparseMatrixDebugString(const SparseXd& A);
 
 void AppendBlockTriplets(const SparseXd& A, int i, int j,
                          std::vector<Eigen::Triplet<double> >* coeffs);
+void AppendBlockTriplets(const Eigen::MatrixXd& A, int i, int j,
+                         std::vector<Eigen::Triplet<double> >* coeffs);
+
 SparseXd BuildSparseMatrix(
     int m, int n, const std::vector<Eigen::Triplet<double>>& coeffs);
 

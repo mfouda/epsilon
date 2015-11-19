@@ -157,14 +157,17 @@ message Expression {
     MULTIPLY_ELEMENTWISE = 12;
 
     // Linear functions
-    INDEX = 20;
-    NEGATE = 21;
-    SUM = 22;
-    TRANSPOSE = 23;
-    HSTACK = 24;
-    VSTACK = 25;
-    TRACE = 26;
-    RESHAPE = 27;
+    DIAG_MAT = 20;
+    DIAG_VEC= 21;
+    HSTACK = 22;
+    INDEX = 23;
+    NEGATE = 24;
+    RESHAPE = 25;
+    SUM = 26;
+    TRACE = 27;
+    TRANSPOSE = 28;
+    VSTACK = 29;
+    KRON = 30;
 
     // Elementwise functions
     ABS = 50;

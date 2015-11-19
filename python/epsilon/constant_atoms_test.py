@@ -33,10 +33,10 @@ v_np = np.matrix([-1.,2,-2]).T
 
 atoms = [
     ([
-        (abs, (2, 2), [ [[-5,2],[-3,1]] ],
-            Constant([[5,2],[3,1]])),
-        # (diag, (2, 1), [ [[-5,2],[-3,1]] ], Constant([-5, 1])),
-        # (diag, (2, 2), [ [-5, 1] ], Constant([[-5, 0], [0, 1]])),
+        # (abs, (2, 2), [ [[-5,2],[-3,1]] ],
+        #     Constant([[5,2],[3,1]])),
+#        (diag, (2, 1), [ [[-5,2],[-3,1]] ], Constant([-5, 1])),
+        (diag, (2, 2), [ [-5, 1] ], Constant([[-5, 0], [0, 1]])),
         # (exp, (2, 2), [ [[1, 0],[2, -1]] ],
         #     Constant([[math.e, 1],[math.e**2, 1.0/math.e]])),
         # (huber, (2, 2), [ [[0.5, -1.5],[4, 0]] ],
@@ -50,7 +50,7 @@ atoms = [
         # (kl_div, (1, 1), [math.e, 1], Constant([1])),
         # (kl_div, (1, 1), [math.e, math.e], Constant([0])),
         # (lambda x: kron(np.matrix("1 2; 3 4"), x), (4, 4), [np.matrix("5 6; 7 8")],
-        #     Constant(np.kron(np.matrix("1 2; 3 4").A, np.matrix("5 6; 7 8").A))),
+        #    Constant(np.kron(np.matrix("1 2; 3 4").A, np.matrix("5 6; 7 8").A))),
         # (lambda_max, (1, 1), [ [[2,0],[0,1]] ], Constant([2])),
         # (lambda_max, (1, 1), [ [[5,7],[7,-3]] ], Constant([9.06225775])),
         # (lambda x: lambda_sum_largest(x, 2), (1, 1), [ [[1, 2, 3], [2,4,5], [3,5,6]] ], Constant([11.51572947])),
@@ -129,15 +129,15 @@ atoms = [
         # (lambda x: sum_largest(x, 3), (1, 1), [ [1,2,3,4,5] ], Constant([5+4+3])),
         # (lambda x: sum_largest(x, 3), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([9+10+11])),
         # (sum_squares, (1, 1), [ [[-1, 2],[3, -4]] ], Constant([30])),
-        # (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
-        # (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
+        (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
+        (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
         # (tv, (1, 1), [ [1,-1,2] ], Constant([5])),
         # (tv, (1, 1), [ [[1],[-1],[2]] ], Constant([5])),
         # (tv, (1, 1), [ [[-5,2],[-3,1]] ], Constant([math.sqrt(53)])),
         # (tv, (1, 1), [ [[-5,2],[-3,1]], [[6,5],[-4,3]], [[8,0],[15,9]] ],
         #     Constant([LA.norm([7, -1, -8, 2, -10, 7])])),
         # (tv, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([4*math.sqrt(10)])),
-        # (upper_tri, (3, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([6, 9, 10])),
+        (upper_tri, (3, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([6, 9, 10])),
     ], Minimize),
     # ([
     #     (entr, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ],
@@ -211,7 +211,8 @@ def run_atom(atom, problem, obj_val, solver):
         print("solver", solver)
         tolerance = SOLVER_TO_TOL[solver]
         if solver == EPSILON:
-            status, result = problem.solve(method=solver)
+            # TODO(mwytock): Figure out why we need to run this to higher accuracy?
+            status, result = problem.solve(method=solver, rel_tol=1e-3)
         else:
             result = problem.solve(solver=solver, verbose=False)
             status = problem.status
