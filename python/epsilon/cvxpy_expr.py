@@ -5,12 +5,13 @@ import numpy
 from cvxpy.atoms import *
 
 from cvxpy import utilities as u
-from cvxpy.atoms.affine.index import index
-from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.add_expr import AddExpression
 from cvxpy.atoms.affine.binary_operators import MulExpression
 from cvxpy.atoms.affine.diag import diag_mat, diag_vec
+from cvxpy.atoms.affine.index import index
+from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
+from cvxpy.atoms.affine.upper_tri import upper_tri
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
@@ -135,6 +136,7 @@ EXPRESSION_TYPES = (
     (sum_largest, lambda e: convert_sum_largest(e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),
     (transpose, lambda e: convert_unary(expression.transpose, e)),
+    (upper_tri, lambda e: convert_generic(Expression.UPPER_TRI, e)),
     (vstack, lambda e: convert_generic(Expression.VSTACK, e)),
 )
 

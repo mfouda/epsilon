@@ -185,7 +185,7 @@ def transform_upper_tri(expr):
 
 def transform_trace(expr):
     return expression.linear_map(
-        linear_map.trace(dim(expr, 0)),
+        linear_map.trace(dim(only_arg(expr), 0)),
         transform_expr(only_arg(expr)))
 
 def transform_linear_expr(expr):

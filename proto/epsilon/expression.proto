@@ -168,6 +168,7 @@ message Expression {
     TRANSPOSE = 28;
     VSTACK = 29;
     KRON = 30;
+    UPPER_TRI = 31;
 
     // Elementwise functions
     ABS = 50;
