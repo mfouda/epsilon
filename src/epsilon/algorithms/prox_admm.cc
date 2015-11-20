@@ -40,8 +40,8 @@ ProxADMMSolver::ProxADMMSolver(
 void ProxADMMSolver::InitConstraints() {
   for (int i = 0; i < problem_.constraint_size(); i++) {
     const Expression& constr = problem_.constraint(i);
-    CHECK_EQ(Expression::PROX_FUNCTION, constr.expression_type());
-    CHECK_EQ(ProxFunction::ZERO, constr.prox_function().prox_function_type());
+    CHECK_EQ(Expression::INDICATOR, constr.expression_type());
+    CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
     affine::BuildAffineOperator(
         problem_.constraint(i).arg(0), std::to_string(i), &A_, &b_);
@@ -81,8 +81,6 @@ void ProxADMMSolver::InitProxOperators() {
 
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
-
-    LOG(INFO) << f_expr.DebugString();
 
     BlockMatrix A;
     for (const Expression* expr : GetVariables(f_expr)) {

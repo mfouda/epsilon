@@ -120,22 +120,18 @@ void BuildAffineOperator(
       expr, row_key, linear_map::Identity(GetDimension(expr)), A, b);
 }
 
-void BuildDiagonalAffineOperator(
-    const Expression& expr,
-    BlockVector* a,
-    BlockVector* b) {
-}
-
-void BuildScalarAffineOperator(
+void GetScalarCoefficients(
     const Expression& expr,
     double* alpha,
-    BlockVector* b) {
-  // BlockMatrix A;
-  // BlockVector b0;
-  // BuildAffineOperator(expr, "_", &A, &b0);
-  // CHECK_EQ(1, A.col_keys().size());
-  // *alpha = linear_map::GetScalar(A("_", *A.col_keys().begin()));
-  // *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+    Eigen::VectorXd* b,
+    std::string* key) {
+  BlockMatrix A;
+  BlockVector b0;
+  BuildAffineOperator(expr, "_", &A, &b0);
+  CHECK_EQ(1, A.col_keys().size());
+  *key = *A.col_keys().begin();
+  *alpha = linear_map::GetScalar(A("_", *key));
+  *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
 }
 
 void GetDiagonalCoefficients(

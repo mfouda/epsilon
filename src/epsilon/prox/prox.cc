@@ -92,7 +92,7 @@ void ProxBlockVectorOperator::Preprocess() {
     // Extract linear function
     BlockMatrix A;
     BlockVector b;
-    affine::BuildAffineOperator(f_expr_.arg(1), "c", &A, &b);
+    affine::BuildAffineOperator(f_expr_.arg(1).arg(0), "c", &A, &b);
     for (const std::string& var_id : A.col_keys())
       c_(var_id) = ToVector(A("c", var_id).impl().AsDense());
   }

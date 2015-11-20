@@ -90,8 +90,9 @@ common_cc = \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/affine.cc \
 	epsilon/prox/non_negative.cc \
-	epsilon/prox/zero.cc \
 	epsilon/prox/prox.cc \
+	epsilon/prox/second_order_cone.cc \
+	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

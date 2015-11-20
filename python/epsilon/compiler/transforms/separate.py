@@ -9,7 +9,7 @@ from epsilon import expression
 from epsilon import tree_format
 from epsilon.compiler.problem_graph import *
 from epsilon.compiler import validate
-from epsilon.compiler.transforms import prox
+from epsilon.compiler.transforms import linear
 from epsilon.expression_pb2 import Expression, ProxFunction
 from epsilon.expression_util import fp_expr
 
@@ -107,9 +107,11 @@ def move_equality_indicators(graph):
     if len(graph.obj_terms) == 1:
         return
 
-    for function in graph.obj_terms:
-        if (is_prox_friendly_constraint(graph, function)):
-            function.constraint = True
+    for f in graph.obj_terms:
+        if is_prox_friendly_constraint(graph, f):
+            # Modify it to be an equality constraint
+            f.expr.CopyFrom(expression.indicator(Cone.ZERO, f.expr.arg[0]))
+            f.constraint = True
 
 def separate_objective_terms(graph):
     """Add variable copies to make functions separable.
@@ -134,10 +136,11 @@ def separate_objective_terms(graph):
             new_var_id = "separate:%s:%s" % (
                 f_var.variable, fp_expr(f_var.function.expr))
             old_var, new_var = f_var.replace_variable(new_var_id)
-            graph.add_function(Function(
-                linear.transform_expr(
-                    expression.eq_constraint(old_var, new_var)),
-                constraint=True))
+            graph.add_function(
+                Function(
+                    linear.transform_expr(
+                        expression.eq_constraint(old_var, new_var)),
+                    constraint=True))
             graph.add_edge(f_var)
 
 def add_null_prox(graph):

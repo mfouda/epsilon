@@ -10,6 +10,10 @@ from epsilon.expression_pb2 import ProxFunction
 
 PROX_TRIALS = 10
 
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+
+
 # Common variable
 n = 10
 x = cp.Variable(n)
@@ -115,6 +119,15 @@ def C_non_negative_scaled():
     alpha = np.random.randn()
     return [alpha*x >= 0]
 
+def C_soc_scaled():
+    return [cp.norm2(randn()*x) <= randn()*t]
+
+def C_soc_translated():
+    return [cp.norm2(x + randn()) <= t + randn()]
+
+def C_soc_scaled_translated():
+    return [cp.norm2(randn()*x + randn()) <= randn()*t + randn()]
+
 # Proximal operators
 PROX_TESTS = [
     # Prox("DeadZoneProx", f_dead_zone),
@@ -144,6 +157,10 @@ PROX_TESTS = [
     Prox("AFFINE", lambda: randn(n).T*x),
     Prox("NON_NEGATIVE", None, C_non_negative_scaled),
     Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
+    Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
+    Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
+    Prox("SECOND_ORDER_CONE", None, C_soc_translated),
+    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),
@@ -172,7 +189,6 @@ PROX_TESTS = [
 #     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
 #     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
 #     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
-#     Prox("NormL2Epigraph", None, lambda: [cp.norm2(x) <= t]),
 #     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
 #     Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
 # ]

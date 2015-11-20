@@ -81,10 +81,10 @@ message Cone {
     UNKNOWN = 0;
     ZERO = 1;                      // x == 0
     NON_NEGATIVE = 2;              // x >= 0
-    SECOND_ORDER = 3;              // (t, x) s.t. ||x||_2 <= t
-    SECOND_ORDER_ELEMENTWISE = 4;  // (t, x) s.t. ||x1_i, x2_i, ... ||_2 <= t_i
-    EXPONENTIAL = 5;               // (x,y,z) s.t. y*exp(x/y) <= z, y >0
-    SEMIDEFINITE = 6;              // X >> 0
+    SECOND_ORDER = 3;              // (t, x) s.t. ||x||_2 <= t, or
+                                   // (X, t) s.t. ||x_i||_2 <= t_i
+    EXPONENTIAL = 4;               // (x,y,z) s.t. y*exp(x/y) <= z, y>0
+    SEMIDEFINITE = 5;              // X >> 0
   }
   Type cone_type = 1;
 }
@@ -135,8 +135,6 @@ message ProxFunction {
     SECOND_ORDER_CONE = 12;
   }
   Type prox_function_type = 1;
-
-  bool elementwise = 2;
 }
 
 message Expression {

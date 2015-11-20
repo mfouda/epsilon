@@ -113,9 +113,9 @@ atoms = [
         # (pos, (2, 1), [ [-3,2] ], Constant([0,2])),
         # (neg, (2, 1), [ [-3,3] ], Constant([3,0])),
 
-        (lambda x: power(x, 0), (1, 1), [7.45], Constant([1])),
-        #(lambda x: power(x, 1), (1, 1), [7.45], Constant([7.45])),
-        #(lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
+#        (lambda x: power(x, 0), (1, 1), [7.45], Constant([1])),
+#        (lambda x: power(x, 1), (1, 1), [7.45], Constant([7.45])),
+#        (lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
         # (lambda x: power(x, -1), (1, 1), [7.45], Constant([0.1342281879194631])),
         # (lambda x: power(x, -.7), (1, 1), [7.45], Constant([0.24518314363015764])),
         # (lambda x: power(x, -1.34), (1, 1), [7.45], Constant([0.06781263100321579])),

@@ -38,6 +38,16 @@ def least_squares_args(expr):
 
     return args, constr
 
+def convert_diagonal(expr):
+    if dcp.is_affine(expr):
+        expr_linear = linear.transform_expr(expr)
+        if affine.is_diagonal(expr_linear):
+            return expr_linear, []
+
+    logging.debug("not diagonal, adding epigraph")
+    t, epi_f = epi_transform(expr, "diagonal")
+    return t, [epi_f]
+
 def diagonal_args(expr):
     args = []
     constr = []
@@ -74,6 +84,23 @@ def scalar_args(expr):
 
     return args, constr
 
+def epigraph_args(convert):
+    def args(expr):
+        f_expr, t_expr = get_epigraph(expr)
+        output_args = []
+        constr = []
+        for input_arg in [t_expr] + [a for a in f_expr.arg]:
+            arg_i, constr_i = convert(input_arg)
+            output_args.append(arg_i)
+            constr += constr_i
+        return output_args, constr
+    return args
+
+def soc_prox_args(expr):
+    args, constr = epigraph_args(convert_diagonal)(expr)
+    # Make argument a row vector
+    x_args = [expression.reshape(x, 1, dim(x)) for x in args[1:]]
+    return [args[0]] + x_args, constr
 
 def create(prox_function_type, **kwargs):
     def create():
@@ -81,11 +108,28 @@ def create(prox_function_type, **kwargs):
         return ProxFunction(**kwargs)
     return create
 
+def match_epigraph(f_match):
+    def match(expr):
+        f_expr, t_expr = get_epigraph(expr)
+        if not f_expr:
+            return False
+        return f_match(f_expr)
+    return match
+
 def match_indicator(cone_type):
     def match(expr):
         return (expr.expression_type == Expression.INDICATOR and
                 expr.cone.cone_type == cone_type)
     return match
+
+# Proximal operator rules
+RULES += [
+    ProxRule(
+        match_epigraph(
+            lambda e: e.expression_type == Expression.NORM_P and e.p == 2),
+        soc_prox_args,
+        create(Prox.SECOND_ORDER_CONE)),
+]
 
 # Linear cone rules
 RULES += [
@@ -93,11 +137,8 @@ RULES += [
     ProxRule(match_indicator(Cone.ZERO), least_squares_args, create(Prox.ZERO)),
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
              create(Prox.NON_NEGATIVE)),
-    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
+    ProxRule(match_indicator(Cone.SECOND_ORDER), diagonal_args,
              create(Prox.SECOND_ORDER_CONE)),
-    ProxRule(match_indicator(Cone.SECOND_ORDER_ELEMENTWISE),
-             diagonal_args,
-             create(Prox.SECOND_ORDER_CONE, elementwise=True)),
 ]
 
 def merge_add(a, b):

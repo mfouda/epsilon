@@ -7,7 +7,7 @@ from cvxpy.utilities import power_tools
 from epsilon import dcp
 from epsilon import error
 from epsilon import expression
-from epsilon.expression_pb2 import Expression, Curvature
+from epsilon.expression_pb2 import Expression, Curvature, Cone
 
 class TransformError(error.ExpressionError):
     pass
@@ -102,3 +102,28 @@ def gm_constrs(t_expr, x_exprs, p):
             constraints += [gm(d[elem], d[children[0]], d[children[1]])]
 
     return constraints
+
+def get_epigraph(expr):
+    if not (expr.expression_type == Expression.INDICATOR and
+            expr.cone.cone_type == Cone.NON_NEGATIVE and
+            expr.arg[0].expression_type == Expression.ADD and
+            len(expr.arg[0].arg) == 2):
+        return None, None
+
+    for i in xrange(2):
+        if expr.arg[0].arg[i].expression_type == Expression.NEGATE:
+            exprs = [expr.arg[0].arg[i].arg[0],
+                     expr.arg[0].arg[1-i]]
+            break
+    else:
+        return None, None
+
+    for i in xrange(2):
+        if dcp.is_affine(exprs[i]):
+            t_expr = exprs[i]
+            f_expr = exprs[i-1]
+            break
+    else:
+        return None, None
+
+    return f_expr, t_expr

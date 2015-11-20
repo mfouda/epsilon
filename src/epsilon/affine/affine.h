@@ -21,15 +21,11 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b);
 
-void BuildDiagonalAffineOperator(
-    const Expression& expr,
-    BlockVector* a,
-    BlockVector* b);
-
-void BuildScalarAffineOperator(
+void GetScalarCoefficients(
     const Expression& expr,
     double* alpha,
-    BlockVector* b);
+    Eigen::VectorXd* b,
+    std::string* key);
 
 void GetDiagonalCoefficients(
     const Expression& expr,
@@ -37,11 +33,6 @@ void GetDiagonalCoefficients(
     Eigen::VectorXd* b,
     std::string* key);
 
-void GetScalarCoefficients(
-    const Expression& expr,
-    double* alpha,
-    BlockVector* b,
-    std::string* key);
 
 }  // namespace affine
 

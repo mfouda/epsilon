@@ -109,6 +109,9 @@ def vstack(*args):
     return e
 
 def reshape(arg, m, n):
+    if dim(arg, 0) == m and dim(arg, 1) == n:
+        return arg
+
     if m*n != prod(arg.size.dim):
         raise ExpressionError("cant reshape to %d x %d" % (m, n), arg)
 
@@ -272,10 +275,18 @@ def leq_constraint(a, b):
     return indicator(Cone.NON_NEGATIVE, add(b, negate(a)))
 
 def soc_constraint(t, x):
-    return indicator(Cone.SECOND_ORDER, t, x)
+    if dim(t) != 1:
+        raise ExpressionError("Second order cone, dim(t) != 1", t)
+
+    # make x a row vector to be compatible with elemwise version
+    return indicator(Cone.SECOND_ORDER, t, reshape(x, 1, dim(x)))
 
 def soc_elemwise_constraint(t, *args):
-    return indicator(Cone.SECOND_ORDER_ELEMENTWISE, t, *args)
+    t = reshape(t, dim(t), 1)
+    X = hstack(*(reshape(arg, 1, dim(arg)) for arg in args))
+    if dim(t) != dim(X, 0):
+        raise ExpressionError("Second order cone, incompatible sizes", t, X)
+    return indicator(Cone.SECOND_ORDER, t, X)
 
 def psd_constraint(a, b):
     return indicator(Cone.SEMIDEFINITE, add(b, negate(a)))

@@ -35,7 +35,7 @@ def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
 
     params = solver_params_pb2.SolverParams(
         rel_tol=rel_tol, abs_tol=abs_tol)
-    if len(prob_proto.objective.arg) == 1:
+    if len(prob_proto.objective.arg) == 1 and not prob_proto.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
         # they can take A=0 instead of just using a large lambda here
         lam = 1e12
@@ -56,42 +56,6 @@ def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
 
 def validate_solver(constraints):
     return True
-
-# def prox(cvxpy_prob, v_map, lam=1):
-#     """Evaluate a single proximal operator."""
-
-#     problem = cvxpy_expr.convert_problem(cvxpy_prob)
-#     logging.debug("Input:\n%s", tree_format.format_problem(problem))
-#     problem = canonicalize_linear.transform_problem(
-#         canonicalize.transform(problem))
-#     logging.debug("Canonical:\n%s", tree_format.format_problem(problem))
-#     validate.check_sum_of_prox(problem)
-
-#     non_const = []
-#     for f_expr in problem.objective.arg:
-#         if f_expr.curvature.curvature_type != Curvature.CONSTANT:
-#             non_const.append(f_expr)
-
-#     # Get the first non constant objective term
-#     if len(non_const) != 1:
-#         raise ProblemError("prox does not have single f", problem)
-
-#     if problem.constraint:
-#         raise ProblemError("prox has constraints", problem)
-
-#     v_bytes_map = {cvxpy_expr.variable_id(var): val.tobytes(order="F") for
-#                    var, val in v_map.iteritems()}
-#     values = _solve.prox(
-#         non_const[0].SerializeToString(),
-#         lam,
-#         constant.global_data_map,
-#         v_bytes_map)
-
-#     for var in cvxpy_prob.variables():
-#         var_id = cvxpy_expr.variable_id(var)
-#         assert var_id in values
-#         x = numpy.fromstring(values[var_id], dtype=numpy.double)
-#         var.value = x.reshape(var.size[1], var.size[0]).transpose()
 
 def register_epsilon():
     cvxpy.Problem.register_solve(EPSILON, solve)
