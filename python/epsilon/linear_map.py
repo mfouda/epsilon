@@ -14,6 +14,10 @@ def kronecker_product(A, B):
     if B.m*B.n == 1:
         return A
 
+    if (A.linear_map_type == LinearMap.SCALAR and
+        B.linear_map_type == LinearMap.SCALAR):
+        return scalar(A.scalar*B.scalar, A.n*B.n)
+
     return LinearMap(
         linear_map_type=LinearMap.KRONECKER_PRODUCT,
         m=A.m*B.m,

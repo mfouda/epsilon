@@ -35,10 +35,20 @@ def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
 
     params = solver_params_pb2.SolverParams(
         rel_tol=rel_tol, abs_tol=abs_tol)
-    status_str, values = _solve.prox_admm_solve(
-        prob_proto.SerializeToString(),
-        params.SerializeToString(),
-        constant.global_data_map)
+    if len(prob_proto.objective.arg) == 1:
+        # TODO(mwytock): Should probably parameterize the proximal operators so
+        # they can take A=0 instead of just using a large lambda here
+        lam = 1e12
+        values = _solve.eval_prox(
+            prob_proto.objective.arg[0].SerializeToString(),
+            lam,
+            constant.global_data_map,
+            {})
+    else:
+        status_str, values = _solve.prox_admm_solve(
+            prob_proto.SerializeToString(),
+            params.SerializeToString(),
+            constant.global_data_map)
 
     # TODO(mwytock): Handle not optimal solutions
     set_solution(prob, values)

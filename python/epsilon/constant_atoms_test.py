@@ -21,6 +21,9 @@ import numpy.linalg as LA
 import epsilon.cvxpy_solver
 from epsilon.cvxpy_solver import EPSILON
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 SOLVERS = {
     EPSILON: epsilon.cvxpy_solver
 }
@@ -33,13 +36,13 @@ v_np = np.matrix([-1.,2,-2]).T
 
 atoms = [
     ([
-        (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
-        (diag, (2, 1), [ [[-5,2],[-3,1]] ], Constant([-5, 1])),
-        (diag, (2, 2), [ [-5, 1] ], Constant([[-5, 0], [0, 1]])),
+#        (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
+#        (diag, (2, 1), [ [[-5,2],[-3,1]] ], Constant([-5, 1])),
+#        (diag, (2, 2), [ [-5, 1] ], Constant([[-5, 0], [0, 1]])),
         # (exp, (2, 2), [ [[1, 0],[2, -1]] ],
         #     Constant([[math.e, 1],[math.e**2, 1.0/math.e]])),
         # (huber, (2, 2), [ [[0.5, -1.5],[4, 0]] ],
-        #     Constant([[0.25, 2],[7, 0]])),
+        #        Constant([[0.25, 2],[7, 0]])),
         # (lambda x: huber(x, 2.5), (2, 2), [ [[0.5, -1.5],[4, 0]] ],
         #      Constant([[0.25, 2.25],[13.75, 0]])),
         # (inv_pos, (2, 2), [ [[1,2],[3,4]] ],
@@ -110,9 +113,9 @@ atoms = [
         # (pos, (2, 1), [ [-3,2] ], Constant([0,2])),
         # (neg, (2, 1), [ [-3,3] ], Constant([3,0])),
 
-        # (lambda x: power(x, 0), (1, 1), [7.45], Constant([1])),
-        # (lambda x: power(x, 1), (1, 1), [7.45], Constant([7.45])),
-        # (lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
+        (lambda x: power(x, 0), (1, 1), [7.45], Constant([1])),
+        #(lambda x: power(x, 1), (1, 1), [7.45], Constant([7.45])),
+        #(lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
         # (lambda x: power(x, -1), (1, 1), [7.45], Constant([0.1342281879194631])),
         # (lambda x: power(x, -.7), (1, 1), [7.45], Constant([0.24518314363015764])),
         # (lambda x: power(x, -1.34), (1, 1), [7.45], Constant([0.06781263100321579])),
@@ -128,15 +131,15 @@ atoms = [
         # (lambda x: sum_largest(x, 3), (1, 1), [ [1,2,3,4,5] ], Constant([5+4+3])),
         # (lambda x: sum_largest(x, 3), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([9+10+11])),
         # (sum_squares, (1, 1), [ [[-1, 2],[3, -4]] ], Constant([30])),
-        (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
-        (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
+#        (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
+#        (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
         # (tv, (1, 1), [ [1,-1,2] ], Constant([5])),
         # (tv, (1, 1), [ [[1],[-1],[2]] ], Constant([5])),
         # (tv, (1, 1), [ [[-5,2],[-3,1]] ], Constant([math.sqrt(53)])),
         # (tv, (1, 1), [ [[-5,2],[-3,1]], [[6,5],[-4,3]], [[8,0],[15,9]] ],
         #     Constant([LA.norm([7, -1, -8, 2, -10, 7])])),
         # (tv, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([4*math.sqrt(10)])),
-        (upper_tri, (3, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([6, 9, 10])),
+#        (upper_tri, (3, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([6, 9, 10])),
     ], Minimize),
     # ([
     #     (entr, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ],

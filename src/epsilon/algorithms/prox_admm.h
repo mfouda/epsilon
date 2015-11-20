@@ -32,7 +32,7 @@ private:
 
   void ComputeResiduals();
   void LogStatus();
-  void UpdateLocalParameters();
+  void UpdateParameters();
 
   // Inputs
   Problem problem_;

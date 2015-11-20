@@ -274,6 +274,9 @@ def leq_constraint(a, b):
 def soc_constraint(t, x):
     return indicator(Cone.SECOND_ORDER, t, x)
 
+def soc_elemwise_constraint(t, *args):
+    return indicator(Cone.SECOND_ORDER_ELEMENTWISE, t, *args)
+
 def psd_constraint(a, b):
     return indicator(Cone.SEMIDEFINITE, add(b, negate(a)))
 

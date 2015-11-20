@@ -1,10 +1,12 @@
 """Analyze the problem in sum-of-prox form and combine/split terms."""
 
+import logging
+
 from collections import defaultdict
-from collections import namedtuple
 
 from epsilon import affine
 from epsilon import expression
+from epsilon import tree_format
 from epsilon.compiler.problem_graph import *
 from epsilon.compiler import validate
 from epsilon.compiler.transforms import prox
@@ -83,9 +85,11 @@ def combine_affine_functions(graph):
         if not f.expr.prox_function.prox_function_type == Prox.AFFINE:
             continue
 
+        # no variables
         if not graph.edges_by_function[f]:
             continue
 
+        # no other functions with overlap
         g = max_overlap_function(graph, f)
         if not g:
             continue
@@ -93,9 +97,9 @@ def combine_affine_functions(graph):
         graph.remove_function(f)
         graph.remove_function(g)
 
-        # NOTE(mwytock): The non-affine function must go
-        # first. Fixing/maintaining this should likely go in a normalize step.
-        graph.add_function(Function(add(g.expr, f.expr), constraint=False))
+        # Combine functions with non-affine function first
+        graph.add_function(
+            Function(expression.add(g.expr, f.expr), constraint=False))
 
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
@@ -163,4 +167,8 @@ def transform_problem(problem):
     graph = ProblemGraph(problem)
     for f in GRAPH_TRANSFORMS:
         f(graph)
+        logging.debug(
+            "%s:\n%s",
+            f.__name__,
+            tree_format.format_problem(graph.problem()))
     return graph.problem()

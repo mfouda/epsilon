@@ -16,6 +16,8 @@ from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
 from cvxpy.constraints.psd_constraint import PSDConstraint
+from cvxpy.constraints.second_order import SOC
+from cvxpy.constraints.soc_elemwise import SOC_Elemwise
 from cvxpy.expressions.constants.constant import Constant
 from cvxpy.expressions.variables.variable import Variable
 from cvxpy.problems import objective
@@ -165,6 +167,15 @@ def convert_constraint(constraint):
         return expression.leq_constraint(
             convert_expression(constraint.args[0]),
             convert_expression(constraint.args[1]))
+    elif isinstance(constraint, SOC_Elemwise):
+        return expression.soc_elemwise_constraint(
+            convert_expression(constraint.t),
+            *[convert_expression(x) for x in constraint.x_elems])
+    elif isinstance(constraint, SOC):
+        return expression.soc_contraint(
+            convert_expression(constraint.t),
+            expression.vstack(
+                *[convert_expression(x) for x in constraint.x_elems]))
 
     raise RuntimeError("Unknown constraint: %s" % type(constraint))
 

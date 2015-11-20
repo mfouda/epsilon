@@ -81,6 +81,9 @@ void ProxADMMSolver::InitProxOperators() {
 
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
+
+    LOG(INFO) << f_expr.DebugString();
+
     BlockMatrix A;
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
@@ -147,11 +150,11 @@ void ProxADMMSolver::Solve() {
     status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   }
 
-  UpdateLocalParameters();
+  UpdateParameters();
   UpdateStatus(status_);
 }
 
-void ProxADMMSolver::UpdateLocalParameters() {
+void ProxADMMSolver::UpdateParameters() {
   for (int i = 0; i < N_; i++) {
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();

@@ -50,6 +50,9 @@ def is_affine(expr):
     return (dcp_attr.curvature == cvxpy.utilities.Curvature.AFFINE or
             dcp_attr.curvature == cvxpy.utilities.Curvature.CONSTANT)
 
+def is_constant(expr):
+    return get_dcp_attr(expr).curvature == cvxpy.utilities.Curvature.CONSTANT
+
 def get_curvature(expr):
     dcp_attr = get_dcp_attr(expr)
     return expression_pb2.Curvature(

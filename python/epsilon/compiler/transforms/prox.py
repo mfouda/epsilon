@@ -95,6 +95,9 @@ RULES += [
              create(Prox.NON_NEGATIVE)),
     ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
              create(Prox.SECOND_ORDER_CONE)),
+    ProxRule(match_indicator(Cone.SECOND_ORDER_ELEMENTWISE),
+             diagonal_args,
+             create(Prox.SECOND_ORDER_CONE, elementwise=True)),
 ]
 
 def merge_add(a, b):

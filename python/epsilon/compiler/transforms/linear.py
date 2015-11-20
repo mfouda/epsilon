@@ -188,6 +188,15 @@ def transform_trace(expr):
         linear_map.trace(dim(only_arg(expr), 0)),
         transform_expr(only_arg(expr)))
 
+def transform_power(expr):
+    p = expr.p
+    if p == 1:
+        return transform_expr(only_arg(expr))
+    if p == 0:
+        return expression.scalar_constant(1)
+
+    raise TransformError("Unexpected power exponent", expr)
+
 def transform_linear_expr(expr):
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)
