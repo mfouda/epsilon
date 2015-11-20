@@ -13,7 +13,6 @@ PROX_TRIALS = 10
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-
 # Common variable
 n = 10
 x = cp.Variable(n)
@@ -154,13 +153,13 @@ PROX_TESTS = [
     # Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     # Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
     #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
-    Prox("AFFINE", lambda: randn(n).T*x),
-    Prox("NON_NEGATIVE", None, C_non_negative_scaled),
-    Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
+    # Prox("AFFINE", lambda: randn(n).T*x),
+    # Prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    # Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
+    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
+    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
+    # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
+    # Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),

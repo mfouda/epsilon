@@ -116,7 +116,7 @@ atoms = [
 #        (lambda x: power(x, 0), (1, 1), [7.45], Constant([1])),
 #        (lambda x: power(x, 1), (1, 1), [7.45], Constant([7.45])),
 #        (lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
-        # (lambda x: power(x, -1), (1, 1), [7.45], Constant([0.1342281879194631])),
+        (lambda x: power(x, -1), (1, 1), [7.45], Constant([0.1342281879194631])),
         # (lambda x: power(x, -.7), (1, 1), [7.45], Constant([0.24518314363015764])),
         # (lambda x: power(x, -1.34), (1, 1), [7.45], Constant([0.06781263100321579])),
         # (lambda x: power(x, 1.34), (1, 1), [7.45], Constant([14.746515290825071])),

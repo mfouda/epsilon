@@ -159,9 +159,11 @@ def add_null_prox(graph):
         graph.add_function(Function(f_expr, constraint=False))
 
 
+# TODO(mwytock): Add back these optimizations when ready
+# move_equality_indicators
+# combine_affine_functions
+
 GRAPH_TRANSFORMS = [
-    move_equality_indicators,
-    combine_affine_functions,
     separate_objective_terms,
     add_null_prox,
 ]

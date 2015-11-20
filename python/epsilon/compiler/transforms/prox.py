@@ -137,7 +137,7 @@ RULES += [
     ProxRule(match_indicator(Cone.ZERO), least_squares_args, create(Prox.ZERO)),
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
              create(Prox.NON_NEGATIVE)),
-    ProxRule(match_indicator(Cone.SECOND_ORDER), diagonal_args,
+    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
              create(Prox.SECOND_ORDER_CONE)),
 ]
 

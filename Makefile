@@ -71,6 +71,11 @@ endif
 # 	epsilon/prox/sum_exp.cc \
 # 	epsilon/prox/sum_largest.cc
 
+# epsilon/prox/affine.cc \
+# epsilon/prox/non_negative.cc \
+
+# epsilon/prox/second_order_cone.cc \
+
 common_cc = \
 	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
@@ -88,10 +93,7 @@ common_cc = \
 	epsilon/linear/scalar_matrix_impl.cc \
 	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/parameters/local_parameter_service.cc \
-	epsilon/prox/affine.cc \
-	epsilon/prox/non_negative.cc \
 	epsilon/prox/prox.cc \
-	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \

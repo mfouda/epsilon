@@ -11,6 +11,7 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/parameters/parameter_service.h"
+#include "epsilon/prox/prox.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/vector/block_matrix.h"
 #include "epsilon/vector/block_vector.h"
@@ -51,7 +52,7 @@ private:
   int iter_;
   BlockVector u_;
   std::vector<BlockVector> x_;
-  std::vector<std::unique_ptr<BlockVectorOperator> > prox_;
+  std::vector<std::unique_ptr<ProxOperator> > prox_;
 
   // Iteration variables
   SolverStatus status_;

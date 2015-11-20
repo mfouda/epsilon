@@ -4,41 +4,25 @@
 #include <vector>
 #include <memory>
 
+#include "epsilon/affine/affine.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/vector/vector_operator.h"
 
-// Create a "proximal operator" for expression
-// argmin_x lambda*f(x) + (1/2)||Ax - v||^2
-std::unique_ptr<BlockVectorOperator> CreateProxOperator(
-    double lambda,
-    BlockMatrix A,
-    const Expression& f_expr);
-
-// Arguments to the proximal operator, lambda*f(A*x + b)
 class ProxOperatorArg {
  public:
   ProxOperatorArg(
-      double lambda,
-      const BlockMatrix* A,
-      const Expression* f_expr,
-      const VariableOffsetMap* var_map)
-      : lambda_(lambda), A_(A), f_expr_(f_expr), var_map_(var_map) {}
+      const AffineOperator& affine_arg,
+      const AffineOperator& affine_constraint)
+      : affine_arg_(affine_arg),
+        affine_constraint_(affine_constraint) {}
 
-  double lambda() const { return lambda_; };
-  const BlockMatrix& A() const { return *A_; }
-
-  // Ax+b in expression form
-  const Expression& f_expr() const { return *f_expr_; }
-  const VariableOffsetMap& var_map() const { return *var_map_; }
+  const AffineOperator& affine_arg() const { return affine_arg_; }
+  const AffineOperator& affine_constraint() const { return affine_constraint_; }
 
  private:
-  double lambda_;
-
   // Not owned by us
-  const BlockMatrix* A_;
-  const Expression* f_expr_;
-  const VariableOffsetMap* var_map_;
+  const AffineOperator& affine_arg_;
+  const AffineOperator& affine_constraint_;
 };
 
 // Abstract interface for proximal operator implementations
@@ -47,6 +31,10 @@ class ProxOperator {
   virtual void Init(const ProxOperatorArg& arg) {}
   virtual BlockVector Apply(const BlockVector& v) = 0;
 };
+
+// Create a generalized proximal operator for expression
+// argmin_x f(H(x)) + (1/2)||A(x) - v||^2
+std::unique_ptr<ProxOperator> CreateProxOperator(ProxFunction::Type type);
 
 extern std::unordered_map<
   ProxFunction::Type,

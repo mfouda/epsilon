@@ -163,19 +163,29 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
   if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
     return nullptr;
 
-  BlockMatrix A;
-  for (const Expression* var_expr : GetVariables(f_expr)) {
-    const std::string& var_id = var_expr->variable().variable_id();
-    A(var_id, var_id) = linear_map::Identity(GetDimension(*var_expr));
-  }
-
   InitLogging();
   WriteConstants(data);
   if (!setjmp(failure_buf)) {
-    std::unique_ptr<BlockVectorOperator> op = CreateProxOperator(
-        lambda, A, f_expr);
-    op->Init();
-    BlockVector x = op->Apply(GetVariableVector(v_map));
+    CHECK_EQ(Expression::PROX_FUNCTION, f_expr.expression_type());
+
+    AffineOperator H, A;
+    for (int i = 0; i < f_expr.arg_size(); i++) {
+      affine::BuildAffineOperator(f_expr.arg(i), affine::arg_key(i), &H.A, &H.b);
+    }
+
+    // Set up affine function for constraints for (1/2)||A(x) - v||^2 form
+    int i = 0;
+    for (const Expression* var_expr : GetVariables(f_expr)) {
+      const std::string& var_id = var_expr->variable().variable_id();
+      A.A(affine::constraint_key(i++), var_id) = (
+          sqrt(lambda)*linear_map::Identity(GetDimension(*var_expr)));
+    }
+    BlockVector v = A.A*GetVariableVector(v_map);
+
+    std::unique_ptr<ProxOperator> op = CreateProxOperator(
+        f_expr.prox_function().prox_function_type());
+    op->Init(ProxOperatorArg(H, A));
+    BlockVector x = op->Apply(v);
     PyObject* vars = GetVariableMap(x);
     PyObject* retval = Py_BuildValue("O", vars);
     Py_DECREF(vars);
