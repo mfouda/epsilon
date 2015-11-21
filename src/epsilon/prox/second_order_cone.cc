@@ -69,7 +69,6 @@ private:
         (*t)(i) = (1/beta)*alpha(i)*v_norm(i);
       }
     }
-
     *X = alpha.asDiagonal() * (*X);
   }
 

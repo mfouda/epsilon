@@ -67,7 +67,8 @@ void ProxADMMSolver::InitProxOperators() {
     }
 
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
-    VLOG(2) << "Initializing " << ProxFunction::Type_Name(type);
+    VLOG(2) << "prox " << i << ", initializing "
+            << ProxFunction::Type_Name(type);
     prox_.emplace_back(CreateProxOperator(type));
     prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
 
@@ -98,7 +99,7 @@ void ProxADMMSolver::Solve() {
       u_ += A_*x_[i];
       x_[i] = prox_[i]->Apply(u_);
       u_ -= A_*x_[i];
-      VLOG(2) << "x: " << x_[i].DebugString();
+      VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
     }
     VLOG(2) << "u: " << u_.DebugString();
 

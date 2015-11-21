@@ -10,8 +10,8 @@ from epsilon.expression_pb2 import ProxFunction
 
 RANDOM_PROX_TRIALS = 10
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Common variable
 n = 10
@@ -161,7 +161,6 @@ PROX_TESTS = [
     Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
     Prox("SECOND_ORDER_CONE", None, C_soc_translated),
     Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
-    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),
@@ -174,6 +173,7 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
 ]
+
 
 # Epigraph operators
 # PROX_TESTS += [
@@ -194,58 +194,68 @@ PROX_TESTS = [
 #     Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
 # ]
 
-def test_prox():
-    def run(prox, i, random_inputs):
-        np.random.seed(i)
-        v = np.random.randn(n)
-        lam = np.abs(np.random.randn())
+def run_prox(prox_function_type, prob, v_map, lam=1):
+    eval_prox(prox_function_type, prob, v_map, lam)
+    actual = {x: x.value for x in prob.variables()}
 
-        f = 0 if not prox.objective else prox.objective()
-        C = [] if not prox.constraint else prox.constraint()
+    # Compare to solution with cvxpy
+    prob.objective.args[0] *= lam
+    prob.objective.args[0] += sum(
+        0.5*cp.sum_squares(x - v_map[x]) for x, v in v_map.iteritems())
+    prob.solve()
 
-        # Form problem and solve with proximal operator implementation
-        prob = cp.Problem(cp.Minimize(f), C)
-        if random_inputs:
-            v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
-        else:
-            v_map = {x: np.zeros(x.size) for x in prob.variables()}
-        prox_function_type = ProxFunction.Type.Value(prox.prox_type)
-        eval_prox(prox_function_type, prob, v_map, lam)
-        actual = {x: x.value for x in prob.variables()}
+    try:
+        for x in prob.variables():
+            np.testing.assert_allclose(x.value, actual[x], rtol=1e-2, atol=1e-2)
+    except AssertionError as e:
+        # print objective value and constraints
+        print
+        print 'cvx:'
+        print map(lambda x: x.value, prob.variables())
+        print 'actual:'
+        print actual.values()
+        print 'vmap:'
+        print v_map.values()
+        print 'cvx obj:', prob.objective.value
+        for c in prob.constraints:
+            print c, c.value, map(lambda x: x.value, c.args)
 
-        # Compare to solution with cvxpy
-        prob.objective.args[0] *= lam
-        prob.objective.args[0] += sum(
-            0.5*cp.sum_squares(x - v_map[x]) for x, v in v_map.iteritems())
-        prob.solve()
-
-        try:
-            for x in prob.variables():
-                np.testing.assert_allclose(x.value, actual[x], rtol=1e-2, atol=1e-2)
-        except AssertionError as e:
-            # print objective value and constraints
-            print
-            print 'cvx:'
-            print map(lambda x: x.value, prob.variables())
-            print 'actual:'
-            print actual.values()
-            print 'vmap:'
-            print v_map.values()
-            print 'cvx obj:', prob.objective.value
-            for c in prob.constraints:
-                print c, c.value, map(lambda x: x.value, c.args)
-
-            for x,v in actual.items():
-                x.value = v
+        for x,v in actual.items():
+            x.value = v
             print 'our obj:', prob.objective.value
-            for c in prob.constraints:
-                print c, c.value, map(lambda x: x.value, c.args)
-            print
+        for c in prob.constraints:
+            print c, c.value, map(lambda x: x.value, c.args)
+        print
 
-            raise e
+        raise e
 
-    # Test zero input once and N random inputs
+def run_random_prox(prox, trial):
+    np.random.seed(trial)
+    v = np.random.randn(n)
+    lam = np.abs(np.random.randn())
+
+    f = 0 if not prox.objective else prox.objective()
+    C = [] if not prox.constraint else prox.constraint()
+
+    # Form problem and solve with proximal operator implementation
+    prob = cp.Problem(cp.Minimize(f), C)
+    v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+
+    run_prox(ProxFunction.Type.Value(prox.prox_type), prob, v_map, lam)
+
+def test_random_prox():
     for prox in PROX_TESTS:
-        yield run, prox, 0, False
-        for i in xrange(RANDOM_PROX_TRIALS):
-            yield run, prox, i, True
+        for trial in xrange(RANDOM_PROX_TRIALS):
+            yield run_random_prox, prox, trial
+
+def test_second_order_cone():
+    v_maps = [
+        {x: np.zeros(10), t: np.array([0])},
+        {x: np.arange(10), t: np.array([100])},
+        {x: np.arange(10), t: np.array([10])},
+        {x: np.arange(10), t: np.array([-100])},
+        {x: np.arange(10), t: np.array([-10])}]
+
+    for v_map in v_maps:
+        prob = cp.Problem(cp.Minimize(0), [cp.norm(x) <= t])
+        yield run_prox, ProxFunction.SECOND_ORDER_CONE, prob, v_map

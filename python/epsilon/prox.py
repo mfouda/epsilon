@@ -36,8 +36,10 @@ def eval_prox(prox_function_type, prob, v_map, lam=1):
     if problem.constraint:
         raise ProblemError("prox has constraints", problem)
 
-    v_bytes_map = {cvxpy_expr.variable_id(var): val.tobytes(order="F") for
-                   var, val in v_map.iteritems()}
+    v_bytes_map = {cvxpy_expr.variable_id(var):
+                   numpy.array(val, dtype=numpy.float64).tobytes(order="F")
+                   for var, val in v_map.iteritems()}
+
     values = _solve.eval_prox(
         non_const[0].SerializeToString(),
         lam,
