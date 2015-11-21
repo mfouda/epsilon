@@ -24,7 +24,7 @@ def set_solution(prob, values):
         x = numpy.fromstring(values[var_id], dtype=numpy.double)
         var.value = x.reshape(var.size[1], var.size[0]).transpose()
 
-def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
+def solve(prob, **kwargs):
     """Solve optimziation problem."""
 
     if not prob.variables():
@@ -33,8 +33,7 @@ def solve(prob, rel_tol=1e-2, abs_tol=1e-4):
     prob_proto = cvxpy_expr.convert_problem(prob)
     prob_proto = compiler.compile_problem(prob_proto)
 
-    params = solver_params_pb2.SolverParams(
-        rel_tol=rel_tol, abs_tol=abs_tol)
+    params = solver_params_pb2.SolverParams(**kwargs)
     if len(prob_proto.objective.arg) == 1 and not prob_proto.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
         # they can take A=0 instead of just using a large lambda here
