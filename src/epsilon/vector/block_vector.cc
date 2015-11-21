@@ -57,6 +57,13 @@ const BlockVector::DenseVector& BlockVector::operator()(
   return iter->second;
 }
 
+BlockVector::DenseVector BlockVector::Get(const std::string& key, int n) const {
+  auto iter = data_.find(key);
+  if (iter == data_.end())
+    return DenseVector::Zero(n);
+  return iter->second;
+}
+
 int BlockVector::n() const {
   int n = 0;
   for (const auto& iter : data_) {

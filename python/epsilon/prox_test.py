@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-PROX_TRIALS = 1
+PROX_TRIALS = 10
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
@@ -156,10 +156,10 @@ PROX_TESTS = [
     Prox("AFFINE", lambda: randn(n).T*x),
     Prox("NON_NEGATIVE", None, C_non_negative_scaled),
     Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    # Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
+    Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
+    Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
+    Prox("SECOND_ORDER_CONE", None, C_soc_translated),
+    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),
@@ -171,13 +171,6 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
-]
-
-PROX_TESTS = [
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
 ]
 
 # Epigraph operators
@@ -204,8 +197,6 @@ def test_prox():
         np.random.seed(i)
         v = np.random.randn(n)
         lam = np.abs(np.random.randn())
-        print lam
-
 
         f = 0 if not prox.objective else prox.objective()
         C = [] if not prox.constraint else prox.constraint()

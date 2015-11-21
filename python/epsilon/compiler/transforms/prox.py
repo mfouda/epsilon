@@ -111,8 +111,8 @@ def create(prox_function_type, **kwargs):
 def create_second_order_cone(expr, args):
     return ProxFunction(
         prox_function_type=Prox.SECOND_ORDER_CONE,
-        m=dim(args[0], 0),
-        n=dim(args[0], 1))
+        m=dim(args[1], 0),
+        n=dim(args[1], 1))
 
 def match_epigraph(f_match):
     def match(expr):

@@ -3,7 +3,7 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 
-void GetKeys(const BlockMatrix& H, std::string* t_key, std::string* x_key) {
+void GetArgKeys(const BlockMatrix& H, std::string* t_key, std::string* x_key) {
   for (const auto& col_iter : H.data()) {
     for (const auto& row_iter : col_iter.second) {
       if (row_iter.first == affine::arg_key(0)) {
@@ -28,25 +28,15 @@ void GetKeys(const BlockMatrix& H, std::string* t_key, std::string* x_key) {
 // multi-argument functions.
 class SecondOrderConeProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
-    const BlockMatrix& H = arg.affine_arg().A;
-    GetKeys(H, &t_key_, &x_key_);
-    double at = linear_map::GetScalar(H(affine::arg_key(0), t_key_));
-    double ax = linear_map::GetScalar(H(affine::arg_key(1), x_key_));
-
-    const BlockVector& g = arg.affine_arg().b;
-    bt_ = g(affine::arg_key(0));
-    bx_ = g(affine::arg_key(1));
     m_ = arg.prox_function().m();
     n_ = arg.prox_function().n();
-    a_ = at/fabs(ax);
-    bx_ /= ax;
-    bt_ /= fabs(ax);
-
+    InitArgs(arg.affine_arg());
     InitConstraints(arg.affine_constraint());
   }
 
   BlockVector Apply(const BlockVector& v) override {
     BlockVector u = AT_*v;
+
     Eigen::MatrixXd V = ToMatrix(u(x_key_) + bx_, m_, n_);
     Eigen::VectorXd s = u(t_key_) + bt_/a_;
     Eigen::VectorXd v_norm = V.rowwise().norm();
@@ -66,6 +56,20 @@ class SecondOrderConeProx final : public ProxOperator {
   }
 
 private:
+  void InitArgs(const AffineOperator& f) {
+    const BlockMatrix& H = f.A;
+    GetArgKeys(H, &t_key_, &x_key_);
+    double at = linear_map::GetScalar(H(affine::arg_key(0), t_key_));
+    double ax = linear_map::GetScalar(H(affine::arg_key(1), x_key_));
+
+    const BlockVector& g = f.b;
+    bt_ = g.Get(affine::arg_key(0), m_);
+    bx_ = g.Get(affine::arg_key(1), m_*n_);
+    a_ = at/fabs(ax);
+    bx_ /= ax;
+    bt_ /= fabs(ax);
+  }
+
   void InitConstraints(const AffineOperator& f) {
   // A'A must be scalar
     const BlockMatrix& A = f.A;
