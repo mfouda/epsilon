@@ -32,4 +32,7 @@ private:
   BlockMatrix AT_, ATA_inv_;
   BlockVector b_, c_;
 };
-REGISTER_PROX_OPERATOR(ProxFunction::AFFINE, AffineProx);
+
+// Register twice, as same function works c = 0
+REGISTER_PROX_OPERATOR(AFFINE, AffineProx);
+REGISTER_PROX_OPERATOR(CONSTANT, AffineProx);

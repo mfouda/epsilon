@@ -170,6 +170,9 @@ GRAPH_TRANSFORMS = [
 
 def transform_problem(problem):
     graph = ProblemGraph(problem)
+    if not graph.variables:
+        return problem
+
     for f in GRAPH_TRANSFORMS:
         f(graph)
         logging.debug(

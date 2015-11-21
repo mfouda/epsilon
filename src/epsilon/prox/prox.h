@@ -59,6 +59,9 @@ bool RegisterProxOperator(ProxFunction::Type type) {
   return true;
 }
 
-#define REGISTER_PROX_OPERATOR(type, T) bool registered_##T = RegisterProxOperator<T>(type)
+// NOTE(mwytock) C preprocessor nastiness
+#define REGISTER_VAR(type, T) registered_ ## type ## _ ##T
+#define REGISTER_PROX_OPERATOR(type, T) \
+  bool REGISTER_VAR(type, T) = RegisterProxOperator<T>(ProxFunction::type)
 
 #endif  // EPSILON_OPERATORS_PROX_H

@@ -139,6 +139,7 @@ RULES += [
 
 # Linear cone rules
 RULES += [
+    ProxRule(dcp.is_constant, affine_args, create(Prox.CONSTANT)),
     ProxRule(dcp.is_affine, affine_args, create(Prox.AFFINE)),
     ProxRule(match_indicator(Cone.ZERO), least_squares_args, create(Prox.ZERO)),
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,

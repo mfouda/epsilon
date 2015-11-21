@@ -154,6 +154,7 @@ PROX_TESTS = [
     # Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
     #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
     Prox("AFFINE", lambda: randn(n).T*x),
+    Prox("CONSTANT", lambda: 0),
     Prox("NON_NEGATIVE", None, C_non_negative_scaled),
     Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
     Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
