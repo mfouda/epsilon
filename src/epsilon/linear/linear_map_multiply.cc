@@ -45,7 +45,9 @@ LinearMapImpl* Multiply_DenseMatrix_ScalarMatrix(
 LinearMapImpl* Multiply_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      rhs.AsDense());
 }
 
 LinearMapImpl* Multiply_SparseMatrix_DenseMatrix(
@@ -178,7 +180,9 @@ LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
 LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      lhs.AsDense()*
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(

@@ -1,6 +1,7 @@
 """Conic transforms for non-linear functions."""
 
 import logging
+from fractions import Fraction
 
 from cvxpy.utilities import power_tools
 
@@ -24,10 +25,6 @@ def transform_min_elemwise(expr):
     t = epi_var(expr, "min_elemwise")
     return t, [expression.leq_constraint(t, x) for x in args]
 
-def transform_soc_elemwise(expr):
-    t = epi_var(expr, "soc_elemwise")
-    return t, [expression.soc_elemwise_constraint(t, x) for x in args]
-
 def transform_quad_over_lin(expr):
     validate_args(expr, 2)
     x, y = expr.arg
@@ -47,7 +44,8 @@ def transform_norm_p(expr):
     p = expr.p
     x = only_arg(expr)
     t = epi_var(expr, "norm_p", size=(1,1))
-    if is_inf(p):
+
+    if p == float("inf"):
         return t, [expression.leq_constraint(x, t),
                    expression.leq_constraint(expression.negate(x), t)]
 
@@ -57,16 +55,19 @@ def transform_norm_p(expr):
     if p == 2:
         return t, [expression.soc_constraint(t, x)]
 
-    # if p > 1:
-    #     pass
+    r = epi_var(expr, "norm_p_r")
+    t_ = expression.promote(t, *dims(expr))
+    p = Fraction(p)
 
-    # if 0 < p < 1:
-    #     pass
+    if p < 0:
+        constrs = gm_constrs(t_, [x, r], (-p/(1-p), 1/(1-p)))
+    elif 0 < p < 1:
+        constrs = gm_constrs(r, [x, t_], (p, 1-p))
+    elif p > 1:
+        constrs = gm_constrs(x, [r, t_], (1/p, 1-1/p))
 
-    # if p < 0:
-    #     pass
-
-    raise TransformError("Unsupported p norm", expr)
+    constrs.append(expression.eq_constraint(expression.sum_entries(r), t))
+    return t, constrs
 
 def transform_power(expr):
     p = expr.p
@@ -80,19 +81,18 @@ def transform_power(expr):
 
     t = epi_var(expr, "power")
     x = only_arg(expr)
-    if p > 1:
-        p, w = power_tools.pow_high(p)
-        return t, gm_constrs(x, [t, one], w)
-
-    if 0 < p < 1:
-        p, w = power_tools.pow_mid(p)
-        return t, gm_constrs(t, [x, one], w)
 
     if p < 0:
         p, w = power_tools.pow_neg(p)
-        return t, gm_constrs(one, [x, t], w)
+        constrs = gm_constrs(one, [x, t], w)
+    if 0 < p < 1:
+        p, w = power_tools.pow_mid(p)
+        constrs = gm_constrs(t, [x, one], w)
+    if p > 1:
+        p, w = power_tools.pow_high(p)
+        constrs = gm_constrs(x, [t, one], w)
 
-    raise TransformError("Unsupported power", expr)
+    return t, constrs
 
 def transform_huber(expr):
     n = epi_var(expr, "huber_n")

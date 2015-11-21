@@ -49,7 +49,8 @@ LinearMapImpl* Add_DenseMatrix_ScalarMatrix(
 LinearMapImpl* Add_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      static_cast<const DenseMatrixImpl&>(lhs).dense()+rhs.AsDense());
 }
 
 LinearMapImpl* Add_SparseMatrix_DenseMatrix(

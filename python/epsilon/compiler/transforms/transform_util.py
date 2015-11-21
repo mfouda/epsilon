@@ -81,10 +81,11 @@ def gm_constrs(t_expr, x_exprs, p):
     w = power_tools.dyad_completion(p)
     tree = power_tools.decompose(w)
 
-    gm_vars = 0
+    # Sigh Python variable scoping..
+    gm_vars = [0]
     def create_gm_var():
-        var = epi_var(t_expr, "gm_var_%d" % gm_vars)
-        gm_vars += 1
+        var = epi_var(t_expr, "gm_var_%d" % gm_vars[0])
+        gm_vars[0] += 1
         return var
 
     d = defaultdict(create_gm_var)

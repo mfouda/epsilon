@@ -7,13 +7,18 @@ from epsilon.error import LinearMapError
 from epsilon.expression_pb2 import Expression, LinearMap
 from epsilon.expression_util import *
 
+def dense_type():
+    return LinearMapType(LinearMap(linear_map_type=LinearMap.DENSE_MATRIX))
+
 def multiply_kronecker(K, A):
     KA = LinearMapType(K.linear_map.arg[0])
     KB = LinearMapType(K.linear_map.arg[1])
     if A.scalar and (KA.scalar or KB.scalar):
         return K.copy()
+    return dense_type()
 
-    raise LinearMapError("not implemented", K.linear_map, A.linear_map)
+def add_kronecker(K, A):
+    raise LinearMapError("not implemented", K, A)
 
 class LinearMapType(object):
     """Handle type conversion for linear maps."""
@@ -66,7 +71,12 @@ class LinearMapType(object):
         if self.basic and B.basic:
             return self.copy().promote(B)
 
-        raise ValueError("not implemented A:\n%sB:\n%s" % (self.linear_map, B.linear_map))
+        if self.kronecker_product:
+            return add_kronecker(self, B)
+        if B.kronecker_pdocut:
+            return add_kronecker(B, self)
+
+        return dense_type()
 
     def __mul__(self, B):
         if isinstance(B, AffineExpression):
@@ -81,8 +91,7 @@ class LinearMapType(object):
         if B.kronecker_product:
             return multiply_kronecker(B, self)
 
-        raise LinearMapError("multiply type not implemented",
-                             self.linear_map, B.linear_map)
+        return dense_type()
 
 class AffineExpression(object):
     def __init__(self, linear_maps):
