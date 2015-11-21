@@ -66,7 +66,6 @@ class BlockVector {
 
 
   std::string DebugString() const;
-
   void InsertOrAdd(const std::string& key, DenseVector value);
 
  private:

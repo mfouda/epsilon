@@ -1,10 +1,15 @@
 
 #include "epsilon/prox/elementwise.h"
+#include "epsilon/vector/vector_util.h"
 
 void ElementwiseProxOperator::Init(const ProxOperatorArg& arg) {
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
   InitElementwise(lambda_);
+
+  VLOG(2) << "AT: " << AT_.DebugString();
+  VLOG(2) << "a: " << VectorDebugString(a_);
+  VLOG(2) << "b: " << VectorDebugString(b_);
 }
 
 void ElementwiseProxOperator::InitArgs(const AffineOperator& f) {

@@ -99,7 +99,7 @@ void BuildAffineOperatorImpl(
     linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  VLOG(2) << "BuildAffineOperatorImpl\n"
+  VLOG(3) << "BuildAffineOperatorImpl\n"
           << "L: " << L.impl().DebugString() << "\n"
           << expr.DebugString();
 

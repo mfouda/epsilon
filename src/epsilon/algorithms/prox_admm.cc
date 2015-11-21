@@ -30,6 +30,8 @@ void ProxADMMSolver::InitConstraints() {
         problem_.constraint(i).arg(0),
         affine::constraint_key(i),
         &A_, &b_);
+    u_(affine::constraint_key(i)) = BlockVector::DenseVector::Zero(
+        GetDimension(problem_.constraint(i).arg(0)));
   }
   AT_ = A_.Transpose();
   m_ = A_.m();
@@ -74,7 +76,7 @@ void ProxADMMSolver::InitProxOperators() {
 }
 
 void ProxADMMSolver::Init() {
-  VLOG(2) << problem_.DebugString();
+  VLOG(3) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
