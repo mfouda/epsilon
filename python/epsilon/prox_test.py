@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-PROX_TRIALS = 10
+RANDOM_PROX_TRIALS = 10
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
@@ -161,6 +161,7 @@ PROX_TESTS = [
     Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
     Prox("SECOND_ORDER_CONE", None, C_soc_translated),
     Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
+    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),
@@ -194,7 +195,7 @@ PROX_TESTS = [
 # ]
 
 def test_prox():
-    def run(prox, i):
+    def run(prox, i, random_inputs):
         np.random.seed(i)
         v = np.random.randn(n)
         lam = np.abs(np.random.randn())
@@ -204,7 +205,10 @@ def test_prox():
 
         # Form problem and solve with proximal operator implementation
         prob = cp.Problem(cp.Minimize(f), C)
-        v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+        if random_inputs:
+            v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
+        else:
+            v_map = {x: np.zeros(x.size) for x in prob.variables()}
         prox_function_type = ProxFunction.Type.Value(prox.prox_type)
         eval_prox(prox_function_type, prob, v_map, lam)
         actual = {x: x.value for x in prob.variables()}
@@ -240,6 +244,8 @@ def test_prox():
 
             raise e
 
+    # Test zero input once and N random inputs
     for prox in PROX_TESTS:
-        for i in xrange(PROX_TRIALS):
-            yield run, prox, i
+        yield run, prox, 0, False
+        for i in xrange(RANDOM_PROX_TRIALS):
+            yield run, prox, i, True

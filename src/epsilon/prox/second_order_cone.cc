@@ -32,30 +32,47 @@ class SecondOrderConeProx final : public ProxOperator {
     n_ = arg.prox_function().n();
     InitArgs(arg.affine_arg());
     InitConstraints(arg.affine_constraint());
+
+    VLOG(2) << "AT: " << AT_.DebugString();
+    VLOG(2) << "t_key: " << t_key_ << ", x_key: " << x_key_;
+    VLOG(2) << "cones m=" << m_ << ", dimension n=" << n_;
+    VLOG(2) << "a: " << a_;
+    VLOG(2) << "bt: " << VectorDebugString(bt_);
+    VLOG(2) << "bx: " << VectorDebugString(bx_);
   }
 
   BlockVector Apply(const BlockVector& v) override {
     BlockVector u = AT_*v;
-
-    Eigen::MatrixXd V = ToMatrix(u(x_key_) + bx_, m_, n_);
-    Eigen::VectorXd s = u(t_key_) + bt_/a_;
-    Eigen::VectorXd v_norm = V.rowwise().norm();
-    const double a2 = a_*a_;
-
-    Eigen::VectorXd alpha =
-        ((1/(a2+1))*(a2 + a_*s.array()/v_norm.array())).cwiseMin(1).cwiseMax(0);
-
+    Eigen::MatrixXd X = ToMatrix(u(x_key_) + bx_, m_, n_);
+    Eigen::VectorXd t = u(t_key_) + bt_/a_;
+    ApplyProjection(&X, &t, a_);
     BlockVector x;
-    x(x_key_) = ToVector(alpha.asDiagonal() * V) - bx_;
-    x(t_key_) = s - bt_/a_;
-    for (int i = 0; i < m_; i++) {
-      if (alpha(i) != 1)
-        x(t_key_)(i) = (1/a_)*alpha(i)*v_norm(i) - bt_(i)/a_;
-    }
+    x(x_key_) = ToVector(X) - bx_;
+    x(t_key_) = t - bt_/a_;
     return x;
   }
 
 private:
+  void ApplyProjection(Eigen::MatrixXd* X, Eigen::VectorXd* t, double beta) {
+    Eigen::VectorXd v_norm = X->rowwise().norm();
+    const double beta2 = beta*beta;
+    Eigen::VectorXd alpha =
+        ((1/(beta2+1))*(beta2 + beta*t->array()/v_norm.array()));
+
+    for (int i = 0; i < m_; i++) {
+      if (isnan(alpha(i)) || alpha(i) > 1) {
+        alpha(i) = 1;
+      } else if (alpha(i) < 0) {
+        alpha(i) = 0;
+        (*t)(i) = 0;
+      } else {
+        (*t)(i) = (1/beta)*alpha(i)*v_norm(i);
+      }
+    }
+
+    *X = alpha.asDiagonal() * (*X);
+  }
+
   void InitArgs(const AffineOperator& f) {
     const BlockMatrix& H = f.A;
     GetArgKeys(H, &t_key_, &x_key_);
@@ -71,7 +88,7 @@ private:
   }
 
   void InitConstraints(const AffineOperator& f) {
-  // A'A must be scalar
+    // A'A must be scalar
     const BlockMatrix& A = f.A;
     AT_ = A.Transpose();
     BlockMatrix ATA = AT_*A;
@@ -91,4 +108,4 @@ private:
   std::string t_key_, x_key_;
   int m_, n_;
 };
-REGISTER_PROX_OPERATOR(ProxFunction::SECOND_ORDER_CONE, SecondOrderConeProx);
+REGISTER_PROX_OPERATOR(SECOND_ORDER_CONE, SecondOrderConeProx);
