@@ -1,11 +1,19 @@
 """Operations on LinearMaps."""
-
 import numpy as np
 import scipy.sparse as sp
 
 from epsilon import linear_map
+from epsilon.error import LinearMapError
 from epsilon.expression_pb2 import Expression, LinearMap
 from epsilon.expression_util import *
+
+def multiply_kronecker(K, A):
+    KA = LinearMapType(K.linear_map.arg[0])
+    KB = LinearMapType(K.linear_map.arg[1])
+    if A.scalar and (KA.scalar or KB.scalar):
+        return K.copy()
+
+    raise LinearMapError("not implemented", K.linear_map, A.linear_map)
 
 class LinearMapType(object):
     """Handle type conversion for linear maps."""
@@ -29,6 +37,10 @@ class LinearMapType(object):
     @property
     def scalar(self):
         return self.linear_map.linear_map_type == LinearMap.SCALAR
+
+    @property
+    def kronecker_product(self):
+        return self.linear_map.linear_map_type == LinearMap.KRONECKER_PRODUCT
 
     def eval_ops(self):
         if self.linear_map.linear_map_type == LinearMap.TRANSPOSE:
@@ -64,7 +76,13 @@ class LinearMapType(object):
         if self.basic and B.basic:
             return self.copy().promote(B)
 
-        raise ValueError("not implemented A:\n%sB:\n%s" % (self.linear_map, B.linear_map))
+        if self.kronecker_product:
+            return multiply_kronecker(self, B)
+        if B.kronecker_product:
+            return multiply_kronecker(B, self)
+
+        raise LinearMapError("multiply type not implemented",
+                             self.linear_map, B.linear_map)
 
 class AffineExpression(object):
     def __init__(self, linear_maps):

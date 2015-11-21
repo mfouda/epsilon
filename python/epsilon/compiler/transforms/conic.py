@@ -74,7 +74,7 @@ def transform_power(expr):
     if p == 1:
         return only_arg(expr)
 
-    one = expression.scalar_constant(1)
+    one = expression.promote(expression.scalar_constant(1), *dims(expr))
     if p == 0:
         return one, []
 

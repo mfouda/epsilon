@@ -85,7 +85,8 @@ def hstack(*args):
         if i == 0:
             e.size.dim.extend(arg.size.dim)
         else:
-            assert e.size.dim[0] == arg.size.dim[0]
+            if dim(e, 0) != dim(arg, 0):
+                raise ExpressionError("Incompatible sizes", e, arg)
             e.size.dim[1] += arg.size.dim[1]
 
         e.arg.add().CopyFrom(arg)
@@ -283,7 +284,7 @@ def soc_constraint(t, x):
 
 def soc_elemwise_constraint(t, *args):
     t = reshape(t, dim(t), 1)
-    X = hstack(*(reshape(arg, 1, dim(arg)) for arg in args))
+    X = hstack(*(reshape(arg, dim(arg), 1) for arg in args))
     if dim(t) != dim(X, 0):
         raise ExpressionError("Second order cone, incompatible sizes", t, X)
     return indicator(Cone.SECOND_ORDER, t, X)
@@ -297,3 +298,9 @@ def prox_function(f, *args):
         size=Size(dim=[1, 1]),
         prox_function=f,
         arg=args)
+
+def promote(expr, *dim):
+    promoted_expr = Expression()
+    promoted_expr.CopyFrom(expr)
+    promoted_expr.size.CopyFrom(Size(dim=dim))
+    return promoted_expr

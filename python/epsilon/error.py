@@ -1,4 +1,4 @@
-from epsilon.tree_format import format_problem, format_expr
+from epsilon.tree_format import *
 
 class ProblemError(Exception):
     def __init__(self, message, problem):
@@ -16,4 +16,13 @@ class ExpressionError(Exception):
 
     def __str__(self):
         return (super(ExpressionError, self).__str__() + "\n" +
-                "\n".join(format_expr(expr) for expr in self.expr_args))
+                "\n\n".join(format_expr(expr) for expr in self.expr_args))
+
+class LinearMapError(Exception):
+    def __init__(self, message, *linear_map_args):
+        super(LinearMapError, self).__init__(message)
+        self.linear_map_args = linear_map_args
+
+    def __str__(self):
+        return (super(LinearMapError, self).__str__() + "\nLinear maps:\n" +
+                "\n".join(format_linear_map(A) for A in self.linear_map_args))
