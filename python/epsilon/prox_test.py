@@ -153,9 +153,9 @@ PROX_TESTS = [
     # Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     # Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
     #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
-    # Prox("AFFINE", lambda: randn(n).T*x),
-    # Prox("NON_NEGATIVE", None, C_non_negative_scaled),
-    # Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
+    Prox("AFFINE", lambda: randn(n).T*x),
+    Prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
     # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
     # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
     # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
@@ -197,6 +197,8 @@ def test_prox():
         np.random.seed(i)
         v = np.random.randn(n)
         lam = np.abs(np.random.randn())
+        print lam
+
 
         f = 0 if not prox.objective else prox.objective()
         C = [] if not prox.constraint else prox.constraint()

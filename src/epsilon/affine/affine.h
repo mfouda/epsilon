@@ -30,10 +30,13 @@ void BuildAffineOperator(
     BlockVector* b);
 
 // Convenience methods for "simple" affine operators
-std::string GetSingleKey(const AffineOperator& op);
+std::string GetSingleVariableKey(const AffineOperator& op);
 double GetScalar(const AffineOperator& op);
 Eigen::VectorXd GetDiagonal(const AffineOperator& op);
 Eigen::VectorXd GetConstant(const AffineOperator& op);
+
+BlockVector GetLinear(const AffineOperator& op);
+
 
 }  // namespace affine
 

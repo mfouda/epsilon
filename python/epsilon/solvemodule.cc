@@ -178,7 +178,7 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
     for (const Expression* var_expr : GetVariables(f_expr)) {
       const std::string& var_id = var_expr->variable().variable_id();
       A.A(affine::constraint_key(i++), var_id) = (
-          sqrt(lambda)*linear_map::Identity(GetDimension(*var_expr)));
+          (1/sqrt(lambda))*linear_map::Identity(GetDimension(*var_expr)));
     }
     BlockVector v = A.A*GetVariableVector(v_map);
 

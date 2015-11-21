@@ -3,30 +3,33 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 
-// a'x + b
+// Convert 1 x n linear maps to a BlockVector
+BlockVector GetLinear(const BlockMatrix& A) {
+  BlockVector c;
+  for (const auto& col_iter : A.data()) {
+    for (const auto& row_iter: col_iter.second) {
+      c(col_iter.first) = row_iter.second.impl().AsDense().transpose();
+    }
+  }
+  return c;
+}
+
+// c'x
 class AffineProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
-    CHECK_EQ(1, GetDimension(arg.f_expr()));
-    CHECK_EQ(1, arg.f_expr().arg_size());
-
-    BlockMatrix A;
-    BlockVector b;
-    affine::BuildAffineOperator(arg.f_expr().arg(0), "_", &A, &b);
-
-    // Get the coefficients of the linear function
-    for (const auto& col_iter : A.data()) {
-      for (const auto& row_iter : col_iter.second) {
-        a_(col_iter.first) = row_iter.second.impl().AsDense();
-      }
-    }
-    a_ *= arg.lambda();
+    const BlockMatrix& A = arg.affine_constraint().A;
+    AT_ = A.Transpose();
+    ATA_inv_ = (AT_*A).Inverse();
+    b_ = arg.affine_constraint().b;
+    c_ = GetLinear(arg.affine_arg().A);
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return v - a_;
+    return ATA_inv_*(AT_*(v - b_) - c_);
   }
 
 private:
-  BlockVector a_;
+  BlockMatrix AT_, ATA_inv_;
+  BlockVector b_, c_;
 };
 REGISTER_PROX_OPERATOR(ProxFunction::AFFINE, AffineProx);

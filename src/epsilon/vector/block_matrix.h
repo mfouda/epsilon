@@ -59,7 +59,7 @@ class BlockMatrix {
                    linear_map::LinearMap value);
 
  private:
-  // col -> row -> value
+  // col -> row -> valu
   std::map<std::string, std::map<std::string, linear_map::LinearMap>> data_;
 
   friend BlockMatrix operator*(const BlockMatrix& A, const BlockMatrix& B);
