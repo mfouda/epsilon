@@ -184,7 +184,7 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
 
     std::unique_ptr<ProxOperator> op = CreateProxOperator(
         f_expr.prox_function().prox_function_type());
-    op->Init(ProxOperatorArg(H, A));
+    op->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
     BlockVector x = op->Apply(v);
     PyObject* vars = GetVariableMap(x);
     PyObject* retval = Py_BuildValue("O", vars);

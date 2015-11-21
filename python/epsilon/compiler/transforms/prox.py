@@ -103,10 +103,16 @@ def soc_prox_args(expr):
     return [args[0]] + x_args, constr
 
 def create(prox_function_type, **kwargs):
-    def create():
+    def create(expr, args):
         kwargs["prox_function_type"] = prox_function_type
         return ProxFunction(**kwargs)
     return create
+
+def create_second_order_cone(expr, args):
+    return ProxFunction(
+        prox_function_type=Prox.SECOND_ORDER_CONE,
+        m=dim(args[0], 0),
+        n=dim(args[0], 1))
 
 def match_epigraph(f_match):
     def match(expr):
@@ -128,7 +134,7 @@ RULES += [
         match_epigraph(
             lambda e: e.expression_type == Expression.NORM_P and e.p == 2),
         soc_prox_args,
-        create(Prox.SECOND_ORDER_CONE)),
+        create_second_order_cone),
 ]
 
 # Linear cone rules
@@ -138,7 +144,7 @@ RULES += [
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
              create(Prox.NON_NEGATIVE)),
     ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
-             create(Prox.SECOND_ORDER_CONE)),
+             create_second_order_cone),
 ]
 
 def merge_add(a, b):
@@ -150,8 +156,8 @@ def merge_add(a, b):
 def transform_prox_expr(rule, expr):
     logging.debug("transform_prox_expr:\n%s", tree_format.format_expr(expr))
     args, constrs = rule.convert_args(expr)
-    f = rule.create()
-    expr = expression.add(expression.prox_function(rule.create(), *args))
+    prox = rule.create(expr, args)
+    expr = expression.add(expression.prox_function(prox, *args))
     for constr in constrs:
         expr = merge_add(expr, transform_expr(constr))
     logging.debug(

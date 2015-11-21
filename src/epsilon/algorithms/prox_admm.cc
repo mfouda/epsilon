@@ -66,7 +66,7 @@ void ProxADMMSolver::InitProxOperators() {
 
     prox_.emplace_back(
         CreateProxOperator(f_expr.prox_function().prox_function_type()));
-    prox_.back()->Init(ProxOperatorArg(H, A));
+    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
 
     // TODO(mwytock): This is scaled by rho now, figure out what to do here
     AiT_.push_back(A.A.Transpose());

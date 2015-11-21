@@ -94,6 +94,10 @@ LinearMap Diagonal(const Eigen::VectorXd& a) {
   return LinearMap(new DiagonalMatrixImpl(a.asDiagonal()));
 }
 
+LinearMap Scalar(double alpha, int n) {
+  return LinearMap(new ScalarMatrixImpl(n, alpha));
+}
+
 Eigen::VectorXd GetDiagonal(const LinearMap& linear_map) {
   const LinearMapImpl& impl = linear_map.impl();
   if (impl.type() == SCALAR_MATRIX) {

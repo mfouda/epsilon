@@ -71,9 +71,6 @@ endif
 # 	epsilon/prox/sum_exp.cc \
 # 	epsilon/prox/sum_largest.cc
 
-# epsilon/prox/affine.cc \
-
-# epsilon/prox/second_order_cone.cc \
 
 common_cc = \
 	epsilon/affine/affine.cc \
@@ -97,6 +94,7 @@ common_cc = \
 	epsilon/prox/non_negative.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/zero.cc \
+	epsilon/prox/second_order_cone.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

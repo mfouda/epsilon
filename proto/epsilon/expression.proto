@@ -135,6 +135,10 @@ message ProxFunction {
     SECOND_ORDER_CONE = 12;
   }
   Type prox_function_type = 1;
+
+  // For matrix-valued functions
+  int32 m = 2;
+  int32 n = 3;
 }
 
 message Expression {
