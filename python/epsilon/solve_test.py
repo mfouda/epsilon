@@ -5,8 +5,7 @@ import logging
 import cvxpy as cp
 import numpy as np
 
-from epsilon import solve
-from epsilon import solver_params_pb2
+from epsilon import cvxpy_solver
 from epsilon.problems import *
 from epsilon.problems.problem_instance import ProblemInstance
 
@@ -54,6 +53,10 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("lp", lp.create, dict(m=10, n=20)),
+]
+
 def solve_problem(problem_instance):
     np.random.seed(0)
     problem = problem_instance.create()
@@ -62,9 +65,8 @@ def solve_problem(problem_instance):
     obj0 = problem.objective.value
 
     logging.debug(problem_instance.name)
-    params = solver_params_pb2.SolverParams(abs_tol=1e-5)
-    params.rel_tol = REL_TOL.get(problem_instance.name, 1e-2)
-    solve.solve(problem, params)
+    cvxpy_solver.solve(
+        problem, rel_tol=REL_TOL.get(problem_instance.name, 1e-2))
     obj1 = problem.objective.value
 
     # A lower objective is okay

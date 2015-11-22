@@ -154,10 +154,13 @@ def variable(m, n, variable_id):
             elementwise=True,
             scalar_multiple=True))
 
-def scalar_constant(scalar):
+def scalar_constant(scalar, size=None):
+    if size is None:
+        size = (1, 1)
+
     return Expression(
         expression_type=Expression.CONSTANT,
-        size=Size(dim=[1, 1]),
+        size=Size(dim=size),
         constant=Constant(
             constant_type=Constant.SCALAR,
             scalar=scalar),
@@ -237,6 +240,13 @@ def transpose(x):
         curvature=AFFINE,
         arg=[x])
 
+def trace(X):
+    return Expression(
+        expression_type=Expression.TRACE,
+        size=Size(dim=[1, 1]),
+        curvature=AFFINE,
+        arg=[X])
+
 def diag_vec(x):
     if dim(x, 1) != 1:
         raise ExpressionError("diag_vec on non vector")
@@ -252,6 +262,10 @@ def index(x, start_i, stop_i, start_j=None, stop_j=None):
     if start_j is None and stop_j is None:
         start_j = 0
         stop_j = x.size.dim[1]
+
+    if (dim(x, 0) == stop_i - start_i and
+        dim(x, 1) == stop_j - start_j):
+        return x
 
     return Expression(
         expression_type=Expression.INDEX,
@@ -311,8 +325,14 @@ def soc_elemwise_constraint(t, *args):
         raise ExpressionError("Second order cone, incompatible sizes", t, X)
     return indicator(Cone.SECOND_ORDER, t, X)
 
-def psd_constraint(a, b):
-    return indicator(Cone.SEMIDEFINITE, add(a, negate(b)))
+def psd_constraint(X, Y):
+    return indicator(Cone.SEMIDEFINITE, add(X, negate(Y)))
+
+def semidefinite(X):
+    return indicator(Cone.SEMIDEFINITE, X)
+
+def non_negative(x):
+    return indicator(Cone.NON_NEGATIVE, x)
 
 def prox_function(f, *args):
     return Expression(

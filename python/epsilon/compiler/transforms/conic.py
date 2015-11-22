@@ -32,10 +32,6 @@ def transform_max_entries(expr):
 def transform_min_entries(expr):
     return transform_min_elementwise(expr)
 
-def lambda_max_expr(t, X):
-    n = dim(X, 0)
-    return expression.add(tI, expression.negate(X))
-
 def transform_lambda_max(expr):
     t = epi_var(expr, "lambda_max", size=(1,1))
     X = only_arg(expr)
@@ -49,6 +45,19 @@ def transform_lambda_min(expr):
     n = dim(X, 0)
     tI = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
     return t, [expression.psd_constraint(X, tI)]
+
+def transform_sigma_max(expr):
+    X = only_arg(expr)
+    m, n = dims(expr)
+    S = epi_var(expr, "sigma_max_S", size=(m+n, m+n))
+    t = epi_var(expr, "sigma_max")
+    t_In = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
+    t_Im = expression.diag_vec(expression.multiply(expression.ones(m, 1), t))
+    return t, [
+        expression.eq_constraint(expression.index(S, 0, n, 0, n), t_In),
+        expression.eq_constraint(expression.index(S, 0, n, n, n+m), X),
+        expression.eq_constraint(expression.index(S, n, n+m, n, n+m), t_Im),
+        expression.semidefinite(S)]
 
 def transform_quad_over_lin(expr):
     assert len(expr.arg) == 2
@@ -99,13 +108,25 @@ def transform_norm_2_elementwise(expr):
     t = epi_var(expr, "norm_2_elementwise")
     return t, [expression.soc_elemwise_constraint(t, *expr.arg)]
 
+def transform_norm_nuc(expr):
+    X = only_arg(expr)
+    m, n = dims(expr)
+    T = epi_var(expr, "norm_nuc", size=(m+n, m+n))
+
+    obj = expression.multiply(
+        expression.scalar_constant(0.5),
+        expression.trace(T))
+    return obj, [
+        expression.semidefinite(T),
+        expression.eq_constraint(expression.index(T, 0, m, m, m+n), X)]
+
 def transform_power(expr):
     p = expr.p
 
     if p == 1:
         return only_arg(expr)
 
-    one = expression.scalar_constant(1)
+    one = expression.scalar_constant(1, size=dims(expr))
     if p == 0:
         return one, []
 
@@ -150,7 +171,33 @@ def transform_geo_mean(expr):
     x_list = [expression.index(x, i, i+1) for i in range(len(w))]
     return t, gm_constrs(t, x_list, w)
 
+def transform_sum_largest(expr):
+    x = only_arg(expr)
+    k = expr.k
+    q = epi_var(expr, "sum_largest")
+    t = epi_var(expr, "sum_largest_t", size=dims(x))
 
+    obj = expression.add(
+        expression.sum_entries(t),
+        expression.multiply(expression.scalar_constant(k), q))
+    constr = [
+        expression.leq_constraint(x, expression.add(t, q)),
+        expression.leq_constraint(expression.scalar_constant(0), t)]
+
+    return obj, constr
+
+def transform_matrix_frac(expr):
+    assert len(expr.arg) == 2
+    x, P = expr.arg
+    n = dim(P, 0)
+
+    M = epi_var(expr, "matrix_frac_M", size=(n+1,n+1))
+    t = epi_var(expr, "matrix_frac")
+    return t, [
+        expression.eq_constraint(expression.index(M, 0, n, 0, n), P),
+        expression.eq_constraint(expression.index(M, 0, n, n, n+1), x),
+        expression.eq_constraint(expression.index(M, n, n+1, n, n+1), t),
+        expression.semidefinite(M)]
 
 def transform_expr(expr):
     logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))

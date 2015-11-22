@@ -19,6 +19,7 @@ from cvxpy.constraints.psd_constraint import PSDConstraint
 from cvxpy.constraints.second_order import SOC
 from cvxpy.constraints.soc_elemwise import SOC_Elemwise
 from cvxpy.expressions.constants.constant import Constant
+from cvxpy.expressions.constants.parameter import Parameter
 from cvxpy.expressions.variables.variable import Variable
 from cvxpy.problems import objective
 
@@ -112,6 +113,7 @@ EXPRESSION_TYPES = (
     (Constant, convert_constant),
     (MulExpression, lambda e: convert_binary(expression.multiply, e)),
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
+    (Parameter, convert_constant),
     (Variable, convert_variable),
     (abs, lambda e: convert_generic(Expression.ABS, e)),
     (diag_mat, lambda e: convert_generic(Expression.DIAG_MAT, e)),
@@ -139,6 +141,8 @@ EXPRESSION_TYPES = (
     (pnorm, lambda e: convert_p(Expression.NORM_P, e)),
     (power, lambda e: convert_p(Expression.POWER, e)),
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
+    (reshape, lambda e: convert_generic(Expression.RESHAPE, e)),
+    (sigma_max, lambda e: convert_generic(Expression.SIGMA_MAX, e)),
     (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
     (sum_largest, lambda e: convert_sum_largest(e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),

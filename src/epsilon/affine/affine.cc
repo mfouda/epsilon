@@ -56,6 +56,7 @@ void Constant(
   Eigen::VectorXd b_dense;
   const ::Constant& c = expr.constant();
   if (c.data_location() == "") {
+    // TODO(mwytock): This should probably be made explicit
     // Handle promotion if necessary by using L
     b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
