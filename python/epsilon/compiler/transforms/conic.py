@@ -17,19 +17,23 @@ def transform_abs(expr):
     return t, [expression.leq_constraint(x, t),
                expression.leq_constraint(expression.negate(x), t)]
 
-def transform_max_elemwise(expr):
-    t = epi_var(expr, "max_elemwise")
-    return t, [expression.leq_constraint(x, t) for x in args]
+def transform_max_elementwise(expr):
+    t = epi_var(expr, "max_elementwise")
+    return t, [expression.leq_constraint(x, t) for x in expr.arg]
 
-def transform_min_elemwise(expr):
-    t = epi_var(expr, "min_elemwise")
-    return t, [expression.leq_constraint(t, x) for x in args]
+def transform_max_entries(expr):
+    t = epi_var(expr, "max_entries")
+    return t, [expression.leq_constraint(x, expression.promote(t, *dims(expr)))
+               for x in expr.arg]
+
+def transform_min_elementwise(expr):
+    t = epi_var(expr, "min_elementwise")
+    return t, [expression.leq_constraint(t, x) for x in expr.arg]
 
 def transform_quad_over_lin(expr):
-    validate_args(expr, 2)
+    assert len(expr.arg) == 2
     x, y = expr.arg
-    if dim(y) != 1:
-        raise TransformError("quad_over_lin expects scalar y", expr)
+    assert dim(y) == 1
 
     t = epi_var(expr, "qol", size=(1,1))
     return t, [
@@ -37,8 +41,10 @@ def transform_quad_over_lin(expr):
             expression.add(y, t),
             expression.vstack(
                 expression.add(y, expression.negate(t)),
-                expression.multiply(expression.constant(1, 1, scalar=2), x))),
-        expression.leq_constraint(expression.constant(1, 1, scalar=0), y)]
+                expression.reshape(
+                    expression.multiply(expression.scalar_constant(2), x),
+                    dim(x), 1))),
+        expression.leq_constraint(expression.scalar_constant(0), y)]
 
 def transform_norm_p(expr):
     p = expr.p
@@ -68,6 +74,10 @@ def transform_norm_p(expr):
 
     constrs.append(expression.eq_constraint(expression.sum_entries(r), t))
     return t, constrs
+
+def transform_norm_2_elementwise(expr):
+    t = epi_var(expr, "norm_2_elementwise")
+    return t, [expression.soc_elemwise_constraint(t, *expr.arg)]
 
 def transform_power(expr):
     p = expr.p
@@ -109,6 +119,7 @@ def transform_huber(expr):
     x = only_arg(expr)
     constr.append(expression.eq_constraint(x, expression.add(s, n)))
     return t, constr
+
 
 def transform_expr(expr):
     logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))

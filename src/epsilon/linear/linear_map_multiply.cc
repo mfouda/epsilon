@@ -217,10 +217,7 @@ LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
       Multiply(C.B().impl(), D.B().impl()));
   }
 
-  LOG(FATAL) << "Not implemented: "
-             << "C: " << C.DebugString() << "\n"
-             << "D: " << D.DebugString();
-
+  return new SparseMatrixImpl(C.AsSparse()*D.AsSparse());
 }
 
 LinearMapImpl* Multiply_NotImplemented(

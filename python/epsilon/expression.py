@@ -21,7 +21,7 @@ def _add_binary(a, b):
     elif a.size == b.size:
         size = a.size
     else:
-        raise ValueError("adding incompatible sizes")
+        raise ExpressionError("adding incompatible sizes", a, b)
 
     return Expression(size=size)
 
@@ -102,7 +102,8 @@ def vstack(*args):
         if i == 0:
             e.size.dim.extend(arg.size.dim)
         else:
-            assert e.size.dim[1] == arg.size.dim[1]
+            if dim(e, 1) != dim(arg, 1):
+                raise ExpressionError("Incompatible sizes", e, arg)
             e.size.dim[0] += arg.size.dim[0]
 
         e.arg.add().CopyFrom(arg)

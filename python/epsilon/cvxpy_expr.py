@@ -87,16 +87,12 @@ def convert_huber(expr):
 
 def convert_pnorm(expr):
     proto = convert_generic(Expression.NORM_P, expr)
-    proto.p = expr.p
+    proto.p = float(expr.p)
     return proto
 
 def convert_power(expr):
     proto = convert_generic(Expression.POWER, expr)
-    try:
-        proto.p = expr.p
-    except TypeError: # FIXME expr.p has type Fraciton on inv_pos
-        proto.p = -1
-
+    proto.p = float(expr.p)
     return proto
 
 def convert_sum_largest(expr):

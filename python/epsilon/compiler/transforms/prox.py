@@ -38,14 +38,13 @@ def least_squares_args(expr):
 
     return args, constr
 
-def convert_diagonal(expr):
+def convert_arg(expr, affine_check):
     if dcp.is_affine(expr):
         expr_linear = linear.transform_expr(expr)
-        if affine.is_diagonal(expr_linear):
+        if affine_check(expr_linear):
             return expr_linear, []
 
-    logging.debug("not diagonal, adding epigraph")
-    t, epi_f = epi_transform(expr, "diagonal")
+    t, epi_f = epi_transform(expr, "convert_arg")
     return t, [epi_f]
 
 def diagonal_args(expr):
@@ -96,8 +95,19 @@ def epigraph_args(convert):
         return output_args, constr
     return args
 
+def expr_args(convert):
+    def args(expr):
+        output_args = []
+        constr = []
+        for input_arg in expr.arg:
+            arg_i, constr_i = convert(input_arg)
+            output_args.append(arg_i)
+            constr += constr_i
+        return output_args, constr
+    return args
+
 def soc_prox_args(expr):
-    args, constr = epigraph_args(convert_diagonal)(expr)
+    args, constr = epigraph_args(lambda e: convert_arg(e, dcp.is_scalar))(expr)
     # Make argument a row vector
     x_args = [expression.reshape(x, 1, dim(x)) for x in args[1:]]
     return [args[0]] + x_args, constr

@@ -1,38 +1,30 @@
 """Transforms for linear functions."""
 
+import logging
+
 from epsilon import dcp
 from epsilon import error
 from epsilon import expression
 from epsilon import linear_map
+from epsilon import tree_format
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Problem, Constant
 from epsilon.compiler.transforms.transform_util import *
 
 def transform_variable(expr):
-    if dim(expr,1) == 1:
-        return expr
     return expression.reshape(expr, dim(expr), 1)
 
 def transform_constant(expr):
-    if dim(expr,1) == 1:
-        return expr
     return expression.reshape(expr, dim(expr), 1)
 
-def maybe_promote(dim_sum, expr):
-    if dim(expr) == 1 and dim_sum != 1:
-        return expression.linear_map(linear_map.promote(dim_sum), expr)
-    else:
-        return expr
-
 def transform_add(expr):
-    dim_sum = dim(expr)
-    return expression.add(
-        *[maybe_promote(dim_sum, transform_expr(e)) for e in expr.arg])
+    return expression.add(*[transform_expr(e) for e in expr.arg])
 
-def transform_transpose(expr):
-    return expression.linear_map(
-        linear_map.transpose(dim(expr,0), dim(expr,1)),
-        transform_expr(only_arg(expr)))
+# TODO(mwytock): is this needed?
+# def transform_transpose(expr):
+#     return expression.linear_map(
+#         linear_map.transpose(dim(expr,0), dim(expr,1)),
+#         transform_expr(only_arg(expr)))
 
 def transform_index(expr):
     return expression.linear_map(
@@ -160,10 +152,8 @@ def transform_vstack(expr):
     return expression.add(*add_args)
 
 def transform_reshape(expr):
-    return expression.reshape(
-        transform_expr(only_arg(expr)),
-        dim(expr, 0),
-        dim(expr, 1))
+    # drop reshape nodes as everything is a vector
+    return transform_expr(only_arg(expr))
 
 def transform_linear_map(expr):
     return expr
@@ -198,6 +188,7 @@ def transform_power(expr):
     raise TransformError("Unexpected power exponent", expr)
 
 def transform_linear_expr(expr):
+    logging.debug("transform_linear_expr:\n%s", tree_format.format_expr(expr))
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)
 
