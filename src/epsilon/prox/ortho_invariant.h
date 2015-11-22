@@ -1,39 +1,48 @@
-#include "epsilon/affine/affine.h"
-#include "epsilon/expression/expression_util.h"
+
+#include "epsilon/prox/elementwise.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/vector_util.h"
-#include <cmath>
 
-class OrthoInvariantProx: public ProxOperator {
+class OrthoInvariantProx : public ProxOperator {
 public:
-  virtual void Init(const ProxOperatorArg& arg) override {
-    lambda_ = arg.lambda();
-    ProxOperatorArg prox_arg(lambda_, NULL, NULL, NULL);
-    f_->Init(prox_arg);
-  }
-  OrthoInvariantProx(std::unique_ptr<ProxOperator> f, bool symm_part_=false, bool add_res=false)
-    : f_(std::move(f)), symm_part_(symm_part_), add_res_(add_res) {}
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& y) override;
-protected:
-  std::unique_ptr<ProxOperator> f_;
+  OrthoInvariantProx(
+      std::unique_ptr<ElementwiseProx> eigen_prox,
+      bool symmetric = false,
+      bool add_non_symmetric = false)
+    : eigen_prox_(std::move(eigen_prox)),
+      symmetric_(symmetric),
+      add_non_symmetric_(add_non_symmetric) {}
+
+  void Init(const ProxOperatorArg& arg) override;
+  BlockVector Apply(const BlockVector& v) override;
+
+private:
+  void InitArgs(const AffineOperator& f);
+  void InitConstraints(const AffineOperator& f);
+  Eigen::MatrixXd ApplyOrthoInvariant(const Eigen::MatrixXd& Y);
+
+  std::unique_ptr<ElementwiseProx> eigen_prox_;
+  bool symmetric_, add_non_symmetric_;
+
+  int m_, n_;
+  std::string key_;
+  BlockMatrix AT_;
   double lambda_;
-  bool symm_part_;
-  bool add_res_;
+  Eigen::MatrixXd B_;
 };
 
-class OrthoInvariantEpigraph: public ProxOperator {
-public:
-  virtual void Init(const ProxOperatorArg& arg) override {
-    lambda_ = arg.lambda();
-    ProxOperatorArg prox_arg(lambda_, NULL, NULL, NULL);
-    f_->Init(prox_arg);
-  }
-  OrthoInvariantEpigraph(std::unique_ptr<ProxOperator> f, bool symm_part_=false)
-    : f_(std::move(f)), symm_part_(symm_part_) {}
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& sy) override;
+// class OrthoInvariantEpigraph: public ProxOperator {
+// public:
+//   virtual void Init(const ProxOperatorArg& arg) override {
+//     lambda_ = arg.lambda();
+//     ProxOperatorArg prox_arg(lambda_, NULL, NULL, NULL);
+//     f_->Init(prox_arg);
+//   }
+//   OrthoInvariantEpigraph(std::unique_ptr<ProxOperator> f, bool symm_part_=false)
+//     : f_(std::move(f)), symm_part_(symm_part_) {}
+//   virtual Eigen::VectorXd Apply(const Eigen::VectorXd& sy) override;
 
-protected:
-  std::unique_ptr<ProxOperator> f_;
-  double lambda_;
-  bool symm_part_;
-};
+// protected:
+//   std::unique_ptr<ProxOperator> f_;
+//   double lambda_;
+//   bool symm_part_;
+// };

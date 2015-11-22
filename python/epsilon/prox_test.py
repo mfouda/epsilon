@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 10
+RANDOM_PROX_TRIALS = 1
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -149,7 +149,6 @@ PROX_TESTS = [
     # Prox("NormL2Prox", lambda: cp.norm2(x)),
     # Prox("NormNuclearProx", lambda: cp.norm(X, "nuc")),
     # Prox("ScaledZoneProx", f_scaled_zone_single_max),
-    # Prox("SemidefiniteProx", None, lambda: [X >> 0]),
     # Prox("SumExpProx", lambda: cp.sum_entries(cp.exp(x))),
     # Prox("SumLargest", lambda: cp.sum_largest(x, 4)),
     #Prox("MatrixFracProx", lambda: cp.matrix_frac(p, X)),
@@ -172,6 +171,12 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
+]
+
+
+PROX_TESTS = [
+    Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
 ]
 
 

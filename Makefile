@@ -65,7 +65,6 @@ endif
 # 	epsilon/prox/norm_l1_asymmetric.cc \
 # 	epsilon/prox/norm_l1_l2.cc \
 # 	epsilon/prox/norm_l2.cc \
-# 	epsilon/prox/ortho_invariant.cc \
 # 	epsilon/prox/quad_over_lin.cc \
 # 	epsilon/prox/scaled_zone.cc \
 # 	epsilon/prox/sum_exp.cc \
@@ -92,9 +91,11 @@ common_cc = \
 	epsilon/prox/affine.cc \
 	epsilon/prox/elementwise.cc \
 	epsilon/prox/non_negative.cc \
+	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
-	epsilon/prox/zero.cc \
 	epsilon/prox/second_order_cone.cc \
+	epsilon/prox/semidefinite.cc \
+	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \

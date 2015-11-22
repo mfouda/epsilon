@@ -165,8 +165,8 @@ def convert_constraint(constraint):
             convert_expression(constraint.args[1]))
     elif isinstance(constraint, PSDConstraint):
         return expression.psd_constraint(
-            convert_expression(constraint.args[0]),
-            convert_expression(constraint.args[1]))
+            convert_expression(constraint.args[1]),
+            convert_expression(constraint.args[0]))
     elif isinstance(constraint, LeqConstraint):
         return expression.leq_constraint(
             convert_expression(constraint.args[0]),

@@ -118,6 +118,14 @@ def create(prox_function_type, **kwargs):
         return ProxFunction(**kwargs)
     return create
 
+def create_matrix_valued(prox_function_type):
+    def create(expr, args):
+        return ProxFunction(
+            prox_function_type=prox_function_type,
+            m=dim(expr.arg[0], 0),
+            n=dim(expr.arg[0], 1))
+    return create
+
 def create_second_order_cone(expr, args):
     return ProxFunction(
         prox_function_type=Prox.SECOND_ORDER_CONE,
@@ -156,6 +164,8 @@ RULES += [
              create(Prox.NON_NEGATIVE)),
     ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
              create_second_order_cone),
+    ProxRule(match_indicator(Cone.SEMIDEFINITE), scalar_args,
+             create_matrix_valued(Prox.SEMIDEFINITE)),
 ]
 
 def merge_add(a, b):

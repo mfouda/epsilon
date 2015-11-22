@@ -89,10 +89,6 @@ message Cone {
   Type cone_type = 1;
 }
 
-message ProximalOperator {
-  string name = 1;
-}
-
 message LinearMap {
   enum Type {
     UNKNOWN = 0;
@@ -133,6 +129,7 @@ message ProxFunction {
     ZERO = 10;
     NON_NEGATIVE = 11;
     SECOND_ORDER_CONE = 12;
+    SEMIDEFINITE = 13;
   }
   Type prox_function_type = 1;
 
@@ -219,8 +216,6 @@ message Expression {
   Sign sign = 4;
   Curvature curvature = 5;
   repeated Monotonicity arg_monotonicity = 6;
-
-  ProximalOperator proximal_operator = 7;
 
   // CONSTANT, VARIABLE
   Constant constant = 8;

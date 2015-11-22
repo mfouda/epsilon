@@ -2,7 +2,7 @@
 #include "epsilon/prox/elementwise.h"
 #include "epsilon/vector/vector_util.h"
 
-void ElementwiseProxOperator::Init(const ProxOperatorArg& arg) {
+void ElementwiseProx::Init(const ProxOperatorArg& arg) {
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
   InitElementwise(lambda_);
@@ -12,7 +12,7 @@ void ElementwiseProxOperator::Init(const ProxOperatorArg& arg) {
   VLOG(2) << "b: " << VectorDebugString(b_);
 }
 
-void ElementwiseProxOperator::InitArgs(const AffineOperator& f) {
+void ElementwiseProx::InitArgs(const AffineOperator& f) {
   // Assumes single argument and single variable
   const BlockMatrix& H = f.A;
   const BlockVector& g = f.b;
@@ -25,7 +25,7 @@ void ElementwiseProxOperator::InitArgs(const AffineOperator& f) {
   lambda_ = Eigen::VectorXd::Constant(a_.rows(), 1);
 }
 
-void ElementwiseProxOperator::InitConstraints(const AffineOperator& f) {
+void ElementwiseProx::InitConstraints(const AffineOperator& f) {
   // A'A must be diagonal
   const BlockMatrix& A = f.A;
   AT_ = A.Transpose();
@@ -38,7 +38,7 @@ void ElementwiseProxOperator::InitConstraints(const AffineOperator& f) {
   AT_ = D*AT_;
 }
 
-BlockVector ElementwiseProxOperator::Apply(const BlockVector& v) {
+BlockVector ElementwiseProx::Apply(const BlockVector& v) {
   BlockVector x;
   // Apply the composition rules
   x(key_) = (ApplyElementwise(
