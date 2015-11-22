@@ -34,7 +34,7 @@ def dim(expr, index=None):
         return expr.size.dim[index]
 
 def dims(expr):
-    return expr.size.dim
+    return tuple(expr.size.dim)
 
 def epi(f_expr, t_expr):
     """An expression for an epigraph constraint.

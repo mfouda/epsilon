@@ -34,6 +34,10 @@ SOLVER_TO_TOL = {EPSILON: 1e-2}
 v = cvxopt.matrix([-1,2,-2], tc='d')
 v_np = np.matrix([-1.,2,-2]).T
 
+# TODO(mwytock): Two types of tests are slow/broken at the moment, these are
+# commented out
+# - exp/log: requires exponential cone implementation
+# - power/pnorm with abnormal p: results in big problem, slow convergence
 atoms = [
     ([
 #        (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
@@ -185,10 +189,10 @@ atoms = [
     #     (lambda x: lambda_sum_smallest(x, 2), (1, 1), [ [[1, 2, 3], [2,4,5], [3,5,6]] ], Constant([-0.34481428])),
     #     (log, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ], Constant([[0, 1],[2, -1]])),
     #     (log1p, (2, 2), [ [[0, math.e-1],[math.e**2-1, 1.0/math.e-1]] ], Constant([[0, 1],[2, -1]])),
-         # (min_elemwise, (2, 1), [ [-5,2],[-3,1],0,[1,2] ], Constant([-5,0])),
-         # (min_elemwise, (2, 2), [ [[-5,2],[-3,-1]],0,[[5,4],[-1,2]] ], Constant([[-5,0],[-3,-1]])),
-         # (min_entries, (1, 1), [ [[-5,2],[-3,1]] ], Constant([-5])),
-         # (min_entries, (1, 1), [ [-5,-10] ], Constant([-10])),
+#         (min_elemwise, (2, 1), [ [-5,2],[-3,1],0,[1,2] ], Constant([-5,0])),
+#         (min_elemwise, (2, 2), [ [[-5,2],[-3,-1]],0,[[5,4],[-1,2]] ], Constant([[-5,0],[-3,-1]])),
+#         (min_entries, (1, 1), [ [[-5,2],[-3,1]] ], Constant([-5])),
+#         (min_entries, (1, 1), [ [-5,-10] ], Constant([-10])),
 #         (lambda x: x**0.25, (1, 1), [7.45], Constant([7.45**0.25])),
 #         (lambda x: x**0.32, (2, 1), [ [7.45, 3.9] ], Constant(np.power(np.array([7.45, 3.9]), 0.32))),
 #         (lambda x: x**0.9, (2, 2),  [ [[7.45, 2.2], [4, 7]] ], Constant(np.power(np.array([[7.45, 2.2], [4, 7]]).T, 0.9))),

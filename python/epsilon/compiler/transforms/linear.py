@@ -17,14 +17,16 @@ def transform_variable(expr):
 def transform_constant(expr):
     return expression.reshape(expr, dim(expr), 1)
 
-def transform_add(expr):
-    return expression.add(*[transform_expr(e) for e in expr.arg])
+def promote_add(expr, dim_sum):
+    if dim(expr) == dim_sum:
+        return expr
+    if dim(expr) != 1:
+        raise TransformError("Can't promote non-scalar", expr)
+    return expression.linear_map(linear_map.promote(dim_sum), expr)
 
-# TODO(mwytock): is this needed?
-# def transform_transpose(expr):
-#     return expression.linear_map(
-#         linear_map.transpose(dim(expr,0), dim(expr,1)),
-#         transform_expr(only_arg(expr)))
+def transform_add(expr):
+    return expression.add(
+        *[promote_add(transform_expr(e), dim(expr)) for e in expr.arg])
 
 def transform_index(expr):
     return expression.linear_map(
