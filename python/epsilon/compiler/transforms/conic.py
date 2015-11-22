@@ -23,8 +23,7 @@ def transform_max_elementwise(expr):
 
 def transform_max_entries(expr):
     t = epi_var(expr, "max_entries")
-    return t, [expression.leq_constraint(x, expression.promote(t, *dims(expr)))
-               for x in expr.arg]
+    return t, [expression.leq_constraint(x, t) for x in expr.arg]
 
 def transform_min_elementwise(expr):
     t = epi_var(expr, "min_elementwise")
@@ -61,16 +60,16 @@ def transform_norm_p(expr):
     if p == 2:
         return t, [expression.soc_constraint(t, x)]
 
-    r = epi_var(expr, "norm_p_r")
-    t_ = expression.promote(t, *dims(expr))
+    r = epi_var(expr, "norm_p_r", size=dims(x))
     p = Fraction(p)
+    t1 = expression.multiply(expression.ones(*dims(x)), t)
 
     if p < 0:
-        constrs = gm_constrs(t_, [x, r], (-p/(1-p), 1/(1-p)))
+        constrs = gm_constrs(t1, [x, r], (-p/(1-p), 1/(1-p)))
     elif 0 < p < 1:
-        constrs = gm_constrs(r, [x, t_], (p, 1-p))
+        constrs = gm_constrs(r, [x, t1], (p, 1-p))
     elif p > 1:
-        constrs = gm_constrs(x, [r, t_], (1/p, 1-1/p))
+        constrs = gm_constrs(x, [r, t1], (1/p, 1-1/p))
 
     constrs.append(expression.eq_constraint(expression.sum_entries(r), t))
     return t, constrs
@@ -85,7 +84,7 @@ def transform_power(expr):
     if p == 1:
         return only_arg(expr)
 
-    one = expression.promote(expression.scalar_constant(1), *dims(expr))
+    one = expression.scalar_constant(1)
     if p == 0:
         return one, []
 
@@ -120,6 +119,15 @@ def transform_huber(expr):
     constr.append(expression.eq_constraint(x, expression.add(s, n)))
     return t, constr
 
+def transform_geo_mean(expr):
+    w = [Fraction(x.a, x.b) for x in expr.geo_mean_params.w]
+    w_dyad = [Fraction(x.a, x.b) for x in expr.geo_mean_params.w_dyad]
+    tree = power_tools.decompose(w_dyad)
+
+    t = epi_var(expr, "geo_mean")
+    x = only_arg(expr)
+    x_list = [expression.index(x, i, i+1) for i in range(len(w))]
+    return t, gm_constrs(t, x_list, w)
 
 def transform_expr(expr):
     logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))

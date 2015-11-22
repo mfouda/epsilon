@@ -141,6 +141,12 @@ message ProxFunction {
   int32 n = 3;
 }
 
+// a/b
+message Fraction {
+  int32 a = 1;
+  int32 b = 2;
+}
+
 message Expression {
   enum Type {
     // Default value
@@ -190,6 +196,7 @@ message Expression {
     LOG_SUM_EXP = 102;
     MAX_ENTRIES = 103;
     SUM_LARGEST = 104;
+    GEO_MEAN = 105;
 
     // Matrix functions
     LOG_DET = 200;
@@ -256,6 +263,13 @@ message Expression {
 
   // PROX_FUNCTION
   ProxFunction prox_function = 19;
+
+  // GEO_MEAN
+  message GeoMeanParams {
+    repeated Fraction w = 1;
+    repeated Fraction w_dyad = 2;
+  }
+  GeoMeanParams geo_mean_params = 20;
 }
 
 // Arbitrary convex problem of the form

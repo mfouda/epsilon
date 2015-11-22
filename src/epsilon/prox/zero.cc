@@ -39,4 +39,4 @@ private:
   BlockMatrix A_, AT_, H_, HT_, ATA_inv_, HHT_inv_;
   BlockVector b_, g_;
 };
-REGISTER_PROX_OPERATOR(ProxFunction::ZERO, ZeroProx);
+REGISTER_PROX_OPERATOR(ZERO, ZeroProx);

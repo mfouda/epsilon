@@ -10,7 +10,7 @@ public:
     return v.cwiseMax(0);
   }
 };
-REGISTER_PROX_OPERATOR(ProxFunction::NON_NEGATIVE, NonNegativeProx);
+REGISTER_PROX_OPERATOR(NON_NEGATIVE, NonNegativeProx);
 
 // class SimpleNonNegativeProx final : public ProxOperator {
 // public:

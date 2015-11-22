@@ -1,5 +1,8 @@
 """Functional form of the expression operators."""
 
+import numpy as np
+
+from epsilon import constant as _constant
 from epsilon.error import ExpressionError
 from epsilon.expression_pb2 import *
 from epsilon.expression_util import *
@@ -9,7 +12,7 @@ from epsilon.util import prod
 SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
 
 AFFINE = Curvature(curvature_type=Curvature.AFFINE)
-
+CONSTANT = Curvature(curvature_type=Curvature.CONSTANT)
 
 # Internal helpers
 
@@ -158,7 +161,14 @@ def scalar_constant(scalar):
         constant=Constant(
             constant_type=Constant.SCALAR,
             scalar=scalar),
-        curvature=Curvature(curvature_type=Curvature.CONSTANT))
+        curvature=CONSTANT)
+
+def ones(*dims):
+    return Expression(
+        expression_type=Expression.CONSTANT,
+        size=Size(dim=dims),
+        constant=_constant.store(np.ones(dims)),
+        curvature=CONSTANT)
 
 def constant(m, n, scalar=None, constant=None):
     if scalar is not None:
@@ -299,9 +309,3 @@ def prox_function(f, *args):
         size=Size(dim=[1, 1]),
         prox_function=f,
         arg=args)
-
-def promote(expr, *dim):
-    promoted_expr = Expression()
-    promoted_expr.CopyFrom(expr)
-    promoted_expr.size.CopyFrom(Size(dim=dim))
-    return promoted_expr

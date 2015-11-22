@@ -279,7 +279,9 @@ LinearMapBinaryOp kMultiplyTable
 };
 
 LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
-  CHECK_EQ(lhs.n(), rhs.m());
+  CHECK_EQ(lhs.n(), rhs.m())
+      << "A: " << lhs.DebugString() << "\n"
+      << "B: " << rhs.DebugString();
   return LinearMap((*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 
