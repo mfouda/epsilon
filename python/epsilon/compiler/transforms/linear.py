@@ -55,13 +55,13 @@ def transform_multiply(expr):
 
     m = dim(expr, 0)
     n = dim(expr, 1)
-    if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
+    if dcp.is_constant(expr.arg[0]):
         return expression.linear_map(
             linear_map.left_matrix_product(
                 multiply_constant(expr.arg[0], m), n),
             transform_expr(expr.arg[1]))
 
-    if expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
+    if dcp.is_constant(expr.arg[1]):
         return expression.linear_map(
             linear_map.right_matrix_product(
                 multiply_constant(expr.arg[1], n), m),

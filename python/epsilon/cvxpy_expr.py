@@ -125,6 +125,7 @@ EXPRESSION_TYPES = (
     (kl_div, lambda e: convert_generic(Expression.KL_DIV, e)),
     (kron, lambda e: convert_generic(Expression.KRON, e)),
     (lambda_max, lambda e: convert_generic(Expression.LAMBDA_MAX, e)),
+    (lambda_min, lambda e: convert_generic(Expression.LAMBDA_MIN, e)),
     (log, lambda e: convert_generic(Expression.LOG, e)),
     (log_det, lambda e: convert_generic(Expression.LOG_DET, e)),
     (log_sum_exp, lambda e: convert_generic(Expression.LOG_SUM_EXP, e)),
@@ -165,8 +166,8 @@ def convert_constraint(constraint):
             convert_expression(constraint.args[1]))
     elif isinstance(constraint, PSDConstraint):
         return expression.psd_constraint(
-            convert_expression(constraint.args[1]),
-            convert_expression(constraint.args[0]))
+            convert_expression(constraint.args[0]),
+            convert_expression(constraint.args[1]))
     elif isinstance(constraint, LeqConstraint):
         return expression.leq_constraint(
             convert_expression(constraint.args[0]),

@@ -202,7 +202,8 @@ message Expression {
     MAX_ELEMENTWISE = 203;
     NORM_NUC = 204;
     LAMBDA_MAX = 205;
-    MATRIX_FRAC = 206;
+    LAMBDA_MIN = 206;
+    MATRIX_FRAC = 207;
 
     // Atomic expressions
     LINEAR_MAP = 300;

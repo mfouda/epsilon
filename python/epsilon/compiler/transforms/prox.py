@@ -1,4 +1,8 @@
-"""Transform a problem to prox-affine form."""
+"""Transform a problem to prox-affine form.
+
+TODO(mwytock): Clean up the interaction between expression matching and args
+extraction.
+"""
 
 import logging
 from collections import namedtuple
@@ -107,7 +111,8 @@ def expr_args(convert):
     return args
 
 def soc_prox_args(expr):
-    args, constr = epigraph_args(lambda e: convert_arg(e, dcp.is_scalar))(expr)
+    args, constr = epigraph_args(
+        lambda e: convert_arg(e, affine.is_scalar))(expr)
     # Make argument a row vector
     x_args = [expression.reshape(x, 1, dim(x)) for x in args[1:]]
     return [args[0]] + x_args, constr

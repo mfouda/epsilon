@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 1
+RANDOM_PROX_TRIALS = 10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -173,12 +173,6 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
     Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
 ]
-
-
-PROX_TESTS = [
-    Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
-]
-
 
 # Epigraph operators
 # PROX_TESTS += [

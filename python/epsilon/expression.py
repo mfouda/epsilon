@@ -234,7 +234,18 @@ def transpose(x):
     return Expression(
         expression_type=Expression.TRANSPOSE,
         size=Size(dim=[n, m]),
-        curvature=x.curvature,
+        curvature=AFFINE,
+        arg=[x])
+
+def diag_vec(x):
+    if dim(x, 1) != 1:
+        raise ExpressionError("diag_vec on non vector")
+
+    n = dim(x, 0)
+    return Expression(
+        expression_type=Expression.DIAG_VEC,
+        size=Size(dim=[n, n]),
+        curvature=AFFINE,
         arg=[x])
 
 def index(x, start_i, stop_i, start_j=None, stop_j=None):
@@ -301,7 +312,7 @@ def soc_elemwise_constraint(t, *args):
     return indicator(Cone.SECOND_ORDER, t, X)
 
 def psd_constraint(a, b):
-    return indicator(Cone.SEMIDEFINITE, add(b, negate(a)))
+    return indicator(Cone.SEMIDEFINITE, add(a, negate(b)))
 
 def prox_function(f, *args):
     return Expression(

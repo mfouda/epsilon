@@ -5,9 +5,10 @@ from fractions import Fraction
 
 from cvxpy.utilities import power_tools
 
-from epsilon import expression
-from epsilon import tree_format
 from epsilon import dcp
+from epsilon import expression
+from epsilon import linear_map
+from epsilon import tree_format
 from epsilon.compiler.transforms.transform_util import *
 from epsilon.expression_pb2 import Curvature, Expression
 
@@ -18,16 +19,36 @@ def transform_abs(expr):
                expression.leq_constraint(expression.negate(x), t)]
 
 def transform_max_elementwise(expr):
-    t = epi_var(expr, "max_elementwise")
-    return t, [expression.leq_constraint(x, t) for x in expr.arg]
-
-def transform_max_entries(expr):
-    t = epi_var(expr, "max_entries")
+    t = epi_var(expr, "max")
     return t, [expression.leq_constraint(x, t) for x in expr.arg]
 
 def transform_min_elementwise(expr):
-    t = epi_var(expr, "min_elementwise")
+    t = epi_var(expr, "min")
     return t, [expression.leq_constraint(t, x) for x in expr.arg]
+
+def transform_max_entries(expr):
+    return transform_max_elementwise(expr)
+
+def transform_min_entries(expr):
+    return transform_min_elementwise(expr)
+
+def lambda_max_expr(t, X):
+    n = dim(X, 0)
+    return expression.add(tI, expression.negate(X))
+
+def transform_lambda_max(expr):
+    t = epi_var(expr, "lambda_max", size=(1,1))
+    X = only_arg(expr)
+    n = dim(X, 0)
+    tI = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
+    return t, [expression.psd_constraint(tI, X)]
+
+def transform_lambda_min(expr):
+    t = epi_var(expr, "lambda_min", size=(1,1))
+    X = only_arg(expr)
+    n = dim(X, 0)
+    tI = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
+    return t, [expression.psd_constraint(X, tI)]
 
 def transform_quad_over_lin(expr):
     assert len(expr.arg) == 2
@@ -128,6 +149,8 @@ def transform_geo_mean(expr):
     x = only_arg(expr)
     x_list = [expression.index(x, i, i+1) for i in range(len(w))]
     return t, gm_constrs(t, x_list, w)
+
+
 
 def transform_expr(expr):
     logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))
