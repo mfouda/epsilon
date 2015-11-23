@@ -66,6 +66,7 @@ def convert_binary(f, expr):
 
 def convert_unary(f, expr):
     assert len(expr.args) == 1
+    print "convert_unary:", type(expr.args[0])
     return f(convert_expression(expr.args[0]))
 
 def convert_index(expr):
@@ -135,6 +136,8 @@ EXPRESSION_TYPES = (
     (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
     (max_entries, lambda e: convert_generic(Expression.MAX_ENTRIES, e)),
+    (min_elemwise, lambda e: convert_generic(Expression.MIN_ELEMENTWISE, e)),
+    (min_entries, lambda e: convert_generic(Expression.MIN_ENTRIES, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
     (normNuc, lambda e: convert_generic(Expression.NORM_NUC, e)),
@@ -159,7 +162,7 @@ for expr_cls, expr_type in EXPRESSION_TYPES:
 
 def convert_expression(expr):
     for expr_cls, convert in EXPRESSION_TYPES:
-        if isinstance(expr, expr_cls):
+        if type(expr) is expr_cls:
             return convert(expr)
     raise RuntimeError("Unknown type: %s" % type(expr))
 

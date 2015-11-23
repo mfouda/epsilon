@@ -212,8 +212,9 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda x: norm(x, 2), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([22.368559552680377])),
-#      ], Minimize),
+#         (min_entries, (1, 1), [ [[-5,2],[-3,1]] ], Constant([-5])),
+#         (min_entries, (1, 1), [ [-5,-10] ], Constant([-10])),
+#     ], Maximize),
 # ]
 
 def check_solver(prob, solver_name):

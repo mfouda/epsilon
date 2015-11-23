@@ -192,19 +192,21 @@ message Expression {
     QUAD_OVER_LIN = 101;
     LOG_SUM_EXP = 102;
     MAX_ENTRIES = 103;
-    SUM_LARGEST = 104;
-    GEO_MEAN = 105;
+    MIN_ENTRIES = 104;
+    SUM_LARGEST = 105;
+    GEO_MEAN = 106;
 
     // Matrix functions
     LOG_DET = 200;
     NORM_PQ = 201;
     NORM_2_ELEMENTWISE = 202;
     MAX_ELEMENTWISE = 203;
-    NORM_NUC = 204;
-    LAMBDA_MAX = 205;
-    LAMBDA_MIN = 206;
-    MATRIX_FRAC = 207;
-    SIGMA_MAX = 208;
+    MIN_ELEMENTWISE = 204;
+    NORM_NUC = 205;
+    LAMBDA_MAX = 206;
+    LAMBDA_MIN = 207;
+    MATRIX_FRAC = 208;
+    SIGMA_MAX = 209;
 
     // Atomic expressions
     LINEAR_MAP = 300;

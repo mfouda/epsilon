@@ -112,7 +112,7 @@ def transform_norm_2_elementwise(expr):
 
 def transform_norm_nuc(expr):
     X = only_arg(expr)
-    m, n = dims(expr)
+    m, n = dims(X)
     T = epi_var(expr, "norm_nuc", size=(m+n, m+n))
 
     obj = expression.multiply(
