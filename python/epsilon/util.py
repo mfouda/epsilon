@@ -1,5 +1,5 @@
 
-from operator import mul
+import resource
 
-def prod(x):
-    return reduce(mul, x, 1)
+def cpu_time():
+    return resource.getrusage(resource.RUSAGE_SELF).ru_utime

@@ -10,6 +10,7 @@ from epsilon import cvxpy_expr
 from epsilon import constant
 from epsilon import solver_params_pb2
 from epsilon import solver_pb2
+from epsilon import util
 from epsilon.compiler import compiler
 from epsilon.solver_pb2 import SolverStatus
 
@@ -38,8 +39,11 @@ def solve(prob, **kwargs):
     if not prob.variables():
         return OPTIMAL
 
+    t0 = util.cpu_time()
     prob_proto = cvxpy_expr.convert_problem(prob)
     prob_proto = compiler.compile_problem(prob_proto)
+    t1 = util.cpu_time()
+    logging.info("Epsilon compile: %f seconds", t1-t0)
 
     params = solver_params_pb2.SolverParams(**kwargs)
     if len(prob_proto.objective.arg) == 1 and not prob_proto.constraint:
@@ -58,6 +62,8 @@ def solve(prob, **kwargs):
             params.SerializeToString(),
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
+    t2 = util.cpu_time()
+    logging.info("Epsilon solve: %f seconds", t2-t1)
 
     set_solution(prob, values)
     return status

@@ -66,7 +66,6 @@ def convert_binary(f, expr):
 
 def convert_unary(f, expr):
     assert len(expr.args) == 1
-    print "convert_unary:", type(expr.args[0])
     return f(convert_expression(expr.args[0]))
 
 def convert_index(expr):

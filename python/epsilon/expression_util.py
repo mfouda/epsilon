@@ -3,7 +3,6 @@ import struct
 
 from epsilon.error import ExpressionError
 from epsilon.expression_pb2 import Curvature, Expression
-from epsilon.util import prod
 
 def fp_expr(expr):
     return struct.pack("q", hash(expr.SerializeToString())).encode("hex")

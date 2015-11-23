@@ -6,7 +6,6 @@ from epsilon import constant as _constant
 from epsilon.error import ExpressionError
 from epsilon.expression_pb2 import *
 from epsilon.expression_util import *
-from epsilon.util import prod
 
 # Shorthand convenience
 SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
@@ -14,63 +13,51 @@ SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
 AFFINE = Curvature(curvature_type=Curvature.AFFINE)
 CONSTANT = Curvature(curvature_type=Curvature.CONSTANT)
 
-# Internal helpers
+def is_scalar(a):
+    return a[0]*a[1] == 1
 
-def _add_binary(a, b):
-    if prod(a.size.dim) == 1:
-        size = b.size
-    elif prod(b.size.dim) == 1:
-        size = a.size
-    elif a.size == b.size:
-        size = a.size
-    else:
-        raise ExpressionError("adding incompatible sizes", a, b)
+def elementwise_dims(a, b):
+    if a == b:
+        return a
+    if is_scalar(b):
+        return a
+    if is_scalar(a):
+        return b
+    raise ValueError("Incompatible elemwise binary op sizes")
 
-    return Expression(size=size)
-
-def _multiply_binary(a, b, elemwise=False):
-    if prod(a.size.dim) == 1:
-        size = b.size
-    elif prod(b.size.dim) == 1:
-        size = a.size
-    elif not elemwise and a.size.dim[1] == b.size.dim[0]:
-        size = Size(dim=[a.size.dim[0], b.size.dim[1]])
-    elif elemwise and a.size == b.size:
-        size = a.size
-    else:
-        raise ExpressionError("multiplying incompatible sizes", a, b)
-
-    return Expression(size=size)
+def matrix_multiply_dims(a, b):
+    if a[1] == b[0]:
+        return (a[0], b[1])
+    if is_scalar(a):
+        return b
+    if is_scalar(b):
+        return a
+    raise ValueError("Incompatible matrix multiply sizes")
 
 def _multiply(args, elemwise=False):
     if not args:
         raise ValueError("multiplying null args")
 
-    a = args[0]
-    for i in range(1, len(args)):
-        a = _multiply_binary(a, args[i], elemwise)
-
+    op_dims = elementwise_dims if elemwise else matrix_multiply_dims
     return Expression(
         expression_type=(Expression.MULTIPLY_ELEMENTWISE if elemwise else
                          Expression.MULTIPLY),
         arg=args,
-        size=a.size,
+        size=Size(dim=reduce(lambda a, b: op_dims(a, b),
+                             (dims(a) for a in args))),
         curvature=AFFINE)
 
 # Expressions
-
 def add(*args):
     if not args:
         raise ValueError("adding null args")
 
-    a = args[0]
-    for i in range(1, len(args)):
-        a = _add_binary(a, args[i])
-
     return Expression(
         expression_type=Expression.ADD,
         arg=args,
-        size=a.size,
+        size=Size(
+            dim=reduce(lambda a, b: elementwise_dims(a, b),
+                       (dims(a) for a in args))),
         curvature=AFFINE)
 
 def multiply(*args):
@@ -117,7 +104,7 @@ def reshape(arg, m, n):
     if dim(arg, 0) == m and dim(arg, 1) == n:
         return arg
 
-    if m*n != prod(arg.size.dim):
+    if m*n != dim(arg):
         raise ExpressionError("cant reshape to %d x %d" % (m, n), arg)
 
     # If we have two reshapes that "undo" each other, cancel them out

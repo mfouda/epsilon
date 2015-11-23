@@ -179,42 +179,33 @@ RULES += [
              create_matrix_prox(Prox.SEMIDEFINITE)),
 ]
 
-def merge_add(a, b):
-    args = []
-    args += a.arg if a.expression_type == Expression.ADD else [a]
-    args += b.arg if b.expression_type == Expression.ADD else [b]
-    return expression.add(*args)
-
 def transform_prox_expr(rule, expr):
-    logging.debug("transform_prox_expr:\n%s", tree_format.format_expr(expr))
     args, constrs = rule.convert_args(expr)
     prox = rule.create(expr)
-    expr = expression.add(expression.prox_function(prox, *args))
+    yield expression.prox_function(prox, *args)
     for constr in constrs:
-        expr = merge_add(expr, transform_expr(constr))
-    logging.debug(
-        "transform_prox_expr done:\n%s", tree_format.format_expr(expr))
-    return expr
+        for f_expr in transform_expr(constr):
+            yield f_expr
 
 def transform_cone_expr(expr):
-    logging.debug("transform_cone_expr:\n%s", tree_format.format_expr(expr))
-    expr, constrs = conic.transform_expr(expr)
-    expr = transform_expr(expr)
-    for constr in constrs:
-        expr = merge_add(expr, transform_expr(constr))
-    logging.debug(
-        "transform_cone_expr done:\n%s", tree_format.format_expr(expr))
-    return expr
+    obj, constrs = conic.transform_expr(expr)
+    for expr in [obj] + constrs:
+        for f_expr in transform_expr(expr):
+            yield f_expr
 
 def transform_expr(expr):
-    logging.debug("transform_expr:\n%s", tree_format.format_expr(expr))
     for rule in RULES:
         if rule.match(expr):
-            return transform_prox_expr(rule, expr)
-    return transform_cone_expr(expr)
+            for f_expr in transform_prox_expr(rule, expr):
+                yield f_expr
+            break
+    else:
+        # TODO(mwytock): Make this a rule with lowest priority
+        for f_expr in transform_cone_expr(expr):
+            yield f_expr
 
 def transform_problem(problem):
-    expr = transform_expr(problem.objective)
+    f_exprs = list(transform_expr(problem.objective))
     for constr in problem.constraint:
-        expr = merge_add(expr, transform_expr(constr))
-    return Problem(objective=expr)
+        f_exprs += list(transform_expr(constr))
+    return Problem(objective=expression.add(*f_exprs))

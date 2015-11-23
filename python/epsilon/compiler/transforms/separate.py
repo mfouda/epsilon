@@ -160,8 +160,8 @@ def add_null_prox(graph):
 
 
 # TODO(mwytock): Add back these optimizations when ready
-# move_equality_indicators
 # combine_affine_functions
+# move_equality_indicators,
 
 GRAPH_TRANSFORMS = [
     separate_objective_terms,
@@ -175,8 +175,8 @@ def transform_problem(problem):
 
     for f in GRAPH_TRANSFORMS:
         f(graph)
-        logging.debug(
-            "%s:\n%s",
-            f.__name__,
-            tree_format.format_problem(graph.problem()))
+        # logging.debug(
+        #     "%s:\n%s",
+        #     f.__name__,
+        #     tree_format.format_problem(graph.problem()))
     return graph.problem()
