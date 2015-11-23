@@ -7,34 +7,11 @@ from cvxpy.utilities import power_tools
 from epsilon import dcp
 from epsilon import error
 from epsilon import expression
+from epsilon.expression_util import *
 from epsilon.expression_pb2 import Expression, Curvature, Cone
 
 class TransformError(error.ExpressionError):
     pass
-
-def fp_expr(expr):
-    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-
-def validate_args(expr, count):
-    if len(expr.arg) != count:
-        raise TransformError(
-            "invalid args %d != %d" % (len(expr.args), count),
-            expr)
-
-def only_arg(expr):
-    validate_args(expr, 1)
-    return expr.arg[0]
-
-def dim(expr, index=None):
-    if len(expr.size.dim) != 2:
-        raise ExpressioneError("wrong number of dimensions", expr)
-    if index is None:
-        return expr.size.dim[0]*expr.size.dim[1]
-    else:
-        return expr.size.dim[index]
-
-def dims(expr):
-    return tuple(expr.size.dim)
 
 def epi(f_expr, t_expr):
     """An expression for an epigraph constraint.
@@ -65,9 +42,6 @@ def epi_transform(f_expr, name):
     t_expr = epi_var(f_expr, name)
     epi_f_expr = epi(f_expr, t_expr)
     return t_expr, epi_f_expr
-
-def create_lu_var(expr):
-    return lin_utils.create_var((dim(expr, 0), dim(expr, 1)))
 
 # gm()/gm_constrs() translated from cvxpy.utilities.power_tools.gm_constrs()
 def gm(t, x, y):

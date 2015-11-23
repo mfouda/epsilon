@@ -22,6 +22,9 @@ class AffineProx final : public ProxOperator {
     ATA_inv_ = (AT_*A).Inverse();
     b_ = arg.affine_constraint().b;
     c_ = GetLinear(arg.affine_arg().A);
+
+    VLOG(2) << "A: " << A.DebugString();
+    VLOG(2) << "c: " << c_.DebugString();
   }
 
   BlockVector Apply(const BlockVector& v) override {

@@ -15,11 +15,6 @@ public:
     A_ = arg.affine_constraint().A;
     b_ = arg.affine_constraint().b;
 
-    VLOG(2) << "H:" << H_.DebugString();
-    VLOG(2) << "g:" << g_.DebugString();
-    VLOG(2) << "A:" << A_.DebugString();
-    VLOG(2) << "b:" << b_.DebugString();
-
     // Use Gaussian elimination to solve the system
     // [ A'A  H' ][ x ] = [ A'(v - b) ]
     // [ H    0  ][ y ]   [ -g        ]
@@ -27,6 +22,10 @@ public:
     HT_ = H_.Transpose();
     ATA_inv_ = (AT_*A_).Inverse();
     HHT_inv_ = (H_*ATA_inv_*HT_).Inverse();
+
+    VLOG(2) << "H:" << H_.DebugString();
+    VLOG(2) << "g:" << g_.DebugString();
+    VLOG(2) << "A:" << A_.DebugString();
   }
 
   BlockVector Apply(const BlockVector& v) override {

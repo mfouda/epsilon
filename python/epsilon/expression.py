@@ -305,8 +305,10 @@ def linear_map(A, x):
         linear_map=A,
         arg=[x])
 
-def eq_constraint(a, b):
-    return indicator(Cone.ZERO, add(a, negate(b)))
+def eq_constraint(x, y):
+    if dims(x) != dims(y) and dim(x) != 1 and dim(y) != 1:
+        raise ExpressionError("incompatible sizes", x, y)
+    return indicator(Cone.ZERO, add(x, negate(y)))
 
 def leq_constraint(a, b):
     return indicator(Cone.NON_NEGATIVE, add(b, negate(a)))

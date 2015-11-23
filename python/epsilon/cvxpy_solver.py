@@ -3,7 +3,7 @@
 import logging
 import numpy
 
-from cvxpy.settings import OPTIMAL
+from cvxpy.settings import OPTIMAL, OPTIMAL_INACCURATE, SOLVER_ERROR
 
 from epsilon import _solve
 from epsilon import cvxpy_expr
@@ -11,6 +11,7 @@ from epsilon import constant
 from epsilon import solver_params_pb2
 from epsilon import solver_pb2
 from epsilon.compiler import compiler
+from epsilon.solver_pb2 import SolverStatus
 
 EPSILON = "epsilon"
 
@@ -24,11 +25,18 @@ def set_solution(prob, values):
         x = numpy.fromstring(values[var_id], dtype=numpy.double)
         var.value = x.reshape(var.size[1], var.size[0]).transpose()
 
+def cvxpy_status(solver_status):
+    if solver_status.state == SolverStatus.OPTIMAL:
+        return OPTIMAL
+    elif solver_status.state == SolverStatus.MAX_ITERATIONS_REACHED:
+        return OPTIMAL_INACCURATE
+    return SOLVER_ERROR
+
 def solve(prob, **kwargs):
     """Solve optimziation problem."""
 
     if not prob.variables():
-        return OPTIMAL, prob.objective.value
+        return OPTIMAL
 
     prob_proto = cvxpy_expr.convert_problem(prob)
     prob_proto = compiler.compile_problem(prob_proto)
@@ -43,15 +51,16 @@ def solve(prob, **kwargs):
             lam,
             constant.global_data_map,
             {})
+        status = OPTIMAL
     else:
         status_str, values = _solve.prox_admm_solve(
             prob_proto.SerializeToString(),
             params.SerializeToString(),
             constant.global_data_map)
+        status = cvxpy_status(SolverStatus.FromString(status_str))
 
-    # TODO(mwytock): Handle not optimal solutions
     set_solution(prob, values)
-    return OPTIMAL, prob.objective.value
+    return status
 
 def validate_solver(constraints):
     return True

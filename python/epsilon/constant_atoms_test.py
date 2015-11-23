@@ -31,6 +31,9 @@ SOLVER_TO_TOL = {EPSILON: 1e-2}
 v = cvxopt.matrix([-1,2,-2], tc='d')
 v_np = np.matrix([-1.,2,-2]).T
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 # TODO(mwytock): Fix tests that are slow/broken:
 # - exp/log: requires exponential cone implementation
 # - power/pnorm with abnormal p: results in big problem, slow convergence
@@ -207,6 +210,12 @@ atoms = [
      ], Maximize),
 ]
 
+# atoms = [
+#     ([
+#         (lambda x: norm(x, 2), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([22.368559552680377])),
+#      ], Minimize),
+# ]
+
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?
     """
@@ -228,7 +237,8 @@ def run_atom(atom, problem, obj_val, solver):
         tolerance = SOLVER_TO_TOL[solver]
         if solver == EPSILON:
             # TODO(mwytock): Figure out why we need to run this to higher accuracy?
-            status, result = problem.solve(method=solver, rel_tol=1e-3, max_iterations=1000)
+            status = problem.solve(method=solver, rel_tol=1e-3, max_iterations=1000)
+            result = problem.objective.value
         else:
             result = problem.solve(solver=solver, verbose=False)
             status = problem.status
@@ -237,7 +247,7 @@ def run_atom(atom, problem, obj_val, solver):
             print(obj_val)
             assert( -tolerance <= (result - obj_val)/(1+np.abs(obj_val)) <= tolerance )
         else:
-            assert (atom, solver) in KNOWN_SOLVER_ERRORS
+            assert False, "failed"
 
 def test_atom():
     for atom_list, objective_type in atoms:

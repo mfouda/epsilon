@@ -10,6 +10,7 @@ from epsilon import expression
 from epsilon import linear_map
 from epsilon import tree_format
 from epsilon.compiler.transforms.transform_util import *
+from epsilon.expression_util import *
 from epsilon.expression_pb2 import Curvature, Expression
 
 def transform_abs(expr):
@@ -48,14 +49,15 @@ def transform_lambda_min(expr):
 
 def transform_sigma_max(expr):
     X = only_arg(expr)
-    m, n = dims(expr)
+    m, n = dims(X)
     S = epi_var(expr, "sigma_max_S", size=(m+n, m+n))
     t = epi_var(expr, "sigma_max")
     t_In = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
     t_Im = expression.diag_vec(expression.multiply(expression.ones(m, 1), t))
+
     return t, [
         expression.eq_constraint(expression.index(S, 0, n, 0, n), t_In),
-        expression.eq_constraint(expression.index(S, 0, n, n, n+m), X),
+        expression.eq_constraint(expression.index(S, n, n+m, 0, n), X),
         expression.eq_constraint(expression.index(S, n, n+m, n, n+m), t_Im),
         expression.semidefinite(S)]
 
