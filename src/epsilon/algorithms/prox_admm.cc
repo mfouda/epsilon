@@ -59,8 +59,11 @@ void ProxADMMSolver::InitProxOperators() {
     }
 
     AffineOperator A;
+    std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
+      CHECK(constr_vars.find(var_id) != constr_vars.end())
+          << var_id << " not in constraints";
       for (auto iter : A_.col(var_id)) {
         A.A(iter.first, var_id) = sqrt_rho*iter.second;
       }
@@ -92,23 +95,17 @@ void ProxADMMSolver::Solve() {
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
     x_prev_ = x_;
 
-    //BlockVector a = u_;
     u_ -= b_;
     for (int i = 0; i < N_; i++)
       u_ -= A_*x_[i];
-    //LOG(INFO) << "delta1: " << (u_ - a).DebugString();
 
-    //a = u_;
     for (int i = 0; i < N_; i++) {
-      //LOG(INFO) << "add: " << (A_*x_[i]).DebugString();
       u_ += A_*x_[i];
       x_[i] = prox_[i]->Apply(u_);
-      //LOG(INFO) << "sub: " << (A_*x_[i]).DebugString();
       u_ -= A_*x_[i];
       VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
     }
     VLOG(2) << "u: " << u_.DebugString();
-    //LOG(INFO) << "delta2: " << (u_ - a).DebugString();
 
     if (iter_ % params_.epoch_iterations() == 0) {
       ComputeResiduals();

@@ -17,16 +17,14 @@ def transform_variable(expr):
 def transform_constant(expr):
     return expression.reshape(expr, dim(expr), 1)
 
-def promote_add(expr, dim_sum):
-    if dim(expr) == dim_sum:
+def promote(expr, new_dim):
+    if dim(expr) != 1 or dim(expr) == new_dim:
         return expr
-    if dim(expr) != 1:
-        raise TransformError("Can't promote non-scalar", expr)
-    return expression.linear_map(linear_map.promote(dim_sum), expr)
+    return expression.linear_map(linear_map.promote(new_dim), expr)
 
 def transform_add(expr):
     return expression.add(
-        *[promote_add(transform_expr(e), dim(expr)) for e in expr.arg])
+        *[promote(transform_expr(e), dim(expr)) for e in expr.arg])
 
 def transform_index(expr):
     return expression.linear_map(
@@ -42,7 +40,7 @@ def multiply_constant(expr, n):
             return linear_map.scalar(expr.constant.scalar, n)
         if expr.constant.constant_type == Constant.DENSE_MATRIX:
             return linear_map.dense_matrix(expr.constant)
-        if expr.constant.constant_type == Constant.SPARSE_MATRIX:
+        if expr.constant.constant_type == Constant.SPARSEc_MATRIX:
             return linear_map.sparse_matrix(expr.constant)
     elif expr.expression_type == Expression.TRANSPOSE:
         return linear_map.transpose(multiply_constant(only_arg(expr), n))
@@ -56,16 +54,14 @@ def transform_multiply(expr):
     m = dim(expr, 0)
     n = dim(expr, 1)
     if dcp.is_constant(expr.arg[0]):
-        return expression.linear_map(
-            linear_map.left_matrix_product(
-                multiply_constant(expr.arg[0], m), n),
-            transform_expr(expr.arg[1]))
+        A = multiply_constant(expr.arg[0], m)
+        B = promote(transform_expr(expr.arg[1]), n*n)
+        return expression.linear_map(linear_map.left_matrix_product(A, n), B)
 
     if dcp.is_constant(expr.arg[1]):
-        return expression.linear_map(
-            linear_map.right_matrix_product(
-                multiply_constant(expr.arg[1], n), m),
-            transform_expr(expr.arg[0]))
+        A = promote(transform_expr(expr.arg[0]), m*m)
+        B = multiply_constant(expr.arg[1], n)
+        return expression.linear_map(linear_map.right_matrix_product(B, m), A)
 
     raise TransformError("multiplying non constants", expr)
 

@@ -36,8 +36,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # TODO(mwytock): Fix tests that are slow/broken:
 # - exp/log: requires exponential cone implementation
-# - power/pnorm with abnormal p: results in big problem, slow convergence
-# - lambda_sum_largest/smallest: slow convergence
+# - lambda_sum_largest/smallest: need SemidefUpperTri variables
 atoms = [
     ([
         (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
@@ -116,9 +115,9 @@ atoms = [
         (lambda x: pnorm(x, 2), (1, 1), [[1.1, 2, -3]], Constant([3.7696153649941531])),
         (lambda x: pnorm(x, 'inf'), (1, 1), [[1.1, 2, -3]], Constant([3])),
 
-        # (lambda x: pnorm(x, 3), (1, 1), [[1.1, 2, -3]], Constant([3.3120161866074733])),
-        # (lambda x: pnorm(x, 5.6), (1, 1), [[1.1, 2, -3]], Constant([3.0548953718931089])),
-        # (lambda x: pnorm(x, 1.2), (1, 1), [[[1, 2, 3], [4, 5, 6]]], Constant([15.971021676279573])),
+        (lambda x: pnorm(x, 3), (1, 1), [[1.1, 2, -3]], Constant([3.3120161866074733])),
+        (lambda x: pnorm(x, 5.6), (1, 1), [[1.1, 2, -3]], Constant([3.0548953718931089])),
+        (lambda x: pnorm(x, 1.2), (1, 1), [[[1, 2, 3], [4, 5, 6]]], Constant([15.971021676279573])),
 
         (pos, (1, 1), [8], Constant([8])),
         (pos, (2, 1), [ [-3,2] ], Constant([0,2])),
@@ -129,9 +128,9 @@ atoms = [
         (lambda x: power(x, 2), (1, 1), [7.45], Constant([55.502500000000005])),
         (lambda x: power(x, -1), (1, 1), [7.45], Constant([0.1342281879194631])),
 
-        # (lambda x: power(x, -.7), (1, 1), [7.45], Constant([0.24518314363015764])),
-        # (lambda x: power(x, -1.34), (1, 1), [7.45], Constant([0.06781263100321579])),
-        # (lambda x: power(x, 1.34), (1, 1), [7.45], Constant([14.746515290825071])),
+        (lambda x: power(x, -.7), (1, 1), [7.45], Constant([0.24518314363015764])),
+        (lambda x: power(x, -1.34), (1, 1), [7.45], Constant([0.06781263100321579])),
+        (lambda x: power(x, 1.34), (1, 1), [7.45], Constant([14.746515290825071])),
 
         (quad_over_lin, (1, 1), [ [[-1,2,-2], [-1,2,-2]], 2], Constant([2*4.5])),
         (quad_over_lin, (1, 1), [v, 2], Constant([4.5])),
@@ -169,8 +168,7 @@ atoms = [
         (geo_mean, (1, 1), [[63, 7]], Constant([21])),
         (geo_mean, (1, 1), [[1, 10]], Constant([math.sqrt(10)])),
         (lambda x: geo_mean(x, [1, 1]), (1, 1), [[1, 10]], Constant([math.sqrt(10)])),
-
-        # (lambda x: geo_mean(x, [.4, .8, 4.9]), (1, 1), [[.5, 1.8, 17]], Constant([10.04921378316062])),
+        (lambda x: geo_mean(x, [.4, .8, 4.9]), (1, 1), [[.5, 1.8, 17]], Constant([10.04921378316062])),
 
         (harmonic_mean, (1, 1), [[1, 2, 3]], Constant([1.6363636363636365])),
         (harmonic_mean, (1, 1), [[2.5, 2.5, 2.5, 2.5]], Constant([2.5])),
@@ -184,10 +182,9 @@ atoms = [
         (lambda x: diff(x, 2), (2, 1), [[2.1, 1, 4.5, -.1]], Constant([ 4.6, -8.1 ])),
 
         (lambda x: pnorm(x, .5), (1, 1), [[1.1, 2, .1]], Constant([7.724231543909264])),
-        # TODO(mwytock): slow
-        # (lambda x: pnorm(x, -.4), (1, 1), [[1.1, 2, .1]], Constant([0.02713620334])),
-        # (lambda x: pnorm(x, -1), (1, 1), [[1.1, 2, .1]], Constant([0.0876494023904])),
-        # (lambda x: pnorm(x, -2.3), (1, 1), [[1.1, 2, .1]], Constant([0.099781528576])),
+        (lambda x: pnorm(x, -.4), (1, 1), [[1.1, 2, .1]], Constant([0.02713620334])),
+        (lambda x: pnorm(x, -1), (1, 1), [[1.1, 2, .1]], Constant([0.0876494023904])),
+        (lambda x: pnorm(x, -2.3), (1, 1), [[1.1, 2, .1]], Constant([0.099781528576])),
 
         (lambda_min, (1, 1), [ [[2,0],[0,1]] ], Constant([1])),
         (lambda_min, (1, 1), [ [[5,7],[7,-3]] ], Constant([-7.06225775])),
@@ -210,13 +207,6 @@ atoms = [
      ], Maximize),
 ]
 
-# atoms = [
-#     ([
-#         (min_entries, (1, 1), [ [[-5,2],[-3,1]] ], Constant([-5])),
-#         (min_entries, (1, 1), [ [-5,-10] ], Constant([-10])),
-#     ], Maximize),
-# ]
-
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?
     """
@@ -238,7 +228,7 @@ def run_atom(atom, problem, obj_val, solver):
         tolerance = SOLVER_TO_TOL[solver]
         if solver == EPSILON:
             # TODO(mwytock): Figure out why we need to run this to higher accuracy?
-            status = problem.solve(method=solver, rel_tol=1e-3, max_iterations=1000)
+            status = problem.solve(method=solver, rel_tol=1e-3, max_iterations=10000)
             result = problem.objective.value
         else:
             result = problem.solve(solver=solver, verbose=False)

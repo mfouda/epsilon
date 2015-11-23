@@ -66,8 +66,8 @@ def gm_constrs(t_expr, x_exprs, p):
     d[w] = t_expr
     if len(x_exprs) < len(w):
         x_exprs += [t_expr]
-    assert len(x_exprs) == len(w)
 
+    assert len(x_exprs) == len(w)
     for i, (p, v) in enumerate(zip(w, x_exprs)):
         if p > 0:
             tmp = [0]*len(w)

@@ -93,15 +93,21 @@ def transform_norm_p(expr):
         return t, [expression.soc_constraint(t, x)]
 
     r = epi_var(expr, "norm_p_r", size=dims(x))
-    p = Fraction(p)
     t1 = expression.multiply(expression.ones(*dims(x)), t)
 
     if p < 0:
+        p, _ = power_tools.pow_neg(p)
+        p = Fraction(p)
         constrs = gm_constrs(t1, [x, r], (-p/(1-p), 1/(1-p)))
     elif 0 < p < 1:
+        p, _ = power_tools.pow_mid(p)
+        p = Fraction(p)
         constrs = gm_constrs(r, [x, t1], (p, 1-p))
     elif p > 1:
-        constrs = gm_constrs(x, [r, t1], (1/p, 1-1/p))
+        abs_x, constrs = transform_expr(expression.abs_val(x))
+        p, _ = power_tools.pow_high(p)
+        p = Fraction(p)
+        constrs += gm_constrs(abs_x, [r, t1], (1/p, 1-1/p))
 
     constrs.append(expression.eq_constraint(expression.sum_entries(r), t))
     return t, constrs
