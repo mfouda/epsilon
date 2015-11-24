@@ -4,7 +4,6 @@ import struct
 
 from cvxpy.utilities import power_tools
 
-from epsilon import dcp
 from epsilon import error
 from epsilon import expression
 from epsilon.expression_util import *
@@ -21,13 +20,12 @@ def epi(f_expr, t_expr):
       - f concave, I(f(x) >= t)
       - f affine,  I(f(x) == t)
     """
-    f_curvature = dcp.get_curvature(f_expr)
-
-    if f_curvature.curvature_type == Curvature.CONVEX:
+    f_curvature = f_expr.dcp_props.curvature.curvature_type
+    if f_curvature == Curvature.CONVEX:
         return expression.leq_constraint(f_expr, t_expr)
-    elif f_curvature.curvature_type == Curvature.CONCAVE:
+    elif f_curvature == Curvature.CONCAVE:
         return expression.leq_constraint(negate(f_expr), negate(t_expr))
-    elif f_curvature.curvature_type == Curvature.AFFINE:
+    elif f_curvature == Curvature.AFFINE:
         return expression.eq_constraint(f_expr, t_expr);
 
     raise TransformError("Unknown curvature", f_expr)
@@ -97,7 +95,7 @@ def get_epigraph(expr):
         return None, None
 
     for i in xrange(2):
-        if dcp.is_affine(exprs[i]):
+        if exprs[i].dcp_props.affine:
             t_expr = exprs[i]
             f_expr = exprs[i-1]
             break

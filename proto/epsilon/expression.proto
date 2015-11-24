@@ -218,7 +218,7 @@ message Expression {
 
   // DCP attributes
   Sign sign = 4;
-  Curvature curvature = 5;
+  Curvature func_curvature = 5;
   repeated Monotonicity arg_monotonicity = 6;
 
   // CONSTANT, VARIABLE

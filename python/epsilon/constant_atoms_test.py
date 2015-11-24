@@ -31,6 +31,9 @@ SOLVER_TO_TOL = {EPSILON: 1e-2}
 v = cvxopt.matrix([-1,2,-2], tc='d')
 v_np = np.matrix([-1.,2,-2]).T
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 # TODO(mwytock): Fix tests that are slow/broken:
 # - exp/log: requires exponential cone implementation
 # - lambda_sum_largest/smallest: need SemidefUpperTri variables
@@ -204,13 +207,11 @@ atoms = [
      ], Maximize),
 ]
 
-
-# atoms = [
-#     ([
-#         (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
-#     ], Minimize),
-# ]
-
+atoms = [
+    ([
+        (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
+    ], Minimize),
+]
 
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?

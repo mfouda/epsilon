@@ -47,10 +47,10 @@ def convert_constant(expr):
     return expression.constant(m, n, constant=constant.store(expr.value))
 
 def convert_generic(expression_type, expr):
-    return expression_pb2.Expression(
+    return expression.Expression(
         expression_type=expression_type,
         size=expression_pb2.Size(dim=expr.size),
-        curvature=expression_pb2.Curvature(
+        func_curvature=expression_pb2.Curvature(
             curvature_type=expression_pb2.Curvature.Type.Value(
                 expr.func_curvature().curvature_str)),
         sign=expression_pb2.Sign(
@@ -84,12 +84,12 @@ def convert_index(expr):
 
 def convert_huber(expr):
     proto = convert_generic(Expression.HUBER, expr)
-    proto.M = expr.M.value
+    proto.proto.M = expr.M.value
     return proto
 
 def convert_p(expression_type, expr):
     proto = convert_generic(expression_type, expr)
-    proto.p = float(expr.p)
+    proto.proto.p = float(expr.p)
     return proto
 
 def convert_fraction(fraction):
@@ -99,13 +99,13 @@ def convert_fraction(fraction):
 
 def convert_geo_mean(expr):
     proto = convert_generic(Expression.GEO_MEAN, expr)
-    proto.geo_mean_params.w.extend(convert_fraction(x) for x in expr.w)
-    proto.geo_mean_params.w_dyad.extend(convert_fraction(x) for x in expr.w_dyad)
+    proto.proto.geo_mean_params.w.extend(convert_fraction(x) for x in expr.w)
+    proto.proto.geo_mean_params.w_dyad.extend(convert_fraction(x) for x in expr.w_dyad)
     return proto
 
 def convert_sum_largest(expr):
     proto = convert_generic(Expression.SUM_LARGEST, expr)
-    proto.k = expr.k
+    proto.proto.k = expr.k
     return proto
 
 EXPRESSION_TYPES = (
@@ -199,6 +199,6 @@ def convert_problem(problem):
     else:
         raise RuntimeError("Unknown objective: %s" % type(problem.objective))
 
-    return expression_pb2.Problem(
+    return expression.Problem(
         objective=convert_expression(obj_expr),
         constraint=[convert_constraint(c) for c in problem.constraints])

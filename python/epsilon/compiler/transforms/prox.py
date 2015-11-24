@@ -7,8 +7,6 @@ extraction.
 import logging
 from collections import namedtuple
 
-from epsilon import affine
-from epsilon import dcp
 from epsilon import expression
 from epsilon import tree_format
 from epsilon.compiler.transforms import conic
@@ -31,7 +29,7 @@ def least_squares_args(expr):
     constr = []
 
     for arg in expr.arg:
-        if dcp.is_affine(arg):
+        if arg.dcp_props.affine:
             args.append(linear.transform_expr(arg))
             continue
 
@@ -43,7 +41,7 @@ def least_squares_args(expr):
     return args, constr
 
 def convert_arg(expr, affine_check):
-    if dcp.is_affine(expr):
+    if expr.dcp_props.affine:
         expr_linear = linear.transform_expr(expr)
         if affine_check(expr_linear):
             return expr_linear, []
@@ -56,9 +54,9 @@ def diagonal_args(expr):
     constr = []
 
     for arg in expr.arg:
-        if dcp.is_affine(arg):
+        if arg.dcp_props.affine:
             arg_linear = linear.transform_expr(arg)
-            if affine.is_diagonal(arg_linear):
+            if arg_linear.affine_props.diagonal:
                 args.append(arg_linear)
                 continue
 
@@ -74,9 +72,9 @@ def scalar_args(expr):
     constr = []
 
     for arg in expr.arg:
-        if dcp.is_affine(arg):
+        if arg.dcp_props.affine:
             arg_linear = linear.transform_expr(arg)
-            if affine.is_scalar(arg_linear):
+            if arg_linear.affine_props.scalar:
                 args.append(arg_linear)
                 continue
 
@@ -112,7 +110,7 @@ def expr_args(convert):
 
 def soc_prox_args(expr):
     return epigraph_args(
-        lambda e: convert_arg(e, affine.is_scalar))(expr)
+        lambda e: convert_arg(e, lambda e: e.affine_props.scalar))(expr)
 
 def create_prox(prox_function_type, **kwargs):
     def create(expr):
@@ -167,8 +165,10 @@ RULES += [
 
 # Linear cone rules
 RULES += [
-    ProxRule(dcp.is_constant, affine_args, create_prox(Prox.CONSTANT)),
-    ProxRule(dcp.is_affine, affine_args, create_prox(Prox.AFFINE)),
+    ProxRule(lambda e: e.dcp_props.constant, affine_args,
+             create_prox(Prox.CONSTANT)),
+    ProxRule(lambda e: e.dcp_props.affine, affine_args,
+             create_prox(Prox.AFFINE)),
     ProxRule(match_indicator(Cone.ZERO), least_squares_args,
              create_prox(Prox.ZERO)),
     ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
@@ -194,6 +194,7 @@ def transform_cone_expr(expr):
             yield f_expr
 
 def transform_expr(expr):
+    #logging.debug("transform_expr:\n%s", tree_format.format_expr(expr))
     for rule in RULES:
         if rule.match(expr):
             for f_expr in transform_prox_expr(rule, expr):
@@ -208,4 +209,4 @@ def transform_problem(problem):
     f_exprs = list(transform_expr(problem.objective))
     for constr in problem.constraint:
         f_exprs += list(transform_expr(constr))
-    return Problem(objective=expression.add(*f_exprs))
+    return expression.Problem(objective=expression.add(*f_exprs))

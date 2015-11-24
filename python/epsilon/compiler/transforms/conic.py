@@ -5,7 +5,6 @@ from fractions import Fraction
 
 from cvxpy.utilities import power_tools
 
-from epsilon import dcp
 from epsilon import expression
 from epsilon import linear_map
 from epsilon import tree_format
@@ -208,19 +207,27 @@ def transform_matrix_frac(expr):
         expression.semidefinite(M)]
 
 def transform_expr(expr):
-    logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))
+    #logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))
 
-    constr = []
+    constrs = []
+    transformed_args = []
     for arg in expr.arg:
-        arg_conic, arg_constr = transform_expr(arg)
-        arg.CopyFrom(arg_conic)
-        constr += arg_constr
+        obj_arg, constr = transform_expr(arg)
+        transformed_args.append(obj_arg)
+        constrs += constr
 
-    if not dcp.is_affine(expr):
-        f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
+    # Create the same expression but now with linear arguments.
+    # TODO(mwytock): Support this in a better way?
+    obj_linear = expression.Expression()
+    obj_linear.proto.CopyFrom(expr.proto)
+    obj_linear.arg = transformed_args
+
+    if not obj_linear.dcp_props.affine:
+        f_name = ("transform_" +
+                  Expression.Type.Name(obj_linear.expression_type).lower())
         if f_name not in globals():
             raise TransformError("No conic transform", expr)
-        expr, expr_constr = globals()[f_name](expr)
-        constr += expr_constr
+        obj_linear, constr = globals()[f_name](obj_linear)
+        constrs += constr
 
-    return expr, constr
+    return obj_linear, constrs

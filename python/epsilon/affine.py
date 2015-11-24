@@ -1,4 +1,5 @@
-"""Operations on LinearMaps."""
+"""Properties of affine expressions defined by linear maps."""
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -79,7 +80,7 @@ class LinearMapType(object):
         return dense_type()
 
     def __mul__(self, B):
-        if isinstance(B, AffineExpression):
+        if isinstance(B, AffineProperties):
             return B.__rmul__(self)
         assert isinstance(B, LinearMapType)
 
@@ -93,7 +94,7 @@ class LinearMapType(object):
 
         return dense_type()
 
-class AffineExpression(object):
+class AffineProperties(object):
     def __init__(self, linear_maps):
         self.linear_maps = linear_maps
 
@@ -109,14 +110,14 @@ class AffineExpression(object):
 
     def __rmul__(self, A):
         assert isinstance(A, LinearMapType)
-        C = AffineExpression(self.linear_maps.copy())
+        C = AffineProperties(self.linear_maps.copy())
         for var_id, Bi in self.linear_maps.items():
             C.linear_maps[var_id] = A*Bi
         return C
 
     def __add__(self, B):
-        assert isinstance(B, AffineExpression)
-        C = AffineExpression(self.linear_maps.copy())
+        assert isinstance(B, AffineProperties)
+        C = AffineProperties(self.linear_maps.copy())
         for var_id, Bi in B.linear_maps.items():
             if var_id not in self.linear_maps:
                 C.linear_maps[var_id] = Bi
@@ -124,34 +125,26 @@ class AffineExpression(object):
                 C.linear_maps[var_id] += Bi
         return C
 
-# TODO(mwytock): memoize
-def get_affine_expr(expr):
+def compute_affine_properties(expr):
     if expr.expression_type == Expression.CONSTANT:
         # TODO(mwytock): Keep track of constant terms if needed
-        return AffineExpression({})
+        return AffineProperties({})
 
     elif expr.expression_type == Expression.VARIABLE:
-        return AffineExpression({
+        return AffineProperties({
             expr.variable.variable_id:
             LinearMapType(linear_map.identity(dim(expr)))})
 
     elif expr.expression_type == Expression.ADD:
         return reduce(lambda A,B: A+B,
-                      (get_affine_expr(arg) for arg in expr.arg))
+                      (compute_affine_properties(arg) for arg in expr.arg))
 
     elif expr.expression_type == Expression.LINEAR_MAP:
         A = LinearMapType(expr.linear_map)
         A = A.eval_ops()
-        return A*get_affine_expr(only_arg(expr))
+        return A*compute_affine_properties(only_arg(expr))
 
     elif expr.expression_type == Expression.RESHAPE:
-        return get_affine_expr(only_arg(expr))
+        return compute_affine_properties(only_arg(expr))
 
     raise ExpressionError("Unkonwn expression type", expr)
-
-
-def is_diagonal(expr):
-    return get_affine_expr(expr).diagonal
-
-def is_scalar(expr):
-    return get_affine_expr(expr).scalar

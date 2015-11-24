@@ -2,9 +2,12 @@
 
 import numpy as np
 
+from epsilon import affine
 from epsilon import constant as _constant
+from epsilon import dcp
+from epsilon import expression_pb2
 from epsilon.error import ExpressionError
-from epsilon.expression_pb2 import *
+from epsilon.expression_pb2 import Monotonicity, Curvature, Sign, Size, Cone
 from epsilon.expression_util import *
 
 # Shorthand convenience
@@ -12,6 +15,62 @@ SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
 
 AFFINE = Curvature(curvature_type=Curvature.AFFINE)
 CONSTANT = Curvature(curvature_type=Curvature.CONSTANT)
+
+# Thin wrappers around Expression/Problem protobuf, making them immutable and
+# with reference semantics for args.
+class Problem(object):
+    def __init__(self, objective, constraint=[]):
+        assert type(objective) is Expression
+        for constr in constraint:
+            assert type(constr) is Expression
+
+        self.objective = objective
+        self.constraint = constraint
+
+    def SerializeToString(self):
+        proto = expression_pb2.Problem(
+            objective=self.objective.proto_with_args,
+            constraint=[c.proto_with_args for c in self.constraint])
+        return proto.SerializeToString()
+
+ARG_FIELD = "arg"
+class Expression(object):
+    def __init__(self, **kwargs):
+        self.arg = list(kwargs.get(ARG_FIELD, []))
+        for arg in self.arg:
+            assert type(arg) is Expression
+
+        kwargs[ARG_FIELD] = []
+        self.proto = expression_pb2.Expression(**kwargs)
+
+        # Lazily computed properties
+        self._dcp_props = None
+        self._affine_props = None
+
+    @property
+    def dcp_props(self):
+        if self._dcp_props is None:
+            self._dcp_props = dcp.compute_dcp_properties(self)
+        return self._dcp_props
+
+    @property
+    def affine_props(self):
+        if self._affine_props is None:
+            self._affine_props = affine.compute_affine_properties(self)
+        return self._affine_props
+
+    @property
+    def proto_with_args(self):
+        proto_with_args = expression_pb2.Expression()
+        proto_with_args.CopyFrom(self.proto)
+        proto_with_args.arg.extend(arg.proto_with_args for arg in self.arg)
+        return proto_with_args
+
+    def SerializeToString(self):
+        return self.proto_with_args.SerializeToString()
+
+    def __getattr__(self, name):
+        return getattr(self.proto, name)
 
 def is_scalar(a):
     return a[0]*a[1] == 1
@@ -34,18 +93,25 @@ def matrix_multiply_dims(a, b):
         return a
     raise ValueError("Incompatible matrix multiply sizes")
 
+def stack_dims(a, b, idx):
+    if a[1-idx] != b[1-idx]:
+        raise ValueError("Incomaptible stack sizes")
+    new_dims = list(a)
+    new_dims[idx] += b[idx]
+    return tuple(new_dims)
+
 def _multiply(args, elemwise=False):
     if not args:
         raise ValueError("multiplying null args")
 
     op_dims = elementwise_dims if elemwise else matrix_multiply_dims
     return Expression(
-        expression_type=(Expression.MULTIPLY_ELEMENTWISE if elemwise else
-                         Expression.MULTIPLY),
+        expression_type=(expression_pb2.Expression.MULTIPLY_ELEMENTWISE if elemwise else
+                         expression_pb2.Expression.MULTIPLY),
         arg=args,
         size=Size(dim=reduce(lambda a, b: op_dims(a, b),
                              (dims(a) for a in args))),
-        curvature=AFFINE)
+        func_curvature=AFFINE)
 
 # Expressions
 def add(*args):
@@ -53,12 +119,12 @@ def add(*args):
         raise ValueError("adding null args")
 
     return Expression(
-        expression_type=Expression.ADD,
+        expression_type=expression_pb2.Expression.ADD,
         arg=args,
         size=Size(
             dim=reduce(lambda a, b: elementwise_dims(a, b),
                        (dims(a) for a in args))),
-        curvature=AFFINE)
+        func_curvature=AFFINE)
 
 def multiply(*args):
     return _multiply(args, elemwise=False)
@@ -67,38 +133,22 @@ def multiply_elemwise(*args):
     return _multiply(args, elemwise=True)
 
 def hstack(*args):
-    e = Expression(
-        expression_type=Expression.HSTACK,
-        curvature=AFFINE)
-
-    for i, arg in enumerate(args):
-        if i == 0:
-            e.size.dim.extend(arg.size.dim)
-        else:
-            if dim(e, 0) != dim(arg, 0):
-                raise ExpressionError("Incompatible sizes", e, arg)
-            e.size.dim[1] += arg.size.dim[1]
-
-        e.arg.add().CopyFrom(arg)
-
-    return e
+    return Expression(
+        expression_type=expression_pb2.Expression.HSTACK,
+        func_curvature=AFFINE,
+        size=Size(
+            dim=reduce(lambda a, b: stack_dims(a, b, 1),
+                       (dims(a) for a in args))),
+        arg=args)
 
 def vstack(*args):
-    e = Expression(
-        expression_type=Expression.VSTACK,
-        curvature=AFFINE)
-
-    for i, arg in enumerate(args):
-        if i == 0:
-            e.size.dim.extend(arg.size.dim)
-        else:
-            if dim(e, 1) != dim(arg, 1):
-                raise ExpressionError("Incompatible sizes", e, arg)
-            e.size.dim[0] += arg.size.dim[0]
-
-        e.arg.add().CopyFrom(arg)
-
-    return e
+    return Expression(
+        expression_type=expression_pb2.Expression.VSTACK,
+        func_curvature=AFFINE,
+        size=Size(
+            dim=reduce(lambda a, b: stack_dims(a, b, 0),
+                       (dims(a) for a in args))),
+        arg=args)
 
 def reshape(arg, m, n):
     if dim(arg, 0) == m and dim(arg, 1) == n:
@@ -108,35 +158,35 @@ def reshape(arg, m, n):
         raise ExpressionError("cant reshape to %d x %d" % (m, n), arg)
 
     # If we have two reshapes that "undo" each other, cancel them out
-    if (arg.expression_type == Expression.RESHAPE and
+    if (arg.expression_type == expression_pb2.Expression.RESHAPE and
         dim(arg.arg[0], 0) == m and
         dim(arg.arg[0], 1) == n):
         return arg.arg[0]
 
     return Expression(
-        expression_type=Expression.RESHAPE,
+        expression_type=expression_pb2.Expression.RESHAPE,
         arg=[arg],
         size=Size(dim=[m,n]),
-        curvature=arg.curvature,
+        func_curvature=AFFINE,
         sign=arg.sign)
 
 def negate(x):
     # Automatically reduce negate(negate(x)) to x
-    if x.expression_type == Expression.NEGATE:
+    if x.expression_type == expression_pb2.Expression.NEGATE:
         return only_arg(x)
 
     return Expression(
-        expression_type=Expression.NEGATE,
+        expression_type=expression_pb2.Expression.NEGATE,
         arg=[x],
         size=x.size,
-        curvature=AFFINE)
+        func_curvature=AFFINE)
 
 def variable(m, n, variable_id):
     return Expression(
-        expression_type=Expression.VARIABLE,
+        expression_type=expression_pb2.Expression.VARIABLE,
         size=Size(dim=[m, n]),
-        variable=Variable(variable_id=variable_id),
-        curvature=Curvature(
+        variable=expression_pb2.Variable(variable_id=variable_id),
+        func_curvature=Curvature(
             curvature_type=Curvature.AFFINE,
             elementwise=True,
             scalar_multiple=True))
@@ -146,92 +196,92 @@ def scalar_constant(scalar, size=None):
         size = (1, 1)
 
     return Expression(
-        expression_type=Expression.CONSTANT,
+        expression_type=expression_pb2.Expression.CONSTANT,
         size=Size(dim=size),
-        constant=Constant(
-            constant_type=Constant.SCALAR,
+        constant=expression_pb2.Constant(
+            constant_type=expression_pb2.Constant.SCALAR,
             scalar=scalar),
-        curvature=CONSTANT)
+        func_curvature=CONSTANT)
 
 def ones(*dims):
     return Expression(
-        expression_type=Expression.CONSTANT,
+        expression_type=expression_pb2.Expression.CONSTANT,
         size=Size(dim=dims),
         constant=_constant.store(np.ones(dims)),
-        curvature=CONSTANT)
+        func_curvature=CONSTANT)
 
 def constant(m, n, scalar=None, constant=None):
     if scalar is not None:
-        constant = Constant(
-            constant_type=Constant.SCALAR,
+        constant = expression_pb2.Constant(
+            constant_type=expression_pb2.Constant.SCALAR,
             scalar=scalar)
     elif constant is None:
         raise ValueError("need either scalar or constant")
 
     return Expression(
-        expression_type=Expression.CONSTANT,
+        expression_type=expression_pb2.Expression.CONSTANT,
         size=Size(dim=[m, n]),
         constant=constant,
-        curvature=Curvature(curvature_type=Curvature.CONSTANT))
+        func_curvature=Curvature(curvature_type=Curvature.CONSTANT))
 
 def indicator(cone_type, *args):
     return Expression(
-        expression_type=Expression.INDICATOR,
+        expression_type=expression_pb2.Expression.INDICATOR,
         size=Size(dim=[1, 1]),
         cone=Cone(cone_type=cone_type),
         arg=args)
 
 def norm_pq(x, p, q):
     return Expression(
-        expression_type=Expression.NORM_PQ,
+        expression_type=expression_pb2.Expression.NORM_PQ,
         size=Size(dim=[1, 1]),
         arg=[x], p=p, q=q)
 
 def norm_p(x, p):
     return Expression(
-        expression_type=Expression.NORM_P,
+        expression_type=expression_pb2.Expression.NORM_P,
         size=Size(dim=[1, 1]),
         arg=[x], p=p)
 
 def power(x, p):
     return Expression(
-        expression_type=Expression.POWER,
+        expression_type=expression_pb2.Expression.POWER,
         size=x.size,
         arg=[x], p=p)
 
 def sum_largest(x, k):
     return Expression(
-        expression_type=Expression.SUM_LARGEST,
+        expression_type=expression_pb2.Expression.SUM_LARGEST,
         size=Size(dim=[1,1]),
         arg=[x], k=k)
 
 def abs_val(x):
     return Expression(
-        expression_type=Expression.ABS,
+        expression_type=expression_pb2.Expression.ABS,
         arg_monotonicity=[SIGNED],
         size=x.size,
         arg=[x])
 
 def sum_entries(x):
     return Expression(
-        expression_type=Expression.SUM,
+        expression_type=expression_pb2.Expression.SUM,
         size=Size(dim=[1, 1]),
-        curvature=AFFINE,
+        func_curvature=AFFINE,
         arg=[x])
 
 def transpose(x):
     m, n = x.size.dim
     return Expression(
-        expression_type=Expression.TRANSPOSE,
+        expression_type=expression_pb2.Expression.TRANSPOSE,
         size=Size(dim=[n, m]),
-        curvature=AFFINE,
+        func_curvature=AFFINE,
         arg=[x])
 
 def trace(X):
     return Expression(
-        expression_type=Expression.TRACE,
+        expression_type=expression_pb2.Expression.TRACE,
         size=Size(dim=[1, 1]),
-        curvature=AFFINE,
+        func_curvature=AFFINE,
         arg=[X])
 
 def diag_vec(x):
@@ -240,9 +290,9 @@ def diag_vec(x):
 
     n = dim(x, 0)
     return Expression(
-        expression_type=Expression.DIAG_VEC,
+        expression_type=expression_pb2.Expression.DIAG_VEC,
         size=Size(dim=[n, n]),
-        curvature=AFFINE,
+        func_curvature=AFFINE,
         arg=[x])
 
 def index(x, start_i, stop_i, start_j=None, stop_j=None):
@@ -255,27 +305,16 @@ def index(x, start_i, stop_i, start_j=None, stop_j=None):
         return x
 
     return Expression(
-        expression_type=Expression.INDEX,
+        expression_type=expression_pb2.Expression.INDEX,
         size=Size(dim=[stop_i-start_i, stop_j-start_j]),
-        curvature=AFFINE,
-        key=[Slice(start=start_i, stop=stop_i, step=1),
-             Slice(start=start_j, stop=stop_j, step=1)],
-        arg=[x])
-
-def scaled_zone(x, alpha, beta, C, M):
-    return Expression(
-        expression_type=Expression.SCALED_ZONE,
-        size=Size(dim=[1, 1]),
-        scaled_zone_params=Expression.ScaledZoneParams(
-            alpha=alpha,
-            beta=beta,
-            c=C,
-            m=M),
+        func_curvature=AFFINE,
+        key=[expression_pb2.Slice(start=start_i, stop=stop_i, step=1),
+             expression_pb2.Slice(start=start_j, stop=stop_j, step=1)],
         arg=[x])
 
 def zero(x):
     return Expression(
-        expression_type=Expression.ZERO,
+        expression_type=expression_pb2.Expression.ZERO,
         size=Size(dim=[1, 1]),
         arg=[x])
 
@@ -286,9 +325,9 @@ def linear_map(A, x):
         raise ExpressionError("linear map has wrong size: %s" % A, x)
 
     return Expression(
-        expression_type=Expression.LINEAR_MAP,
+        expression_type=expression_pb2.Expression.LINEAR_MAP,
         size=Size(dim=[A.m, 1]),
-        curvature=AFFINE,
+        func_curvature=AFFINE,
         linear_map=A,
         arg=[x])
 
@@ -325,7 +364,7 @@ def non_negative(x):
 
 def prox_function(f, *args):
     return Expression(
-        expression_type=Expression.PROX_FUNCTION,
+        expression_type=expression_pb2.Expression.PROX_FUNCTION,
         size=Size(dim=[1, 1]),
         prox_function=f,
         arg=args)

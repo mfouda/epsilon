@@ -55,13 +55,15 @@ class FunctionVariable(object):
         else:
             to_replace = self.instances
 
-        old_var = Expression()
-        old_var.CopyFrom(to_replace[0])
+        # TODO(mwytock): Support this in a better way, would be better if
+        # Expressions were immutable
+        old_var = expression.Expression()
+        old_var.proto.CopyFrom(to_replace[0].proto)
         m, n = old_var.size.dim
 
         new_var = expression.variable(m, n, new_var_id)
         for instance in to_replace:
-            instance.CopyFrom(new_var)
+            instance.proto.CopyFrom(new_var.proto)
 
         self.variable = new_var_id
         return old_var, new_var
@@ -103,7 +105,7 @@ class ProblemGraph(object):
             self.add_function(Function(f_expr, constraint=True))
 
     def problem(self):
-        return Problem(
+        return expression.Problem(
             objective=expression.add(*(f.expr for f in self.obj_terms)),
             constraint=[f.expr for f in self.constraints])
 

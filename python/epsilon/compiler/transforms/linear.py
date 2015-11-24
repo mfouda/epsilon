@@ -2,7 +2,6 @@
 
 import logging
 
-from epsilon import dcp
 from epsilon import error
 from epsilon import expression
 from epsilon import linear_map
@@ -53,12 +52,12 @@ def transform_multiply(expr):
 
     m = dim(expr, 0)
     n = dim(expr, 1)
-    if dcp.is_constant(expr.arg[0]):
+    if expr.arg[0].dcp_props.constant:
         A = multiply_constant(expr.arg[0], m)
         B = promote(transform_expr(expr.arg[1]), n*n)
         return expression.linear_map(linear_map.left_matrix_product(A, n), B)
 
-    if dcp.is_constant(expr.arg[1]):
+    if expr.arg[1].dcp_props.constant:
         A = promote(transform_expr(expr.arg[0]), m*m)
         B = multiply_constant(expr.arg[1], n)
         return expression.linear_map(linear_map.right_matrix_product(B, m), A)
@@ -69,7 +68,7 @@ def transform_kron(expr):
     if len(expr.arg) != 2:
         raise TransformError("Wrong number of arguments", expr)
 
-    if not dcp.is_constant(expr.arg[0]):
+    if not expr.arg[0].dcp_props.constant:
         raise TransformError("First arg is not constant", expr)
 
     return expression.linear_map(
@@ -93,10 +92,10 @@ def transform_multiply_elementwise(expr):
     if len(expr.arg) != 2:
         raise TransformError("wrong number of args", expr)
 
-    if expr.arg[0].curvature.curvature_type == Curvature.CONSTANT:
+    if expr.arg[0].dcp_props.constant:
         c_expr = expr.arg[0]
         x_expr = expr.arg[1]
-    elif expr.arg[1].curvature.curvature_type == Curvature.CONSTANT:
+    elif expr.arg[1].dcp_props.constant:
         c_expr = expr.arg[1]
         x_expr = expr.arg[0]
     else:
@@ -191,12 +190,16 @@ def transform_linear_expr(expr):
     return globals()[f_name](expr)
 
 def transform_expr(expr):
-    if expr.curvature.curvature_type in (Curvature.AFFINE, Curvature.CONSTANT):
+    if expr.func_curvature.curvature_type in (
+            Curvature.AFFINE,
+            Curvature.CONSTANT):
         return transform_linear_expr(expr)
     else:
+        transformed_expr = expression.Expression()
+        transformed_expr.proto.CopyFrom(expr.proto)
         for arg in expr.arg:
-            arg.CopyFrom(transform_expr(arg))
-        return expr
+            transformed_expr.arg.append(transform_expr(arg))
+        return transformed_expr
 
 def transform_problem(problem):
     return Problem(

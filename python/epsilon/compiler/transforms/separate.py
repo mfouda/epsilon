@@ -4,7 +4,6 @@ import logging
 
 from collections import defaultdict
 
-from epsilon import affine
 from epsilon import expression
 from epsilon import tree_format
 from epsilon.compiler.problem_graph import *
@@ -43,11 +42,10 @@ def is_prox_friendly_constraint(graph, f):
         return False
 
     assert len(f.expr.arg) == 1
-    affine_expr = affine.get_affine_expr(f.expr.arg[0])
     for f_var in graph.edges_by_function[f]:
         edges = graph.edges_by_variable[f_var.variable]
         if (len(edges) > 1 and
-            not affine_expr.linear_maps[f_var.variable].scalar):
+            not f.expr.arg[0].affine_props.linear_maps[f_var.variable].scalar):
             return False
 
     return True
