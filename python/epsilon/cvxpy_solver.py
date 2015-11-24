@@ -33,39 +33,40 @@ def cvxpy_status(solver_status):
         return OPTIMAL_INACCURATE
     return SOLVER_ERROR
 
-def solve(prob, **kwargs):
+def solve(cvxpy_prob, **kwargs):
     """Solve optimziation problem."""
 
-    if not prob.variables():
+    # Nothing to do in this case
+    if not cvxpy_prob.variables():
         return OPTIMAL
 
     t0 = util.cpu_time()
-    prob_proto = cvxpy_expr.convert_problem(prob)
-    prob_proto = compiler.compile_problem(prob_proto)
+    problem = cvxpy_expr.convert_problem(cvxpy_prob)
+    problem = compiler.compile_problem(problem)
     t1 = util.cpu_time()
     logging.info("Epsilon compile: %f seconds", t1-t0)
 
-    params = solver_params_pb2.SolverParams(**kwargs)
-    if len(prob_proto.objective.arg) == 1 and not prob_proto.constraint:
+    if len(problem.objective.arg) == 1 and not problem.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
         # they can take A=0 instead of just using a large lambda here
         lam = 1e12
         values = _solve.eval_prox(
-            prob_proto.objective.arg[0].SerializeToString(),
+            problem.objective.arg[0].SerializeToString(),
             lam,
             constant.global_data_map,
             {})
         status = OPTIMAL
     else:
+        params = solver_params_pb2.SolverParams(**kwargs)
         status_str, values = _solve.prox_admm_solve(
-            prob_proto.SerializeToString(),
+            problem.SerializeToString(),
             params.SerializeToString(),
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
     t2 = util.cpu_time()
     logging.info("Epsilon solve: %f seconds", t2-t1)
 
-    set_solution(prob, values)
+    set_solution(cvxpy_prob, values)
     return status
 
 def validate_solver(constraints):

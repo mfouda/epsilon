@@ -158,17 +158,24 @@ def variables(expr):
         for var in variables(arg):
             yield var
 
-def add_variables(f, graph):
-    for var_expr in variables(f.expr):
+def add_function(f_expr, node_type, graph):
+    var_list = list(variables(f_expr))
+
+    # Exclude constant functions
+    if not var_list:
+        return
+
+    f = graph.add_node(f_expr, node_type)
+    for var_expr in var_list:
         var_id = var_expr.variable.variable_id
         graph.add_edge(f, graph.add_node(var_expr, VARIABLE, node_id=var_id))
 
 def build_graph(problem):
     graph = ProblemGraph()
     for f_expr in problem.objective.arg:
-        add_variables(graph.add_node(f_expr, FUNCTION), graph)
+        add_function(f_expr, FUNCTION, graph)
     for constr_expr in problem.constraint:
-        add_variables(graph.add_node(constr_expr, CONSTRAINT), graph)
+        add_function(f_expr, CONSTRAINT, graph)
     return graph
 
 # TODO(mwytock): Add back these optimizations when ready
