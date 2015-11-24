@@ -46,6 +46,15 @@ class Expression(object):
         # Lazily computed properties
         self._dcp_props = None
         self._affine_props = None
+        self._fingerprint = None
+
+    @staticmethod
+    def FromProto(proto, arg):
+        assert not proto.arg
+        expr = Expression()
+        expr.proto = proto
+        expr.arg = arg
+        return expr
 
     @property
     def dcp_props(self):
@@ -58,6 +67,12 @@ class Expression(object):
         if self._affine_props is None:
             self._affine_props = affine.compute_affine_properties(self)
         return self._affine_props
+
+    @property
+    def fingerprint(self):
+        if self._fingerprint is None:
+            self._fingerprint = fp_expr(self)
+        return self._fingerprint
 
     @property
     def proto_with_args(self):

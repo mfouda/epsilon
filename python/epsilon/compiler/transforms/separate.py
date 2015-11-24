@@ -1,18 +1,16 @@
 """Analyze the problem in sum-of-prox form and combine/split terms."""
 
-import logging
-
 from collections import defaultdict
 
 from epsilon import expression
 from epsilon import tree_format
-from epsilon.compiler.problem_graph import *
 from epsilon.compiler import validate
+from epsilon.compiler.problem_graph import *
 from epsilon.compiler.transforms import linear
+from epsilon.compiler.transforms.transform_util import *
 from epsilon.expression_pb2 import Expression, ProxFunction
 from epsilon.expression_util import fp_expr
-
-Prox = ProxFunction
+from epsilon.util import *
 
 def has_data_constant(expr):
     if (expr.expression_type == Expression.CONSTANT and
@@ -25,12 +23,13 @@ def has_data_constant(expr):
 
     return False
 
-def prox_op(expr):
-    if expr.expression_type == Expression.ADD:
-        return prox_op(expr.arg[0])
-    if expr.expression_type == Expression.MULTIPLY:
-        return prox_op(expr.arg[1])
-    return expr.proximal_operator.name
+def replace_var(expr, old_var_id, new_var):
+    if (expr.expression_type == Expression.VARIABLE and
+        expr.variable.variable_id == old_var_id):
+        return new_var
+    return expression.Expression.FromProto(
+        expr.proto,
+        [replace_var(arg, old_var_id, new_var) for arg in expr.arg])
 
 def is_prox_friendly_constraint(graph, f):
     """Returns true if f represents a prox-friendly equality constraint.
@@ -38,7 +37,7 @@ def is_prox_friendly_constraint(graph, f):
     In other words, one that can be treated as a constraint without interfering
     with the proximal operators for the other objective terms."""
 
-    if not f.expr.prox_function.prox_function_type == Prox.ZERO:
+    if not f.expr.prox_function.prox_function_type == ProxFunction.ZERO:
         return False
 
     assert len(f.expr.arg) == 1
@@ -80,7 +79,7 @@ def separate_var(f_var):
 def combine_affine_functions(graph):
     """Combine affine functions with other objective terms."""
     for f in graph.obj_terms:
-        if not f.expr.prox_function.prox_function_type == Prox.AFFINE:
+        if not f.expr.prox_function.prox_function_type == ProxFunction.AFFINE:
             continue
 
         # no variables
@@ -111,51 +110,67 @@ def move_equality_indicators(graph):
             f.expr.CopyFrom(expression.indicator(Cone.ZERO, f.expr.arg[0]))
             f.constraint = True
 
+
 def separate_objective_terms(graph):
     """Add variable copies to make functions separable.
 
     This applies to objective functions only and we dont need to modify the
     first occurence.
    """
-    for var in graph.variables:
-        # Exclude constraint terms
-        f_vars = [f_var for f_var in graph.edges_by_variable[var]
-                  if not f_var.function.constraint]
+    for var in graph.nodes(VARIABLE):
+        functions = graph.neighbors(var, FUNCTION)
 
-        skipped_one = False
-        for f_var in reversed(f_vars):
-            # Skip first one, rename the rest
-            if not f_var.has_linops() and not skipped_one:
-                skipped_one = True
-                continue
+        # NOTE(mwytock): We reverse the order of the functions here because we
+        # prefer the last function to retain the original variable id
+        functions.reverse()
 
-            graph.remove_edge(f_var)
+        for f in functions[1:]:
+            m, n = dims(var.expr)
+            old_var_id = var.expr.variable.variable_id
+            new_var_id = "separate:%s:%s" % (old_var_id, f.expr.fingerprint)
 
-            new_var_id = "separate:%s:%s" % (
-                f_var.variable, fp_expr(f_var.function.expr))
-            old_var, new_var = f_var.replace_variable(new_var_id)
-            graph.add_function(
-                Function(
-                    linear.transform_expr(
-                        expression.eq_constraint(old_var, new_var)),
-                    constraint=True))
-            graph.add_edge(f_var)
+            new_var = graph.add_node(
+                expression.variable(m, n, new_var_id), VARIABLE, new_var_id)
+            f.expr = replace_var(f.expr, old_var_id, new_var.expr)
+            graph.remove_edge(f, var)
+            graph.add_edge(f, new_var)
 
-def add_null_prox(graph):
+            eq_constr = graph.add_node(linear.transform_expr(
+                expression.eq_constraint(new_var.expr, var.expr)), CONSTRAINT)
+            graph.add_edge(eq_constr, new_var)
+            graph.add_edge(eq_constr, var)
+
+def add_constant_prox(graph):
     """Add f(x) = 0 term for variables only appearing in constraints."""
 
-    for var in graph.variables:
-        f_vars = [f_var for f_var in graph.edges_by_variable[var]
-                  if not f_var.function.constraint]
-
-        if f_vars:
+    for var in graph.nodes(VARIABLE):
+        # Only add constant prox for variables not appearing in objective
+        if graph.neighbors(var, FUNCTION):
             continue
 
-        var_expr = graph.edges_by_variable[var][0].instances[0]
         f_expr = expression.prox_function(
-            ProxFunction(prox_function_type=Prox.CONSTANT), var_expr)
-        graph.add_function(Function(f_expr, constraint=False))
+            ProxFunction(prox_function_type=ProxFunction.CONSTANT), var.expr)
+        graph.add_edge(graph.add_node(f_expr, FUNCTION), var)
 
+def variables(expr):
+    if expr.expression_type == Expression.VARIABLE:
+        yield expr
+    for arg in expr.arg:
+        for var in variables(arg):
+            yield var
+
+def add_variables(f, graph):
+    for var_expr in variables(f.expr):
+        var_id = var_expr.variable.variable_id
+        graph.add_edge(f, graph.add_node(var_expr, VARIABLE, node_id=var_id))
+
+def build_graph(problem):
+    graph = ProblemGraph()
+    for f_expr in problem.objective.arg:
+        add_variables(graph.add_node(f_expr, FUNCTION), graph)
+    for constr_expr in problem.constraint:
+        add_variables(graph.add_node(constr_expr, CONSTRAINT), graph)
+    return graph
 
 # TODO(mwytock): Add back these optimizations when ready
 # combine_affine_functions
@@ -163,18 +178,21 @@ def add_null_prox(graph):
 
 GRAPH_TRANSFORMS = [
     separate_objective_terms,
-    add_null_prox,
+    add_constant_prox,
 ]
 
 def transform_problem(problem):
-    graph = ProblemGraph(problem)
-    if not graph.variables:
+    validate.check_sum_of_prox(problem)
+    graph = build_graph(problem)
+    if not graph.nodes(VARIABLE):
         return problem
 
     for f in GRAPH_TRANSFORMS:
         f(graph)
-        # logging.debug(
-        #     "%s:\n%s",
-        #     f.__name__,
-        #     tree_format.format_problem(graph.problem()))
-    return graph.problem()
+        log_debug(
+            lambda f, graph:
+            "%s:\n%s" %
+            (f.__name__,
+             tree_format.format_problem(graph.problem)),
+            f, graph)
+    return graph.problem
