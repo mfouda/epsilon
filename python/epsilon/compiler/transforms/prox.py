@@ -194,7 +194,7 @@ def transform_cone_expr(expr):
             yield f_expr
 
 def transform_expr(expr):
-    #logging.debug("transform_expr:\n%s", tree_format.format_expr(expr))
+    log_debug_expr("transform_expr", expr)
     for rule in RULES:
         if rule.match(expr):
             for f_expr in transform_prox_expr(rule, expr):

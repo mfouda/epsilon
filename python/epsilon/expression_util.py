@@ -4,9 +4,6 @@ import struct
 from epsilon.error import ExpressionError
 from epsilon.expression_pb2 import Curvature, Expression
 
-def fp_expr(expr):
-    return struct.pack("q", hash(expr.SerializeToString())).encode("hex")
-
 # Helper functions
 def only_arg(expr):
     if len(expr.arg) != 1:

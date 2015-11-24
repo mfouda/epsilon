@@ -9,7 +9,6 @@ from epsilon.compiler.problem_graph import *
 from epsilon.compiler.transforms import linear
 from epsilon.compiler.transforms.transform_util import *
 from epsilon.expression_pb2 import Expression, ProxFunction
-from epsilon.expression_util import fp_expr
 from epsilon.util import *
 
 def has_data_constant(expr):
@@ -127,7 +126,7 @@ def separate_objective_terms(graph):
         for f in functions[1:]:
             m, n = dims(var.expr)
             old_var_id = var.expr.variable.variable_id
-            new_var_id = "separate:%s:%s" % (old_var_id, f.expr.fingerprint)
+            new_var_id = "separate:%s:%s" % (old_var_id, f.node_id)
 
             new_var = graph.add_node(
                 expression.variable(m, n, new_var_id), VARIABLE, new_var_id)

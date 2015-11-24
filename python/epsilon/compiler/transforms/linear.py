@@ -6,6 +6,7 @@ from epsilon import error
 from epsilon import expression
 from epsilon import linear_map
 from epsilon import tree_format
+from epsilon.util import *
 from epsilon.compiler import validate
 from epsilon.expression_pb2 import Problem, Constant
 from epsilon.compiler.transforms.transform_util import *
@@ -185,7 +186,7 @@ def transform_power(expr):
     raise TransformError("Unexpected power exponent", expr)
 
 def transform_linear_expr(expr):
-    logging.debug("transform_linear_expr:\n%s", tree_format.format_expr(expr))
+    log_debug_expr("transform_linear_expr", expr)
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     return globals()[f_name](expr)
 

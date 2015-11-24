@@ -6,8 +6,9 @@ from cvxpy.utilities import power_tools
 
 from epsilon import error
 from epsilon import expression
-from epsilon.expression_util import *
 from epsilon.expression_pb2 import Expression, Curvature, Cone
+from epsilon.expression_util import *
+from epsilon.util import *
 
 class TransformError(error.ExpressionError):
     pass
@@ -33,7 +34,7 @@ def epi(f_expr, t_expr):
 def epi_var(expr, name, size=None):
     if size is None:
         size = expr.size.dim
-    name += ":" + fp_expr(expr)
+    name += ":%x" % id(expr)
     return expression.variable(size[0], size[1], name)
 
 def epi_transform(f_expr, name):

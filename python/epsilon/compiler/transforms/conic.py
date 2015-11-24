@@ -207,7 +207,7 @@ def transform_matrix_frac(expr):
         expression.semidefinite(M)]
 
 def transform_expr(expr):
-    #logging.debug("conic transform_expr:\n%s", tree_format.format_expr(expr))
+    log_debug_expr("conic transform_expr", expr)
 
     constrs = []
     transformed_args = []
