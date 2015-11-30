@@ -5,8 +5,10 @@
 #include "epsilon/vector/vector_util.h"
 
 void OrthoInvariantProx::Init(const ProxOperatorArg& arg) {
-  m_ = arg.prox_function().m();
-  n_ = arg.prox_function().n();
+  CHECK_EQ(1, arg.prox_function().arg_size_size());
+  CHECK_EQ(2, arg.prox_function().arg_size(0).dim_size());
+  m_ = arg.prox_function().arg_size(0).dim(0);
+  n_ = arg.prox_function().arg_size(0).dim(1);
   lambda_ = 1;
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());

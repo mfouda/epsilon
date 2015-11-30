@@ -130,12 +130,43 @@ message ProxFunction {
     NON_NEGATIVE = 11;
     SECOND_ORDER_CONE = 12;
     SEMIDEFINITE = 13;
+
+    // Elementwise
+    MAX = 20;
+    NORM_1 = 21;
+    SUM_DEADZONE = 22;
+    SUM_EXP = 23;
+    SUM_HINGE = 24;
+    SUM_INV_POS = 25;
+    SUM_KL_DIV = 26;
+    SUM_LARGEST = 27;
+    SUM_LOGISTIC = 28;
+    SUM_NEG_ENTR = 29;
+    SUM_NEG_LOG = 30;
+    SUM_QUAD_OVER_LIN = 31;
+    SUM_QUANTILE = 32;
+    SUM_SQUARE = 33;
+
+    // Vector
+    NORM_2 = 100;
+    NORM_INF = 101;
+    LOG_SUM_EXP = 102;
+    TOTAL_VARIATION_1D = 103;
+
+    // Matrix
+    NEG_LOG_DET = 200;
+    NORM_NUCLEAR = 201;
+    SIGMA_MAX = 202;
+    LAMBDA_MAX = 203;
+    MATRIX_FRAC = 204;
   }
   Type prox_function_type = 1;
 
-  // For matrix-valued functions
-  int32 m = 2;
-  int32 n = 3;
+  // The epigraph form, I(f(x) <= t)
+  bool epigraph = 2;
+
+  // Needed for matrix-valued functions operating on mat(x_i, m, n)
+  repeated Size arg_size = 3;
 }
 
 // a/b

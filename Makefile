@@ -95,6 +95,7 @@ common_cc = \
 	epsilon/prox/prox.cc \
 	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/semidefinite.cc \
+	epsilon/prox/sum_square.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \

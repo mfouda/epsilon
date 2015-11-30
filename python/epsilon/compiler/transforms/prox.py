@@ -5,7 +5,6 @@ extraction.
 """
 
 import logging
-from collections import namedtuple
 
 from epsilon import expression
 from epsilon import tree_format
@@ -14,196 +13,190 @@ from epsilon.compiler.transforms import linear
 from epsilon.compiler.transforms.transform_util import *
 from epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem
 
-ProxRule = namedtuple("ProxRule", ["match", "convert_args", "create"])
+class MatchResult(object):
+    def __init__(self, match, prox_expr=None, constrs=[]):
+        self.match = match
+        self.prox_expr = prox_expr
+        self.constrs = constrs
 
-RULES = []
+def convert_diagonal(expr):
+    assert False, "not implemented"
 
-# Shorthand convenience
-Prox = ProxFunction
+def convert_scalar(expr):
+    assert False, "not implemented"
 
-def affine_args(expr):
-    return [linear.transform_expr(expr)], []
-
-def least_squares_args(expr):
-    args = []
-    constr = []
-
-    for arg in expr.arg:
-        if arg.dcp_props.affine:
-            args.append(linear.transform_expr(arg))
-            continue
-
-        logging.debug("not affine, adding epigraph")
-        t, epi_f = epi_transform(arg, "affine")
-        args.append(t)
-        constr.append(epi_f)
-
-    return args, constr
-
-def convert_arg(expr, affine_check):
+def convert_affine(expr):
     if expr.dcp_props.affine:
-        expr_linear = linear.transform_expr(expr)
-        if affine_check(expr_linear):
-            return expr_linear, []
+        return linear.transform_expr(expr), []
+    else:
+        t, epi_f = epi_transform(expr, "affine")
+        return t, [epi_f]
 
-    t, epi_f = epi_transform(expr, "convert_arg")
-    return t, [epi_f]
+# Simple functions
 
-def diagonal_args(expr):
-    args = []
-    constr = []
+def prox_constant(expr):
+    if expr.dcp_props.constant:
+        return MatchResult(
+            True,
+            expression.prox_function(
+                ProxFunction(prox_function_type=ProxFunction.CONSTANT),
+                expr))
+    else:
+        return MatchResult(False)
 
-    for arg in expr.arg:
-        if arg.dcp_props.affine:
-            arg_linear = linear.transform_expr(arg)
-            if arg_linear.affine_props.diagonal:
-                args.append(arg_linear)
-                continue
 
-        logging.debug("not diagonal, adding epigraph")
-        t, epi_f = epi_transform(arg, "diagonal")
-        args.append(t)
-        constr.append(epi_f)
+def prox_affine(expr):
+    if expr.dcp_props.affine:
+        return MatchResult(
+            True,
+            expression.prox_function(
+                ProxFunction(prox_function_type=ProxFunction.AFFINE),
+                expr))
+    else:
+        return MatchResult(False)
 
-    return args, constr
+# Cones
 
-def scalar_args(expr):
-    args = []
-    constr = []
+def prox_zero(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.ZERO):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
 
-    for arg in expr.arg:
-        if arg.dcp_props.affine:
-            arg_linear = linear.transform_expr(arg)
-            if arg_linear.affine_props.scalar:
-                args.append(arg_linear)
-                continue
+    affine_arg, constrs = convert_affine(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.ZERO),
+            affine_arg),
+        constrs)
 
-        logging.debug("not scalar, adding epigraph")
-        t, epi_f = epi_transform(arg, "scalar")
-        args.append(t)
-        constr.append(epi_f)
+def prox_non_negative(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.NON_NEGATIVE):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
 
-    return args, constr
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.NON_NEGATIVE),
+            diagonal_arg),
+        constrs)
 
-def epigraph_args(convert):
-    def args(expr):
-        f_expr, t_expr = get_epigraph(expr)
-        output_args = []
-        constr = []
-        for input_arg in [t_expr] + [a for a in f_expr.arg]:
-            arg_i, constr_i = convert(input_arg)
-            output_args.append(arg_i)
-            constr += constr_i
-        return output_args, constr
-    return args
-
-def expr_args(convert):
-    def args(expr):
-        output_args = []
-        constr = []
-        for input_arg in expr.arg:
-            arg_i, constr_i = convert(input_arg)
-            output_args.append(arg_i)
-            constr += constr_i
-        return output_args, constr
-    return args
-
-def soc_prox_args(expr):
-    return epigraph_args(
-        lambda e: convert_arg(e, lambda e: e.affine_props.scalar))(expr)
-
-def create_prox(prox_function_type, **kwargs):
-    def create(expr):
-        kwargs["prox_function_type"] = prox_function_type
-        return ProxFunction(**kwargs)
-    return create
-
-def create_matrix_prox(prox_function_type):
-    def create(expr):
-        return ProxFunction(
-            prox_function_type=prox_function_type,
-            m=dim(expr.arg[0], 0),
-            n=dim(expr.arg[0], 1))
-    return create
-
-def args_default(expr):
-    return expr.arg
-
-def args_epigraph(expr):
+def prox_second_order_cone(expr):
     f_expr, t_expr = get_epigraph(expr)
-    return [t_expr] + list(f_expr.arg)
+    if (f_expr and
+        f_expr.expression_type == Expression.NORM_P and
+        f_expr.p == 2):
+        args = [t_expr, f_expr.arg[0]]
+    else:
+        return MatchResult(False)
 
-def create_second_order_cone(expr, f_args=args_default):
-    args = f_args(expr)
-    return ProxFunction(
-        prox_function_type=Prox.SECOND_ORDER_CONE,
-        m=dim(args[1], 0),
-        n=dim(args[1], 1))
+    scalar_arg0, constrs0 = convert_scalar(args[0])
+    scalar_arg1, constrs1 = convert_scalar(args[1])
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SECOND_ORDER_CONE),
+            scalar_arg0,
+            scalar_arg1),
+        constrs0 + constrs1)
 
-def match_epigraph(f_match):
-    def match(expr):
-        f_expr, t_expr = get_epigraph(expr)
-        if not f_expr:
-            return False
-        return f_match(f_expr)
-    return match
+def prox_semidefinite(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.SEMIDEFINITE):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
 
-def match_indicator(cone_type):
-    def match(expr):
-        return (expr.expression_type == Expression.INDICATOR and
-                expr.cone.cone_type == cone_type)
-    return match
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_fucntion(
+            ProxFunction(prox_function_type=ProxFunction.SEMIDEFINITE),
+            scalar_arg),
+        constrs)
 
-# Proximal operator rules
-RULES += [
-    ProxRule(
-        match_epigraph(
-            lambda e: e.expression_type == Expression.NORM_P and e.p == 2),
-        soc_prox_args,
-        lambda e: create_second_order_cone(e, epigraph_args)),
-]
+# Elementwise
 
-# Linear cone rules
-RULES += [
-    ProxRule(lambda e: e.dcp_props.constant, affine_args,
-             create_prox(Prox.CONSTANT)),
-    ProxRule(lambda e: e.dcp_props.affine, affine_args,
-             create_prox(Prox.AFFINE)),
-    ProxRule(match_indicator(Cone.ZERO), least_squares_args,
-             create_prox(Prox.ZERO)),
-    ProxRule(match_indicator(Cone.NON_NEGATIVE), diagonal_args,
-             create_prox(Prox.NON_NEGATIVE)),
-    ProxRule(match_indicator(Cone.SECOND_ORDER), scalar_args,
-             create_second_order_cone),
-    ProxRule(match_indicator(Cone.SEMIDEFINITE), scalar_args,
-             create_matrix_prox(Prox.SEMIDEFINITE)),
-]
+def prox_max(expr):
+    pass
 
-def transform_prox_expr(rule, expr):
-    args, constrs = rule.convert_args(expr)
-    prox = rule.create(expr)
-    yield expression.prox_function(prox, *args)
-    for constr in constrs:
-        for f_expr in transform_expr(constr):
-            yield f_expr
+def prox_norm1(expr):
+    pass
 
-def transform_cone_expr(expr):
+def prox_sum_deadzone(expr):
+    pass
+
+def prox_sum_exp(expr):
+    pass
+
+def prox_sum_square(expr):
+    if (expr.expression_type == Expression.QUAD_OVER_LIN and
+        expr.arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[1].constant.scalar == 1):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    affine_arg, constrs = convert_affine(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_SQUARE),
+            affine_arg),
+        constrs)
+
+# Vector
+
+# Matrix
+
+def transform_cone(expr):
     obj, constrs = conic.transform_expr(expr)
-    for expr in [obj] + constrs:
-        for f_expr in transform_expr(expr):
-            yield f_expr
+    return MatchResult(True, None, [obj] + constrs)
+
+# Add rules in reverse priority order to apply high-level prox rules first
+RULES = [
+    # Matrix
+
+    # Vector
+
+    # Elementwise
+    prox_sum_square,
+
+    # Cone
+    prox_non_negative,
+    prox_second_order_cone,
+    prox_semidefinite,
+    prox_zero,
+
+    # Simple
+    prox_constant,
+    prox_affine,
+
+    # Lowest priority, transform to cone problem
+    transform_cone
+]
 
 def transform_expr(expr):
     log_debug_expr("transform_expr", expr)
     for rule in RULES:
-        if rule.match(expr):
-            for f_expr in transform_prox_expr(rule, expr):
-                yield f_expr
+        result = rule(expr)
+
+        if result.match:
+            if result.prox_expr:
+                yield result.prox_expr
+
+            for constr in result.constrs:
+                for f_expr in transform_expr(constr):
+                    yield f_expr
             break
     else:
-        # TODO(mwytock): Make this a rule with lowest priority
-        for f_expr in transform_cone_expr(expr):
-            yield f_expr
+        raise TransformError("No rule matched")
 
 def transform_problem(problem):
     f_exprs = list(transform_expr(problem.objective))

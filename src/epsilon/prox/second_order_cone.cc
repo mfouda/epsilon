@@ -28,8 +28,10 @@ void GetArgKeys(const BlockMatrix& H, std::string* t_key, std::string* x_key) {
 // multi-argument functions.
 class SecondOrderConeProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
-    m_ = arg.prox_function().m();
-    n_ = arg.prox_function().n();
+    CHECK_EQ(2, arg.prox_function().arg_size_size());
+    CHECK_EQ(2, arg.prox_function().arg_size(1).dim_size());
+    m_ = arg.prox_function().arg_size(1).dim(0);
+    n_ = arg.prox_function().arg_size(1).dim(1);
     InitArgs(arg.affine_arg());
     InitConstraints(arg.affine_constraint());
 
