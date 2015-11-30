@@ -5,7 +5,7 @@
 class OrthoInvariantProx : public ProxOperator {
 public:
   OrthoInvariantProx(
-      std::unique_ptr<ElementwiseProx> eigen_prox,
+      std::unique_ptr<VectorProx> eigen_prox,
       bool symmetric = false,
       bool add_non_symmetric = false)
     : eigen_prox_(std::move(eigen_prox)),
@@ -20,7 +20,7 @@ private:
   void InitConstraints(const AffineOperator& f);
   Eigen::MatrixXd ApplyOrthoInvariant(const Eigen::MatrixXd& Y);
 
-  std::unique_ptr<ElementwiseProx> eigen_prox_;
+  std::unique_ptr<VectorProx> eigen_prox_;
   bool symmetric_, add_non_symmetric_;
 
   int m_, n_;

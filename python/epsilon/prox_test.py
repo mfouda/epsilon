@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 10
+RANDOM_PROX_TRIALS = 1
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -126,9 +126,9 @@ def C_soc_scaled_translated():
 
 # Proximal operators
 PROX_TESTS = [
-    #Prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
+    Prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
     #Prox("MATRIX_FRAC", lambda: cp.matrix_frac(p, X)),
-    #Prox("MAX", lambda: cp.max_entries(x)),
+    Prox("MAX", lambda: cp.max_entries(x)),
     #Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     #Prox("NORM_1", lambda: cp.norm1(x)),
     #Prox("NORM_2", lambda: cp.norm2(x)),
@@ -169,6 +169,9 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+]
+
+PROX_TESTS = [
 ]
 
 

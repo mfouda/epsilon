@@ -12,8 +12,7 @@ void OrthoInvariantProx::Init(const ProxOperatorArg& arg) {
   lambda_ = 1;
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
-  eigen_prox_->InitElementwise(
-      Eigen::VectorXd::Constant(std::min(m_, n_), lambda_));
+  eigen_prox_->InitVector(std::min(m_, n_), lambda_);
 
   VLOG(2) << "AT: "     << AT_.DebugString();
   VLOG(2) << "lambda: " << lambda_;
@@ -78,7 +77,7 @@ Eigen::MatrixXd OrthoInvariantProx::ApplyOrthoInvariant(const Eigen::MatrixXd& Y
   }
 
   VLOG(2) << "\nD = " << VectorDebugString(d) << "\n";
-  Eigen::VectorXd x_tilde = eigen_prox_->ApplyElementwise(d);
+  Eigen::VectorXd x_tilde = eigen_prox_->ApplyVector(d);
   Eigen::MatrixXd X = U*x_tilde.asDiagonal()*V.transpose();
   if (add_non_symmetric_)
     X += R;

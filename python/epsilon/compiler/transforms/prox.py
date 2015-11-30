@@ -144,9 +144,6 @@ def prox_semidefinite(expr):
 
 # Elementwise
 
-def prox_max(expr):
-    pass
-
 def prox_norm1(expr):
     pass
 
@@ -174,7 +171,39 @@ def prox_sum_square(expr):
 
 # Vector
 
+def prox_max(expr):
+    if expr.expression_type == Expression.MAX_ENTRIES:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.MAX),
+            scalar_arg),
+        constrs)
+
 # Matrix
+
+def prox_lambda_max(expr):
+    if expr.expression_type == Expression.LAMBDA_MAX:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.LAMBDA_MAX,
+                arg_size=[Size(dim=dims(arg))]),
+            scalar_arg),
+        constrs)
+
+# Conic transform (catch-all default)
 
 def transform_cone(expr):
     obj, constrs = conic.transform_expr(expr)
@@ -183,8 +212,10 @@ def transform_cone(expr):
 # Add rules in reverse priority order to apply high-level prox rules first
 RULES = [
     # Matrix
+    prox_lambda_max,
 
     # Vector
+    prox_max,
 
     # Elementwise
     prox_sum_square,

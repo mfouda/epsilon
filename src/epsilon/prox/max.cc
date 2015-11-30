@@ -1,19 +1,19 @@
 
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/prox/prox.h"
+#include "epsilon/prox/max.h"
 #include "epsilon/prox/ortho_invariant.h"
+#include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 
 // max_i x_i
-Eigen::VectorXd MaxEntriesProx::ApplyElementwise(
-    const Eigen::VectorXd& v) {
+Eigen::VectorXd MaxProx::ApplyVector(const Eigen::VectorXd& v) {
   int n = v.rows();
   Eigen::VectorXd y_vec = v;
   double *y = y_vec.data();
   sort(y, y+n, std::greater<double>());
 
-  if(lambda_ <= 0){
+  if (lambda_ <= 0) {
     return v;
   }
 
@@ -38,6 +38,7 @@ Eigen::VectorXd MaxEntriesProx::ApplyElementwise(
 
   return x;
 }
+REGISTER_PROX_OPERATOR(MAX, MaxProx);
 
 // private:
 //   double lambda_;

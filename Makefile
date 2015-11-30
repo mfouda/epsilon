@@ -90,12 +90,15 @@ common_cc = \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/affine.cc \
 	epsilon/prox/elementwise.cc \
+	epsilon/prox/lambda_max.cc \
+	epsilon/prox/max.cc \
 	epsilon/prox/non_negative.cc \
 	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/semidefinite.cc \
 	epsilon/prox/sum_square.cc \
+	epsilon/prox/vector.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
