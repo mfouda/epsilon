@@ -20,28 +20,24 @@ def eval_prox(prox_function_type, prob, v_map, lam=1):
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(prob))
     validate.check_sum_of_prox(problem)
 
-    non_const = []
-    for f_expr in problem.objective.arg:
-        if f_expr.curvature.curvature_type != Curvature.CONSTANT:
-            non_const.append(f_expr)
-
     # Get the first non constant objective term
-    if len(non_const) != 1:
+    if len(problem.objective.arg) != 1:
         raise ProblemError("prox does not have single f", problem)
-
-    if (non_const[0].expression_type != Expression.PROX_FUNCTION or
-        non_const[0].prox_function.prox_function_type != prox_function_type):
-        raise ProblemError("prox did not compile to right type", problem)
 
     if problem.constraint:
         raise ProblemError("prox has constraints", problem)
+
+    f_expr = problem.objective.arg[0]
+    if (f_expr.expression_type != Expression.PROX_FUNCTION or
+        f_expr.prox_function.prox_function_type != prox_function_type):
+        raise ProblemError("prox did not compile to right type", problem)
 
     v_bytes_map = {cvxpy_expr.variable_id(var):
                    numpy.array(val, dtype=numpy.float64).tobytes(order="F")
                    for var, val in v_map.iteritems()}
 
     values = _solve.eval_prox(
-        non_const[0].SerializeToString(),
+        f_expr.SerializeToString(),
         lam,
         constant.global_data_map,
         v_bytes_map)

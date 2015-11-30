@@ -11,7 +11,7 @@ from epsilon import tree_format
 from epsilon.compiler.transforms import conic
 from epsilon.compiler.transforms import linear
 from epsilon.compiler.transforms.transform_util import *
-from epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem
+from epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
 
 class MatchResult(object):
     def __init__(self, match, prox_expr=None, constrs=[]):
@@ -20,17 +20,25 @@ class MatchResult(object):
         self.constrs = constrs
 
 def convert_diagonal(expr):
-    assert False, "not implemented"
+    if not expr.dcp_props.affine:
+        return epi_transform(expr, "affine")
+    linear_expr = linear.transform_expr(expr)
+    if linear_expr.affine_props.diagonal:
+        return linear_expr, []
+    return epi_transform(linear_expr, "diagonal")
 
 def convert_scalar(expr):
-    assert False, "not implemented"
+    if not expr.dcp_props.affine:
+        return epi_transform(expr, "affine")
+    linear_expr = linear.transform_expr(expr)
+    if linear_expr.affine_props.scalar:
+        return linear_expr, []
+    return epi_transform(linear_expr, "scalar")
 
 def convert_affine(expr):
-    if expr.dcp_props.affine:
-        return linear.transform_expr(expr), []
-    else:
-        t, epi_f = epi_transform(expr, "affine")
-        return t, [epi_f]
+    if not expr.dcp_props.affine:
+        return epi_transform(expr, "affine")
+    return linear.transform_expr(expr), []
 
 # Simple functions
 
@@ -40,7 +48,7 @@ def prox_constant(expr):
             True,
             expression.prox_function(
                 ProxFunction(prox_function_type=ProxFunction.CONSTANT),
-                expr))
+                linear.transform_expr(expr)))
     else:
         return MatchResult(False)
 
@@ -51,7 +59,7 @@ def prox_affine(expr):
             True,
             expression.prox_function(
                 ProxFunction(prox_function_type=ProxFunction.AFFINE),
-                expr))
+                linear.transform_expr(expr)))
     else:
         return MatchResult(False)
 
@@ -88,12 +96,19 @@ def prox_non_negative(expr):
         constrs)
 
 def prox_second_order_cone(expr):
-    f_expr, t_expr = get_epigraph(expr)
-    if (f_expr and
-        f_expr.expression_type == Expression.NORM_P and
-        f_expr.p == 2):
-        args = [t_expr, f_expr.arg[0]]
+    args = []
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.SECOND_ORDER):
+        args = expr.arg
     else:
+        f_expr, t_expr = get_epigraph(expr)
+        if (f_expr and
+            f_expr.expression_type == Expression.NORM_P and
+            f_expr.p == 2):
+            args = [t_expr, f_expr.arg[0]]
+            # make second argument a row vector
+            args[1] = expression.reshape(args[1], 1, dim(args[1]))
+    if not args:
         return MatchResult(False)
 
     scalar_arg0, constrs0 = convert_scalar(args[0])
@@ -101,7 +116,11 @@ def prox_second_order_cone(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SECOND_ORDER_CONE),
+            ProxFunction(
+                prox_function_type=ProxFunction.SECOND_ORDER_CONE,
+                arg_size=[
+                    Size(dim=dims(args[0])),
+                    Size(dim=dims(args[1]))]),
             scalar_arg0,
             scalar_arg1),
         constrs0 + constrs1)
@@ -116,8 +135,10 @@ def prox_semidefinite(expr):
     scalar_arg, constrs = convert_scalar(arg)
     return MatchResult(
         True,
-        expression.prox_fucntion(
-            ProxFunction(prox_function_type=ProxFunction.SEMIDEFINITE),
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.SEMIDEFINITE,
+                arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
         constrs)
 
@@ -169,8 +190,8 @@ RULES = [
     prox_sum_square,
 
     # Cone
-    prox_non_negative,
     prox_second_order_cone,
+    prox_non_negative,
     prox_semidefinite,
     prox_zero,
 

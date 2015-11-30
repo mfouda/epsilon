@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 1
+RANDOM_PROX_TRIALS = 10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -132,6 +132,7 @@ PROX_TESTS = [
     #Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     #Prox("NORM_1", lambda: cp.norm1(x)),
     #Prox("NORM_2", lambda: cp.norm2(x)),
+    #Prox("NORM_2", lambda: cp.norm(X, "fro")),
     #Prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
     #Prox("SIGMA_MAX", lambda: cp.sigma_max(X)),
     #Prox("SUM_DEADZONE", f_dead_zone),
@@ -144,10 +145,6 @@ PROX_TESTS = [
     #Prox("SUM_NEG_ENTR", lambda: -cp.sum_entries(cp.entr(x))),
     #Prox("SUM_NEG_LOG", lambda: -cp.sum_entries(cp.log(x))),
     #Prox("SUM_QUANTILE", f_norm_l1_asymmetric),
-    #Prox("SUM_SQUARE", f_least_squares_matrix),
-    #Prox("SUM_SQUARE", lambda: cp.norm(X, "fro")),
-    #Prox("SUM_SQUARE", lambda: f_least_squares(20)),
-    #Prox("SUM_SQUARE", lambda: f_least_squares(5)),
     #Prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
     Prox("AFFINE", lambda: randn(n).T*x),
     Prox("CONSTANT", lambda: 0),
@@ -158,6 +155,9 @@ PROX_TESTS = [
     Prox("SECOND_ORDER_CONE", None, C_soc_translated),
     Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
+    Prox("SUM_SQUARE", f_least_squares_matrix),
+    Prox("SUM_SQUARE", lambda: f_least_squares(20)),
+    Prox("SUM_SQUARE", lambda: f_least_squares(5)),
     Prox("ZERO", None, C_linear_equality),
     Prox("ZERO", None, C_linear_equality_matrix_lhs),
     Prox("ZERO", None, C_linear_equality_matrix_rhs),
@@ -171,12 +171,6 @@ PROX_TESTS = [
     Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
 ]
 
-PROX_TESTS = [
-    Prox("SUM_SQUARE", f_least_squares_matrix),
-    # Prox("SUM_SQUARE", lambda: cp.norm(X, "fro")),
-    # Prox("SUM_SQUARE", lambda: f_least_squares(20)),
-    # Prox("SUM_SQUARE", lambda: f_least_squares(5)),
-]
 
 # Epigraph operators
 # PROX_TESTS += [

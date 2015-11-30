@@ -7,6 +7,7 @@ from cvxpy.atoms import *
 from cvxpy import utilities as u
 from cvxpy.atoms.affine.add_expr import AddExpression
 from cvxpy.atoms.affine.binary_operators import MulExpression
+from cvxpy.atoms.affine.binary_operators import RMulExpression
 from cvxpy.atoms.affine.diag import diag_mat, diag_vec
 from cvxpy.atoms.affine.index import index
 from cvxpy.atoms.affine.transpose import transpose
@@ -112,6 +113,7 @@ EXPRESSION_TYPES = (
     (AddExpression, lambda e: convert_binary(expression.add, e)),
     (Constant, convert_constant),
     (MulExpression, lambda e: convert_binary(expression.multiply, e)),
+    (RMulExpression, lambda e: convert_binary(expression.multiply, e)),
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
     (Parameter, convert_constant),
     (Variable, convert_variable),

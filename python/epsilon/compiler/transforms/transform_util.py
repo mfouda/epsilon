@@ -40,7 +40,7 @@ def epi_var(expr, name, size=None):
 def epi_transform(f_expr, name):
     t_expr = epi_var(f_expr, name)
     epi_f_expr = epi(f_expr, t_expr)
-    return t_expr, epi_f_expr
+    return t_expr, [epi_f_expr]
 
 # gm()/gm_constrs() translated from cvxpy.utilities.power_tools.gm_constrs()
 def gm(t, x, y):
