@@ -1,130 +1,154 @@
-#include "epsilon/prox/scaled_zone.h"
-
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
+#include "epsilon/prox/elementwise.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/util/string.h"
 #include "epsilon/vector/vector_util.h"
 
-bool abs_cmp_descending(const double &x, const double &y)
-{
-    double ax = std::fabs(x), ay = std::fabs(y);
-    return ax > ay;
-}
+// Assumption: alpha,beta,M>=0, C in R
+// f(x) = \sum_i \alpha \max(0, (x_i-C)-M) + \beta \max(0, -(x_i-C)-M)
+class ScaledZoneProx final : public ElementwiseProx {
+public:
+  void Init(const ProxOperatorArg& arg) override;
 
-double ScaledZoneProx::key(double x) {
-  if(x>0)
-    return (x-M_) / alpha_;
-  else
-    return (x+M_) / beta_;
+protected:
+  Eigen::VectorXd ApplyElementwise(
+      const Eigen::VectorXd& lambda,
+      const Eigen::VectorXd& v) override;
+
+private:
+  ProxFunction::ScaledZoneParams params_;
+};
+
+ProxFunction::ScaledZoneParams GetParams(const ProxFunction& prox) {
+  ProxFunction::ScaledZoneParams params = prox.scaled_zone_params();
+  if (prox.prox_function_type() == ProxFunction::NORM_1) {
+    params.set_alpha(1);
+    params.set_beta(1);
+    params.set_c(0);
+    params.set_m(0);
+  } else if (prox.prox_function_type() == ProxFunction::SUM_DEADZONE) {
+    // Use existing m
+    params.set_alpha(1);
+    params.set_beta(1);
+    params.set_c(0);
+  } else if (prox.prox_function_type() == ProxFunction::SUM_HINGE) {
+    params.set_alpha(1);
+    params.set_beta(0);
+    params.set_c(0);
+    params.set_m(0);
+  } else if (prox.prox_function_type() == ProxFunction::SUM_QUANTILE) {
+    // Use existing alpha/beta
+    params.set_m(0);
+    params.set_c(0);
+  } else {
+    LOG(FATAL) << "Unknown prox type: " << prox.prox_function_type();
+  }
+
+  return params;
 }
 
 void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
-  lambda_ = arg.lambda();
-  if (params_from_proto_) {
-    alpha_ = arg.f_expr().scaled_zone_params().alpha();
-    beta_ = arg.f_expr().scaled_zone_params().beta();
-    C_ = arg.f_expr().scaled_zone_params().c();
-    M_ = arg.f_expr().scaled_zone_params().m();
-    affine::BuildDiagonalAffineOperator(arg.f_expr().arg(0), &a_, &b_);
-  }
+  ElementwiseProx::Init(arg);
+  params_ = GetParams(arg.prox_function());
 }
 
-Eigen::VectorXd ScaledZoneProx::Apply(const Eigen::VectorXd &v) {
+Eigen::VectorXd ScaledZoneProx::ApplyElementwise(
+    const Eigen::VectorXd& lambda,
+    const Eigen::VectorXd& v) {
+  // Convenience/readability
   const int n = v.rows();
-  Eigen::VectorXd x(n), lambda(n);
+  const double& alpha = params_.alpha();
+  const double& beta = params_.beta();
+  const double& M = params_.m();
+  const double& C = params_.c();
 
-  if (params_from_proto_) {
-    x = (a_.array()*v.array()+b_.array()-C_).matrix();
-    lambda = a_.array().square() * lambda_;
-  } else {
-    x = (v.array()-C_).matrix();
-    lambda = Eigen::VectorXd::Constant(n, lambda_);
-  }
-
-  for(int i=0; i<n; i++){ // possible loop unrolling
-    if(std::fabs(x(i)) <= M_)
+  Eigen::VectorXd x = (v.array()-C).matrix();
+  for (int i=0; i < n; i++) {
+    if (std::fabs(x(i)) <= M)
       x(i) = x(i);
-    else if(x(i) > M_ + lambda(i) * alpha_)
-      x(i) = x(i) - lambda(i) * alpha_;
-    else if(x(i) < -M_ - lambda(i) * beta_)
-      x(i) = x(i) + lambda(i) * beta_;
-    else if(x(i) > 0)
-      x(i) = M_;
+    else if (x(i) > M + lambda(i) * alpha)
+      x(i) = x(i) - lambda(i) * alpha;
+    else if (x(i) < -M - lambda(i) * beta)
+      x(i) = x(i) + lambda(i) * beta;
+    else if (x(i) > 0)
+      x(i) = M;
     else
-      x(i) = -M_;
+      x(i) = -M;
   }
-
-  if (params_from_proto_) {
-    return ((x.array()+C_-b_.array())/a_.array()).matrix();
-  } else {
-    return (x.array()+C_).matrix();
-  }
-
-}
-REGISTER_PROX_OPERATOR(ScaledZoneProx);
-
-std::string ArrayDebugString(double *a, int n)
-{
-        std::string t = "";
-        for(int i=0; i<n; i++)
-                t += StringPrintf("%.4lf ", a[i]);
-        return t;
+  return (x.array()+C).matrix();
 }
 
-Eigen::VectorXd ScaledZoneEpigraph::Apply(const Eigen::VectorXd& sv) {
-  const int n = sv.rows() - 1;
-  const double s = sv(0);
-  Eigen::VectorXd vec_y = sv.tail(n);
-  double *y = vec_y.data();
-  int ny = n;
+REGISTER_PROX_OPERATOR(NORM_1, ScaledZoneProx);
+REGISTER_PROX_OPERATOR(SUM_DEADZONE, ScaledZoneProx);
+REGISTER_PROX_OPERATOR(SUM_HINGE, ScaledZoneProx);
+REGISTER_PROX_OPERATOR(SUM_QUANTILE, ScaledZoneProx);
 
-  // Filter and eval function
-  double fval = 0;
-  for(int i=0; i<ny; ) {
-    y[i] = y[i] - C_;
-    if(std::fabs(y[i]) <= M_ || (y[i]>0 && alpha_==0) || (y[i]<0 && beta_==0)) {
-            assert(ny >= 1);
-      std::swap(y[i], y[--ny]);
-    } else {
-      if(y[i] > M_)
-        fval += alpha_ * (y[i]-M_);
-      else if(y[i] < -M_)
-        fval += beta_ * (-y[i]-M_);
+// bool abs_cmp_descending(const double &x, const double &y)
+// {
+//     double ax = std::fabs(x), ay = std::fabs(y);
+//     return ax > ay;
+// }
 
-      y[i] = key(y[i]);
-      i++;
-    }
-  }
+// double ScaledZoneProx::key(double x) {
+//   if(x>0)
+//     return (x-M_) / alpha_;
+//   else
+//     return (x+M_) / beta_;
+// }
 
-  if (fval <= s){
-    return sv;
-  }
+// Eigen::VectorXd ScaledZoneEpigraph::Apply(const Eigen::VectorXd& sv) {
+//   const int n = sv.rows() - 1;
+//   const double s = sv(0);
+//   Eigen::VectorXd vec_y = sv.tail(n);
+//   double *y = vec_y.data();
+//   int ny = n;
 
-  std::sort(y, y+ny, abs_cmp_descending);
+//   // Filter and eval function
+//   double fval = 0;
+//   for(int i=0; i<ny; ) {
+//     y[i] = y[i] - C_;
+//     if(std::fabs(y[i]) <= M_ || (y[i]>0 && alpha_==0) || (y[i]<0 && beta_==0)) {
+//             assert(ny >= 1);
+//       std::swap(y[i], y[--ny]);
+//     } else {
+//       if(y[i] > M_)
+//         fval += alpha_ * (y[i]-M_);
+//       else if(y[i] < -M_)
+//         fval += beta_ * (-y[i]-M_);
 
-  double div = 0;
-  double acc = -s;
+//       y[i] = key(y[i]);
+//       i++;
+//     }
+//   }
 
-  for(int i=0; i<ny; i++) {
-    double lam = acc/(div+1);
-    if(std::fabs(y[i]) <= lam)
-      break;
+//   if (fval <= s){
+//     return sv;
+//   }
 
-    if(y[i] > 0) {
-      acc = acc + alpha_*alpha_ * y[i];
-      div = div + alpha_*alpha_;
-    } else if(y[i] < 0) {
-      acc = acc + beta_*beta_ * (-y[i]);
-      div = div + beta_*beta_;
-    }
-  }
-  double lam = acc/(div+1);
+//   std::sort(y, y+ny, abs_cmp_descending);
 
-  Eigen::VectorXd tx(n+1);
-  this->lambda_ = lam;
-  tx(0) = s+lam;
-  tx.tail(n) = ScaledZoneProx::Apply(sv.tail(n));
-  return tx;
-}
-REGISTER_PROX_OPERATOR(ScaledZoneEpigraph);
+//   double div = 0;
+//   double acc = -s;
+
+//   for(int i=0; i<ny; i++) {
+//     double lam = acc/(div+1);
+//     if(std::fabs(y[i]) <= lam)
+//       break;
+
+//     if(y[i] > 0) {
+//       acc = acc + alpha_*alpha_ * y[i];
+//       div = div + alpha_*alpha_;
+//     } else if(y[i] < 0) {
+//       acc = acc + beta_*beta_ * (-y[i]);
+//       div = div + beta_*beta_;
+//     }
+//   }
+//   double lam = acc/(div+1);
+
+//   Eigen::VectorXd tx(n+1);
+//   this->lambda_ = lam;
+//   tx(0) = s+lam;
+//   tx.tail(n) = ScaledZoneProx::Apply(sv.tail(n));
+//   return tx;
+// }
+// REGISTER_PROX_OPERATOR(ScaledZoneEpigraph);

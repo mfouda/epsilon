@@ -1,15 +1,16 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/prox/prox.h"
+#include "epsilon/prox/vector.h"
 #include "epsilon/vector/vector_util.h"
 
-class SumLargestProx : public ProxOperator {
-  void Init(const ProxOperatorArg& arg) override {
-    lambda_ = arg.lambda();
-    k_ = arg.f_expr().k();
+class SumLargestProx : public VectorProxOperator {
+  void InitVector(const ProxOperatorArg& arg, double lambda) override {
+    lambda_ = lambda;
+    k_ = arg.prox_function().sum_largest_params().k();
     //VLOG(2) << "k = " << k_ << "\n";
   }
-  Eigen::VectorXd Apply(const Eigen::VectorXd& v) override {
+
+  Eigen::VectorXd ApplyVector(const Eigen::VectorXd& v) override {
     int n = v.rows();
     Eigen::VectorXd y_vec = v;
     double *y = y_vec.data();

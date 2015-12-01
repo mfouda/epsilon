@@ -8,8 +8,10 @@ class VectorProx : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override;
   BlockVector Apply(const BlockVector& v) override;
 
-  virtual void InitVector(int n, double lambda) {}
-  virtual Eigen::VectorXd ApplyVector(const Eigen::VectorXd& v) = 0;
+ protected:
+  virtual Eigen::VectorXd ApplyVector(
+      double lambda,
+      const Eigen::VectorXd& v) = 0;
 
  private:
   void InitArgs(const AffineOperator& f);

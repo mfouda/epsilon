@@ -61,7 +61,6 @@ endif
 # 	epsilon/prox/negative_entropy.cc \
 # 	epsilon/prox/negative_log.cc \
 # 	epsilon/prox/newton.cc \
-# 	epsilon/prox/norm_l1.cc \
 # 	epsilon/prox/norm_l1_asymmetric.cc \
 # 	epsilon/prox/norm_l1_l2.cc \
 # 	epsilon/prox/norm_l2.cc \
@@ -92,11 +91,21 @@ common_cc = \
 	epsilon/prox/elementwise.cc \
 	epsilon/prox/lambda_max.cc \
 	epsilon/prox/max.cc \
+	epsilon/prox/neg_log_det.cc \
+	epsilon/prox/newton.cc \
 	epsilon/prox/non_negative.cc \
+	epsilon/prox/norm_2.cc \
+	epsilon/prox/norm_nuclear.cc \
 	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
+	epsilon/prox/scaled_zone.cc \
 	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/semidefinite.cc \
+	epsilon/prox/sum_exp.cc \
+	epsilon/prox/sum_inv_pos.cc \
+	epsilon/prox/sum_logistic.cc \
+	epsilon/prox/sum_neg_entr.cc \
+	epsilon/prox/sum_neg_log.cc \
 	epsilon/prox/sum_square.cc \
 	epsilon/prox/vector.cc \
 	epsilon/prox/zero.cc \

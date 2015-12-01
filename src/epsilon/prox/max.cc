@@ -1,19 +1,24 @@
 
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/prox/max.h"
-#include "epsilon/prox/ortho_invariant.h"
-#include "epsilon/prox/prox.h"
+#include "epsilon/prox/vector.h"
 #include "epsilon/vector/vector_util.h"
 
 // max_i x_i
-Eigen::VectorXd MaxProx::ApplyVector(const Eigen::VectorXd& v) {
+class MaxProx final : public VectorProx {
+protected:
+  Eigen::VectorXd ApplyVector(double lambda, const Eigen::VectorXd& v) override;
+};
+
+Eigen::VectorXd MaxProx::ApplyVector(
+    double lambda,
+    const Eigen::VectorXd& v) {
   int n = v.rows();
   Eigen::VectorXd y_vec = v;
   double *y = y_vec.data();
   sort(y, y+n, std::greater<double>());
 
-  if (lambda_ <= 0) {
+  if (lambda <= 0) {
     return v;
   }
 
@@ -21,7 +26,7 @@ Eigen::VectorXd MaxProx::ApplyVector(const Eigen::VectorXd& v) {
   //    x_i = min(t, v_i)
 
   double t = 0;
-  double acc = -lambda_, div = 0;
+  double acc = -lambda, div = 0;
   for(int i=0; i<n; i++){
     if(y[i]*div < acc)
       break;
@@ -41,7 +46,7 @@ Eigen::VectorXd MaxProx::ApplyVector(const Eigen::VectorXd& v) {
 REGISTER_PROX_OPERATOR(MAX, MaxProx);
 
 // private:
-//   double lambda_;
+//   double lambda;
 // };
 // REGISTER_PROX_OPERATOR(MaxEntriesProx);
 

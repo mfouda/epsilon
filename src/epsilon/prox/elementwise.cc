@@ -5,9 +5,9 @@
 void ElementwiseProx::Init(const ProxOperatorArg& arg) {
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
-  InitElementwise(lambda_);
 
   VLOG(2) << "AT: " << AT_.DebugString();
+  VLOG(2) << "lambda: " << VectorDebugString(lambda_);
   VLOG(2) << "a: " << VectorDebugString(a_);
   VLOG(2) << "b: " << VectorDebugString(b_);
 }
@@ -42,6 +42,7 @@ BlockVector ElementwiseProx::Apply(const BlockVector& v) {
   BlockVector x;
   // Apply the composition rules
   x(key_) = (ApplyElementwise(
+      lambda_,
       a_.cwiseProduct((AT_*v)(key_)) + b_) - b_).cwiseQuotient(a_);
   return x;
 }

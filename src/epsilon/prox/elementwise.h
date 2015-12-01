@@ -3,22 +3,15 @@
 
 #include "epsilon/prox/vector.h"
 
-class ElementwiseProx : public VectorProx {
+class ElementwiseProx : public ProxOperator {
  public:
-  // ProxOperator
   void Init(const ProxOperatorArg& arg) override;
   BlockVector Apply(const BlockVector& v) override;
 
-  // VectorProx
-  void InitVector(int n, double lambda) override {
-    InitElementwise(Eigen::VectorXd::Constant(n, lambda));
-  }
-  Eigen::VectorXd ApplyVector(const Eigen::VectorXd& v) override {
-    return ApplyElementwise(v);
-  }
-
-  virtual void InitElementwise(const Eigen::VectorXd& lambda) {}
-  virtual Eigen::VectorXd ApplyElementwise(const Eigen::VectorXd& v) = 0;
+ protected:
+  virtual Eigen::VectorXd ApplyElementwise(
+      const Eigen::VectorXd& lambda,
+      const Eigen::VectorXd& v) = 0;
 
  private:
   void InitArgs(const AffineOperator& f);

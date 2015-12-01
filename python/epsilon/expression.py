@@ -47,6 +47,12 @@ class Expression(object):
         self._dcp_props = None
         self._affine_props = None
 
+    def __eq__(self, other):
+        if isinstance(other, Expression):
+            return self.proto_with_args == other.proto_with_args
+        else:
+            return False
+
     @staticmethod
     def FromProto(proto, arg):
         assert not proto.arg

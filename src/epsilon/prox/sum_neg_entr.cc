@@ -41,16 +41,16 @@ public:
 };
 
 // \sum_i xi log xi
-class NegativeEntropyProx final : public NewtonProx {
+class SumNegEntrProx final : public NewtonProx {
 public:
-  NegativeEntropyProx() : NewtonProx(std::make_unique<NegativeEntropy>()) {}
+  SumNegEntrProx() : NewtonProx(std::make_unique<NegativeEntropy>()) {}
 };
-REGISTER_PROX_OPERATOR(NegativeEntropyProx);
+REGISTER_PROX_OPERATOR(SUM_NEG_ENTR, SumNegEntrProx);
 
-// I(\sum_i xi log xi <= t)
-class NegativeEntropyEpigraph final : public ImplicitNewtonEpigraph {
-public:
-  NegativeEntropyEpigraph()
-    : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
-};
-REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);
+// // I(\sum_i xi log xi <= t)
+// class NegativeEntropyEpigraph final : public ImplicitNewtonEpigraph {
+// public:
+//   NegativeEntropyEpigraph()
+//     : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
+// };
+// REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);

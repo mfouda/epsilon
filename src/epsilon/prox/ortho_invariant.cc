@@ -12,7 +12,7 @@ void OrthoInvariantProx::Init(const ProxOperatorArg& arg) {
   lambda_ = 1;
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
-  eigen_prox_->InitVector(std::min(m_, n_), lambda_);
+  InitEigenProx(arg.prox_function());
 
   VLOG(2) << "AT: "     << AT_.DebugString();
   VLOG(2) << "lambda: " << lambda_;
@@ -53,6 +53,10 @@ BlockVector OrthoInvariantProx::Apply(const BlockVector& v) {
   return x;
 }
 
+void OrthoInvariantProx::InitEigenProx(const ProxFunction& prox) {
+  eigen_prox_ = CreateProxOperator(eigen_prox_type_);
+}
+
 Eigen::MatrixXd OrthoInvariantProx::ApplyOrthoInvariant(const Eigen::MatrixXd& Y) {
   Eigen::VectorXd d;
   Eigen::MatrixXd U, V, R;
@@ -73,16 +77,20 @@ Eigen::MatrixXd OrthoInvariantProx::ApplyOrthoInvariant(const Eigen::MatrixXd& Y
     d = solver.eigenvalues();
     V = solver.eigenvectors();
     d = d.cwiseSqrt();
-    U = V * V * d.asDiagonal().inverse();
+    U = Y * V * d.asDiagonal().inverse();
   }
 
   VLOG(2) << "\nD = " << VectorDebugString(d) << "\n";
-  Eigen::VectorXd x_tilde = eigen_prox_->ApplyVector(d);
+  Eigen::VectorXd x_tilde = ApplyEigenProx(d);
   Eigen::MatrixXd X = U*x_tilde.asDiagonal()*V.transpose();
   if (add_non_symmetric_)
     X += R;
 
   return X;
+}
+
+Eigen::VectorXd OrthoInvariantProx::ApplyEigenProx(const Eigen::VectorXd& d) {
+  return d;
 }
 
 // Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {

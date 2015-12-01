@@ -125,40 +125,40 @@ message ProxFunction {
     AFFINE = 1;
     CONSTANT = 2;
 
-    // Cones
+    // Affine
     ZERO = 10;
-    NON_NEGATIVE = 11;
-    SECOND_ORDER_CONE = 12;
-    SEMIDEFINITE = 13;
+    SUM_SQUARE = 11;
 
     // Elementwise
-    MAX = 20;
+    NON_NEGATIVE = 20;
     NORM_1 = 21;
     SUM_DEADZONE = 22;
     SUM_EXP = 23;
     SUM_HINGE = 24;
     SUM_INV_POS = 25;
     SUM_KL_DIV = 26;
-    SUM_LARGEST = 27;
-    SUM_LOGISTIC = 28;
-    SUM_NEG_ENTR = 29;
-    SUM_NEG_LOG = 30;
-    SUM_QUAD_OVER_LIN = 31;
-    SUM_QUANTILE = 32;
-    SUM_SQUARE = 33;
+    SUM_LOGISTIC = 27;
+    SUM_NEG_ENTR = 28;
+    SUM_NEG_LOG = 29;
+    SUM_QUAD_OVER_LIN = 30;
+    SUM_QUANTILE = 31;
 
     // Vector
-    NORM_2 = 100;
-    NORM_INF = 101;
-    LOG_SUM_EXP = 102;
-    TOTAL_VARIATION_1D = 103;
+    LOG_SUM_EXP = 100;
+    MAX = 101;
+    NORM_2 = 102;
+    NORM_INF = 103;
+    SECOND_ORDER_CONE = 104;
+    SUM_LARGEST = 105;
+    TOTAL_VARIATION_1D = 106;
 
     // Matrix
-    NEG_LOG_DET = 200;
-    NORM_NUCLEAR = 201;
-    SIGMA_MAX = 202;
-    LAMBDA_MAX = 203;
-    MATRIX_FRAC = 204;
+    LAMBDA_MAX = 200;
+    MATRIX_FRAC = 201;
+    NEG_LOG_DET = 202;
+    NORM_NUCLEAR = 203;
+    SEMIDEFINITE = 204;
+    SIGMA_MAX = 205;
   }
   Type prox_function_type = 1;
 
@@ -167,6 +167,19 @@ message ProxFunction {
 
   // Needed for matrix-valued functions operating on mat(x_i, m, n)
   repeated Size arg_size = 3;
+
+  message SumLargestParams {
+    int32 k = 1;
+  }
+  SumLargestParams sum_largest_params = 4;
+
+  message ScaledZoneParams {
+    double alpha = 1;
+    double beta = 2;
+    double c = 3;
+    double m = 4;
+  }
+  ScaledZoneParams scaled_zone_params = 5;
 }
 
 // a/b

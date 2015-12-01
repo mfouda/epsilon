@@ -65,36 +65,6 @@ def prox_affine(expr):
 
 # Cones
 
-def prox_zero(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.ZERO):
-        arg = expr.arg[0]
-    else:
-        return MatchResult(False)
-
-    affine_arg, constrs = convert_affine(arg)
-    return MatchResult(
-        True,
-        expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.ZERO),
-            affine_arg),
-        constrs)
-
-def prox_non_negative(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.NON_NEGATIVE):
-        arg = expr.arg[0]
-    else:
-        return MatchResult(False)
-
-    diagonal_arg, constrs = convert_diagonal(arg)
-    return MatchResult(
-        True,
-        expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.NON_NEGATIVE),
-            diagonal_arg),
-        constrs)
-
 def prox_second_order_cone(expr):
     args = []
     if (expr.expression_type == Expression.INDICATOR and
@@ -125,48 +95,181 @@ def prox_second_order_cone(expr):
             scalar_arg1),
         constrs0 + constrs1)
 
-def prox_semidefinite(expr):
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.SEMIDEFINITE):
+# Elementwise
+
+def prox_norm_1(expr):
+    if (expr.expression_type == Expression.NORM_P and
+        expr.p == 1):
         arg = expr.arg[0]
     else:
         return MatchResult(False)
 
-    scalar_arg, constrs = convert_scalar(arg)
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.NORM_1),
+            diagonal_arg),
+        constrs)
+
+def prox_non_negative(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.NON_NEGATIVE):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.NON_NEGATIVE),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_deadzone(expr):
+    hinge_arg = get_hinge_arg(expr)
+    arg = None
+    if (hinge_arg and
+        hinge_arg.expression_type == Expression.ADD and
+        len(hinge_arg.arg) == 2 and
+        hinge_arg.arg[0].expression_type == Expression.ABS):
+        m = get_scalar_constant(hinge_arg.arg[1])
+        if m <= 0:
+            arg = hinge_arg.arg[0].arg[0]
+    if not arg:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
     return MatchResult(
         True,
         expression.prox_function(
             ProxFunction(
-                prox_function_type=ProxFunction.SEMIDEFINITE,
-                arg_size=[Size(dim=dims(arg))]),
-            scalar_arg),
+                prox_function_type=ProxFunction.SUM_DEADZONE,
+                scaled_zone_params=ProxFunction.ScaledZoneParams(m=m)),
+            diagonal_arg),
         constrs)
 
-# Elementwise
-
-def prox_norm1(expr):
-    pass
-
-def prox_sum_deadzone(expr):
-    pass
-
-def prox_sum_exp(expr):
-    pass
-
-def prox_sum_square(expr):
-    if (expr.expression_type == Expression.QUAD_OVER_LIN and
-        expr.arg[1].expression_type == Expression.CONSTANT and
-        expr.arg[1].constant.scalar == 1):
-        arg = expr.arg[0]
-    else:
+def prox_sum_hinge(expr):
+    arg = get_hinge_arg(expr)
+    if not arg:
         return MatchResult(False)
 
-    affine_arg, constrs = convert_affine(arg)
+    diagonal_arg, constrs = convert_diagonal(arg)
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_SQUARE),
-            affine_arg),
+            ProxFunction(prox_function_type=ProxFunction.SUM_HINGE),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_quantile(expr):
+    arg = None
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        len(expr.arg[0].arg) == 2):
+
+        alpha, x = get_quantile_arg(expr.arg[0].arg[0])
+        beta, y  = get_quantile_arg(expr.arg[0].arg[1])
+        if (x is not None and y is not None and x == y and
+            abs(alpha) <= 1 and abs(beta) <= 1):
+            if alpha <= 0 and beta > 0:
+                arg = x
+                alpha, beta = beta, abs(alpha)
+            elif beta <= 0 and alpha > 0:
+                arg = x
+                beta = abs(beta)
+    if not arg:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.SUM_QUANTILE,
+                scaled_zone_params=ProxFunction.ScaledZoneParams(
+                    alpha=alpha,
+                    beta=beta)),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_exp(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.EXP):
+        arg = expr.arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_EXP),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_inv_pos(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.POWER and
+        expr.arg[0].p == -1):
+        arg = expr.arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_INV_POS),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_logistic(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.LOGISTIC):
+        arg = expr.arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_LOGISTIC),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_neg_entr(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.SUM and
+        expr.arg[0].arg[0].expression_type == Expression.ENTR):
+        arg = expr.arg[0].arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_NEG_ENTR),
+            diagonal_arg),
+        constrs)
+
+def prox_sum_neg_log(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.SUM and
+        expr.arg[0].arg[0].expression_type == Expression.LOG):
+        arg = expr.arg[0].arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_NEG_LOG),
+            diagonal_arg),
         constrs)
 
 # Vector
@@ -182,6 +285,20 @@ def prox_max(expr):
         True,
         expression.prox_function(
             ProxFunction(prox_function_type=ProxFunction.MAX),
+            scalar_arg),
+        constrs)
+
+def prox_norm_2(expr):
+    if expr.expression_type == Expression.NORM_P and expr.p == 2:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.NORM_2),
             scalar_arg),
         constrs)
 
@@ -203,6 +320,89 @@ def prox_lambda_max(expr):
             scalar_arg),
         constrs)
 
+def prox_neg_log_det(expr):
+    if (expr.expression_type == Expression.NEGATE and
+        expr.arg[0].expression_type == Expression.LOG_DET):
+        arg = expr.arg[0].arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.NEG_LOG_DET,
+                arg_size=[Size(dim=dims(arg))]),
+            scalar_arg),
+        constrs)
+
+def prox_semidefinite(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.SEMIDEFINITE):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.SEMIDEFINITE,
+                arg_size=[Size(dim=dims(arg))]),
+            scalar_arg),
+        constrs)
+
+def prox_norm_nuclear(expr):
+    if expr.expression_type == Expression.NORM_NUC:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.NORM_NUCLEAR,
+                arg_size=[Size(dim=dims(arg))]),
+            scalar_arg),
+        constrs)
+
+# Any affine function
+
+def prox_sum_square(expr):
+    if (expr.expression_type == Expression.QUAD_OVER_LIN and
+        expr.arg[1].expression_type == Expression.CONSTANT and
+        expr.arg[1].constant.scalar == 1):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    affine_arg, constrs = convert_affine(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_SQUARE),
+            affine_arg),
+        constrs)
+
+def prox_zero(expr):
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.ZERO):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    affine_arg, constrs = convert_affine(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.ZERO),
+            affine_arg),
+        constrs)
+
 # Conic transform (catch-all default)
 
 def transform_cone(expr):
@@ -211,24 +411,38 @@ def transform_cone(expr):
 
 # Add rules in reverse priority order to apply high-level prox rules first
 RULES = [
+    # Affine
+    prox_sum_square,
+    prox_zero,
+
     # Matrix
     prox_lambda_max,
+    prox_neg_log_det,
+    prox_norm_nuclear,
+    prox_semidefinite,
 
     # Vector
     prox_max,
+    prox_norm_2,
+    prox_second_order_cone,
 
     # Elementwise
-    prox_sum_square,
-
-    # Cone
-    prox_second_order_cone,
     prox_non_negative,
-    prox_semidefinite,
-    prox_zero,
+    prox_norm_1,
+    prox_sum_exp,
+    prox_sum_inv_pos,
+    prox_sum_logistic,
+    prox_sum_neg_entr,
+    prox_sum_neg_log,
+
+    # NOTE(mwytock): Maintain this order as deadzone specializes hinge
+    prox_sum_deadzone,
+    prox_sum_quantile,
+    prox_sum_hinge,
 
     # Simple
-    prox_constant,
     prox_affine,
+    prox_constant,
 
     # Lowest priority, transform to cone problem
     transform_cone

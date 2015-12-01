@@ -4,7 +4,6 @@
 void VectorProx::Init(const ProxOperatorArg& arg) {
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
-  InitVector(n_, lambda_);
 
   VLOG(2) << "AT: " << AT_.DebugString();
   VLOG(2) << "lambda: " << lambda_ << ", alpha: " << alpha_;
@@ -40,6 +39,6 @@ void VectorProx::InitConstraints(const AffineOperator& f) {
 BlockVector VectorProx::Apply(const BlockVector& v) {
   BlockVector x;
   // Apply the composition rules
-  x(key_) = (ApplyVector(alpha_*(AT_*v)(key_) + b_) - b_)/alpha_;
+  x(key_) = (ApplyVector(lambda_, alpha_*(AT_*v)(key_) + b_) - b_)/alpha_;
   return x;
 }

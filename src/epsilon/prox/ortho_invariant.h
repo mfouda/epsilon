@@ -1,26 +1,30 @@
+#ifndef EPSILON_PROX_ORTHO_INVARIANT_H
+#define EPSILON_PROX_ORTHO_INVARIANT_H
 
 #include "epsilon/prox/elementwise.h"
 #include "epsilon/prox/prox.h"
 
 class OrthoInvariantProx : public ProxOperator {
-public:
+ public:
   OrthoInvariantProx(
-      std::unique_ptr<VectorProx> eigen_prox,
+      ProxFunction::Type eigen_prox_type,
       bool symmetric = false,
       bool add_non_symmetric = false)
-    : eigen_prox_(std::move(eigen_prox)),
-      symmetric_(symmetric),
-      add_non_symmetric_(add_non_symmetric) {}
+      : eigen_prox_type_(eigen_prox_type),
+        symmetric_(symmetric),
+        add_non_symmetric_(add_non_symmetric) {}
 
   void Init(const ProxOperatorArg& arg) override;
   BlockVector Apply(const BlockVector& v) override;
 
-private:
+ private:
   void InitArgs(const AffineOperator& f);
   void InitConstraints(const AffineOperator& f);
+  void InitEigenProx(const ProxFunction& prox);
   Eigen::MatrixXd ApplyOrthoInvariant(const Eigen::MatrixXd& Y);
+  Eigen::VectorXd ApplyEigenProx(const Eigen::VectorXd& v);
 
-  std::unique_ptr<VectorProx> eigen_prox_;
+  ProxFunction::Type eigen_prox_type_;
   bool symmetric_, add_non_symmetric_;
 
   int m_, n_;
@@ -28,6 +32,7 @@ private:
   BlockMatrix AT_;
   double lambda_;
   Eigen::MatrixXd B_;
+  std::unique_ptr<ProxOperator> eigen_prox_;
 };
 
 // class OrthoInvariantEpigraph: public ProxOperator {
@@ -46,3 +51,5 @@ private:
 //   double lambda_;
 //   bool symm_part_;
 // };
+
+#endif  // EPSILON_PROX_ORTHO_INVARIANT_H

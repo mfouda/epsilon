@@ -8,14 +8,14 @@
 #include "epsilon/prox/ortho_invariant.h"
 #include <cmath>
 
-// \sum_i exp(x(i))
-class SumExp final : public SmoothFunction {
+// \sum_i 1/(xi)
+class InvPos final : public SmoothFunction {
 public:
   double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     double sum = 0;
     for(int i=0; i<n; i++){
-      sum +=  std::exp(x(i));
+      sum += 1/x(i);
     }
     return sum;
   }
@@ -23,26 +23,29 @@ public:
     int n = x.rows();
     Eigen::VectorXd g(n);
     for(int i=0; i<n; i++)
-      g(i) = std::exp(x(i));
+      g(i) = -1/(x(i)*x(i));
     return g;
   }
   Eigen::VectorXd hessf(const Eigen::VectorXd &x) const override {
     int n = x.rows();
     Eigen::VectorXd h(n);
     for(int i=0; i<n; i++)
-      h(i) = std::exp(x(i));
+      h(i) = 2/(x(i)*x(i)*x(i));
     return h;
+  }
+  Eigen::VectorXd proj_feasible(const Eigen::VectorXd& x) const override {
+    return x.cwiseMax(1e-6);
   }
 };
 
-class SumExpProx: public NewtonProx {
+class SumInvPosProx : public NewtonProx {
 public:
-  SumExpProx() : NewtonProx(std::make_unique<SumExp>()) {}
+  SumInvPosProx() : NewtonProx(std::make_unique<InvPos>()) {}
 };
-REGISTER_PROX_OPERATOR(SUM_EXP, SumExpProx);
+REGISTER_PROX_OPERATOR(SUM_INV_POS, SumInvPosProx);
 
-// class SumExpEpigraph : public NewtonEpigraph {
+// class InvPosEpigraph : public NewtonEpigraph {
 // public:
-//   SumExpEpigraph() : NewtonEpigraph(std::make_unique<SumExp>()) {}
+//   InvPosEpigraph() : NewtonEpigraph(std::make_unique<InvPos>()) {}
 // };
-// REGISTER_PROX_OPERATOR(SumExpEpigraph);
+// REGISTER_PROX_OPERATOR(InvPosEpigraph);

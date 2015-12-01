@@ -104,3 +104,32 @@ def get_epigraph(expr):
         return None, None
 
     return f_expr, t_expr
+
+def get_scalar_constant(expr):
+    if dim(expr) == 1:
+        if expr.expression_type == Expression.NEGATE:
+            c = get_scalar_constant(expr.arg[0])
+            if c is not None:
+                return -c
+        if (expr.expression_type == Expression.CONSTANT and
+            not expr.constant.data_location):
+            return expr.constant.scalar
+
+def get_hinge_arg(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.MAX_ELEMENTWISE and
+        len(expr.arg[0].arg) == 2):
+        if get_scalar_constant(expr.arg[0].arg[0]) == 0:
+            return expr.arg[0].arg[1]
+        elif get_scalar_constant(expr.arg[0].arg[1]) == 0:
+            return expr.arg[0].arg[0]
+
+def get_quantile_arg(expr):
+    if (expr.expression_type == Expression.MULTIPLY and
+        len(expr.arg) == 2):
+        for i, arg in enumerate(expr.arg):
+            alpha = get_scalar_constant(arg)
+            if alpha is not None:
+                return alpha, expr.arg[1-i]
+
+    return None, None

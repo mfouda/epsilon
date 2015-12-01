@@ -1,6 +1,11 @@
-#include "epsilon/prox/non_negative.h"
+#include "epsilon/prox/elementwise.h"
 
-Eigen::VectorXd NonNegativeProx::ApplyElementwise(const Eigen::VectorXd& v) {
+class NonNegativeProx final : public ElementwiseProx {
+protected:
+  Eigen::VectorXd ApplyElementwise(
+      const Eigen::VectorXd& lambda,
+      const Eigen::VectorXd& v) override {
     return v.cwiseMax(0);
-}
+  }
+};
 REGISTER_PROX_OPERATOR(NON_NEGATIVE, NonNegativeProx);
