@@ -302,6 +302,35 @@ def prox_norm_2(expr):
             scalar_arg),
         constrs)
 
+def prox_sum_largest(expr):
+    if expr.expression_type == Expression.SUM_LARGEST:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(
+                prox_function_type=ProxFunction.SUM_LARGEST,
+                sum_largest_params=ProxFunction.SumLargestParams(k=expr.k)),
+            scalar_arg),
+        constrs)
+
+def prox_total_variation_1d(expr):
+    arg = get_total_variation_arg(expr)
+    if arg is None:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.TOTAL_VARIATION_1D),
+            scalar_arg),
+        constrs)
+
 # Matrix
 
 def prox_lambda_max(expr):
@@ -425,6 +454,8 @@ RULES = [
     prox_max,
     prox_norm_2,
     prox_second_order_cone,
+    prox_sum_largest,
+    prox_total_variation_1d,
 
     # Elementwise
     prox_non_negative,

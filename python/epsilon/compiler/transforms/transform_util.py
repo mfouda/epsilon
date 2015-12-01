@@ -133,3 +133,18 @@ def get_quantile_arg(expr):
                 return alpha, expr.arg[1-i]
 
     return None, None
+
+def get_total_variation_arg(expr):
+    if (expr.expression_type == Expression.NORM_P and expr.p == 1 and
+        expr.arg[0].expression_type == Expression.ADD and
+        expr.arg[0].arg[0].expression_type == Expression.INDEX and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.VARIABLE and
+        expr.arg[0].arg[1].expression_type == Expression.NEGATE and
+        expr.arg[0].arg[1].arg[0].expression_type == Expression.INDEX and
+        expr.arg[0].arg[1].arg[0].arg[0].expression_type ==
+        Expression.VARIABLE):
+
+        var_id0 = expr.arg[0].arg[0].arg[0].variable.variable_id
+        var_id1 = expr.arg[0].arg[1].arg[0].arg[0].variable.variable_id
+        if var_id0 == var_id1:
+            return expr.arg[0].arg[0].arg[0]

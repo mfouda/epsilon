@@ -176,8 +176,7 @@ PROX_TESTS = [
 ]
 
 PROX_TESTS = [
-    # Prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
-    # Prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
+    Prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
 ]
 
 

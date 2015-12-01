@@ -48,28 +48,6 @@ LDLIBS += `pkg-config --libs $(LIBS)`
 CXXFLAGS += `pkg-config --cflags $(LIBS)`
 endif
 
-# 	epsilon/prox/deadzone.cc \
-# 	epsilon/prox/fused_lasso.cc \
-# 	epsilon/prox/hinge.cc \
-# 	epsilon/prox/inv_pos.cc \
-# 	epsilon/prox/kl_div.cc \
-# 	epsilon/prox/least_squares.cc
-
-#  	epsilon/prox/linear_equality.cc \
-# 	epsilon/prox/logistic.cc \
-# 	epsilon/prox/max_entries.cc \
-# 	epsilon/prox/negative_entropy.cc \
-# 	epsilon/prox/negative_log.cc \
-# 	epsilon/prox/newton.cc \
-# 	epsilon/prox/norm_l1_asymmetric.cc \
-# 	epsilon/prox/norm_l1_l2.cc \
-# 	epsilon/prox/norm_l2.cc \
-# 	epsilon/prox/quad_over_lin.cc \
-# 	epsilon/prox/scaled_zone.cc \
-# 	epsilon/prox/sum_exp.cc \
-# 	epsilon/prox/sum_largest.cc
-
-
 common_cc = \
 	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
@@ -103,10 +81,12 @@ common_cc = \
 	epsilon/prox/semidefinite.cc \
 	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_inv_pos.cc \
+	epsilon/prox/sum_largest.cc \
 	epsilon/prox/sum_logistic.cc \
 	epsilon/prox/sum_neg_entr.cc \
 	epsilon/prox/sum_neg_log.cc \
 	epsilon/prox/sum_square.cc \
+	epsilon/prox/total_variation_1d.cc \
 	epsilon/prox/vector.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \

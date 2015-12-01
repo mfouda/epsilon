@@ -3,14 +3,15 @@
 #include "epsilon/prox/vector.h"
 #include "epsilon/vector/vector_util.h"
 
-class SumLargestProx : public VectorProxOperator {
-  void InitVector(const ProxOperatorArg& arg, double lambda) override {
-    lambda_ = lambda;
+class SumLargestProx : public VectorProx {
+ public:
+  void Init(const ProxOperatorArg& arg) override {
+    VectorProx::Init(arg);
     k_ = arg.prox_function().sum_largest_params().k();
-    //VLOG(2) << "k = " << k_ << "\n";
   }
 
-  Eigen::VectorXd ApplyVector(const Eigen::VectorXd& v) override {
+ protected:
+  Eigen::VectorXd ApplyVector(double lambda, const Eigen::VectorXd& v) override {
     int n = v.rows();
     Eigen::VectorXd y_vec = v;
     double *y = y_vec.data();
@@ -22,21 +23,21 @@ class SumLargestProx : public VectorProxOperator {
     // inside: the window of [q, q+lam)
     // initialize with nothing inside
     double q = 0;
-    double acc = - k_*lambda_;
+    double acc = - k_*lambda;
     int inside = 0;
     int i=0, j=0;
     for(; i<n and j<n; ) {
       //VLOG(2) << "acc=" <<  acc << ", yi = " << y[i] << ", yj = " << y[j] << "\n";
-      // yi < q and yj < q+lambda_
-      if(y[i]*inside <= acc and (y[j]-lambda_)*inside <= acc)
+      // yi < q and yj < q+lambda
+      if(y[i]*inside <= acc and (y[j]-lambda)*inside <= acc)
         break;
       // front-yi <= rear - yj, where rear-front=lam
-      if(y[i] >= y[j]-lambda_) {
+      if(y[i] >= y[j]-lambda) {
         acc += y[i];
         inside += 1;
         i++;
       } else {
-        acc += -y[j]+lambda_;
+        acc += -y[j]+lambda;
         inside -= 1;
         j++;
       }
@@ -44,13 +45,13 @@ class SumLargestProx : public VectorProxOperator {
     }
     Eigen::VectorXd x(n);
     for(int i=0; i<n; i++) {
-      x(i) = v(i) - std::max(0., std::min(lambda_, v(i)-q));
+      x(i) = v(i) - std::max(0., std::min(lambda, v(i)-q));
     }
 
     return x;
   }
-private:
-  double lambda_;
+
+ private:
   int k_;
 };
-REGISTER_PROX_OPERATOR(SumLargestProx);
+REGISTER_PROX_OPERATOR(SUM_LARGEST, SumLargestProx);
