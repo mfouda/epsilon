@@ -1,4 +1,4 @@
-#include "epsilon/prox/vector.h"
+#include "epsilon/prox/vector_prox.h"
 #include "epsilon/vector/vector_util.h"
 
 void VectorProx::Init(const ProxOperatorArg& arg) {
@@ -36,9 +36,18 @@ void VectorProx::InitConstraints(const AffineOperator& f) {
   AT_ = (1/alpha)*AT_;
 }
 
-BlockVector VectorProx::Apply(const BlockVector& v) {
+// Build input from v
+void VectorProx::ProcessInput(const BlockVector& v) {
+
+}
+// Build x from output
+BlockVector VectorProx::ProcessOutput() {
   BlockVector x;
-  // Apply the composition rules
-  x(key_) = (ApplyVector(lambda_, alpha_*(AT_*v)(key_) + b_) - b_)/alpha_;
   return x;
+}
+
+BlockVector VectorProx::Apply(const BlockVector& v) {
+  ProcessInput(v);
+  ApplyVector(input_, &output_);
+  return ProcessOutput();
 }

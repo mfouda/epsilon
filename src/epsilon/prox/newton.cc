@@ -5,30 +5,63 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 
-Eigen::VectorXd NewtonProx::residual(
+Eigen::VectorXd ProxResidual(
+    const SmoothFunction& f,
+    const Eigen::VectorXd& lambda,
     const Eigen::VectorXd& x,
-    const Eigen::VectorXd& v,
-    const Eigen::VectorXd& lambda) {
-  return x-v+lambda.asDiagonal()*f_->gradf(x);
+    const Eigen::VectorXd& v) {
+  return x-v+lambda.asDiagonal()*f.gradf(x);
 }
 
-Eigen::VectorXd NewtonProx::ApplyElementwise(
+Eigen::VectorXd EpigraphResidual(
+    const SmoothFunction& f,
+    double lam,
+    const Eigen::VectorXd& x, double t,
+    const Eigen::VectorXd& v, double s) {
+  int n = x.rows();
+  VectorXd r(x.rows()+2);
+  r.head(n) = x-v+lam*f.gradf(x);
+  r(n) = t-s-lam;
+  r(n+1) = f.eval(x)-t;
+  return r;
+}
+
+// solve Ax=b, where A = [diag(d), z; z', alpha], and d_i>0 forall i
+Eigen::VectorXd SolveArrowheadSystem(
+    const Eigen::VectorXd &d,
+    const Eigen::VectorXd &z,
+    double alpha,
+    const Eigen::VectorXd &b) {
+  int n = z.rows();
+  Eigen::VectorXd u = z.array() / d.array();
+  double rho = alpha - u.dot(z);
+  Eigen::VectorXd y(n+1);
+  y.head(n) = u;
+  y(n) = -1;
+  Eigen::VectorXd dinv_b(n+1);
+  dinv_b.head(n) = b.head(n).array() / d.array();
+  dinv_b(n) = 0;
+  return dinv_b + 1/rho * y.dot(b) * y;
+}
+
+Eigen::VectorXd ApplyNewtonProx(
+    const SmoothFunction& f,
     const Eigen::VectorXd& lambda,
     const Eigen::VectorXd& v) {
   int n = v.rows();
   double eps = std::max(1e-12, 1e-10/n);
 
   // init
-  Eigen::VectorXd x = f_->proj_feasible(v);
+  Eigen::VectorXd x = f.proj_feasible(v);
 
   int iter = 0;
   int MAX_ITER = 100;
   for(; iter < MAX_ITER; iter++) {
     Eigen::VectorXd hx = (
-        Eigen::VectorXd::Constant(n, 1.) + lambda.asDiagonal() * f_->hessf(x));
-    Eigen::VectorXd gx = residual(x, v, lambda);
+        Eigen::VectorXd::Constant(n, 1.) + lambda.asDiagonal() * f.hessf(x));
+    Eigen::VectorXd gx = ProxResidual(f, lambda, x, v);
     Eigen::VectorXd dx = (gx.array() / hx.array()).matrix();
-//    VLOG(2) << "Iter " << iter << " gx: " << VectorDebugString(gx);
+    VLOG(3) << "Iter " << iter << " gx: " << VectorDebugString(gx);
 
     // line search
     double beta = 0.001;
@@ -37,7 +70,7 @@ Eigen::VectorXd NewtonProx::ApplyElementwise(
     double x_res = gx.norm();
     while(theta > eps) {
       Eigen::VectorXd nx = x - theta * dx;
-      double nx_res = residual(nx, v, lambda).norm();
+      double nx_res = ProxResidual(f, lambda, nx, v).norm();
       if(nx_res <= (1-beta*theta)*x_res) {
         x = nx;
         x_res = nx_res;
@@ -58,160 +91,151 @@ Eigen::VectorXd NewtonProx::ApplyElementwise(
   return x;
 }
 
-// Eigen::VectorXd NewtonEpigraph::residual
-// (const Eigen::VectorXd &x, double t, double lam, const Eigen::VectorXd &v, double s) {
-//   int n = x.rows();
-//   VectorXd r(x.rows()+2);
-//   r.head(n) = x-v+lam*f_->gradf(x);
-//   r(n) = t-s-lam;
-//   r(n+1) = f_->eval(x)-t;
-//   return r;
-// }
+Eigen::VectorXd ApplyNewtonProx(
+    const SmoothFunction& f,
+    double lambda,
+    const Eigen::VectorXd& v) {
+  return ApplyNewtonProx(
+      f, Eigen::VectorXd::Constant(lambda, v.rows()), v);
+}
 
-// Eigen::VectorXd NewtonEpigraph::Apply(const Eigen::VectorXd &sv) {
-//   int n = sv.rows()-1;
-//   double eps = std::max(1e-12, 1e-10/n);
+void NewtonProx::ApplyVector(
+    const VectorProxInput& input,
+    VectorProxOutput* output) {
+  output->set_value(
+      0, ApplyNewtonProx(
+          *f_, input.lambda_vec(), input.value_vec(0)));
+}
 
-//   double s = sv(0);
-//   Eigen::VectorXd v = sv.tail(n);
-//   Eigen::VectorXd x = f_->proj_feasible(v);
-//   double feasible_dist = (v-x).norm();
+void NewtonEpigraph::ApplyVector(
+    const VectorProxInput& input,
+    VectorProxOutput* output) {
+  const SmoothFunction& f = *f_;
+  const Eigen::VectorXd& v = input.value_vec(0);
+  const double s =  input.value(1);
+  const int n = v.rows();
+  const double eps = std::max(1e-12, 1e-10/n);
 
-//   // easy case
-//   if (feasible_dist < eps && f_->eval(x) <= s)
-//     return sv;
+  Eigen::VectorXd x = f.proj_feasible(v);
+  double feasible_dist = (v-x).norm();
 
-//   // init
-//   double t = s;
-//   double lam = 1;
+  // easy case
+  if (feasible_dist < eps && f.eval(x) <= s) {
+    output->set_value(0, v);
+    output->set_value(1, s);
+    return;
+  }
 
-//   int iter = 0;
-//   int MAX_ITER = 100;
-//   for(; iter < MAX_ITER; iter++) {
-//     Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * f_->hessf(x);
-//     Eigen::VectorXd g = residual(x, t, lam, v, s);
-//     VLOG(2) << "Iter " << iter << "\n"
-//             << " lam: " << lam << "\n"
-//             << " x: " << VectorDebugString(x) << "\n"
-//             << " g: " << VectorDebugString(g) << "\n"
-//             << " hx: " << VectorDebugString(hx);
+  // init
+  double t = s;
+  double lam = 1;
 
-//     // construct arrowhead hessian matrix
-//     Eigen::VectorXd d(n+1);
-//     d.head(n) = Eigen::VectorXd::Constant(n, 1.) + lam * f_->hessf(x);
-//     d(n) = 1;
-//     Eigen::VectorXd z(n+1);
-//     z.head(n) = g.head(n);
-//     z(n) = -1.;
-//     double alpha = 0;
-//     Eigen::VectorXd step = SolveArrowheadSystem(d, z, alpha, g);
-//     VLOG(2) << " step: " << VectorDebugString(step);
+  int iter = 0;
+  int MAX_ITER = 100;
+  for(; iter < MAX_ITER; iter++) {
+    Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * f.hessf(x);
+    Eigen::VectorXd g = EpigraphResidual(f, lam, x, t, v, s);
+    VLOG(2) << "Iter " << iter << "\n"
+            << " lam: " << lam << "\n"
+            << " x: " << VectorDebugString(x) << "\n"
+            << " g: " << VectorDebugString(g) << "\n"
+            << " hx: " << VectorDebugString(hx);
 
-//     // line search
-//     double beta = 0.001;
-//     double gamma = 0.5;
-//     double theta = 1;
-//     double x_res = g.norm();
-//     while(theta > eps) {
-//       Eigen::VectorXd nx = x - theta*step.head(n);
-//       nx = f_->proj_feasible(nx);
-//       double nt = t - theta*step(n);
-//       double nlam = lam - theta*step(n+1);
-//       if(nlam < eps)
-//               nlam = eps;
-//       double nx_res = residual(nx, nt, nlam, v, s).norm();
-//       VLOG(2) << "x_res = " << x_res << ", nx_res = " << nx_res << "\n";
-//       if(nx_res <= (1-beta*theta)*x_res) {
-//         x = nx;
-//         t = nt;
-//         lam = nlam;
-//         x_res = nx_res;
-//         break;
-//       }
-//       theta *= gamma;
-//       if(theta < eps)
-//               VLOG(1) << "Line search reach max iter, x_res=" << x_res << "\n";
-//     }
-//     VLOG(2) << "XRES = "<< x_res << ", theta = " << theta <<"\n";
+    // construct arrowhead hessian matrix
+    Eigen::VectorXd d(n+1);
+    d.head(n) = Eigen::VectorXd::Constant(n, 1.) + lam * f.hessf(x);
+    d(n) = 1;
+    Eigen::VectorXd z(n+1);
+    z.head(n) = g.head(n);
+    z(n) = -1.;
+    double alpha = 0;
+    Eigen::VectorXd step = SolveArrowheadSystem(d, z, alpha, g);
+    VLOG(2) << " step: " << VectorDebugString(step);
 
-//     if(x_res < eps) {
-//       VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
-//       break;
-//     } else if(iter == MAX_ITER-1) {
-//       VLOG(1) << "Newton Method won't converge for epigraph.\n"
-//         << "sv = " << sv << '\n';
-//     }
-//   }
-//   Eigen::VectorXd tx(n+1);
-//   tx(0) = t;
-//   tx.tail(n) = x;
-//   return tx;
-// }
+    // line search
+    double beta = 0.001;
+    double gamma = 0.5;
+    double theta = 1;
+    double x_res = g.norm();
+    while(theta > eps) {
+      Eigen::VectorXd nx = x - theta*step.head(n);
+      nx = f.proj_feasible(nx);
+      double nt = t - theta*step(n);
+      double nlam = lam - theta*step(n+1);
+      if(nlam < eps)
+              nlam = eps;
+      double nx_res = EpigraphResidual(f, nlam, nx, nt, v, s).norm();
+      VLOG(2) << "x_res = " << x_res << ", nx_res = " << nx_res << "\n";
+      if(nx_res <= (1-beta*theta)*x_res) {
+        x = nx;
+        t = nt;
+        lam = nlam;
+        x_res = nx_res;
+        break;
+      }
+      theta *= gamma;
+      if(theta < eps)
+              VLOG(1) << "Line search reach max iter, x_res=" << x_res << "\n";
+    }
+    VLOG(2) << "XRES = "<< x_res << ", theta = " << theta <<"\n";
 
-// // solve Ax=b, where A = [diag(d), z; z', alpha], and d_i>0 forall i
-// Eigen::VectorXd NewtonEpigraph::SolveArrowheadSystem
-//   (const Eigen::VectorXd &d, const Eigen::VectorXd &z, double alpha,
-//     const Eigen::VectorXd &b) {
-//     int n = z.rows();
-//     Eigen::VectorXd u = z.array() / d.array();
-//     double rho = alpha - u.dot(z);
-//     Eigen::VectorXd y(n+1);
-//     y.head(n) = u;
-//     y(n) = -1;
-//     Eigen::VectorXd dinv_b(n+1);
-//     dinv_b.head(n) = b.head(n).array() / d.array();
-//     dinv_b(n) = 0;
+    if(x_res < eps) {
+      VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
+      break;
+    } else if(iter == MAX_ITER-1) {
+      VLOG(1) << "Newton Method won't converge for epigraph.\n";
+    }
+  }
 
-//     return dinv_b + 1/rho * y.dot(b) * y;
-// }
+  output->set_value(0, x);
+  output->set_value(1, t);
+}
 
-// Eigen::VectorXd ImplicitNewtonEpigraph::Apply(const Eigen::VectorXd& sv) {
-//   int n = sv.rows()-1;
-//   double s = sv(0);
-//   Eigen::VectorXd v = sv.tail(n);
-//   double t = s;
-//   Eigen::VectorXd x = f_->proj_feasible(v);
+void ImplicitNewtonEpigraph::ApplyVector(
+    const VectorProxInput& input,
+    VectorProxOutput* output) {
 
-//   if(f_->eval(x) <= t) {
-//     Eigen::VectorXd txx(n+1);
-//     txx(0) = s;
-//     txx.tail(n) = x;
-//     return txx;
-//   }
+  const SmoothFunction& f = *f_;
+  const Eigen::VectorXd& v = input.value_vec(0);
+  const double s =  input.value(1);
 
-//   double lam = 1;
-//   int iter = 0, max_iter=100;
-//   double res = 0;
-//   for(; iter < max_iter; iter++) {
-//     //ProxOperatorArg prox_arg(lam, NULL, NULL);
-//     //NewtonProx::Init(prox_arg);
-//     lambda_ = lam;
-//     x = NewtonProx::Apply(v);
+  Eigen::VectorXd x = f.proj_feasible(v);
+  double t = s;
 
-//     Eigen::VectorXd gx = f_->gradf(x);
-//     Eigen::VectorXd hx = f_->hessf(x);
-//     double glam = f_->eval(x) - lam - s;
-//     double hlam = -(gx.cwiseQuotient((1.+lam*hx.array()).matrix()).dot(gx)) - 1;
-//     VLOG(2) << "glam = " << glam << ", hlam = " << hlam << "\n";
+  if (f.eval(x) <= t) {
+    output->set_value(0, x);
+    output->set_value(1, t);
+    return;
+  }
 
-//     res = std::abs(glam);
-//     if(res < 1e-10)
-//       break;
+  double lam = 1;
+  int iter = 0, max_iter=100;
+  double res = 0;
+  for(; iter < max_iter; iter++) {
+    x = ApplyNewtonProx(*f_, lam, v);
 
-//     lam = lam - glam/hlam;
-//     if (lam < 0)
-//       lam = 1e-6;
+    Eigen::VectorXd gx = f.gradf(x);
+    Eigen::VectorXd hx = f.hessf(x);
+    double glam = f.eval(x) - lam - s;
+    double hlam = -(gx.cwiseQuotient((1.+lam*hx.array()).matrix()).dot(gx)) - 1;
+    VLOG(2) << "glam = " << glam << ", hlam = " << hlam << "\n";
 
-//   }
-//   if(iter == max_iter) {
-//     VLOG(2) << "Newton reach max iter, residual = " << res << "\n";
-//   } else {
-//     VLOG(2) << "Newton ends in " << iter << "iterations, r = " << res << "\n";
-//   }
+    res = std::abs(glam);
+    if(res < 1e-10)
+      break;
 
-//   Eigen::VectorXd tx(n+1);
-//   tx(0) = s+lam;
-//   tx.tail(n) = NewtonProx::Apply(v);
+    lam = lam - glam/hlam;
+    if (lam < 0)
+      lam = 1e-6;
 
-//   return tx;
-// }
+  }
+
+  if(iter == max_iter) {
+    VLOG(2) << "Newton reach max iter, residual = " << res << "\n";
+  } else {
+    VLOG(2) << "Newton ends in " << iter << "iterations, r = " << res << "\n";
+  }
+
+  output->set_value(0, ApplyNewtonProx(*f_, lam, v));
+  output->set_value(1, s+lam);
+}

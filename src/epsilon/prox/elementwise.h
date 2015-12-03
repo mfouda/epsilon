@@ -3,15 +3,10 @@
 
 #include "epsilon/prox/vector.h"
 
-class ElementwiseProx : public ProxOperator {
+class ElementwiseProx : public VectorProx {
  public:
   void Init(const ProxOperatorArg& arg) override;
   BlockVector Apply(const BlockVector& v) override;
-
- protected:
-  virtual Eigen::VectorXd ApplyElementwise(
-      const Eigen::VectorXd& lambda,
-      const Eigen::VectorXd& v) = 0;
 
  private:
   void InitArgs(const AffineOperator& f);
