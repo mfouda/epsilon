@@ -7,18 +7,28 @@ class VectorProxInput {
  public:
   double lambda() const;
   const Eigen::VectorXd& lambda_vec() const;
-  const Eigen::MatrixXd& lambda_mat() const;
 
   double value(int i) const;
   const Eigen::VectorXd& value_vec(int i) const;
-  const Eigen::MatrixXd& value_mat(int i) const;
+
+ private:
+  friend class VectorProx;
+
+  bool elementwise_;
+  double lambda_;
+  Eigen::VectorXd lambda_vec_;
+  BlockVector v_;
 };
 
 class VectorProxOutput {
  public:
   void set_value(int i, double x);
   void set_value(int i, const Eigen::VectorXd& x);
-  void set_value(int i, const Eigen::MatrixXd& X);
+
+ private:
+  friend class VectorProx;
+
+  BlockVector x_;
 };
 
 class VectorProx : public ProxOperator {
@@ -34,15 +44,17 @@ class VectorProx : public ProxOperator {
  private:
   void InitArgs(const AffineOperator& f);
   void InitConstraints(const AffineOperator& f);
+  void InitInput();
 
-  void ProcessInput(const BlockVector& v);
-  BlockVector ProcessOutput();
+  void PreProcessInput(const BlockVector& v);
+  BlockVector PostProcessOutput();
 
-  std::string key_;
+  bool elementwise_;
   int n_;
-  BlockMatrix AT_;
-  double alpha_, lambda_;
-  Eigen::VectorXd b_;
+  BlockMatrix AT_, D_alpha_inv_;
+  BlockVector b_;
+  double alpha_, beta_;
+  Eigen::VectorXd alpha_vec_;
 
   // Used in ApplyVector()
   // NOTE(mwytock): Storing per-Apply() state like this makes VectorProx not

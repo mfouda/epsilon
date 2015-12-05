@@ -57,7 +57,6 @@ endif
 	epsilon/prox/norm_2.cc \
 	epsilon/prox/norm_nuclear.cc \
 	epsilon/prox/ortho_invariant.cc \
-	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
 	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/semidefinite.cc \
@@ -88,8 +87,9 @@ common_cc = \
 	epsilon/linear/scalar_matrix_impl.cc \
 	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/parameters/local_parameter_service.cc \
-	epsilon/prox/vector_prox.cc \
 	epsilon/prox/newton.cc \
+	epsilon/prox/prox.cc \
+	epsilon/prox/vector_prox.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \

@@ -1,4 +1,6 @@
 
+#include <set>
+
 #include <glog/logging.h>
 
 #include "epsilon/vector/block_vector.h"
@@ -85,6 +87,14 @@ std::string BlockVector::DebugString() const {
   for (auto iter : data_) {
     if (retval != "") retval += " ";
     retval += iter.first + ": " + VectorDebugString(iter.second);
+  }
+  return retval;
+}
+
+std::set<std::string> BlockVector::keys() const {
+  std::set<std::string> retval;
+  for (const auto& iter : data_) {
+    retval.insert(iter.first);
   }
   return retval;
 }

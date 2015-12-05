@@ -59,6 +59,7 @@ class BlockVector {
 
   int n() const;
   double norm() const;
+  std::set<std::string> keys() const;
   bool has_key(const std::string& key) const {
     return data_.find(key) != data_.end();
   }
