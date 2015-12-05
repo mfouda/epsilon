@@ -1,7 +1,6 @@
 #ifndef EPSILON_PROX_ORTHO_INVARIANT_H
 #define EPSILON_PROX_ORTHO_INVARIANT_H
 
-#include "epsilon/prox/elementwise.h"
 #include "epsilon/prox/prox.h"
 
 class OrthoInvariantProx : public ProxOperator {
@@ -20,7 +19,7 @@ class OrthoInvariantProx : public ProxOperator {
  private:
   void InitArgs(const AffineOperator& f);
   void InitConstraints(const AffineOperator& f);
-  void InitEigenProx(const ProxFunction& prox);
+  void InitEigenProx();
   Eigen::MatrixXd ApplyOrthoInvariant(const Eigen::MatrixXd& Y);
   Eigen::VectorXd ApplyEigenProx(const Eigen::VectorXd& v);
 

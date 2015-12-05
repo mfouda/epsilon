@@ -48,13 +48,6 @@ LDLIBS += `pkg-config --libs $(LIBS)`
 CXXFLAGS += `pkg-config --cflags $(LIBS)`
 endif
 
-#	epsilon/prox/lambda_max.cc \
-	epsilon/prox/neg_log_det.cc \
-	epsilon/prox/norm_nuclear.cc \
-	epsilon/prox/ortho_invariant.cc \
-	epsilon/prox/second_order_cone.cc \
-	epsilon/prox/semidefinite.cc \
-
 common_cc = \
 	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
@@ -73,12 +66,17 @@ common_cc = \
 	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/affine.cc \
+	epsilon/prox/lambda_max.cc \
 	epsilon/prox/max.cc \
+	epsilon/prox/neg_log_det.cc \
 	epsilon/prox/newton.cc \
 	epsilon/prox/non_negative.cc \
 	epsilon/prox/norm_2.cc \
+	epsilon/prox/norm_nuclear.cc \
+	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/semidefinite.cc \
 	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_inv_pos.cc \
 	epsilon/prox/sum_largest.cc \

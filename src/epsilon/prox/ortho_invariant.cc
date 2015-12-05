@@ -12,7 +12,7 @@ void OrthoInvariantProx::Init(const ProxOperatorArg& arg) {
   lambda_ = 1;
   InitArgs(arg.affine_arg());
   InitConstraints(arg.affine_constraint());
-  InitEigenProx(arg.prox_function());
+  InitEigenProx();
 
   VLOG(2) << "AT: "     << AT_.DebugString();
   VLOG(2) << "lambda: " << lambda_;
@@ -53,8 +53,18 @@ BlockVector OrthoInvariantProx::Apply(const BlockVector& v) {
   return x;
 }
 
-void OrthoInvariantProx::InitEigenProx(const ProxFunction& prox) {
+void OrthoInvariantProx::InitEigenProx() {
   eigen_prox_ = CreateProxOperator(eigen_prox_type_);
+  ProxFunction prox_function;
+  prox_function.set_prox_function_type(eigen_prox_type_);
+
+  AffineOperator affine_arg, affine_constraint;
+  const int n = std::min(m_, n_);
+  std::string key = affine::arg_key(0);
+  affine_arg.A(key, key) = linear_map::Identity(n);
+  affine_constraint.A(key, key) = linear_map::Scalar(1/lambda_, n);
+  eigen_prox_->Init(
+      ProxOperatorArg(prox_function, affine_arg, affine_constraint));
 }
 
 Eigen::MatrixXd OrthoInvariantProx::ApplyOrthoInvariant(const Eigen::MatrixXd& Y) {
@@ -90,7 +100,10 @@ Eigen::MatrixXd OrthoInvariantProx::ApplyOrthoInvariant(const Eigen::MatrixXd& Y
 }
 
 Eigen::VectorXd OrthoInvariantProx::ApplyEigenProx(const Eigen::VectorXd& d) {
-  return d;
+  BlockVector v;
+  v(affine::arg_key(0)) = d;
+  BlockVector x = eigen_prox_->Apply(v);
+  return x(affine::arg_key(0));
 }
 
 // Eigen::VectorXd OrthoInvariantEpigraph::Apply(const Eigen::VectorXd& sy) {
