@@ -1,87 +1,53 @@
 #include "epsilon/prox/vector_prox.h"
 #include "epsilon/vector/vector_util.h"
 
+double GetScalar(const BlockMatrix& A) {
+  bool first = true;
+  double alpha;
+  for (const auto& col_iter : A.data()) {
+    if (col_iter.second.size() != 1 ||
+        col_iter.first != col_iter.second.begin()->first)
+      LOG(FATAL) << "Not block diagonal";
 
-void VectorProx::Init(const ProxOperatorArg& arg) {
-  InitArgs(arg.affine_arg());
-  InitConstraints(arg.affine_constraint());
-  InitInput();
-}
-
-void VectorProx::InitInput() {
-  input_.elementwise_ = elementwise_;
-  if (elementwise_) {
-    LOG(FATAL) << "elementwise";
-  } else {
-    input_.lambda_ = alpha_/beta_;
-    input_.lambda_ *= input_.lambda_;
-    input_.lambda_vec_ = Eigen::VectorXd::Constant(n_, input_.lambda_);
-    AT_ = (alpha_/beta_)*AT_;
-  }
-
-  // VLOG(2) << "AT: " << AT_.DebugString();
-  // VLOG(2) << "lambda: " << lambda_ << ", alpha: " << alpha_;
-  // VLOG(2) << "b: " << VectorDebugString(b_);
-}
-
-void VectorProx::InitArgs(const AffineOperator& f) {
-  // Assumes single argument and single variable
-  const BlockMatrix& H = f.A;
-  b_ = f.b;
-
-  if (H.row_keys().size() == 1 && H.col_keys().size() == 1) {
-    // Single key case
-    std::string key = affine::arg_key(0);
-    const linear_map::LinearMap& H0 = H(key, *H.col_keys().begin());
-    n_ = H0.impl().n();
-
-    if (H0.impl().type() == linear_map::DIAGONAL_MATRIX) {
-      elementwise_ = true;
-      alpha_vec_ = linear_map::GetDiagonal(H0);
-      D_alpha_inv_(key, key) = linear_map::Diagonal(alpha_vec_.cwiseInverse());
-    } else if (H0.impl().type() == linear_map::SCALAR_MATRIX) {
-      elementwise_ = false;
-      alpha_ = linear_map::GetScalar(H0);
-      D_alpha_inv_(key, key) = linear_map::Scalar(1/alpha_, n_);
-    } else {
-      LOG(FATAL) << "Non diagonal scaling";
-    }
-  } else {
-    LOG(FATAL) << "multi arg function";
-  }
-}
-
-void VectorProx::InitConstraints(const AffineOperator& f) {
-  // Handle simple case where A'A is scalar and b=0
-  const BlockMatrix& A = f.A;
-  const BlockVector& b = f.b;
-  CHECK(b.keys().empty());
-
-  AT_ = A.Transpose();
-  BlockMatrix ATA = AT_*A;
-
-  bool first = false;
-  for (const auto& col_iter : ATA.data()) {
-    CHECK(col_iter.second.size() == 1 &&
-          col_iter.first == col_iter.second.begin()->first)
-        << "Constraint transform A(x), A'A not block diagonal";
     if (first) {
-      beta_ = linear_map::GetScalar(col_iter.second.begin()->second);
+      alpha = linear_map::GetScalar(col_iter.second.begin()->second);
       first = false;
     } else {
-      CHECK_EQ(beta_, linear_map::GetScalar(col_iter.second.begin()->second));
+      CHECK_EQ(alpha, linear_map::GetScalar(col_iter.second.begin()->second));
     }
   }
+
+  return alpha;
 }
 
-// Build input from v
+void VectorProx::Init(const ProxOperatorArg& arg) {
+  // transform
+  //   argmin_x f(Hx + g) + 1/2||Ax - v||^2 to
+  // to
+  //   argmin_x lambda*f(x) + 1/2||x - (M*v + g)||^2
+
+  const BlockMatrix& A = arg.affine_constraint().A;
+  const BlockMatrix& H = arg.affine_arg().A;
+  g_ = arg.affine_arg().b;
+  H_inv_ = H.Inverse();
+
+  BlockMatrix M = A*H_inv_;
+  MT_ = M.Transpose();
+
+  // Must be a scalar/diagonal matrix
+  // TODO(mwtyock): Support diagonal
+  input_.lambda_ = 1/GetScalar(MT_*M);
+  input_.lambda_vec_ = Eigen::VectorXd::Constant(A.n(), input_.lambda_);
+  input_.elementwise_ = false;
+  MT_ = input_.lambda_*MT_;
+}
+
 void VectorProx::PreProcessInput(const BlockVector& v) {
-  input_.v_ = AT_*v + b_;
+  input_.v_ = MT_*v + g_;
 }
 
-// Build x from output
 BlockVector VectorProx::PostProcessOutput() {
-  return D_alpha_inv_*(output_.x_ - b_);
+  return H_inv_*(output_.x_ - g_);
 }
 
 BlockVector VectorProx::Apply(const BlockVector& v) {

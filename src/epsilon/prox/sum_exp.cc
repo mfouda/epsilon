@@ -5,7 +5,6 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/newton.h"
 #include "epsilon/vector/vector_util.h"
-#include "epsilon/prox/ortho_invariant.h"
 #include <cmath>
 
 // \sum_i exp(x(i))
@@ -35,7 +34,7 @@ public:
   }
 };
 
-class SumExpProx: public NewtonProx {
+class SumExpProx : public NewtonProx {
 public:
   SumExpProx() : NewtonProx(std::make_unique<SumExp>()) {}
 };
@@ -45,4 +44,4 @@ REGISTER_PROX_OPERATOR(SUM_EXP, SumExpProx);
 // public:
 //   SumExpEpigraph() : NewtonEpigraph(std::make_unique<SumExp>()) {}
 // };
-// REGISTER_PROX_OPERATOR(SumExpEpigraph);
+// REGISTER_EPIGRAPH_OPERATOR(SumExpEpigraph);

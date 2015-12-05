@@ -472,8 +472,8 @@ RULES = [
     prox_sum_hinge,
 
     # Simple
-    prox_affine,
     prox_constant,
+    prox_affine,
 
     # Lowest priority, transform to cone problem
     transform_cone

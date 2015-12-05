@@ -15,8 +15,8 @@ class VectorProxInput {
   friend class VectorProx;
 
   bool elementwise_;
-  double lambda_;
   Eigen::VectorXd lambda_vec_;
+  double lambda_;
   BlockVector v_;
 };
 
@@ -49,12 +49,8 @@ class VectorProx : public ProxOperator {
   void PreProcessInput(const BlockVector& v);
   BlockVector PostProcessOutput();
 
-  bool elementwise_;
-  int n_;
-  BlockMatrix AT_, D_alpha_inv_;
-  BlockVector b_;
-  double alpha_, beta_;
-  Eigen::VectorXd alpha_vec_;
+  BlockMatrix MT_, H_inv_;
+  BlockVector g_;
 
   // Used in ApplyVector()
   // NOTE(mwytock): Storing per-Apply() state like this makes VectorProx not

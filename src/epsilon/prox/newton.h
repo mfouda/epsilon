@@ -13,7 +13,9 @@ class SmoothFunction {
   }
 };
 
-class NewtonProx final : public VectorProx {
+// TODO(mwytock): Mark these final and have the registration mechanism accept a
+// lambda rather than a class.
+class NewtonProx : public VectorProx {
 public:
   NewtonProx(std::unique_ptr<SmoothFunction> f) : f_(std::move(f)) {}
 
@@ -26,7 +28,7 @@ private:
   std::unique_ptr<SmoothFunction> f_;
 };
 
-class NewtonEpigraph final : public VectorProx {
+class NewtonEpigraph : public VectorProx {
 public:
   NewtonEpigraph(std::unique_ptr<SmoothFunction> f) : f_(std::move(f)) {}
 
