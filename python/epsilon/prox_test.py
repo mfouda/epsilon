@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epsilon.prox import eval_prox
 from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 10
+RANDOM_PROX_TRIALS = 1
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -126,6 +126,10 @@ def C_soc_scaled_translated():
 
 # Proximal operators
 PROX_TESTS = [
+    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
+    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
+    # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
+    # Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     #Prox("MATRIX_FRAC", lambda: cp.matrix_frac(p, X)),
     #Prox("SIGMA_MAX", lambda: cp.sigma_max(X)),
     #Prox("SUM_KL_DIV", lambda: cp.kl_div(p1, q1)),
@@ -141,10 +145,6 @@ PROX_TESTS = [
     Prox("NORM_2", lambda: cp.norm(X, "fro")),
     Prox("NORM_2", lambda: cp.norm2(x)),
     Prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
     Prox("SUM_DEADZONE", f_dead_zone),
     Prox("SUM_EXP", lambda: cp.sum_entries(cp.exp(x))),
@@ -152,7 +152,6 @@ PROX_TESTS = [
     Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     Prox("SUM_INV_POS", lambda: cp.sum_entries(cp.inv_pos(x))),
-    Prox("SUM_KL_DIV", lambda: cp.kl_div(p1, q1)),
     Prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
     Prox("SUM_LOGISTIC", lambda: cp.sum_entries(cp.logistic(x))),
     Prox("SUM_NEG_ENTR", lambda: -cp.sum_entries(cp.entr(x))),
@@ -177,33 +176,9 @@ PROX_TESTS = [
 
 PROX_TESTS = [
     # Prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
-    # Prox("MAX", lambda: cp.max_entries(x)),
     # Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
-    # Prox("NON_NEGATIVE", None, C_non_negative_scaled),
-    # Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
-    # Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
-    # Prox("NORM_1", lambda: cp.norm1(x)),
-    # Prox("NORM_2", lambda: cp.norm(X, "fro")),
-    # Prox("NORM_2", lambda: cp.norm2(x)),
     # Prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    # Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
     # Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
-    # Prox("SUM_DEADZONE", f_dead_zone),
-    Prox("SUM_EXP", lambda: cp.sum_entries(cp.exp(x))),
-    # Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    # Prox("SUM_INV_POS", lambda: cp.sum_entries(cp.inv_pos(x))),
-    # Prox("SUM_KL_DIV", lambda: cp.kl_div(p1, q1)),
-    # Prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
-    # Prox("SUM_LOGISTIC", lambda: cp.sum_entries(cp.logistic(x))),
-    # Prox("SUM_NEG_ENTR", lambda: -cp.sum_entries(cp.entr(x))),
-    # Prox("SUM_NEG_LOG", lambda: -cp.sum_entries(cp.log(x))),
-    # Prox("SUM_QUANTILE", f_quantile),
-    # Prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
-    # Prox("SUM_HINGE", f_hinge),
-    # Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
 ]
 
 # PROX_TESTS = [

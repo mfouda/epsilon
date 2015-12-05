@@ -1,19 +1,18 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/prox/elementwise.h"
-#include "epsilon/prox/prox.h"
+#include "epsilon/prox/vector_prox.h"
 #include "epsilon/vector/vector_util.h"
 
 // Assumption: alpha,beta,M>=0, C in R
 // f(x) = \sum_i \alpha \max(0, (x_i-C)-M) + \beta \max(0, -(x_i-C)-M)
-class ScaledZoneProx final : public ElementwiseProx {
+class ScaledZoneProx final : public VectorProx {
 public:
   void Init(const ProxOperatorArg& arg) override;
 
 protected:
-  Eigen::VectorXd ApplyElementwise(
-      const Eigen::VectorXd& lambda,
-      const Eigen::VectorXd& v) override;
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override;
 
 private:
   ProxFunction::ScaledZoneParams params_;
@@ -48,13 +47,16 @@ ProxFunction::ScaledZoneParams GetParams(const ProxFunction& prox) {
 }
 
 void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
-  ElementwiseProx::Init(arg);
+  VectorProx::Init(arg);
   params_ = GetParams(arg.prox_function());
 }
 
-Eigen::VectorXd ScaledZoneProx::ApplyElementwise(
-    const Eigen::VectorXd& lambda,
-    const Eigen::VectorXd& v) {
+void ScaledZoneProx::ApplyVector(
+    const VectorProxInput& input,
+    VectorProxOutput* output) {
+  const Eigen::VectorXd& lambda = input.lambda_vec();
+  const Eigen::VectorXd& v = input.value_vec(0);
+
   // Convenience/readability
   const int n = v.rows();
   const double& alpha = params_.alpha();
@@ -75,7 +77,8 @@ Eigen::VectorXd ScaledZoneProx::ApplyElementwise(
     else
       x(i) = -M;
   }
-  return (x.array()+C).matrix();
+
+  output->set_value(0, (x.array()+C).matrix());
 }
 
 REGISTER_PROX_OPERATOR(NORM_1, ScaledZoneProx);

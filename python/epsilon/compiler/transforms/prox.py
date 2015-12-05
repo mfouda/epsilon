@@ -146,7 +146,7 @@ def prox_sum_deadzone(expr):
         expression.prox_function(
             ProxFunction(
                 prox_function_type=ProxFunction.SUM_DEADZONE,
-                scaled_zone_params=ProxFunction.ScaledZoneParams(m=m)),
+                scaled_zone_params=ProxFunction.ScaledZoneParams(m=-m)),
             diagonal_arg),
         constrs)
 

@@ -5,7 +5,6 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/newton.h"
 #include "epsilon/vector/vector_util.h"
-#include "epsilon/prox/ortho_invariant.h"
 #include <cmath>
 
 // \sum_i 1/(xi)

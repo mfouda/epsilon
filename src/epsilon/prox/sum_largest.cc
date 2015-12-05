@@ -1,6 +1,6 @@
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/prox/vector.h"
+#include "epsilon/prox/vector_prox.h"
 #include "epsilon/vector/vector_util.h"
 
 class SumLargestProx : public VectorProx {
@@ -11,8 +11,12 @@ class SumLargestProx : public VectorProx {
   }
 
  protected:
-  Eigen::VectorXd ApplyVector(double lambda, const Eigen::VectorXd& v) override {
-    int n = v.rows();
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override {
+    const double lambda = input.lambda();
+    const Eigen::VectorXd& v = input.value_vec(0);
+    const int n = v.rows();
     Eigen::VectorXd y_vec = v;
     double *y = y_vec.data();
     sort(y, y+n, std::greater<double>());
@@ -48,7 +52,7 @@ class SumLargestProx : public VectorProx {
       x(i) = v(i) - std::max(0., std::min(lambda, v(i)-q));
     }
 
-    return x;
+    output->set_value(0, x);
   }
 
  private:

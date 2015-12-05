@@ -1,16 +1,18 @@
-#include "epsilon/prox/vector.h"
-#include "epsilon/vector/vector_util.h"
+#include "epsilon/prox/vector_prox.h"
 
 // lam*||x||_2
 class Norm2Prox final : public VectorProx {
-  Eigen::VectorXd ApplyVector(
-      double lambda,
-      const Eigen::VectorXd& v) override {
+protected:
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override {
+    const double lambda = input.lambda();
+    const Eigen::VectorXd& v = input.value_vec(0);
     const double v_norm = v.norm();
     if (v_norm >= lambda) {
-      return (1 - lambda/v_norm)*v;
+      output->set_value(0, (1 - lambda/v_norm)*v);
     } else {
-      return Eigen::VectorXd::Zero(v.rows());
+      output->set_value(0, Eigen::VectorXd::Zero(v.rows()));
     }
   }
 };
