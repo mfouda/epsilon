@@ -13,7 +13,8 @@ class OrthoInvariantProx : public VectorProx {
       : eigen_prox_type_(eigen_prox_type),
         symmetric_part_(symmetric_part),
         add_residual_(add_residual),
-        epigraph_(epigraph) {}
+        epigraph_(epigraph),
+        init_eigen_prox_(false) {}
 
   void Init(const ProxOperatorArg& arg) override;
 
@@ -23,7 +24,7 @@ class OrthoInvariantProx : public VectorProx {
       VectorProxOutput* output) override;
 
  private:
-  void InitEigenProx();
+  void InitEigenProx(double lambda);
 
   Eigen::VectorXd ApplyEigenProx(const Eigen::VectorXd& v);
   void ApplyEigenEpigraph(
@@ -32,8 +33,10 @@ class OrthoInvariantProx : public VectorProx {
 
   ProxFunction::Type eigen_prox_type_;
   bool symmetric_part_, add_residual_, epigraph_;
+  bool init_eigen_prox_;
 
   int m_, n_;
+  double alpha_;
   std::unique_ptr<ProxOperator> eigen_prox_;
 };
 

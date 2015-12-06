@@ -8,12 +8,17 @@ void OrthoInvariantProx::Init(const ProxOperatorArg& arg) {
   VectorProx::Init(arg);
   m_ = arg.prox_function().arg_size(0).dim(0);
   n_ = arg.prox_function().arg_size(0).dim(1);
-  InitEigenProx();
 }
 
 void OrthoInvariantProx::ApplyVector(
     const VectorProxInput& input,
     VectorProxOutput* output) {
+  if (!init_eigen_prox_) {
+    // TODO(mwytock): Fix this hack by explicit interface for lambda
+    InitEigenProx(input.lambda());
+    init_eigen_prox_ = true;
+  }
+
   Eigen::MatrixXd Y = ToMatrix(input.value_vec(0), m_, n_);
 
   Eigen::MatrixXd U, V, R;
@@ -58,8 +63,9 @@ void OrthoInvariantProx::ApplyVector(
   }
 }
 
-void OrthoInvariantProx::InitEigenProx() {
+void OrthoInvariantProx::InitEigenProx(double lambda) {
   eigen_prox_ = CreateProxOperator(eigen_prox_type_, epigraph_);
+  alpha_ = epigraph_ ? 1 : 1/sqrt(lambda);
   ProxFunction prox_function;
   prox_function.set_prox_function_type(eigen_prox_type_);
 
@@ -69,7 +75,7 @@ void OrthoInvariantProx::InitEigenProx() {
   for (int i = 0; i < num_args; i++) {
     std::string key = affine::arg_key(i);
     affine_arg.A(key, key) = linear_map::Identity(n);
-    affine_constraint.A(key, key) = linear_map::Identity(n);
+    affine_constraint.A(key, key) = linear_map::Scalar(alpha_, n);
   }
   eigen_prox_->Init(
       ProxOperatorArg(prox_function, affine_arg, affine_constraint));
@@ -77,7 +83,7 @@ void OrthoInvariantProx::InitEigenProx() {
 
 Eigen::VectorXd OrthoInvariantProx::ApplyEigenProx(const Eigen::VectorXd& v) {
   BlockVector input;
-  input(affine::arg_key(0)) = v;
+  input(affine::arg_key(0)) = alpha_*v;
   BlockVector output = eigen_prox_->Apply(input);
   return output(affine::arg_key(0));
 }

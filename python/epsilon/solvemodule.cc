@@ -217,7 +217,7 @@ PyMODINIT_FUNC init_solve() {
   if (!initialized) {
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    //google::InstallFailureFunction(&HandleFailure);
+    google::InstallFailureFunction(&HandleFailure);
 
     initialized = true;
   }

@@ -8,12 +8,7 @@ from numpy.random import randn, rand
 from epsilon import expression_pb2
 from epsilon.prox import eval_prox
 
-# Make ProxFunction.Type more concisely accessible
-for name, value in vars(expression_pb2.ProxFunction).items():
-    if name.isupper():
-        locals()[name] = value
-
-RANDOM_PROX_TRIALS = 1
+RANDOM_PROX_TRIALS = 10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -134,71 +129,71 @@ def C_soc_scaled_translated():
 
 # Proximal operators
 PROX_TESTS = [
-    #prox(MATRIX_FRAC, lambda: cp.matrix_frac(p, X)),
-    #prox(SIGMA_MAX, lambda: cp.sigma_max(X)),
-    prox(AFFINE, lambda: randn(n).T*x),
-    prox(CONSTANT, lambda: 0),
-    prox(LAMBDA_MAX, lambda: cp.lambda_max(X)),
-    prox(MAX, lambda: cp.max_entries(x)),
-    prox(NEG_LOG_DET, lambda: -cp.log_det(X)),
-    prox(NEG_LOG_DET, lambda: -cp.log_det(X)),
-    prox(NON_NEGATIVE, None, C_non_negative_scaled),
-    prox(NON_NEGATIVE, None, lambda: [x >= 0]),
-    prox(NORM_1, lambda: cp.norm1(x)),
-    prox(NORM_2, lambda: cp.norm(X, "fro")),
-    prox(NORM_2, lambda: cp.norm2(x)),
-    prox(NORM_NUCLEAR, lambda: cp.norm(X, "nuc")),
-    prox(SEMIDEFINITE, None, lambda: [X >> 0]),
-    prox(SUM_DEADZONE, f_dead_zone),
-    prox(SUM_EXP, lambda: cp.sum_entries(cp.exp(x))),
-    prox(SUM_HINGE, f_hinge),
-    prox(SUM_HINGE, lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    prox(SUM_HINGE, lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    prox(SUM_INV_POS, lambda: cp.sum_entries(cp.inv_pos(x))),
-    prox(SUM_LARGEST, lambda: cp.sum_largest(x, 4)),
-    prox(SUM_LOGISTIC, lambda: cp.sum_entries(cp.logistic(x))),
-    prox(SUM_NEG_ENTR, lambda: cp.sum_entries(-cp.entr(x))),
-    prox(SUM_NEG_LOG, lambda: cp.sum_entries(-cp.log(x))),
-    prox(SUM_QUANTILE, f_quantile),
-    prox(SUM_SQUARE, f_least_squares_matrix),
-    prox(SUM_SQUARE, lambda: f_least_squares(20)),
-    prox(SUM_SQUARE, lambda: f_least_squares(5)),
-    prox(TOTAL_VARIATION_1D, lambda: cp.tv(x)),
-    prox(ZERO, None, C_linear_equality),
-    prox(ZERO, None, C_linear_equality_matrix_lhs),
-    prox(ZERO, None, C_linear_equality_matrix_rhs),
-    prox(ZERO, None, C_linear_equality_multivariate),
-    prox(ZERO, None, C_linear_equality_multivariate2),
-    prox(ZERO, None, lambda: C_linear_equality_graph(20)),
-    prox(ZERO, None, lambda: C_linear_equality_graph(5)),
-    prox(ZERO, None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    prox(ZERO, None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    prox(ZERO, None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    prox(ZERO, None, lambda: C_linear_equality_graph_rhs(5, 10)),
-    prox(SECOND_ORDER_CONE, None, C_soc_scaled),
-    prox(SECOND_ORDER_CONE, None, C_soc_scaled_translated),
-    prox(SECOND_ORDER_CONE, None, C_soc_translated),
-    prox(SECOND_ORDER_CONE, None, lambda: [cp.norm2(x) <= t]),
-    prox(SECOND_ORDER_CONE, None, lambda: [cp.norm(X, "fro") <= t]),
-    #prox(SUM_KL_DIV, lambda: cp.kl_div(p1,q1)),
+    #prox("MATRIX_FRAC", lambda: cp.matrix_frac(p, X)),
+    #prox("SIGMA_MAX", lambda: cp.sigma_max(X)),
+    prox("AFFINE", lambda: randn(n).T*x),
+    prox("CONSTANT", lambda: 0),
+    prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
+    prox("MAX", lambda: cp.max_entries(x)),
+    prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
+    prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
+    prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    prox("NON_NEGATIVE", None, lambda: [x >= 0]),
+    prox("NORM_1", lambda: cp.norm1(x)),
+    prox("NORM_2", lambda: cp.norm(X, "fro")),
+    prox("NORM_2", lambda: cp.norm2(x)),
+    prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
+    prox("SECOND_ORDER_CONE", None, C_soc_scaled),
+    prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
+    prox("SECOND_ORDER_CONE", None, C_soc_translated),
+    prox("SECOND_ORDER_CONE", None, lambda: [cp.norm(X, "fro") <= t]),
+    prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
+    prox("SEMIDEFINITE", None, lambda: [X >> 0]),
+    prox("SUM_DEADZONE", f_dead_zone),
+    prox("SUM_EXP", lambda: cp.sum_entries(cp.exp(x))),
+    prox("SUM_HINGE", f_hinge),
+    prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    prox("SUM_INV_POS", lambda: cp.sum_entries(cp.inv_pos(x))),
+    prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
+    prox("SUM_LOGISTIC", lambda: cp.sum_entries(cp.logistic(x))),
+    prox("SUM_NEG_ENTR", lambda: cp.sum_entries(-cp.entr(x))),
+    prox("SUM_NEG_LOG", lambda: cp.sum_entries(-cp.log(x))),
+    prox("SUM_QUANTILE", f_quantile),
+    prox("SUM_SQUARE", f_least_squares_matrix),
+    prox("SUM_SQUARE", lambda: f_least_squares(20)),
+    prox("SUM_SQUARE", lambda: f_least_squares(5)),
+    prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
+    prox("ZERO", None, C_linear_equality),
+    prox("ZERO", None, C_linear_equality_matrix_lhs),
+    prox("ZERO", None, C_linear_equality_matrix_rhs),
+    prox("ZERO", None, C_linear_equality_multivariate),
+    prox("ZERO", None, C_linear_equality_multivariate2),
+    prox("ZERO", None, lambda: C_linear_equality_graph(20)),
+    prox("ZERO", None, lambda: C_linear_equality_graph(5)),
+    prox("ZERO", None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    #prox("SUM_KL_DIV", lambda: cp.kl_div(p1,q1)),
 ]
 
 # Epigraph operators
 PROX_TESTS += [
     #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
     #epigraph(SUM_KL_DIV, None, lambda: [cp.kl_div(p1,q1) <= t]),
-    epigraph(MAX, None, lambda: [cp.max_entries(x) <= t]),
-    epigraph(NORM_1, None, lambda: [cp.norm1(x) <= t]),
-    epigraph(SUM_DEADZONE, None, lambda: [f_dead_zone() <= t]),
-    epigraph(SUM_EXP, None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
-    epigraph(SUM_HINGE, None, lambda: [f_hinge() <= t]),
-    epigraph(SUM_INV_POS, None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
-    epigraph(SUM_LOGISTIC, None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
-    epigraph(SUM_NEG_ENTR, None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
-    epigraph(SUM_NEG_LOG, None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
-    epigraph(SUM_QUANTILE, None, lambda: [f_quantile() <= t]),
-    epigraph(LAMBDA_MAX, None, lambda: [cp.lambda_max(X) <= t]),
-    epigraph(NORM_NUCLEAR, None, lambda: [cp.norm(X, "nuc") <= t]),
+    epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
+    epigraph("MAX", None, lambda: [cp.max_entries(x) <= t]),
+    epigraph("NORM_1", None, lambda: [cp.norm1(x) <= t]),
+    epigraph("NORM_NUCLEAR", None, lambda: [cp.norm(X, "nuc") <= t]),
+    epigraph("SUM_DEADZONE", None, lambda: [f_dead_zone() <= t]),
+    epigraph("SUM_EXP", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
+    epigraph("SUM_HINGE", None, lambda: [f_hinge() <= t]),
+    epigraph("SUM_INV_POS", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
+    epigraph("SUM_LOGISTIC", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
+    epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
+    epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
+    epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
@@ -244,6 +239,7 @@ def run_random_prox(prox_test, trial):
     np.random.seed(trial)
     v = np.random.randn(n)
     lam = np.abs(np.random.randn())
+    print lam
 
     f = 0 if not prox_test.objective else prox_test.objective()
     C = [] if not prox_test.constraint else prox_test.constraint()
@@ -252,7 +248,8 @@ def run_random_prox(prox_test, trial):
     prob = cp.Problem(cp.Minimize(f), C)
     v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
 
-    run_prox(prox_test.prox_function_type, prob, v_map, lam, prox_test.epigraph)
+    t = expression_pb2.ProxFunction.Type.Value(prox_test.prox_function_type)
+    run_prox(t, prob, v_map, lam, prox_test.epigraph)
 
 def test_random_prox():
     for prox in PROX_TESTS:
@@ -269,4 +266,4 @@ def test_second_order_cone():
 
     for v_map in v_maps:
         prob = cp.Problem(cp.Minimize(0), [cp.norm(x) <= t])
-        yield run_prox, ProxFunction.SECOND_ORDER_CONE, prob, v_map
+        yield run_prox, "SECOND_ORDER_CONE", prob, v_map
