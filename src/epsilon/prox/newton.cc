@@ -96,7 +96,7 @@ Eigen::VectorXd ApplyNewtonProx(
     double lambda,
     const Eigen::VectorXd& v) {
   return ApplyNewtonProx(
-      f, Eigen::VectorXd::Constant(lambda, v.rows()), v);
+      f, Eigen::VectorXd::Constant(v.rows(), lambda), v);
 }
 
 void NewtonProx::ApplyVector(

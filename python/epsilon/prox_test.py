@@ -5,7 +5,7 @@ import numpy as np
 import cvxpy as cp
 from numpy.random import randn, rand
 
-from epsilon import expression_pb2
+from epsilon.expression_pb2 import ProxFunction
 from epsilon.prox import eval_prox
 
 RANDOM_PROX_TRIALS = 10
@@ -248,7 +248,7 @@ def run_random_prox(prox_test, trial):
     prob = cp.Problem(cp.Minimize(f), C)
     v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
 
-    t = expression_pb2.ProxFunction.Type.Value(prox_test.prox_function_type)
+    t = ProxFunction.Type.Value(prox_test.prox_function_type)
     run_prox(t, prob, v_map, lam, prox_test.epigraph)
 
 def test_random_prox():
@@ -266,4 +266,4 @@ def test_second_order_cone():
 
     for v_map in v_maps:
         prob = cp.Problem(cp.Minimize(0), [cp.norm(x) <= t])
-        yield run_prox, "SECOND_ORDER_CONE", prob, v_map
+        yield run_prox, ProxFunction.SECOND_ORDER_CONE, prob, v_map
