@@ -450,6 +450,14 @@ def epigraph(expr):
                         epi_function, *(result.prox_expr.arg + [t_expr])),
                     result.constrs)
 
+        # No epigraph transform found, do conic transformation
+        obj, constrs = conic.transform_expr(f_expr)
+        return MatchResult(
+            True,
+            None,
+            [expression.leq_constraint(obj, t_expr)] + constrs)
+
+    # Not in epigraph form
     return MatchResult(False)
 
 # Conic transform (catch-all default)

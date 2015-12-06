@@ -25,10 +25,21 @@ class DCPProperties(object):
     def constant(self):
         return self.dcp_attr.curvature == cvxpy.utilities.Curvature.CONSTANT
 
+from epsilon import tree_format
+
 def compute_dcp_properties(expr):
-    return DCPProperties(
-        cvxpy.utilities.DCPAttr(
-            compute_sign(expr), compute_curvature(expr), compute_shape(expr)))
+    # TODO(mwytock): Handle all unary/binary operators in this fashion.
+    if expr.expression_type == expression_pb2.Expression.NEGATE:
+        dcp_attr = -expr.arg[0].dcp_props.dcp_attr
+    else:
+        dcp_attr = cvxpy.utilities.DCPAttr(
+            compute_sign(expr), compute_curvature(expr), compute_shape(expr))
+
+    props = DCPProperties(dcp_attr)
+    # print "compute_dcp_properties"
+    # print tree_format.format_expr(expr)
+    # print props.dcp_attr.curvature
+    return props
 
 def compute_sign(expr):
     return cvxpy.utilities.Sign(

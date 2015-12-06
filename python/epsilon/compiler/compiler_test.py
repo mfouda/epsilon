@@ -29,16 +29,16 @@ def test_basis_pursuit():
         basis_pursuit.create(m=10, n=30)))
     assert_items_equal(
         prox_ops(problem.objective),
-        [Prox.ZERO, Prox.AFFINE] + 2*[Prox.NON_NEGATIVE])
-    assert_equal(0, len(problem.constraint))
+        [Prox.ZERO, Prox.NORM_1])
+    assert_equal(1, len(problem.constraint))
 
 def test_least_abs_deviations():
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
         least_abs_dev.create(m=10, n=5)))
     assert_items_equal(
         prox_ops(problem.objective),
-        [Prox.AFFINE] + [Prox.NON_NEGATIVE, Prox.ZERO]*2)
-    assert_equal(0, len(problem.constraint))
+        [Prox.ZERO, Prox.NORM_1])
+    assert_equal(1, len(problem.constraint))
 
 # def test_tv_denoise():
 #     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
@@ -53,6 +53,6 @@ def test_tv_1d():
         tv_1d.create(n=10)))
     assert_items_equal(
         prox_ops(problem.objective),
-        [Prox.ZERO]*3 + [Prox.AFFINE,  Prox.NON_NEGATIVE]*2 +
+        [Prox.ZERO]*3 + [Prox.AFFINE] + [Prox.NON_NEGATIVE]*2 +
         [Prox.SECOND_ORDER_CONE])
-    assert_equal(0, len(problem.constraint))
+    assert_equal(9, len(problem.constraint))

@@ -40,6 +40,9 @@ REL_TOL = {
 # ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=5, n=10, rho=0.1, mu=0.5)),
 # ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
 
+# Variable not in constraints?
+# ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("fused_lasso", fused_lasso.create, dict(m=5, ni=2, k=5, rho=0.5)),
@@ -49,7 +52,6 @@ PROBLEMS = [
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=20, n=10, rho=1, mu=0.5)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=20, rho=0.1)),
     ProblemInstance("lasso_sparse", lasso.create, dict(m=5, n=20, rho=0.1, mu=0.5)),
-    ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=5, n=20, k=2, rho=0.1)),

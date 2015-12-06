@@ -1,6 +1,7 @@
 
 from collections import defaultdict
 import struct
+import random
 
 from cvxpy.utilities import power_tools
 
@@ -28,13 +29,12 @@ def epi(f_expr, t_expr):
         return expression.leq_constraint(negate(f_expr), negate(t_expr))
     elif f_curvature == Curvature.AFFINE:
         return expression.eq_constraint(f_expr, t_expr);
-
     raise TransformError("Unknown curvature", f_expr)
 
 def epi_var(expr, name, size=None):
     if size is None:
         size = expr.size.dim
-    name += ":%x" % id(expr)
+    name += ":%x" % random.getrandbits(32)
     return expression.variable(size[0], size[1], name)
 
 def epi_transform(f_expr, name):
@@ -83,6 +83,7 @@ def gm_constrs(t_expr, x_exprs, p):
 def get_epigraph(expr):
     if not (expr.expression_type == Expression.INDICATOR and
             expr.cone.cone_type == Cone.NON_NEGATIVE and
+            not expr.arg[0].dcp_props.affine and
             expr.arg[0].expression_type == Expression.ADD and
             len(expr.arg[0].arg) == 2):
         return None, None
