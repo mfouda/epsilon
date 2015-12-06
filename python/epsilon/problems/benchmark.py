@@ -8,7 +8,7 @@ import cvxpy as cp
 import numpy as np
 
 from epsilon import cvxpy_expr
-from epsilon import solve
+from epsilon import cvxpy_solver
 from epsilon import solver_params_pb2
 from epsilon.compiler import compiler
 from epsilon.problems import *
@@ -74,8 +74,7 @@ PROBLEMS_SCALE += [ProblemInstance(
     for n in np.logspace(1, np.log10(5000), 20)]
 
 def benchmark_epsilon(cvxpy_prob):
-    params = solver_params_pb2.SolverParams(rel_tol=1e-2, abs_tol=1e-4)
-    solve.solve(cvxpy_prob, params=params)
+    cvxpy_solver.solve(cvxpy_prob, rel_tol=1e-2, abs_tol=1e-4)
     return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):

@@ -35,11 +35,19 @@ void OrthoInvariantProx::ApplyVector(
   } else {
     Eigen::MatrixXd EPS = Eigen::VectorXd::Constant(n_, 1e-15).asDiagonal();
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(Y.transpose()*Y + EPS);
-    CHECK_EQ(solver.info(), Eigen::Success);
+    CHECK_EQ(solver.info(), Eigen::Success)
+        << MatrixDebugString(Y.transpose()*Y + EPS);
     d = solver.eigenvalues();
     V = solver.eigenvectors();
-    d = d.cwiseSqrt();
-    U = Y * V * d.asDiagonal().inverse();
+    d = d.cwiseMax(0).cwiseSqrt();
+    Eigen::VectorXd dinv(d.rows());
+    for (int i = 0; i < d.rows(); i++) {
+      if (d(i) != 0)
+        dinv(i) = 1/d(i);
+      else
+        dinv(i) = 0;
+    }
+    U = Y * V * dinv.asDiagonal();
   }
   VLOG(2) << "\nD = " << VectorDebugString(d) << "\n";
 
