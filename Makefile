@@ -80,6 +80,7 @@ common_cc = \
 	epsilon/prox/semidefinite.cc \
 	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_inv_pos.cc \
+	epsilon/prox/sum_kl_div.cc \
 	epsilon/prox/sum_largest.cc \
 	epsilon/prox/sum_logistic.cc \
 	epsilon/prox/sum_neg_entr.cc \

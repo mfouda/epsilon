@@ -155,6 +155,7 @@ PROX_TESTS = [
     prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
     prox("SUM_INV_POS", lambda: cp.sum_entries(cp.inv_pos(x))),
+    prox("SUM_KL_DIV", lambda: cp.kl_div(p1,q1)),
     prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
     prox("SUM_LOGISTIC", lambda: cp.sum_entries(cp.logistic(x))),
     prox("SUM_NEG_ENTR", lambda: cp.sum_entries(-cp.entr(x))),
@@ -175,13 +176,11 @@ PROX_TESTS = [
     prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
     prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
     prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
-    #prox("SUM_KL_DIV", lambda: cp.kl_div(p1,q1)),
 ]
 
 # Epigraph operators
 PROX_TESTS += [
     #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
-    #epigraph(SUM_KL_DIV, None, lambda: [cp.kl_div(p1,q1) <= t]),
     epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
     epigraph("MAX", None, lambda: [cp.max_entries(x) <= t]),
     epigraph("NORM_1", None, lambda: [cp.norm1(x) <= t]),
@@ -190,6 +189,7 @@ PROX_TESTS += [
     epigraph("SUM_EXP", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
     epigraph("SUM_HINGE", None, lambda: [f_hinge() <= t]),
     epigraph("SUM_INV_POS", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
+    epigraph("SUM_KL_DIV", None, lambda: [cp.kl_div(p1,q1) <= t]),
     epigraph("SUM_LOGISTIC", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
     epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),

@@ -272,6 +272,23 @@ def prox_sum_neg_log(expr):
             diagonal_arg),
         constrs)
 
+def prox_sum_kl_div(expr):
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.KL_DIV):
+        args = [expr.arg[0].arg[0], expr.arg[0].arg[1]]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg0, constrs0 = convert_diagonal(args[0])
+    diagonal_arg1, constrs1 = convert_diagonal(args[1])
+    return MatchResult(
+        True,
+        expression.prox_function(
+            ProxFunction(prox_function_type=ProxFunction.SUM_KL_DIV),
+            diagonal_arg0,
+            diagonal_arg1),
+        constrs0 + constrs1)
+
 # Vector
 
 def prox_max(expr):
@@ -488,6 +505,7 @@ BASE_RULES = [
     prox_sum_logistic,
     prox_sum_neg_entr,
     prox_sum_neg_log,
+    prox_sum_kl_div,
 
     # NOTE(mwytock): Maintain this order as deadzone specializes hinge
     prox_sum_deadzone,
