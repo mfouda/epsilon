@@ -76,6 +76,7 @@ common_cc = \
 	epsilon/prox/ortho_invariant.cc \
 	epsilon/prox/prox.cc \
 	epsilon/prox/scaled_zone.cc \
+	epsilon/prox/second_order_cone.cc \
 	epsilon/prox/semidefinite.cc \
 	epsilon/prox/sum_exp.cc \
 	epsilon/prox/sum_inv_pos.cc \

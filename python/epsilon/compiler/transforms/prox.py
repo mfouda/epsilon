@@ -257,8 +257,8 @@ def prox_sum_neg_entr(expr):
         constrs)
 
 def prox_sum_neg_log(expr):
-    if (expr.expression_type == Expression.NEGATE and
-        expr.arg[0].expression_type == Expression.SUM and
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.NEGATE and
         expr.arg[0].arg[0].expression_type == Expression.LOG):
         arg = expr.arg[0].arg[0].arg[0]
     else:

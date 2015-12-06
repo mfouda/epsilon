@@ -40,6 +40,10 @@ void VectorProx::Init(const ProxOperatorArg& arg) {
   input_.lambda_vec_ = Eigen::VectorXd::Constant(A.n(), input_.lambda_);
   input_.elementwise_ = false;
   MT_ = input_.lambda_*MT_;
+
+  VLOG(2) << "MT: " << MT_.DebugString();
+  VLOG(2) << "H_inv: " << H_inv_.DebugString();
+  VLOG(2) << "g: " << g_.DebugString();
 }
 
 void VectorProx::PreProcessInput(const BlockVector& v) {
