@@ -227,7 +227,6 @@ void ImplicitNewtonEpigraph::ApplyVector(
     lam = lam - glam/hlam;
     if (lam < 0)
       lam = 1e-6;
-
   }
 
   if(iter == max_iter) {

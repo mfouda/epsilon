@@ -54,7 +54,7 @@ BlockVector OrthoInvariantProx::Apply(const BlockVector& v) {
 }
 
 void OrthoInvariantProx::InitEigenProx() {
-  eigen_prox_ = CreateProxOperator(eigen_prox_type_);
+  eigen_prox_ = CreateProxOperator(eigen_prox_type_, false);
   ProxFunction prox_function;
   prox_function.set_prox_function_type(eigen_prox_type_);
 

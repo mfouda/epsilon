@@ -14,7 +14,7 @@ from epsilon.compiler import validate
 from epsilon.error import ProblemError
 from epsilon.expression_pb2 import Curvature, Expression, ProxFunction
 
-def eval_prox(prox_function_type, prob, v_map, lam=1):
+def eval_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     """Evaluate a single proximal operator."""
 
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(prob))
@@ -29,7 +29,8 @@ def eval_prox(prox_function_type, prob, v_map, lam=1):
 
     f_expr = problem.objective.arg[0]
     if (f_expr.expression_type != Expression.PROX_FUNCTION or
-        f_expr.prox_function.prox_function_type != prox_function_type):
+        f_expr.prox_function.prox_function_type != prox_function_type or
+        f_expr.prox_function.epigraph != epigraph):
         raise ProblemError("prox did not compile to right type", problem)
 
     v_bytes_map = {cvxpy_expr.variable_id(var):

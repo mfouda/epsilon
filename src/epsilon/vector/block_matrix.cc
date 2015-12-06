@@ -5,27 +5,22 @@
 
 #include "epsilon/vector/block_matrix.h"
 
-bool InvertSingleton(const BlockMatrix& A, BlockMatrix* A_inv) {
-  if (A.data().size() != 1 || A.data().begin()->second.size() != 1)
-    return false;
-
-  A_inv->InsertOrAdd(
-      A.data().begin()->first,
-      A.data().begin()->second.begin()->first,
-      A.data().begin()->second.begin()->second.Inverse());
-  return true;
-}
-
 bool InvertBlockDiagonal(const BlockMatrix& A, BlockMatrix* A_inv) {
+  std::set<std::string> seen_row_keys;
   for (const auto& col_iter : A.data()) {
-    if (col_iter.second.size() != 1 ||
-        col_iter.first != col_iter.second.begin()->first)
+    if (col_iter.second.size() != 1)
       return false;
+    const std::string& row_key = col_iter.second.begin()->first;
+    if (seen_row_keys.find(row_key) != seen_row_keys.end())
+      return false;
+    seen_row_keys.insert(row_key);
   }
 
   for (const auto& col_iter : A.data()) {
-    const std::string& key = col_iter.first;
-    A_inv->InsertOrAdd(key, key, col_iter.second.begin()->second.Inverse());
+    const std::string& col_key = col_iter.first;
+    const std::string& row_key = col_iter.second.begin()->first;
+    const linear_map::LinearMap& Ai = col_iter.second.begin()->second;
+    A_inv->InsertOrAdd(col_key, row_key, Ai.Inverse());
   }
   return true;
 }
@@ -58,8 +53,7 @@ BlockMatrix BlockMatrix::Transpose() const {
 BlockMatrix BlockMatrix::Inverse() const {
   CHECK_EQ(m(), n()) << "Inverting non square matrix";
   BlockMatrix A_inv;
-  if (InvertSingleton(*this, &A_inv) ||
-      InvertBlockDiagonal(*this, &A_inv)) {
+  if (InvertBlockDiagonal(*this, &A_inv)) {
     return A_inv;
   }
 

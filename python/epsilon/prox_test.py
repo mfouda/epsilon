@@ -5,10 +5,15 @@ import numpy as np
 import cvxpy as cp
 from numpy.random import randn, rand
 
+from epsilon import expression_pb2
 from epsilon.prox import eval_prox
-from epsilon.expression_pb2 import ProxFunction
 
-RANDOM_PROX_TRIALS = 10
+# Make ProxFunction.Type more concisely accessible
+for name, value in vars(expression_pb2.ProxFunction).items():
+    if name.isupper():
+        locals()[name] = value
+
+RANDOM_PROX_TRIALS = 1
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -22,11 +27,14 @@ t = cp.Variable(1)
 p1 = cp.Variable(1)
 q1 = cp.Variable(1)
 
-class Prox(namedtuple(
-        "Prox", ["prox_type", "objective", "constraint", "epigraph"])):
-    def __new__(cls, prox_type, objective, constraint=None, epigraph=False):
-        return super(Prox, cls).__new__(
-            cls, prox_type, objective, constraint, epigraph)
+ProxTest = namedtuple(
+    "ProxTest", ["prox_function_type", "objective", "constraint", "epigraph"])
+
+def prox(prox_function_type, objective, constraint=None):
+    return ProxTest(prox_function_type, objective, constraint, False)
+
+def epigraph(prox_function_type, objective, constraint):
+    return ProxTest(prox_function_type, objective, constraint, True)
 
 def f_quantile():
     alpha = rand()
@@ -126,75 +134,78 @@ def C_soc_scaled_translated():
 
 # Proximal operators
 PROX_TESTS = [
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
-    # Prox("SECOND_ORDER_CONE", None, C_soc_translated),
-    # Prox("SECOND_ORDER_CONE", None, lambda: [cp.norm2(x) <= t]),
-    #Prox("MATRIX_FRAC", lambda: cp.matrix_frac(p, X)),
-    #Prox("SIGMA_MAX", lambda: cp.sigma_max(X)),
-    #Prox("SUM_KL_DIV", lambda: cp.kl_div(p1, q1)),
-    Prox("AFFINE", lambda: randn(n).T*x),
-    Prox("CONSTANT", lambda: 0),
-    Prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
-    Prox("MAX", lambda: cp.max_entries(x)),
-    Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
-    Prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
-    Prox("NON_NEGATIVE", None, C_non_negative_scaled),
-    Prox("NON_NEGATIVE", None, lambda: [x >= 0]),
-    Prox("NORM_1", lambda: cp.norm1(x)),
-    Prox("NORM_2", lambda: cp.norm(X, "fro")),
-    Prox("NORM_2", lambda: cp.norm2(x)),
-    Prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
-    Prox("SEMIDEFINITE", None, lambda: [X >> 0]),
-    Prox("SUM_DEADZONE", f_dead_zone),
-    Prox("SUM_EXP", lambda: cp.sum_entries(cp.exp(x))),
-    Prox("SUM_HINGE", f_hinge),
-    Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    Prox("SUM_HINGE", lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
-    Prox("SUM_INV_POS", lambda: cp.sum_entries(cp.inv_pos(x))),
-    Prox("SUM_LARGEST", lambda: cp.sum_largest(x, 4)),
-    Prox("SUM_LOGISTIC", lambda: cp.sum_entries(cp.logistic(x))),
-    Prox("SUM_NEG_ENTR", lambda: -cp.sum_entries(cp.entr(x))),
-    Prox("SUM_NEG_LOG", lambda: -cp.sum_entries(cp.log(x))),
-    Prox("SUM_QUANTILE", f_quantile),
-    Prox("SUM_SQUARE", f_least_squares_matrix),
-    Prox("SUM_SQUARE", lambda: f_least_squares(20)),
-    Prox("SUM_SQUARE", lambda: f_least_squares(5)),
-    Prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
-    Prox("ZERO", None, C_linear_equality),
-    Prox("ZERO", None, C_linear_equality_matrix_lhs),
-    Prox("ZERO", None, C_linear_equality_matrix_rhs),
-    Prox("ZERO", None, C_linear_equality_multivariate),
-    Prox("ZERO", None, C_linear_equality_multivariate2),
-    Prox("ZERO", None, lambda: C_linear_equality_graph(20)),
-    Prox("ZERO", None, lambda: C_linear_equality_graph(5)),
-    Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    Prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    Prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
+    #prox(MATRIX_FRAC, lambda: cp.matrix_frac(p, X)),
+    #prox(SIGMA_MAX, lambda: cp.sigma_max(X)),
+    #prox(SUM_KL_DIV, lambda: cp.kl_div(p1, q1)),
+    prox(AFFINE, lambda: randn(n).T*x),
+    prox(CONSTANT, lambda: 0),
+    prox(LAMBDA_MAX, lambda: cp.lambda_max(X)),
+    prox(MAX, lambda: cp.max_entries(x)),
+    prox(NEG_LOG_DET, lambda: -cp.log_det(X)),
+    prox(NEG_LOG_DET, lambda: -cp.log_det(X)),
+    prox(NON_NEGATIVE, None, C_non_negative_scaled),
+    prox(NON_NEGATIVE, None, lambda: [x >= 0]),
+    prox(NORM_1, lambda: cp.norm1(x)),
+    prox(NORM_2, lambda: cp.norm(X, "fro")),
+    prox(NORM_2, lambda: cp.norm2(x)),
+    prox(NORM_NUCLEAR, lambda: cp.norm(X, "nuc")),
+    prox(SEMIDEFINITE, None, lambda: [X >> 0]),
+    prox(SUM_DEADZONE, f_dead_zone),
+    prox(SUM_EXP, lambda: cp.sum_entries(cp.exp(x))),
+    prox(SUM_HINGE, f_hinge),
+    prox(SUM_HINGE, lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    prox(SUM_HINGE, lambda: cp.sum_entries(cp.max_elemwise(1-x, 0))),
+    prox(SUM_INV_POS, lambda: cp.sum_entries(cp.inv_pos(x))),
+    prox(SUM_LARGEST, lambda: cp.sum_largest(x, 4)),
+    prox(SUM_LOGISTIC, lambda: cp.sum_entries(cp.logistic(x))),
+    prox(SUM_NEG_ENTR, lambda: -cp.sum_entries(cp.entr(x))),
+    prox(SUM_NEG_LOG, lambda: -cp.sum_entries(cp.log(x))),
+    prox(SUM_QUANTILE, f_quantile),
+    prox(SUM_SQUARE, f_least_squares_matrix),
+    prox(SUM_SQUARE, lambda: f_least_squares(20)),
+    prox(SUM_SQUARE, lambda: f_least_squares(5)),
+    prox(TOTAL_VARIATION_1D, lambda: cp.tv(x)),
+    prox(ZERO, None, C_linear_equality),
+    prox(ZERO, None, C_linear_equality_matrix_lhs),
+    prox(ZERO, None, C_linear_equality_matrix_rhs),
+    prox(ZERO, None, C_linear_equality_multivariate),
+    prox(ZERO, None, C_linear_equality_multivariate2),
+    prox(ZERO, None, lambda: C_linear_equality_graph(20)),
+    prox(ZERO, None, lambda: C_linear_equality_graph(5)),
+    prox(ZERO, None, lambda: C_linear_equality_graph_lhs(10, 5)),
+    prox(ZERO, None, lambda: C_linear_equality_graph_lhs(5, 10)),
+    prox(ZERO, None, lambda: C_linear_equality_graph_rhs(10, 5)),
+    prox(ZERO, None, lambda: C_linear_equality_graph_rhs(5, 10)),
 ]
 
 # Epigraph operators
-# PROX_TESTS += [
-#     Prox("SUM_DEADZONE", None, lambda: [f_dead_zone() <= t], True),
-#     Prox("HingeEpigraph", None, lambda: [f_hinge() <= t]),
-#     Prox("InvPosEpigraph", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
-#     Prox("KLDivEpigraph", None, lambda: [cp.kl_div(p1,q1) <= t]),
-#     Prox("LambdaMaxEpigraph", None, lambda: [cp.lambda_max(X) <= t]),
-#     Prox("LogisticEpigraph", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
-#     Prox("MaxEntriesEpigraph", None, lambda: [cp.max_entries(x) <= t]),
-#     Prox("NegativeEntropyEpigraph", None, lambda: [-cp.sum_entries(cp.entr(x)) <= t]),
-#     Prox("NegativeLogDetEpigraph", None, lambda: [-cp.log_det(X) <= t]),
-#     Prox("NegativeLogEpigraph", None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
-#     Prox("NormFrobeniusEpigraph", None, lambda: [cp.norm(X, "fro") <= t]),
-#     Prox("NormL1AsymmetricEpigraph", None, lambda: [f_norm_l1_asymmetric() <= t]),
-#     Prox("NormL1Epigraph", None, lambda: [cp.norm1(x) <= t]),
-#     Prox("NormNuclearEpigraph", None, lambda: [cp.norm(X, "nuc") <= t]),
-#     Prox("SumExpEpigraph", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
-# ]
+PROX_TESTS += [
+    epigraph(SUM_EXP, None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
+    epigraph(SUM_INV_POS, None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
+    epigraph(SUM_LOGISTIC, None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
+    epigraph(SUM_NEG_ENTR, None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
+]
 
-def run_prox(prox_function_type, prob, v_map, lam=1):
-    eval_prox(prox_function_type, prob, v_map, lam)
+PROX_TESTS = [
+    # epigraph(SUM_NEG_LOG, None, lambda: [-cp.sum_entries(cp.log(x)) <= t]),
+    # prox(SUM_DEADZONE, None, lambda: [f_dead_zone() <= t], True),
+    # prox(HingeEpigraph, None, lambda: [f_hinge() <= t]),
+    # prox(KLDivEpigraph, None, lambda: [cp.kl_div(p1,q1) <= t]),
+    # prox(LambdaMaxEpigraph, None, lambda: [cp.lambda_max(X) <= t]),
+    # prox(MaxEntriesEpigraph, None, lambda: [cp.max_entries(x) <= t]),
+    # prox(NegativeLogDetEpigraph, None, lambda: [-cp.log_det(X) <= t]),
+    # prox(NormFrobeniusEpigraph, None, lambda: [cp.norm(X, "fro") <= t]),
+    # prox(NormL1AsymmetricEpigraph, None, lambda: [f_norm_l1_asymmetric() <= t]),
+    # prox(NormL1Epigraph, None, lambda: [cp.norm1(x) <= t]),
+    # prox(NormNuclearEpigraph, None, lambda: [cp.norm(X, "nuc") <= t]),
+    # prox(SECOND_ORDER_CONE, None, C_soc_scaled),
+    # prox(SECOND_ORDER_CONE, None, C_soc_scaled_translated),
+    # prox(SECOND_ORDER_CONE, None, C_soc_translated),
+    # prox(SECOND_ORDER_CONE, None, lambda: [cp.norm2(x) <= t]),
+]
+
+def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
+    eval_prox(prox_function_type, prob, v_map, lam, epigraph)
     actual = {x: x.value for x in prob.variables()}
 
     # Compare to solution with cvxpy
@@ -232,34 +243,34 @@ def run_prox(prox_function_type, prob, v_map, lam=1):
 
         raise e
 
-def run_random_prox(prox, trial):
+def run_random_prox(prox_test, trial):
     np.random.seed(trial)
     v = np.random.randn(n)
     lam = np.abs(np.random.randn())
     lam = 1
 
-    f = 0 if not prox.objective else prox.objective()
-    C = [] if not prox.constraint else prox.constraint()
+    f = 0 if not prox_test.objective else prox_test.objective()
+    C = [] if not prox_test.constraint else prox_test.constraint()
 
     # Form problem and solve with proximal operator implementation
     prob = cp.Problem(cp.Minimize(f), C)
     v_map = {x: np.random.randn(*x.size) for x in prob.variables()}
 
-    run_prox(ProxFunction.Type.Value(prox.prox_type), prob, v_map, lam)
+    run_prox(prox_test.prox_function_type, prob, v_map, lam, prox_test.epigraph)
 
 def test_random_prox():
     for prox in PROX_TESTS:
         for trial in xrange(RANDOM_PROX_TRIALS):
             yield run_random_prox, prox, trial
 
-def test_second_order_cone():
-    v_maps = [
-        {x: np.zeros(10), t: np.array([0])},
-        {x: np.arange(10), t: np.array([100])},
-        {x: np.arange(10), t: np.array([10])},
-        {x: np.arange(10), t: np.array([-100])},
-        {x: np.arange(10), t: np.array([-10])}]
+# def test_second_order_cone():
+#     v_maps = [
+#         {x: np.zeros(10), t: np.array([0])},
+#         {x: np.arange(10), t: np.array([100])},
+#         {x: np.arange(10), t: np.array([10])},
+#         {x: np.arange(10), t: np.array([-100])},
+#         {x: np.arange(10), t: np.array([-10])}]
 
-    for v_map in v_maps:
-        prob = cp.Problem(cp.Minimize(0), [cp.norm(x) <= t])
-        yield run_prox, ProxFunction.SECOND_ORDER_CONE, prob, v_map
+#     for v_map in v_maps:
+#         prob = cp.Problem(cp.Minimize(0), [cp.norm(x) <= t])
+#         yield run_prox, ProxFunction.SECOND_ORDER_CONE, prob, v_map, False

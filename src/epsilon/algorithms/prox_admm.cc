@@ -70,9 +70,10 @@ void ProxADMMSolver::InitProxOperators() {
     }
 
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
+    bool epigraph = f_expr.prox_function().epigraph();
     VLOG(2) << "prox " << i << ", initializing "
             << ProxFunction::Type_Name(type);
-    prox_.emplace_back(CreateProxOperator(type));
+    prox_.emplace_back(CreateProxOperator(type, epigraph));
     prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
 
     // TODO(mwytock): This is scaled by rho now, figure out what to do here

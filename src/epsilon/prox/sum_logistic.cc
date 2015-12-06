@@ -37,8 +37,8 @@ public:
 };
 REGISTER_PROX_OPERATOR(SUM_LOGISTIC, SumLogisticProx);
 
-// class LogisticEpigraph final : public NewtonEpigraph {
-// public:
-//   LogisticEpigraph() : NewtonEpigraph(std::make_unique<Logistic>()) {}
-// };
-// REGISTER_PROX_OPERATOR(LogisticEpigraph);
+class SumLogisticEpigraph final : public NewtonEpigraph {
+public:
+  SumLogisticEpigraph() : NewtonEpigraph(std::make_unique<Logistic>()) {}
+};
+REGISTER_EPIGRAPH_OPERATOR(SUM_LOGISTIC, SumLogisticEpigraph);

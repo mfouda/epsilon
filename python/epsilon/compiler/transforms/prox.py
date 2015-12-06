@@ -241,8 +241,8 @@ def prox_sum_logistic(expr):
         constrs)
 
 def prox_sum_neg_entr(expr):
-    if (expr.expression_type == Expression.NEGATE and
-        expr.arg[0].expression_type == Expression.SUM and
+    if (expr.expression_type == Expression.SUM and
+        expr.arg[0].expression_type == Expression.NEGATE and
         expr.arg[0].arg[0].expression_type == Expression.ENTR):
         arg = expr.arg[0].arg[0].arg[0]
     else:
@@ -432,18 +432,34 @@ def prox_zero(expr):
             affine_arg),
         constrs)
 
+# Epigraph transform
+
+def epigraph(expr):
+    f_expr, t_expr = get_epigraph(expr)
+    if f_expr:
+        for rule in BASE_RULES:
+            result = rule(f_expr)
+
+            if result.match:
+                epi_function = result.prox_expr.prox_function
+                epi_function.epigraph = True
+
+                return MatchResult(
+                    True,
+                    expression.prox_function(
+                        epi_function, *(result.prox_expr.arg + [t_expr])),
+                    result.constrs)
+
+    return MatchResult(False)
+
 # Conic transform (catch-all default)
 
 def transform_cone(expr):
     obj, constrs = conic.transform_expr(expr)
     return MatchResult(True, None, [obj] + constrs)
 
-# Add rules in reverse priority order to apply high-level prox rules first
-RULES = [
-    # Affine
-    prox_sum_square,
-    prox_zero,
-
+# Used for both proximal/epigraph operators
+BASE_RULES = [
     # Matrix
     prox_lambda_max,
     prox_neg_log_det,
@@ -458,7 +474,6 @@ RULES = [
     prox_total_variation_1d,
 
     # Elementwise
-    prox_non_negative,
     prox_norm_1,
     prox_sum_exp,
     prox_sum_inv_pos,
@@ -470,18 +485,32 @@ RULES = [
     prox_sum_deadzone,
     prox_sum_quantile,
     prox_sum_hinge,
+]
+
+
+PROX_RULES = [
+    # Affine
+    prox_sum_square,
+    prox_zero,
 
     # Simple
     prox_constant,
     prox_affine,
+]
+
+PROX_RULES += BASE_RULES
+
+PROX_RULES += [
+    epigraph,
+    prox_non_negative,
 
     # Lowest priority, transform to cone problem
-    transform_cone
+    transform_cone,
 ]
 
 def transform_expr(expr):
     log_debug_expr("transform_expr", expr)
-    for rule in RULES:
+    for rule in PROX_RULES:
         result = rule(expr)
 
         if result.match:

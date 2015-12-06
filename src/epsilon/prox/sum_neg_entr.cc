@@ -47,10 +47,10 @@ public:
 };
 REGISTER_PROX_OPERATOR(SUM_NEG_ENTR, SumNegEntrProx);
 
-// // I(\sum_i xi log xi <= t)
-// class NegativeEntropyEpigraph final : public ImplicitNewtonEpigraph {
-// public:
-//   NegativeEntropyEpigraph()
-//     : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
-// };
-// REGISTER_PROX_OPERATOR(NegativeEntropyEpigraph);
+// I(\sum_i xi log xi <= t)
+class SumNegEntrEpigraph final : public ImplicitNewtonEpigraph {
+public:
+  SumNegEntrEpigraph()
+    : ImplicitNewtonEpigraph(std::make_unique<NegativeEntropy>()) {}
+};
+REGISTER_EPIGRAPH_OPERATOR(SUM_NEG_ENTR, SumNegEntrEpigraph);

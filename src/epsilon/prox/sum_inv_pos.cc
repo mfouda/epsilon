@@ -43,8 +43,8 @@ public:
 };
 REGISTER_PROX_OPERATOR(SUM_INV_POS, SumInvPosProx);
 
-// class InvPosEpigraph : public NewtonEpigraph {
-// public:
-//   InvPosEpigraph() : NewtonEpigraph(std::make_unique<InvPos>()) {}
-// };
-// REGISTER_PROX_OPERATOR(InvPosEpigraph);
+class SumInvPosEpigraph : public NewtonEpigraph {
+public:
+  SumInvPosEpigraph() : NewtonEpigraph(std::make_unique<InvPos>()) {}
+};
+REGISTER_EPIGRAPH_OPERATOR(SUM_INV_POS, SumInvPosEpigraph);

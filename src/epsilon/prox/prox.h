@@ -36,32 +36,39 @@ class ProxOperator {
   virtual BlockVector Apply(const BlockVector& v) = 0;
 };
 
+std::string ProxTypeHashKey(ProxFunction::Type type, bool epigraph);
+
 // Create a generalized proximal operator for expression
 // argmin_x f(H(x)) + (1/2)||A(x) - v||^2
-std::unique_ptr<ProxOperator> CreateProxOperator(ProxFunction::Type type);
+std::unique_ptr<ProxOperator> CreateProxOperator(
+    ProxFunction::Type type, bool epigraph);
 
 extern std::unordered_map<
-  ProxFunction::Type,
+  std::string,
   std::function<std::unique_ptr<ProxOperator>()>>* kProxOperatorMap;
 
 template<class T>
-bool RegisterProxOperator(ProxFunction::Type type) {
+bool RegisterProxOperator(ProxFunction::Type type, bool epigraph) {
   if (kProxOperatorMap == nullptr) {
     kProxOperatorMap = new std::unordered_map<
-      ProxFunction::Type,
+      std::string,
       std::function<std::unique_ptr<ProxOperator>()>>();
   }
 
   kProxOperatorMap->insert(std::make_pair(
-      type, [] {
+      ProxTypeHashKey(type, epigraph),
+      [] {
         return std::unique_ptr<T>(new T);
       }));
   return true;
 }
 
-// NOTE(mwytock) C preprocessor nastiness
-#define REGISTER_VAR(type, T) registered_ ## type ## _ ##T
-#define REGISTER_PROX_OPERATOR(type, T) \
-  bool REGISTER_VAR(type, T) = RegisterProxOperator<T>(ProxFunction::type)
+#define REGISTER_VAR(prefix, type, T) prefix ## _ ## type ## _ ##T
+#define REGISTER_PROX_OPERATOR(type, T)                         \
+  bool REGISTER_VAR(prox, type, T) = RegisterProxOperator<T>(   \
+      ProxFunction::type, false)
+#define REGISTER_EPIGRAPH_OPERATOR(type, T)                     \
+  bool REGISTER_VAR(epi, type, T) = RegisterProxOperator<T>(    \
+      ProxFunction::type, true)
 
 #endif  // EPSILON_OPERATORS_PROX_H
