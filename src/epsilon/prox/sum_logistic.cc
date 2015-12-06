@@ -31,16 +31,14 @@ public:
   }
 };
 
-// lam*||x||_2
-class LogisticProx final : public NewtonProx {
+class SumLogisticProx final : public NewtonProx {
 public:
-  LogisticProx() : NewtonProx(std::make_unique<Logistic>()) {}
+  SumLogisticProx() : NewtonProx(std::make_unique<Logistic>()) {}
 };
-REGISTER_PROX_OPERATOR(LogisticProx);
+REGISTER_PROX_OPERATOR(SUM_LOGISTIC, SumLogisticProx);
 
-// I(||x||_2 <= t)
-class LogisticEpigraph final : public NewtonEpigraph {
+class SumLogisticEpigraph final : public NewtonEpigraph {
 public:
-  LogisticEpigraph() : NewtonEpigraph(std::make_unique<Logistic>()) {}
+  SumLogisticEpigraph() : NewtonEpigraph(std::make_unique<Logistic>()) {}
 };
-REGISTER_PROX_OPERATOR(LogisticEpigraph);
+REGISTER_EPIGRAPH_OPERATOR(SUM_LOGISTIC, SumLogisticEpigraph);

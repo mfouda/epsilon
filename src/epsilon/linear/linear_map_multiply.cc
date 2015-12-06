@@ -45,7 +45,9 @@ LinearMapImpl* Multiply_DenseMatrix_ScalarMatrix(
 LinearMapImpl* Multiply_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      rhs.AsDense());
 }
 
 LinearMapImpl* Multiply_SparseMatrix_DenseMatrix(
@@ -83,7 +85,9 @@ LinearMapImpl* Multiply_SparseMatrix_ScalarMatrix(
 LinearMapImpl* Multiply_SparseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const SparseMatrixImpl&>(lhs).sparse()*
+      static_cast<const KroneckerProductImpl&>(rhs).AsSparse());
 }
 
 LinearMapImpl* Multiply_DiagonalMatrix_DenseMatrix(
@@ -176,13 +180,17 @@ LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
 LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      lhs.AsDense()*
+      static_cast<const DenseMatrixImpl&>(rhs).dense());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const KroneckerProductImpl&>(lhs).AsSparse()*
+      static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_DiagonalMatrix(
@@ -209,10 +217,7 @@ LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
       Multiply(C.B().impl(), D.B().impl()));
   }
 
-  LOG(FATAL) << "Not implemented: "
-             << "C: " << C.DebugString() << "\n"
-             << "D: " << D.DebugString();
-
+  return new SparseMatrixImpl(C.AsSparse()*D.AsSparse());
 }
 
 LinearMapImpl* Multiply_NotImplemented(
@@ -274,7 +279,9 @@ LinearMapBinaryOp kMultiplyTable
 };
 
 LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
-  CHECK_EQ(lhs.n(), rhs.m());
+  CHECK_EQ(lhs.n(), rhs.m())
+      << "A: " << lhs.DebugString() << "\n"
+      << "B: " << rhs.DebugString();
   return LinearMap((*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 

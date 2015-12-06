@@ -49,7 +49,8 @@ LinearMapImpl* Add_DenseMatrix_ScalarMatrix(
 LinearMapImpl* Add_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new DenseMatrixImpl(
+      static_cast<const DenseMatrixImpl&>(lhs).dense()+rhs.AsDense());
 }
 
 LinearMapImpl* Add_SparseMatrix_DenseMatrix(
@@ -161,8 +162,8 @@ LinearMapImpl* Add_ScalarMatrix_ScalarMatrix(
 LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
   auto const& S = static_cast<const ScalarMatrixImpl&>(lhs);
+  auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
 
   // kron(A, alpha*I) + beta*I  can be rewritten as
   // kron(A + beta/alpha*I, alpha*I)
@@ -180,11 +181,8 @@ LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
     return new KroneckerProductImpl(
         Add(S1, K.A().impl()),
         Add(S2, K.B().impl()));
-  } else {
-    LOG(FATAL) << "Not implemented\n"
-               << "K:" << K.DebugString() << "\n"
-               << "S:" << S.DebugString();
   }
+  return new SparseMatrixImpl(S.AsSparse() + K.AsSparse());
 }
 
 LinearMapImpl* Add_KroneckerProduct_DenseMatrix(

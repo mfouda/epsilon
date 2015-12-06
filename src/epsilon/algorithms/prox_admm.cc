@@ -12,23 +12,6 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-class LeastSquaresOperator : public BlockVectorOperator {
- public:
-  explicit LeastSquaresOperator(BlockMatrix A) : A_(A) {}
-
-  void Init() override {
-    AT_ = A_.Transpose();
-    ATA_inv_ = (AT_*A_).Inverse();
-  }
-
-  BlockVector Apply(const BlockVector& v) override {
-    return ATA_inv_*(AT_*v);
-  }
-
- private:
-  BlockMatrix A_, AT_, ATA_inv_;
-};
-
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
     const SolverParams& params,
@@ -44,34 +27,15 @@ void ProxADMMSolver::InitConstraints() {
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
     affine::BuildAffineOperator(
-        problem_.constraint(i).arg(0), std::to_string(i), &A_, &b_);
+        problem_.constraint(i).arg(0),
+        affine::constraint_key(i),
+        &A_, &b_);
+    u_(affine::constraint_key(i)) = BlockVector::DenseVector::Zero(
+        GetDimension(problem_.constraint(i).arg(0)));
   }
   AT_ = A_.Transpose();
   m_ = A_.m();
   n_ = A_.n();
-}
-
-double GetBlockDiagonalScalar(const BlockMatrix& A) {
-  double alpha;
-  bool first = true;
-
-  for (const auto& col_iter : A.data()) {
-    CHECK(col_iter.second.size() == 1 &&
-          col_iter.first == col_iter.second.begin()->first)
-        << "Matrix not block diagonal\n" << A.DebugString();
-
-    auto const& Aii = col_iter.second.begin()->second;
-    const double alpha_i = linear_map::GetScalar(Aii);
-
-    if (first) {
-      alpha = alpha_i;
-      first = false;
-    } else {
-      CHECK_EQ(alpha_i, alpha);
-    }
-  }
-
-  return alpha;
 }
 
 void ProxADMMSolver::InitProxOperators() {
@@ -79,35 +43,46 @@ void ProxADMMSolver::InitProxOperators() {
   N_ = problem_.objective().arg_size();
   x_.resize(N_);
 
+  // See TODO below
+  CHECK_EQ(1, params_.rho());
+  const double sqrt_rho = sqrt(params_.rho());
+
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
-    BlockMatrix A;
+
+    AffineOperator H;
+    for (int i = 0; i < f_expr.arg_size(); i++) {
+      affine::BuildAffineOperator(
+          f_expr.arg(i),
+          affine::arg_key(i),
+          &H.A, &H.b);
+    }
+
+    AffineOperator A;
+    std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
+      CHECK(constr_vars.find(var_id) != constr_vars.end())
+          << var_id << " not in constraints";
       for (auto iter : A_.col(var_id)) {
-        A(iter.first, var_id) = iter.second;
+        A.A(iter.first, var_id) = sqrt_rho*iter.second;
       }
     }
 
-    // TODO(mwytock): A bit of a hack, this should likely be specified slightly
-    // differently, perhaps by making the ADMM operations more explicit as part
-    // of the IR.
-    if (f_expr.proximal_operator().name() == "ZeroProx") {
-      prox_.emplace_back(std::make_unique<LeastSquaresOperator>(A));
-    } else {
-      const double alpha = GetBlockDiagonalScalar(A.Transpose()*A);
-      VLOG(1) << "ATA, alpha = " << alpha;
-      prox_.emplace_back(CreateProxOperator(
-          1/params_.rho()/alpha, (1/alpha)*A, f_expr));
-    }
+    ProxFunction::Type type = f_expr.prox_function().prox_function_type();
+    bool epigraph = f_expr.prox_function().epigraph();
+    VLOG(2) << "prox " << i << ", initializing "
+            << ProxFunction::Type_Name(type);
+    prox_.emplace_back(CreateProxOperator(type, epigraph));
+    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
 
-    AiT_.push_back(A.Transpose());
-    prox_.back()->Init();
+    // TODO(mwytock): This is scaled by rho now, figure out what to do here
+    AiT_.push_back(A.A.Transpose());
   }
 }
 
 void ProxADMMSolver::Init() {
-  VLOG(2) << problem_.DebugString();
+  VLOG(3) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
@@ -120,6 +95,7 @@ void ProxADMMSolver::Solve() {
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
     x_prev_ = x_;
+
     u_ -= b_;
     for (int i = 0; i < N_; i++)
       u_ -= A_*x_[i];
@@ -128,7 +104,7 @@ void ProxADMMSolver::Solve() {
       u_ += A_*x_[i];
       x_[i] = prox_[i]->Apply(u_);
       u_ -= A_*x_[i];
-      VLOG(2) << "x: " << x_[i].DebugString();
+      VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
     }
     VLOG(2) << "u: " << u_.DebugString();
 
@@ -146,11 +122,11 @@ void ProxADMMSolver::Solve() {
     status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   }
 
-  UpdateLocalParameters();
+  UpdateParameters();
   UpdateStatus(status_);
 }
 
-void ProxADMMSolver::UpdateLocalParameters() {
+void ProxADMMSolver::UpdateParameters() {
   for (int i = 0; i < N_; i++) {
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();

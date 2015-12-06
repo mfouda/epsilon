@@ -37,9 +37,11 @@ class KroneckerProductImpl final : public LinearMapImpl {
   }
 
   bool operator==(const LinearMapImpl& other) const override;
-  // Scalar matrix API
+
+  // Kronecker product specific methods
   const LinearMap& A() const { return A_; }
   const LinearMap& B() const { return B_; }
+  SparseMatrix AsSparse() const;
 
  private:
   LinearMap A_, B_;

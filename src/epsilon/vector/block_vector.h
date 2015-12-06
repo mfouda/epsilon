@@ -48,6 +48,9 @@ class BlockVector {
   DenseVector& operator()(const std::string& key);
   const DenseVector& operator()(const std::string& key) const;
 
+  // Gets the desired key or returns a vector of zeros
+  DenseVector Get(const std::string& key, int n) const;
+
   BlockVector& operator+=(const BlockVector& rhs);
   BlockVector& operator-=(const BlockVector& rhs);
   BlockVector& operator*=(double alpha);
@@ -56,13 +59,14 @@ class BlockVector {
 
   int n() const;
   double norm() const;
+  std::set<std::string> keys() const;
   bool has_key(const std::string& key) const {
     return data_.find(key) != data_.end();
   }
   const std::map<std::string, DenseVector>& data() const { return data_; }
 
-  std::string DebugString() const;
 
+  std::string DebugString() const;
   void InsertOrAdd(const std::string& key, DenseVector value);
 
  private:

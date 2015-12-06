@@ -56,6 +56,7 @@ void Constant(
   Eigen::VectorXd b_dense;
   const ::Constant& c = expr.constant();
   if (c.data_location() == "") {
+    // TODO(mwytock): This should probably be made explicit
     // Handle promotion if necessary by using L
     b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
@@ -99,7 +100,7 @@ void BuildAffineOperatorImpl(
     linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
-  VLOG(2) << "BuildAffineOperatorImpl\n"
+  VLOG(3) << "BuildAffineOperatorImpl\n"
           << "L: " << L.impl().DebugString() << "\n"
           << expr.DebugString();
 
@@ -120,29 +121,45 @@ void BuildAffineOperator(
       expr, row_key, linear_map::Identity(GetDimension(expr)), A, b);
 }
 
-void BuildDiagonalAffineOperator(
-    const Expression& expr,
-    Eigen::VectorXd* a,
-    Eigen::VectorXd* b) {
-  BlockMatrix A;
-  BlockVector b0;
-  BuildAffineOperator(expr, "_", &A, &b0);
-  CHECK_EQ(1, A.col_keys().size());
-  a->resize(GetDimension(expr));
-  *a = linear_map::GetDiagonal(A("_", *A.col_keys().begin()));
-  *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+// void GetScalarCoefficients(
+//     const Expression& expr,
+//     double* alpha,
+//     Eigen::VectorXd* b,
+//     std::string* key) {
+//   BlockMatrix A;
+//   BlockVector b0;
+//   BuildAffineOperator(expr, "_", &A, &b0);
+//   CHECK_EQ(1, A.col_keys().size());
+//   *key = *A.col_keys().begin();
+//   *alpha = linear_map::GetScalar(A("_", *key));
+//   *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+// }
+
+// void GetDiagonalCoefficients(
+//     const Expression& expr,
+//     Eigen::VectorXd* a,
+//     Eigen::VectorXd* b,
+//     std::string* key) {
+//   BlockMatrix A;
+//   BlockVector b0;
+//   BuildAffineOperator(expr, "_", &A, &b0);
+//   CHECK_EQ(1, A.col_keys().size());
+//   a->resize(GetDimension(expr));
+//   *key = *A.col_keys().begin();
+//   *a = linear_map::GetDiagonal(A("_", *key));
+//   *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+// }
+
+const std::string kConstraintPrefix = "constraint:";
+const std::string kArgPrefix = "arg:";
+
+std::string constraint_key(int i) {
+  return kConstraintPrefix + std::to_string(i);
 }
 
-void BuildScalarAffineOperator(
-    const Expression& expr,
-    double* alpha,
-    Eigen::VectorXd* b) {
-  BlockMatrix A;
-  BlockVector b0;
-  BuildAffineOperator(expr, "_", &A, &b0);
-  CHECK_EQ(1, A.col_keys().size());
-  *alpha = linear_map::GetScalar(A("_", *A.col_keys().begin()));
-  *b = b0.has_key("_") ? b0("_") : Eigen::VectorXd::Zero(GetDimension(expr));
+std::string arg_key(int i) {
+  return kArgPrefix + std::to_string(i);
 }
+
 
 }  // affine

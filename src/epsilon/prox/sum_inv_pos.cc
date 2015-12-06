@@ -5,7 +5,6 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/prox/newton.h"
 #include "epsilon/vector/vector_util.h"
-#include "epsilon/prox/ortho_invariant.h"
 #include <cmath>
 
 // \sum_i 1/(xi)
@@ -38,14 +37,14 @@ public:
   }
 };
 
-class InvPosProx : public NewtonProx {
+class SumInvPosProx : public NewtonProx {
 public:
-  InvPosProx() : NewtonProx(std::make_unique<InvPos>()) {}
+  SumInvPosProx() : NewtonProx(std::make_unique<InvPos>()) {}
 };
-REGISTER_PROX_OPERATOR(InvPosProx);
+REGISTER_PROX_OPERATOR(SUM_INV_POS, SumInvPosProx);
 
-class InvPosEpigraph : public NewtonEpigraph {
+class SumInvPosEpigraph : public NewtonEpigraph {
 public:
-  InvPosEpigraph() : NewtonEpigraph(std::make_unique<InvPos>()) {}
+  SumInvPosEpigraph() : NewtonEpigraph(std::make_unique<InvPos>()) {}
 };
-REGISTER_PROX_OPERATOR(InvPosEpigraph);
+REGISTER_EPIGRAPH_OPERATOR(SUM_INV_POS, SumInvPosEpigraph);

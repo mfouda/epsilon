@@ -14,11 +14,22 @@ def kronecker_product(A, B):
     if B.m*B.n == 1:
         return A
 
+    if (A.linear_map_type == LinearMap.SCALAR and
+        B.linear_map_type == LinearMap.SCALAR):
+        return scalar(A.scalar*B.scalar, A.n*B.n)
+
     return LinearMap(
         linear_map_type=LinearMap.KRONECKER_PRODUCT,
         m=A.m*B.m,
         n=A.n*B.n,
         arg=[A, B])
+
+def kronecker_product_single_arg(A, Bm, Bn):
+    return LinearMap(
+        linear_map_type=LinearMap.KRONECKER_PRODUCT,
+        m=A.m*Bm,
+        n=A*n*Bn,
+        arg=[A])
 
 def dense_matrix(constant):
     return LinearMap(
@@ -84,3 +95,31 @@ def left_matrix_product(A, n):
 
 def right_matrix_product(B, m):
     return kronecker_product(transpose(B), identity(m))
+
+# NOTE(mwytock): Represent the following functions as sparse matrices. This is
+# not very efficient, but we expect these to be relatively rare so the sparse
+# matrix form should be fine.
+def diag_mat(n):
+    rows = np.arange(n)
+    cols = np.arange(n)*(n+1)
+    A = sp.coo_matrix((np.ones(n), (rows, cols)), shape=(n, n*n))
+    return sparse_matrix(constant.store(A))
+
+def diag_vec(n):
+    rows = np.arange(n)*(n+1)
+    cols = np.arange(n)
+    A = sp.coo_matrix((np.ones(n), (rows, cols)), shape=(n*n, n))
+    return sparse_matrix(constant.store(A))
+
+def trace(n):
+    rows = np.zeros(n)
+    cols = np.arange(n)*(n+1)
+    A = sp.coo_matrix((np.ones(n), (rows, cols)), shape=(1, n*n))
+    return sparse_matrix(constant.store(A))
+
+def upper_tri(n):
+    m = n*(n-1)/2
+    rows = np.arange(m)
+    cols = np.array([j*n + i for i in xrange(n) for j in xrange(i+1,n)])
+    A = sp.coo_matrix((np.ones(m), (rows, cols)), shape=(m, n*n))
+    return sparse_matrix(constant.store(A))
