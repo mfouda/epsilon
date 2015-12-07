@@ -17,11 +17,13 @@ PROTO_DIR = "proto"
 PYTHON_DIR = "python"
 PYTHON_PROTO_DIR = PYTHON_DIR + "/epopt/proto"
 
+# For includes and static linking of protobuf, glog and gflags
+LIB_PREFIX = "/usr/local"
+
 PROTOC = find_executable("protoc")
 if PROTOC is None:
     std.stderr.write("protoc is not installed")
     sys.exit(-1)
-PROTOC_PREFIX = os.path.dirname(os.path.dirname(PROTOC))
 
 class BuildPyCommand(build_py):
     def run(self):
@@ -83,26 +85,28 @@ solve = Extension(
     extra_compile_args = ["-std=c++14"],
     depends = ["build-cc/libepsilon.a"],
     include_dirs = [
-        os.path.join(PROTOC_PREFIX, "include"),
+        os.path.join(LIB_PREFIX, "include"),
         "build-cc",
         "src",
         "third_party/eigen",
     ],
-    library_dirs = [
-        os.path.join(PROTOC_PREFIX, "lib"),
-    ],
-    libraries = ["protobuf", "glog"],
 )
 
-# NOTE(mwytock): Need to pull in all symbols from libepsilon.a because these
-# include things that are used indirectly via registration (e.g. the proximal
-# operator library)
+# NOTE(mwytock): The -all_load and -Wl,--whole-archive linker flags are needed
+# to pull in all symbols from libepsilon.a because these include things that are
+# used indirectly via registration (e.g. the proximal operator library)
 if platform.system() == "Darwin":
     solve.extra_link_args += [
-        "-all_load", "build-cc/libepsilon.a"]
+        os.path.join(LIB_PREFIX, "lib", "libgflags.a"),
+        os.path.join(LIB_PREFIX, "lib", "libglog.a"),
+        os.path.join(LIB_PREFIX, "lib", "libprotobuf.a"),
+        "-all_load",
+        "build-cc/libepsilon.a"]
 else:
     solve.extra_link_args += [
-        "-Wl,--whole-archive", "build-cc/libepsilon.a", "-Wl,--no-whole-archive"]
+        "-Wl,--whole-archive",
+        "build-cc/libepsilon.a",
+        "-Wl,--no-whole-archive"]
 
 setup(
     name = "epopt",

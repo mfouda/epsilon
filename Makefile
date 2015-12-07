@@ -18,7 +18,7 @@ CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
 CXXFLAGS += -I$(gtest_dir)/include
 
-# Currently, dont parallelize at Eigen level
+# Dont parallelize at Eigen level
 CXXFLAGS += -DEIGEN_DONT_PARALLELIZE
 
 # Third-party library, glmgen
