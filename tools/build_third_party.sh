@@ -7,16 +7,21 @@ build=$PWD/build-cc/third_party
 
 mkdir -p $build
 
+cmake_flags="-DCMAKE_INSTALL_PREFIX=$build"
+if [ "$(uname -s)" == "Linux" ]; then
+    cmake_flags+=" -DCMAKE_CXX_FLAGS=-fPIC"
+fi
+
 # gflags
-cd $third_party/gflags
-mkdir -p build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=$build ..
+mkdir -p $third_party/gflags/build
+cd $third_party/gflags/build
+cmake $cmake_flags ..
 make -j install
 
 # glog
-cd $third_party/glog
-./configure --enable-static --disable-shared --prefix=$build
+mkdir -p $third_party/glog/build
+cd $third_party/glog/build
+cmake $cmake_flags ..
 make -j install
 
 # protobuf

@@ -78,9 +78,9 @@ class CleanCommand(Command):
         subprocess.check_call(cmd, shell=True)
 
 solve_libs = [
-    os.path.join(THIRD_PARTY_DIR, "lib", "libgflags.a"),
-    os.path.join(THIRD_PARTY_DIR, "lib", "libglog.a"),
     os.path.join(THIRD_PARTY_DIR, "lib", "libprotobuf.a"),
+    os.path.join(THIRD_PARTY_DIR, "lib", "libglog.a"),
+    os.path.join(THIRD_PARTY_DIR, "lib", "libgflags.a"),
 ]
 
 epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")
@@ -96,22 +96,21 @@ solve = Extension(
         BUILD_CC_DIR,
         "src",
         "third_party/eigen",
-    ],
-    extra_objects = solve_libs
+    ]
 )
 
 # NOTE(mwytock): The -all_load and -Wl,--whole-archive linker flags are needed
 # to pull in all symbols from libepsilon.a because these include things that are
 # used indirectly via registration (e.g. the proximal operator library)
 if platform.system() == "Darwin":
-    solve.extra_link_args += [
+    solve.extra_link_args += solve_libs + [
         "-all_load",
         epsilon_lib]
 else:
     solve.extra_link_args += [
         "-Wl,--whole-archive",
         epsilon_lib,
-        "-Wl,--no-whole-archive"]
+        "-Wl,--no-whole-archive"] + solve_libs
 
 setup(
     name = "epopt",

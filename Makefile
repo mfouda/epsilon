@@ -34,6 +34,7 @@ SYSTEM = $(shell uname -s)
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
+LDLIBS += -lpthread
 endif
 
 common_cc = \
