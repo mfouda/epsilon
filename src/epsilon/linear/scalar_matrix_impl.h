@@ -35,6 +35,7 @@ class ScalarMatrixImpl final : public LinearMapImpl {
 
   // Scalar matrix API
   double alpha() const { return alpha_; }
+  SparseMatrix AsSparse() const;
 
  private:
   int n_;

@@ -11,7 +11,15 @@ class BlockVector;
 class Data;
 class Expression;
 
+struct AffineOperator {
+  BlockMatrix A;
+  BlockVector b;
+};
+
 namespace affine {
+
+std::string constraint_key(int i);
+std::string arg_key(int i);
 
 // Convenience function, calls BuildConstant() and BuildLinearMap() on the
 // expressions and puts the result in row_key in the BlockMatrix
@@ -21,15 +29,13 @@ void BuildAffineOperator(
     BlockMatrix* A,
     BlockVector* b);
 
-void BuildDiagonalAffineOperator(
-    const Expression& expr,
-    Eigen::VectorXd* a,
-    Eigen::VectorXd* b);
+// Convenience methods for "simple" affine operators
+std::string GetSingleVariableKey(const AffineOperator& op);
+double GetScalar(const AffineOperator& op);
+Eigen::VectorXd GetDiagonal(const AffineOperator& op);
+Eigen::VectorXd GetConstant(const AffineOperator& op);
 
-void BuildScalarAffineOperator(
-    const Expression& expr,
-    double* alpha,
-    Eigen::VectorXd* b);
+BlockVector GetLinear(const AffineOperator& op);
 
 
 }  // namespace affine

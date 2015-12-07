@@ -1,4 +1,7 @@
-#include "epsilon/prox/prox.h"
+#ifndef EPSILON_PROX_NEWTON_H
+#define EPSILON_PROX_NEWTON_H
+
+#include "epsilon/prox/vector_prox.h"
 
 class SmoothFunction {
  public:
@@ -10,44 +13,45 @@ class SmoothFunction {
   }
 };
 
-class NewtonProx : public ProxOperator {
- public:
+// TODO(mwytock): Mark these final and have the registration mechanism accept a
+// lambda rather than a class.
+class NewtonProx : public VectorProx {
+public:
   NewtonProx(std::unique_ptr<SmoothFunction> f) : f_(std::move(f)) {}
 
-  virtual void Init(const ProxOperatorArg& arg) override {
-    lambda_ = arg.lambda();
-  }
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
+protected:
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override;
 
- protected:
-  Eigen::VectorXd residual(
-      const Eigen::VectorXd& x, const Eigen::VectorXd& v, double lam);
-
+private:
   std::unique_ptr<SmoothFunction> f_;
-  double lambda_;
 };
 
-class NewtonEpigraph : public ProxOperator {
- public:
+class NewtonEpigraph : public VectorProx {
+public:
   NewtonEpigraph(std::unique_ptr<SmoothFunction> f) : f_(std::move(f)) {}
 
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
+protected:
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override;
 
- private:
-  Eigen::VectorXd residual(
-      const Eigen::VectorXd& x, double t, double lam,
-      const Eigen::VectorXd& v, double s);
-  Eigen::VectorXd SolveArrowheadSystem(
-      const Eigen::VectorXd& d, const Eigen::VectorXd& z, double alpha,
-      const Eigen::VectorXd& b);
-
+private:
   std::unique_ptr<SmoothFunction> f_;
 };
 
-class ImplicitNewtonEpigraph : public NewtonProx {
+class ImplicitNewtonEpigraph : public VectorProx {
  public:
-  ImplicitNewtonEpigraph
-    (std::unique_ptr<SmoothFunction> f) : NewtonProx(std::move(f)) {}
+  ImplicitNewtonEpigraph(std::unique_ptr<SmoothFunction> f) : f_(std::move(f)) {}
 
-  virtual Eigen::VectorXd Apply(const Eigen::VectorXd& v) override;
+ protected:
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override;
+
+ private:
+  std::unique_ptr<SmoothFunction> f_;
 };
+
+#endif  // EPSILON_PROX_NEWTON_H

@@ -5,6 +5,26 @@
 
 #include "epsilon/vector/block_matrix.h"
 
+bool InvertBlockDiagonal(const BlockMatrix& A, BlockMatrix* A_inv) {
+  std::set<std::string> seen_row_keys;
+  for (const auto& col_iter : A.data()) {
+    if (col_iter.second.size() != 1)
+      return false;
+    const std::string& row_key = col_iter.second.begin()->first;
+    if (seen_row_keys.find(row_key) != seen_row_keys.end())
+      return false;
+    seen_row_keys.insert(row_key);
+  }
+
+  for (const auto& col_iter : A.data()) {
+    const std::string& col_key = col_iter.first;
+    const std::string& row_key = col_iter.second.begin()->first;
+    const linear_map::LinearMap& Ai = col_iter.second.begin()->second;
+    A_inv->InsertOrAdd(col_key, row_key, Ai.Inverse());
+  }
+  return true;
+}
+
 linear_map::LinearMap& BlockMatrix::operator()(
     const std::string& row_key, const std::string& col_key) {
   return data_[col_key][row_key];
@@ -31,19 +51,13 @@ BlockMatrix BlockMatrix::Transpose() const {
 }
 
 BlockMatrix BlockMatrix::Inverse() const {
-  // Assumed to be block diagonal
-  // TODO(mwytock): Handle general structure?
-
-  BlockMatrix inverse;
-  VLOG(2) << "Inverting: " << DebugString();
-  for (const auto& col_iter : data_) {
-    CHECK(col_iter.second.size() == 1 &&
-          col_iter.first == col_iter.second.begin()->first)
-        << "Trying to invert non block diagonal matrix\n" << DebugString();
-    const std::string& key = col_iter.first;
-    inverse.InsertOrAdd(key, key, col_iter.second.begin()->second.Inverse());
+  CHECK_EQ(m(), n()) << "Inverting non square matrix";
+  BlockMatrix A_inv;
+  if (InvertBlockDiagonal(*this, &A_inv)) {
+    return A_inv;
   }
-  return inverse;
+
+  LOG(FATAL) << "Unable to invert matrix\n" << DebugString();
 }
 
 BlockMatrix BlockMatrix::LeftIdentity() const {

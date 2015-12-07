@@ -1,4 +1,6 @@
 
+#include <set>
+
 #include <glog/logging.h>
 
 #include "epsilon/vector/block_vector.h"
@@ -57,6 +59,13 @@ const BlockVector::DenseVector& BlockVector::operator()(
   return iter->second;
 }
 
+BlockVector::DenseVector BlockVector::Get(const std::string& key, int n) const {
+  auto iter = data_.find(key);
+  if (iter == data_.end())
+    return DenseVector::Zero(n);
+  return iter->second;
+}
+
 int BlockVector::n() const {
   int n = 0;
   for (const auto& iter : data_) {
@@ -78,6 +87,14 @@ std::string BlockVector::DebugString() const {
   for (auto iter : data_) {
     if (retval != "") retval += " ";
     retval += iter.first + ": " + VectorDebugString(iter.second);
+  }
+  return retval;
+}
+
+std::set<std::string> BlockVector::keys() const {
+  std::set<std::string> retval;
+  for (const auto& iter : data_) {
+    retval.insert(iter.first);
   }
   return retval;
 }

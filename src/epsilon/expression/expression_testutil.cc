@@ -29,7 +29,7 @@ Expression TestConstant(const Eigen::MatrixXd& A) {
 
   Expression expr;
   expr.set_expression_type(Expression::CONSTANT);
-  expr.mutable_curvature()->set_curvature_type(Curvature::CONSTANT);
+  expr.mutable_func_curvature()->set_curvature_type(Curvature::CONSTANT);
   expr.mutable_constant()->set_data_location(loc);
   expr.mutable_size()->add_dim(A.rows());
   expr.mutable_size()->add_dim(A.cols());

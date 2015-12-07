@@ -1,4 +1,4 @@
-"""Setup script for epsilon."""
+"""Setup script for epopt python package."""
 
 import fnmatch
 import os
@@ -15,16 +15,19 @@ from setuptools.command.build_py import build_py
 
 PROTO_DIR = "proto"
 PYTHON_DIR = "python"
+PYTHON_PROTO_DIR = PYTHON_DIR + "/epopt/proto"
+
+# For includes and static linking of protobuf, glog and gflags
+LIB_PREFIX = "/usr/local"
 
 PROTOC = find_executable("protoc")
 if PROTOC is None:
     std.stderr.write("protoc is not installed")
     sys.exit(-1)
-PROTOC_PREFIX = os.path.dirname(os.path.dirname(PROTOC))
 
 class BuildPyCommand(build_py):
     def run(self):
-        self.generate_protos(PROTO_DIR, PYTHON_DIR)
+        self.generate_protos(PROTO_DIR, PYTHON_PROTO_DIR)
         build_py.run(self)
 
     def generate_protos(self, src_dir, dst_dir):
@@ -68,46 +71,48 @@ class CleanCommand(Command):
                "./build-cc " +
                "./dist " +
                "./python/*.egg-info " +
-               "./python/epsilon/*.pyc " +
-               "./python/epsilon/*.so" +
-               "./python/epsilon/*_pb2.py " +
-               "./python/epsilon/compiler/*.pyc " +
-               "./python/epsilon/problems/*.pyc")
+               "./python/epopt/*.pyc " +
+               "./python/epopt/*.so " +
+               "./python/epopt/compiler/*.pyc " +
+               "./python/epopt/problems/*.pyc " +
+               "./python/epopt/proto/epsilon/*_pb2.py*")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
-    name = "epsilon._solve",
-    sources = ["python/epsilon/solvemodule.cc"],
+    name = "epopt._solve",
+    sources = ["python/epopt/solvemodule.cc"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
     depends = ["build-cc/libepsilon.a"],
     include_dirs = [
-        os.path.join(PROTOC_PREFIX, "include"),
+        os.path.join(LIB_PREFIX, "include"),
         "build-cc",
         "src",
         "third_party/eigen",
     ],
-    library_dirs = [
-        os.path.join(PROTOC_PREFIX, "lib"),
-    ],
-    libraries = ["protobuf", "glog"],
 )
 
-# NOTE(mwytock): Need to pull in all symbols from libepsilon.a because these
-# include things that are used indirectly via registration (e.g. the proximal
-# operator library)
+# NOTE(mwytock): The -all_load and -Wl,--whole-archive linker flags are needed
+# to pull in all symbols from libepsilon.a because these include things that are
+# used indirectly via registration (e.g. the proximal operator library)
 if platform.system() == "Darwin":
     solve.extra_link_args += [
-        "-all_load", "build-cc/libepsilon.a"]
+        os.path.join(LIB_PREFIX, "lib", "libgflags.a"),
+        os.path.join(LIB_PREFIX, "lib", "libglog.a"),
+        os.path.join(LIB_PREFIX, "lib", "libprotobuf.a"),
+        "-all_load",
+        "build-cc/libepsilon.a"]
 else:
     solve.extra_link_args += [
-        "-Wl,--whole-archive", "build-cc/libepsilon.a", "-Wl,--no-whole-archive"]
+        "-Wl,--whole-archive",
+        "build-cc/libepsilon.a",
+        "-Wl,--no-whole-archive"]
 
 setup(
-    name = "epsilon",
+    name = "epopt",
     version = "0.1.0",
     author = "Matt Wytock",
-    url = "https://github.com/mwytock/epsilon",
+    url = "http://epopt.io/",
     author_email = "mwytock@gmail.com",
     packages = find_packages(PYTHON_DIR),
     package_dir = {"": PYTHON_DIR},

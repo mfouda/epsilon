@@ -10,4 +10,11 @@ bool ScalarMatrixImpl::operator==(const LinearMapImpl& other) const {
   return static_cast<const ScalarMatrixImpl&>(other).alpha() == alpha_;
 }
 
+LinearMap::SparseMatrix ScalarMatrixImpl::AsSparse() const {
+  SparseMatrix A(n(), n());
+  A.setIdentity();
+  A *= alpha_;
+  return A;
+}
+
 }  // namespace linear_map
