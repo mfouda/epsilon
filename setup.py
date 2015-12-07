@@ -13,12 +13,11 @@ from setuptools import setup, find_packages, Extension, Command
 from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 
+BUILD_CC_DIR = "build-cc"
 PROTO_DIR = "proto"
 PYTHON_DIR = "python"
-PYTHON_PROTO_DIR = PYTHON_DIR + "/epopt/proto"
-
-# For includes and static linking of protobuf, glog and gflags
-LIB_PREFIX = "/usr/local"
+PYTHON_PROTO_DIR = os.path.join(PYTHON_DIR, "epopt", "proto")
+THIRD_PARTY_DIR = os.path.join(BUILD_CC_DIR, "third_party")
 
 PROTOC = find_executable("protoc")
 if PROTOC is None:
@@ -78,18 +77,27 @@ class CleanCommand(Command):
                "./python/epopt/proto/epsilon/*_pb2.py*")
         subprocess.check_call(cmd, shell=True)
 
+solve_libs = [
+    os.path.join(THIRD_PARTY_DIR, "lib", "libgflags.a"),
+    os.path.join(THIRD_PARTY_DIR, "lib", "libglog.a"),
+    os.path.join(THIRD_PARTY_DIR, "lib", "libprotobuf.a"),
+]
+
+epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")
+
 solve = Extension(
     name = "epopt._solve",
     sources = ["python/epopt/solvemodule.cc"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
-    depends = ["build-cc/libepsilon.a"],
+    depends = [epsilon_lib],
     include_dirs = [
-        os.path.join(LIB_PREFIX, "include"),
-        "build-cc",
+        os.path.join(THIRD_PARTY_DIR, "include"),
+        BUILD_CC_DIR,
         "src",
         "third_party/eigen",
     ],
+    extra_objects = solve_libs
 )
 
 # NOTE(mwytock): The -all_load and -Wl,--whole-archive linker flags are needed
@@ -97,15 +105,12 @@ solve = Extension(
 # used indirectly via registration (e.g. the proximal operator library)
 if platform.system() == "Darwin":
     solve.extra_link_args += [
-        os.path.join(LIB_PREFIX, "lib", "libgflags.a"),
-        os.path.join(LIB_PREFIX, "lib", "libglog.a"),
-        os.path.join(LIB_PREFIX, "lib", "libprotobuf.a"),
         "-all_load",
-        "build-cc/libepsilon.a"]
+        epsilon_lib]
 else:
     solve.extra_link_args += [
         "-Wl,--whole-archive",
-        "build-cc/libepsilon.a",
+        epsilon_lib,
         "-Wl,--no-whole-archive"]
 
 setup(

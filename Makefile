@@ -15,8 +15,8 @@ CFLAGS += $(OPTFLAGS)
 CXXFLAGS += $(OPTFLAGS) -std=c++14
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
-CXXFLAGS += -I$(build_dir) -I$(src_dir) -I$(eigen_dir)
-CXXFLAGS += -I$(gtest_dir)/include
+CXXFLAGS += -I$(src_dir) -I$(eigen_dir)  -I$(gtest_dir)/include
+CXXFLAGS += -I$(build_dir) -I$(build_dir)/third_party/include
 
 # Dont parallelize at Eigen level
 CXXFLAGS += -DEIGEN_DONT_PARALLELIZE
@@ -34,18 +34,6 @@ SYSTEM = $(shell uname -s)
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
-endif
-
-# NOTE(mwytock): libgflags.pc is missing on Homebrew
-ifeq ($(SYSTEM),Darwin)
-LIBS = protobuf libglog
-LDLIBS += `pkg-config --libs $(LIBS)` -L/usr/local/lib -lgflags
-CXXFLAGS += -Wno-macro-redefined
-CXXFLAGS += `pkg-config --cflags $(LIBS)` -I/usr/local/include
-else
-LIBS = protobuf libglog libgflags
-LDLIBS += `pkg-config --libs $(LIBS)`
-CXXFLAGS += `pkg-config --cflags $(LIBS)`
 endif
 
 common_cc = \
@@ -117,10 +105,16 @@ tests = \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test
 
+third_party_libs = \
+	gflags \
+	glog \
+	protobuf
+
+libs = epsilon
+
 binaries = \
 	epsilon/benchmark
 
-libs = epsilon
 
 # Google test
 gtest_srcs = $(gtest_dir)/src/*.cc $(gtest_dir)/src/*.h
@@ -139,29 +133,34 @@ build_libs = $(libs:%=$(build_dir)/lib%.a)
 build_sub_dirs += $(addprefix $(build_dir)/, $(dir $(third_party_obj)))
 common_obj += $(third_party_obj:%=$(build_dir)/%)
 
+# Static dependencies for linking
+link_obj = $(build_libs)
+link_obj += $(third_party_libs:%=$(build_dir)/third_party/lib/lib%.a)
+
 # Stop make from deleting intermediate files
 .SECONDARY:
 
 all: $(build_libs) $(build_binaries)
 
 clean:
-	rm -rf $(build_dir)
+	rm -rf $(build_dir)/epsilon
+	rm -rf $(build_dir)/libepsilon.a
 
 # Build rules
-$(build_dir):
+$(build_dir)/epsilon:
 	mkdir -p $(build_sub_dirs)
 
-$(build_dir)/%.pb.cc $(build_dir)/%.pb.h: $(proto_dir)/%.proto | $(build_dir)
+$(build_dir)/%.pb.cc $(build_dir)/%.pb.h: $(proto_dir)/%.proto | $(build_dir)/epsilon
 	protoc --proto_path=$(proto_dir) --cpp_out=$(build_dir) $<
 
-$(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)
+$(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)/epsilon
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
 
-$(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)
+$(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)/epsilon
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
 
 # Third party build rules
-$(build_dir)/$(glmgen_dir)/%.o: $(glmgen_dir)/%.c | $(build_dir)
+$(build_dir)/$(glmgen_dir)/%.o: $(glmgen_dir)/%.c | $(build_dir)/epsilon
 	$(COMPILE.c) $(glmgen_CFLAGS) $(OUTPUT_OPTION) $<
 
 # Targets
@@ -171,7 +170,7 @@ ifeq ($(SYSTEM),Darwin)
 	ranlib $@
 endif
 
-$(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(common_obj) $(proto_obj)
+$(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(link_obj)
 	$(LINK.cc) $^ $(LDLIBS) -o $@
 
 $(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
