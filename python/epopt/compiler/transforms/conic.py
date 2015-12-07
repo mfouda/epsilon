@@ -10,7 +10,7 @@ from epopt import linear_map
 from epopt import tree_format
 from epopt.compiler.transforms.transform_util import *
 from epopt.expression_util import *
-from epopt.expression_pb2 import Curvature, Expression
+from epopt.proto.epsilon.expression_pb2 import Curvature, Expression
 
 def transform_abs(expr):
     x = only_arg(expr)

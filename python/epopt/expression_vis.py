@@ -2,9 +2,9 @@
 
 import pygraphviz as pgv
 
-from epopt import expression_pb2
 from epopt import expression_str
 from epopt import expression_util
+from epopt.proto.epsilon import expression_pb2
 
 def node_label(expr):
     return (expression_pb2.Expression.Type.Name(expr.expression_type) + " " +

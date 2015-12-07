@@ -8,7 +8,7 @@ from epopt.compiler import validate
 from epopt.compiler.problem_graph import *
 from epopt.compiler.transforms import linear
 from epopt.compiler.transforms.transform_util import *
-from epopt.expression_pb2 import Expression, ProxFunction
+from epopt.proto.epsilon.expression_pb2 import Expression, ProxFunction
 from epopt.util import *
 
 def has_data_constant(expr):

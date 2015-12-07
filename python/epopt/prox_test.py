@@ -5,7 +5,7 @@ import numpy as np
 import cvxpy as cp
 from numpy.random import randn, rand
 
-from epopt.expression_pb2 import ProxFunction
+from epopt.proto.epsilon.expression_pb2 import ProxFunction
 from epopt.prox import eval_prox
 
 RANDOM_PROX_TRIALS = 10

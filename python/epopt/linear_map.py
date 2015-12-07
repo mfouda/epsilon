@@ -4,8 +4,8 @@ import numpy as np
 import scipy.sparse as sp
 
 from epopt import constant
-from epopt.proto.epsilon.expression_pb2 import LinearMap
 from epopt.expression_util import *
+from epopt.proto.epsilon.expression_pb2 import LinearMap
 
 # Atomic linear maps
 def kronecker_product(A, B):
