@@ -8,6 +8,7 @@ dependencies:
     - docker info
     - docker pull mwytock/epsilon
     - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && tools/build_third_party.sh'
 
 test:
   override:
