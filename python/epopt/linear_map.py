@@ -3,9 +3,9 @@
 import numpy as np
 import scipy.sparse as sp
 
-from epsilon import constant
-from epsilon.expression_pb2 import LinearMap
-from epsilon.expression_util import *
+from epopt import constant
+from epopt.expression_pb2 import LinearMap
+from epopt.expression_util import *
 
 # Atomic linear maps
 def kronecker_product(A, B):

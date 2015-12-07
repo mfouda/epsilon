@@ -5,9 +5,9 @@ import logging
 import cvxpy as cp
 import numpy as np
 
-from epsilon import cvxpy_solver
-from epsilon.problems import *
-from epsilon.problems.problem_instance import ProblemInstance
+from epopt import cvxpy_solver
+from epopt.problems import *
+from epopt.problems.problem_instance import ProblemInstance
 
 REL_TOL = {
     "hinge_l1": 1e-4,

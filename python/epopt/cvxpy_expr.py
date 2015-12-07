@@ -24,10 +24,10 @@ from cvxpy.expressions.constants.parameter import Parameter
 from cvxpy.expressions.variables.variable import Variable
 from cvxpy.problems import objective
 
-from epsilon import constant
-from epsilon import expression
-from epsilon import expression_pb2
-from epsilon.expression_pb2 import Expression
+from epopt import constant
+from epopt import expression
+from epopt import expression_pb2
+from epopt.expression_pb2 import Expression
 
 def index_value(index, size):
     if index < 0:

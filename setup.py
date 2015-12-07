@@ -1,4 +1,4 @@
-"""Setup script for epsilon."""
+"""Setup script for epopt python package."""
 
 import fnmatch
 import os
@@ -68,16 +68,16 @@ class CleanCommand(Command):
                "./build-cc " +
                "./dist " +
                "./python/*.egg-info " +
-               "./python/epsilon/*.pyc " +
-               "./python/epsilon/*.so" +
-               "./python/epsilon/*_pb2.py " +
-               "./python/epsilon/compiler/*.pyc " +
-               "./python/epsilon/problems/*.pyc")
+               "./python/epopt/*.pyc " +
+               "./python/epopt/*.so " +
+               "./python/epopt/*_pb2.py " +
+               "./python/epopt/compiler/*.pyc " +
+               "./python/epopt/problems/*.pyc")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
-    name = "epsilon._solve",
-    sources = ["python/epsilon/solvemodule.cc"],
+    name = "epopt._solve",
+    sources = ["python/epopt/solvemodule.cc"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
     depends = ["build-cc/libepsilon.a"],
@@ -104,7 +104,7 @@ else:
         "-Wl,--whole-archive", "build-cc/libepsilon.a", "-Wl,--no-whole-archive"]
 
 setup(
-    name = "epsilon",
+    name = "epopt",
     version = "0.1.0",
     author = "Matt Wytock",
     url = "https://github.com/mwytock/epsilon",

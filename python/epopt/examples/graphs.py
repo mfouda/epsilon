@@ -3,9 +3,9 @@
 import numpy as np
 import cvxpy as cp
 
-from epsilon import cvxpy_expr
-from epsilon import expression_vis
-from epsilon.compiler import canonicalize
+from epopt import cvxpy_expr
+from epopt import expression_vis
+from epopt.compiler import canonicalize
 
 if __name__ == "__main__":
     n = 5

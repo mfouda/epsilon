@@ -2,7 +2,7 @@
 import logging
 import resource
 
-from epsilon import tree_format
+from epopt import tree_format
 
 def cpu_time():
     return resource.getrusage(resource.RUSAGE_SELF).ru_utime

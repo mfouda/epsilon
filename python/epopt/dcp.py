@@ -7,7 +7,7 @@ help of cvxpy.utilities.
 
 import cvxpy.utilities
 
-from epsilon import expression_pb2
+from epopt import expression_pb2
 
 class DCPProperties(object):
     def __init__(self, dcp_attr):
@@ -25,7 +25,7 @@ class DCPProperties(object):
     def constant(self):
         return self.dcp_attr.curvature == cvxpy.utilities.Curvature.CONSTANT
 
-from epsilon import tree_format
+from epopt import tree_format
 
 def compute_dcp_properties(expr):
     # TODO(mwytock): Handle all unary/binary operators in this fashion.

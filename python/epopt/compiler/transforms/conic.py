@@ -5,12 +5,12 @@ from fractions import Fraction
 
 from cvxpy.utilities import power_tools
 
-from epsilon import expression
-from epsilon import linear_map
-from epsilon import tree_format
-from epsilon.compiler.transforms.transform_util import *
-from epsilon.expression_util import *
-from epsilon.expression_pb2 import Curvature, Expression
+from epopt import expression
+from epopt import linear_map
+from epopt import tree_format
+from epopt.compiler.transforms.transform_util import *
+from epopt.expression_util import *
+from epopt.expression_pb2 import Curvature, Expression
 
 def transform_abs(expr):
     x = only_arg(expr)

@@ -6,12 +6,12 @@ extraction.
 
 import logging
 
-from epsilon import expression
-from epsilon import tree_format
-from epsilon.compiler.transforms import conic
-from epsilon.compiler.transforms import linear
-from epsilon.compiler.transforms.transform_util import *
-from epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
+from epopt import expression
+from epopt import tree_format
+from epopt.compiler.transforms import conic
+from epopt.compiler.transforms import linear
+from epopt.compiler.transforms.transform_util import *
+from epopt.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
 
 class MatchResult(object):
     def __init__(self, match, prox_expr=None, constrs=[]):

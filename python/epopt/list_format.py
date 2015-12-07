@@ -1,6 +1,6 @@
 
 
-from epsilon.expression_pb2 import Expression
+from epopt.expression_pb2 import Expression
 
 def name(proto):
     return Expression.Type.Name(proto.expression_type).lower()

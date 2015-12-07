@@ -1,14 +1,14 @@
 
 from nose.tools import assert_items_equal, assert_equal
 
-from epsilon import cvxpy_expr
-from epsilon.compiler import compiler
-from epsilon.compiler import validate
-from epsilon.problems import basis_pursuit
-from epsilon.problems import least_abs_dev
-from epsilon.problems import tv_1d
-from epsilon.problems import tv_denoise
-from epsilon.expression_pb2 import Expression, ProxFunction
+from epopt import cvxpy_expr
+from epopt.compiler import compiler
+from epopt.compiler import validate
+from epopt.problems import basis_pursuit
+from epopt.problems import least_abs_dev
+from epopt.problems import tv_1d
+from epopt.problems import tv_denoise
+from epopt.expression_pb2 import Expression, ProxFunction
 
 Prox = ProxFunction
 

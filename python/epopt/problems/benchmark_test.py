@@ -1,9 +1,9 @@
 
 import argparse
 
-from epsilon.problems import benchmark
-from epsilon.problems import lasso
-from epsilon.problems.problem_instance import ProblemInstance
+from epopt.problems import benchmark
+from epopt.problems import lasso
+from epopt.problems.problem_instance import ProblemInstance
 
 
 def test_benchmarks():

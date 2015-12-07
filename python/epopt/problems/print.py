@@ -6,11 +6,11 @@
 import argparse
 import json
 
-from epsilon import cvxpy_expr
-from epsilon import text_format
-from epsilon import tree_format
-from epsilon.compiler import compiler
-from epsilon.problems import *
+from epopt import cvxpy_expr
+from epopt import text_format
+from epopt import tree_format
+from epopt.compiler import compiler
+from epopt.problems import *
 
 FORMATTERS = {
     "text": text_format.format_problem,

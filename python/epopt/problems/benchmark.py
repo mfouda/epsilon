@@ -7,14 +7,14 @@ import sys
 import cvxpy as cp
 import numpy as np
 
-from epsilon import cvxpy_expr
-from epsilon import cvxpy_solver
-from epsilon import solver_params_pb2
-from epsilon.compiler import compiler
-from epsilon.problems import *
-from epsilon.problems import benchmark_util
+from epopt import cvxpy_expr
+from epopt import cvxpy_solver
+from epopt import solver_params_pb2
+from epopt.compiler import compiler
+from epopt.problems import *
+from epopt.problems import benchmark_util
 
-from epsilon.problems.problem_instance import ProblemInstance
+from epopt.problems.problem_instance import ProblemInstance
 
 # Need to fix ATA, maybe faster sparse matrix ops?
 # ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
@@ -79,7 +79,7 @@ PROBLEMS_SCALE += [ProblemInstance(
     dict(m=3*int(n), n=int(n)))
     for n in np.logspace(1, np.log10(1500), 20)]
 
-def benchmark_epsilon(cvxpy_prob):
+def benchmark_epopt(cvxpy_prob):
     cvxpy_solver.solve(cvxpy_prob, rel_tol=1e-2, abs_tol=1e-4)
     return cvxpy_prob.objective.value
 
@@ -100,7 +100,7 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         return float("nan")
 
 BENCHMARKS = {
-    "epsilon": benchmark_epsilon,
+    "epopt": benchmark_epopt,
     "scs": lambda p: benchmark_cvxpy(cp.SCS, p),
     "ecos": lambda p: benchmark_cvxpy(cp.ECOS, p),
 }
@@ -128,7 +128,7 @@ def run_benchmarks(benchmarks, problems):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--benchmark", default="epsilon")
+    parser.add_argument("--benchmark", default="epopt")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--list-benchmarks", action="store_true")
     parser.add_argument("--list-problems", action="store_true")

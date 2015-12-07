@@ -1,7 +1,7 @@
 
 
-from epsilon.expression_pb2 import Expression, Problem
-from epsilon import error
+from epopt.expression_pb2 import Expression, Problem
+from epopt import error
 
 class ValidateError(error.ProblemError):
     pass

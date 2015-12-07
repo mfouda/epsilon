@@ -1,8 +1,8 @@
 
 import struct
 
-from epsilon.error import ExpressionError
-from epsilon.expression_pb2 import Curvature, Expression
+from epopt.error import ExpressionError
+from epopt.expression_pb2 import Curvature, Expression
 
 # Helper functions
 def only_arg(expr):

@@ -2,17 +2,17 @@
 import logging
 import numpy
 
-from epsilon import _solve
-from epsilon import constant
-from epsilon import cvxpy_expr
-from epsilon import cvxpy_solver
-from epsilon import solver_params_pb2
-from epsilon import solver_pb2
-from epsilon import tree_format
-from epsilon.compiler import compiler
-from epsilon.compiler import validate
-from epsilon.error import ProblemError
-from epsilon.expression_pb2 import Curvature, Expression, ProxFunction
+from epopt import _solve
+from epopt import constant
+from epopt import cvxpy_expr
+from epopt import cvxpy_solver
+from epopt import solver_params_pb2
+from epopt import solver_pb2
+from epopt import tree_format
+from epopt.compiler import compiler
+from epopt.compiler import validate
+from epopt.error import ProblemError
+from epopt.expression_pb2 import Curvature, Expression, ProxFunction
 
 def eval_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     """Evaluate a single proximal operator."""

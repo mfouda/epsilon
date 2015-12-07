@@ -2,14 +2,14 @@
 
 from collections import defaultdict
 
-from epsilon import expression
-from epsilon import tree_format
-from epsilon.compiler import validate
-from epsilon.compiler.problem_graph import *
-from epsilon.compiler.transforms import linear
-from epsilon.compiler.transforms.transform_util import *
-from epsilon.expression_pb2 import Expression, ProxFunction
-from epsilon.util import *
+from epopt import expression
+from epopt import tree_format
+from epopt.compiler import validate
+from epopt.compiler.problem_graph import *
+from epopt.compiler.transforms import linear
+from epopt.compiler.transforms.transform_util import *
+from epopt.expression_pb2 import Expression, ProxFunction
+from epopt.util import *
 
 def has_data_constant(expr):
     if (expr.expression_type == Expression.CONSTANT and

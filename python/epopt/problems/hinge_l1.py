@@ -2,7 +2,7 @@
 import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
-from epsilon.problems import problem_util
+from epopt.problems import problem_util
 
 def create(**kwargs):
     A, b = problem_util.create_classification(**kwargs)

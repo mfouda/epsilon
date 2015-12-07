@@ -3,7 +3,7 @@ import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
 import scipy.linalg as la
-from epsilon.problems import problem_util
+from epopt.problems import problem_util
 
 def create(m, n):
     # Generate data

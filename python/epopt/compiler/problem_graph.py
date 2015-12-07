@@ -10,11 +10,11 @@ mutations.
 
 from collections import defaultdict
 
-from epsilon import expression
-from epsilon import expression_util
-from epsilon.compiler import validate
-from epsilon.expression_pb2 import Expression, Problem, Cone
-from epsilon import tree_format
+from epopt import expression
+from epopt import expression_util
+from epopt.compiler import validate
+from epopt.expression_pb2 import Expression, Problem, Cone
+from epopt import tree_format
 
 VARIABLE = "variable"
 FUNCTION = "function"

@@ -1,4 +1,4 @@
-from epsilon.tree_format import *
+from epopt.tree_format import *
 
 class ProblemError(Exception):
     def __init__(self, message, problem):

@@ -1,8 +1,8 @@
 import logging
 
-from epsilon.compiler.transforms import prox
-from epsilon.compiler.transforms import separate
-from epsilon import tree_format
+from epopt.compiler.transforms import prox
+from epopt.compiler.transforms import separate
+from epopt import tree_format
 
 TRANSFORMS = [
     prox.transform_problem,

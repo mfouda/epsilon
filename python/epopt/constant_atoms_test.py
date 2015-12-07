@@ -18,13 +18,13 @@ import math
 import numpy as np
 import numpy.linalg as LA
 
-import epsilon.cvxpy_solver
-from epsilon.cvxpy_solver import EPSILON
+import epopt.cvxpy_solver
+from epopt.cvxpy_solver import EPSILON
 
 SOLVERS = {
-    EPSILON: epsilon.cvxpy_solver
+    EPSILON: epopt.cvxpy_solver
 }
-Problem.register_solve(EPSILON, epsilon.cvxpy_solver.solve)
+Problem.register_solve(EPSILON, epopt.cvxpy_solver.solve)
 SOLVERS_TO_TRY = [EPSILON]
 SOLVER_TO_TOL = {EPSILON: 1e-2}
 
@@ -222,7 +222,7 @@ def check_solver(prob, solver_name):
     try:
         solver.validate_solver(constraints)
         return True
-    except epsilon.cvxpy_solver.SolverError as e:
+    except epopt.cvxpy_solver.SolverError as e:
         return False
 
 # Tests numeric version of atoms.

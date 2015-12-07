@@ -1,5 +1,5 @@
 
-from epsilon import tree_format
+from epopt import tree_format
 
 from nose.tools import assert_equal
 

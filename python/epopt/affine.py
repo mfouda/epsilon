@@ -3,10 +3,10 @@
 import numpy as np
 import scipy.sparse as sp
 
-from epsilon import linear_map
-from epsilon.error import LinearMapError
-from epsilon.expression_pb2 import Expression, LinearMap
-from epsilon.expression_util import *
+from epopt import linear_map
+from epopt.error import LinearMapError
+from epopt.expression_pb2 import Expression, LinearMap
+from epopt.expression_util import *
 
 def dense_type():
     return LinearMapType(LinearMap(linear_map_type=LinearMap.DENSE_MATRIX))

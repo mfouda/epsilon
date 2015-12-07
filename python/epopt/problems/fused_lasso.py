@@ -3,7 +3,7 @@ import cvxpy as cp
 import numpy as np
 import numpy.linalg as LA
 import scipy.sparse as sp
-from epsilon.problems import problem_util
+from epopt.problems import problem_util
 
 def create(m, ni, k, rho=0.05, sigma=0.05):
     A = np.random.randn(m, ni*k)

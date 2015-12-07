@@ -5,11 +5,11 @@ import random
 
 from cvxpy.utilities import power_tools
 
-from epsilon import error
-from epsilon import expression
-from epsilon.expression_pb2 import Expression, Curvature, Cone
-from epsilon.expression_util import *
-from epsilon.util import *
+from epopt import error
+from epopt import expression
+from epopt.expression_pb2 import Expression, Curvature, Cone
+from epopt.expression_util import *
+from epopt.util import *
 
 class TransformError(error.ExpressionError):
     pass

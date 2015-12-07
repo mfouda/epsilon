@@ -2,14 +2,14 @@
 
 import logging
 
-from epsilon import error
-from epsilon import expression
-from epsilon import linear_map
-from epsilon import tree_format
-from epsilon.util import *
-from epsilon.compiler import validate
-from epsilon.expression_pb2 import Problem, Constant
-from epsilon.compiler.transforms.transform_util import *
+from epopt import error
+from epopt import expression
+from epopt import linear_map
+from epopt import tree_format
+from epopt.util import *
+from epopt.compiler import validate
+from epopt.expression_pb2 import Problem, Constant
+from epopt.compiler.transforms.transform_util import *
 
 def transform_variable(expr):
     return expression.reshape(expr, dim(expr), 1)

@@ -5,14 +5,14 @@ import numpy
 
 from cvxpy.settings import OPTIMAL, OPTIMAL_INACCURATE, SOLVER_ERROR
 
-from epsilon import _solve
-from epsilon import cvxpy_expr
-from epsilon import constant
-from epsilon import solver_params_pb2
-from epsilon import solver_pb2
-from epsilon import util
-from epsilon.compiler import compiler
-from epsilon.solver_pb2 import SolverStatus
+from epopt import _solve
+from epopt import cvxpy_expr
+from epopt import constant
+from epopt import solver_params_pb2
+from epopt import solver_pb2
+from epopt import util
+from epopt.compiler import compiler
+from epopt.solver_pb2 import SolverStatus
 
 EPSILON = "epsilon"
 

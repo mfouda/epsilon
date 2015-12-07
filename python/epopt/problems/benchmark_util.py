@@ -3,10 +3,10 @@ import errno
 import os
 import resource
 
-from epsilon import cvxpy_expr
-from epsilon import constant
-from epsilon.compiler import compiler
-from epsilon.expression_pb2 import Expression
+from epopt import cvxpy_expr
+from epopt import constant
+from epopt.compiler import compiler
+from epopt.expression_pb2 import Expression
 
 def modify_data_location_linear_map(linear_map, f):
     if linear_map.constant.data_location != "":
