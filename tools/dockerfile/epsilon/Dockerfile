@@ -6,15 +6,12 @@ RUN apt-get update && apt-get install -y \
   autotools-dev \
   build-essential \
   bzip2 \
+  cmake \
   curl \
   g++ \
   gfortran \
   git \
   libc-dev \
-  libgflags-dev \
-  libgoogle-glog-dev \
-  libgoogle-perftools-dev \
-  libgtest-dev \
   libopenblas-dev \
   libquadmath0 \
   libtool \
@@ -29,12 +26,6 @@ RUN apt-get update && apt-get install -y \
   timelimit \
   wget \
   zip && apt-get clean
-
-# Protobuf latest version
-RUN git clone https://github.com/google/protobuf.git
-RUN cd protobuf && git checkout tags/v3.0.0-beta-1
-RUN cd protobuf && ./autogen.sh && ./configure && make install
-RUN ldconfig
 
 # Python with numpy/scipy and cvxpy
 RUN easy_install -U pip
