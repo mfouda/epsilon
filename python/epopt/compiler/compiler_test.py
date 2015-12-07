@@ -8,7 +8,7 @@ from epopt.problems import basis_pursuit
 from epopt.problems import least_abs_dev
 from epopt.problems import tv_1d
 from epopt.problems import tv_denoise
-from epopt.expression_pb2 import Expression, ProxFunction
+from epopt.proto.epsilon.expression_pb2 import Expression, ProxFunction
 
 Prox = ProxFunction
 

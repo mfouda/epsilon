@@ -5,8 +5,8 @@ import scipy.sparse as sp
 
 from epopt import linear_map
 from epopt.error import LinearMapError
-from epopt.expression_pb2 import Expression, LinearMap
 from epopt.expression_util import *
+from epopt.proto.epsilon.expression_pb2 import Expression, LinearMap
 
 def dense_type():
     return LinearMapType(LinearMap(linear_map_type=LinearMap.DENSE_MATRIX))

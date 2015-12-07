@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from epopt import constant
-from epopt.expression_pb2 import LinearMap
+from epopt.proto.epsilon.expression_pb2 import LinearMap
 from epopt.expression_util import *
 
 # Atomic linear maps

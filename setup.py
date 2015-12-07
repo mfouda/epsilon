@@ -15,6 +15,7 @@ from setuptools.command.build_py import build_py
 
 PROTO_DIR = "proto"
 PYTHON_DIR = "python"
+PYTHON_PROTO_DIR = PYTHON_DIR + "/epopt/proto"
 
 PROTOC = find_executable("protoc")
 if PROTOC is None:
@@ -24,7 +25,7 @@ PROTOC_PREFIX = os.path.dirname(os.path.dirname(PROTOC))
 
 class BuildPyCommand(build_py):
     def run(self):
-        self.generate_protos(PROTO_DIR, PYTHON_DIR)
+        self.generate_protos(PROTO_DIR, PYTHON_PROTO_DIR)
         build_py.run(self)
 
     def generate_protos(self, src_dir, dst_dir):
@@ -70,9 +71,9 @@ class CleanCommand(Command):
                "./python/*.egg-info " +
                "./python/epopt/*.pyc " +
                "./python/epopt/*.so " +
-               "./python/epopt/*_pb2.py " +
                "./python/epopt/compiler/*.pyc " +
-               "./python/epopt/problems/*.pyc")
+               "./python/epopt/problems/*.pyc " +
+               "./python/epopt/proto/epsilon/*_pb2.py*")
         subprocess.check_call(cmd, shell=True)
 
 solve = Extension(
@@ -107,7 +108,7 @@ setup(
     name = "epopt",
     version = "0.1.0",
     author = "Matt Wytock",
-    url = "https://github.com/mwytock/epsilon",
+    url = "http://epopt.io/",
     author_email = "mwytock@gmail.com",
     packages = find_packages(PYTHON_DIR),
     package_dir = {"": PYTHON_DIR},

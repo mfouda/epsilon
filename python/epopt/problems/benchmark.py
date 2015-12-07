@@ -9,7 +9,6 @@ import numpy as np
 
 from epopt import cvxpy_expr
 from epopt import cvxpy_solver
-from epopt import solver_params_pb2
 from epopt.compiler import compiler
 from epopt.problems import *
 from epopt.problems import benchmark_util

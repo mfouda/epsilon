@@ -2,7 +2,7 @@
 import numpy as np
 import scipy.sparse as sp
 
-from epopt.expression_pb2 import Constant
+from epopt.proto.epsilon.expression_pb2 import Constant
 
 # Global store of all constants
 global_data_map = {}

@@ -5,10 +5,10 @@ import numpy as np
 from epopt import affine
 from epopt import constant as _constant
 from epopt import dcp
-from epopt import expression_pb2
 from epopt.error import ExpressionError
-from epopt.expression_pb2 import Monotonicity, Curvature, Sign, Size, Cone
 from epopt.expression_util import *
+from epopt.proto.epsilon import expression_pb2
+from epopt.proto.epsilon.expression_pb2 import Monotonicity, Curvature, Sign, Size, Cone
 
 # Shorthand convenience
 SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)

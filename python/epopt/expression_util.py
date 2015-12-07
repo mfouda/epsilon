@@ -2,7 +2,7 @@
 import struct
 
 from epopt.error import ExpressionError
-from epopt.expression_pb2 import Curvature, Expression
+from epopt.proto.epsilon.expression_pb2 import Curvature, Expression
 
 # Helper functions
 def only_arg(expr):

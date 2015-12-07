@@ -6,10 +6,10 @@ from epopt import error
 from epopt import expression
 from epopt import linear_map
 from epopt import tree_format
-from epopt.util import *
 from epopt.compiler import validate
-from epopt.expression_pb2 import Problem, Constant
 from epopt.compiler.transforms.transform_util import *
+from epopt.proto.epsilon.expression_pb2 import Problem, Constant
+from epopt.util import *
 
 def transform_variable(expr):
     return expression.reshape(expr, dim(expr), 1)

@@ -6,13 +6,11 @@ from epopt import _solve
 from epopt import constant
 from epopt import cvxpy_expr
 from epopt import cvxpy_solver
-from epopt import solver_params_pb2
-from epopt import solver_pb2
 from epopt import tree_format
 from epopt.compiler import compiler
 from epopt.compiler import validate
 from epopt.error import ProblemError
-from epopt.expression_pb2 import Curvature, Expression, ProxFunction
+from epopt.proto.epsilon.expression_pb2 import Expression
 
 def eval_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     """Evaluate a single proximal operator."""

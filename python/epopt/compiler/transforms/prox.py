@@ -11,7 +11,7 @@ from epopt import tree_format
 from epopt.compiler.transforms import conic
 from epopt.compiler.transforms import linear
 from epopt.compiler.transforms.transform_util import *
-from epopt.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
+from epopt.proto.epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
 
 class MatchResult(object):
     def __init__(self, match, prox_expr=None, constrs=[]):

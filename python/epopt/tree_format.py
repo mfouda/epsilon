@@ -1,5 +1,5 @@
 
-from epopt.expression_pb2 import *
+from epopt.proto.epsilon.expression_pb2 import *
 
 def key_str(expr):
     return "[" + ", " .join([

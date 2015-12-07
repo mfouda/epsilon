@@ -26,8 +26,8 @@ from cvxpy.problems import objective
 
 from epopt import constant
 from epopt import expression
-from epopt import expression_pb2
-from epopt.expression_pb2 import Expression
+from epopt.proto.epsilon import expression_pb2
+from epopt.proto.epsilon.expression_pb2 import Expression
 
 def index_value(index, size):
     if index < 0:

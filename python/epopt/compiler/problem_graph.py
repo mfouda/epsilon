@@ -12,9 +12,9 @@ from collections import defaultdict
 
 from epopt import expression
 from epopt import expression_util
-from epopt.compiler import validate
-from epopt.expression_pb2 import Expression, Problem, Cone
 from epopt import tree_format
+from epopt.compiler import validate
+from epopt.proto.epsilon.expression_pb2 import Expression, Problem, Cone
 
 VARIABLE = "variable"
 FUNCTION = "function"

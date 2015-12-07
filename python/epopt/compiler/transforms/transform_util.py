@@ -7,8 +7,8 @@ from cvxpy.utilities import power_tools
 
 from epopt import error
 from epopt import expression
-from epopt.expression_pb2 import Expression, Curvature, Cone
 from epopt.expression_util import *
+from epopt.proto.epsilon.expression_pb2 import Expression, Curvature, Cone
 from epopt.util import *
 
 class TransformError(error.ExpressionError):

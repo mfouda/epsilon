@@ -2,7 +2,7 @@
 
 from epopt import expression_util
 from epopt.compiler import validate
-from epopt.expression_pb2 import Expression, Cone, LinearMap
+from epopt.proto.epsilon.expression_pb2 import Expression, Cone, LinearMap
 
 NAMES = {
     Expression.VARIABLE: "xyzwvutsrq",

@@ -6,13 +6,13 @@ import numpy
 from cvxpy.settings import OPTIMAL, OPTIMAL_INACCURATE, SOLVER_ERROR
 
 from epopt import _solve
-from epopt import cvxpy_expr
 from epopt import constant
-from epopt import solver_params_pb2
-from epopt import solver_pb2
+from epopt import cvxpy_expr
 from epopt import util
 from epopt.compiler import compiler
-from epopt.solver_pb2 import SolverStatus
+from epopt.proto.epsilon import solver_params_pb2
+from epopt.proto.epsilon import solver_pb2
+from epopt.proto.epsilon.solver_pb2 import SolverStatus
 
 EPSILON = "epsilon"
 
