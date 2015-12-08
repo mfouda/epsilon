@@ -3,6 +3,23 @@
 Epsilon is a general convex solver based on functions with efficient proximal
 operators.
 
+## Installation instructions
+
+First, follow the instructions to install the numerical python environment
+including CVXPY.
+
+### Mac OS X
+
+```
+pip install epopt
+```
+
+### Linux
+
+```
+pip install http://epopt.s3.amazonaws.com/epopt-0.1.0-cp27-none-linux_x86_64.whl
+```
+
 ## Development Instructions
 
 These instructions are for setting up the development environment with the
