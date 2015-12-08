@@ -190,5 +190,5 @@ test: $(build_tests)
 $(build_dir)/gtest-all.o: $(gtest_srcs)
 	$(COMPILE.cc) -I$(gtest_dir) -Wno-missing-field-initializers -c $(gtest_dir)/src/gtest-all.cc -o $@
 
-$(build_dir)/%_test: $(build_dir)/%_test.o $(common_obj) $(proto_obj) $(common_test_obj) $(build_dir)/gtest-all.o
+$(build_dir)/%_test: $(build_dir)/%_test.o $(link_obj) $(common_test_obj) $(build_dir)/gtest-all.o
 	$(LINK.cc) $^ $(LDLIBS) -o $@
