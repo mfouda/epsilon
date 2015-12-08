@@ -12,7 +12,7 @@ dependencies:
 test:
   override:
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && tools/build_third_party.sh'
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'make -C /epsilon test'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py install'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && nosetests epopt'
-    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'make -C /epsilon test'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c '/epsilon/tools/run_benchmarks_serial.sh epsilon'
