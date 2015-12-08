@@ -20,6 +20,28 @@ pip install epopt
 pip install http://epopt.s3.amazonaws.com/epopt-0.1.0-cp27-none-linux_x86_64.whl
 ```
 
+## Usage
+
+In order to use Epsilon, form an optimization problem using CVXPY in the usual
+way but solve it using Epsilon.
+```python
+import numpy as np
+import cvxpy as cp
+import epopt as ep
+
+# Form lasso problem with CVXPY
+A = np.random.randn(m,n)
+b = np.random.randn(m)
+x = cp.Variable(n)
+prob = cp.Problem(cp.Minimize(cp.sum_square(A*x - b)) + cp.norm1(x))
+
+# Solve with Epsilon
+ep.solve(prob)
+
+# Get the optimal value
+print x.value
+```
+
 ## Development Instructions
 
 These instructions are for setting up the development environment with the
