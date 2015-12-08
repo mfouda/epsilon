@@ -18,11 +18,7 @@ PROTO_DIR = "proto"
 PYTHON_DIR = "python"
 PYTHON_PROTO_DIR = os.path.join(PYTHON_DIR, "epopt", "proto")
 THIRD_PARTY_DIR = os.path.join(BUILD_CC_DIR, "third_party")
-
-PROTOC = find_executable("protoc")
-if PROTOC is None:
-    std.stderr.write("protoc is not installed")
-    sys.exit(-1)
+PROTOC = os.path.join(BUILD_CC_DIR, "third_party", "bin", "protoc")
 
 class BuildPyCommand(build_py):
     def run(self):
@@ -48,14 +44,6 @@ class BuildPyCommand(build_py):
         cmd = [PROTOC, "-I", PROTO_DIR, src, "--python_out=" + dst_dir]
         subprocess.check_call(cmd)
 
-class BuildExtCommand(build_ext):
-    def run(self):
-        self.make()
-        build_ext.run(self)
-
-    def make(self):
-        subprocess.check_call("make")
-
 class CleanCommand(Command):
     user_options = []
     def initialize_options(self):
@@ -67,7 +55,6 @@ class CleanCommand(Command):
     def run(self):
         cmd = ("rm -rf " +
                "./build " +
-               "./build-cc " +
                "./dist " +
                "./python/*.egg-info " +
                "./python/epopt/*.pyc " +
@@ -131,7 +118,6 @@ setup(
         "protobuf==3.0.0a3"
     ],
     cmdclass = {
-        "build_ext": BuildExtCommand,
         "build_py": BuildPyCommand,
         "clean": CleanCommand
     }

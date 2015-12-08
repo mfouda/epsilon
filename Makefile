@@ -1,4 +1,6 @@
 # Makefile for epsilon, supports OS X and Linux
+#
+# Run tools/build_third_party.sh first
 
 # Optimization flags, use OPTFLAGS=-g when debugging
 OPTFLAGS = -DNDEBUG -O3
@@ -10,6 +12,8 @@ tools_dir = tools
 eigen_dir = third_party/eigen
 gtest_dir = third_party/googletest/googletest
 build_dir = build-cc
+
+PROTOC = $(build_dir)/third_party/bin/protoc
 
 CFLAGS += $(OPTFLAGS)
 CXXFLAGS += $(OPTFLAGS) -std=c++14
@@ -152,7 +156,7 @@ $(build_dir)/epsilon:
 	mkdir -p $(build_sub_dirs)
 
 $(build_dir)/%.pb.cc $(build_dir)/%.pb.h: $(proto_dir)/%.proto | $(build_dir)/epsilon
-	protoc --proto_path=$(proto_dir) --cpp_out=$(build_dir) $<
+	$(PROTOC) --proto_path=$(proto_dir) --cpp_out=$(build_dir) $<
 
 $(build_dir)/%.pb.o: $(src_dir)/%.pb.cc | $(build_dir)/epsilon
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
