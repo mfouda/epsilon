@@ -235,8 +235,8 @@ def run_atom(atom, problem, obj_val, solver):
         tolerance = SOLVER_TO_TOL[solver]
         if solver == EPSILON:
             # TODO(mwytock): Figure out why we need to run this to higher accuracy?
-            status = problem.solve(method=solver, rel_tol=1e-3, max_iterations=10000)
-            result = problem.objective.value
+            result = problem.solve(method=solver, rel_tol=1e-3, max_iterations=10000)
+            status = OPTIMAL
         else:
             result = problem.solve(solver=solver, verbose=False)
             status = problem.status
