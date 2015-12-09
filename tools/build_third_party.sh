@@ -10,6 +10,7 @@ mkdir -p $build
 cmake_flags="-DCMAKE_INSTALL_PREFIX=$build"
 if [ "$(uname -s)" == "Linux" ]; then
     cmake_flags+=" -DCMAKE_CXX_FLAGS=-fPIC"
+    export CXXFLAGS=-fPIC
 fi
 
 # gflags
