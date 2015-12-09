@@ -67,7 +67,7 @@ def solve(cvxpy_prob, **kwargs):
     logging.info("Epsilon solve: %f seconds", t2-t1)
 
     set_solution(cvxpy_prob, values)
-    return status
+    return cvxpy_prob.objective.value
 
 def validate_solver(constraints):
     return True

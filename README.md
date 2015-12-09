@@ -30,15 +30,17 @@ import cvxpy as cp
 import epopt as ep
 
 # Form lasso problem with CVXPY
+m = 5
+n = 10
 A = np.random.randn(m,n)
 b = np.random.randn(m)
 x = cp.Variable(n)
-prob = cp.Problem(cp.Minimize(cp.sum_square(A*x - b)) + cp.norm1(x))
+prob = cp.Problem(cp.Minimize(cp.sum_squares(A*x - b) + cp.norm1(x)))
 
 # Solve with Epsilon
-ep.solve(prob)
-
-# Get the optimal value
+print "Objective:"
+print ep.solve(prob)
+print "Solution:"
 print x.value
 ```
 
