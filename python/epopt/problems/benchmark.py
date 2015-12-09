@@ -37,7 +37,6 @@ from epopt.problems.problem_instance import ProblemInstance
 # ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
 # ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
 # ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
-# ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -47,6 +46,7 @@ PROBLEMS = [
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
+    ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]

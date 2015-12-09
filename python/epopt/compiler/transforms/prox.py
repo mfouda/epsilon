@@ -540,6 +540,7 @@ def transform_expr(expr):
         result = rule(expr)
 
         if result.match:
+            logging.debug("rule match: %s", str(rule))
             if result.prox_expr:
                 yield result.prox_expr
 
