@@ -18,13 +18,12 @@ import math
 import numpy as np
 import numpy.linalg as LA
 
-import epopt.cvxpy_solver
+from epopt import cvxpy_solver
 from epopt.cvxpy_solver import EPSILON
 
 SOLVERS = {
-    EPSILON: epopt.cvxpy_solver
+    EPSILON: cvxpy_solver
 }
-Problem.register_solve(EPSILON, epopt.cvxpy_solver.solve)
 SOLVERS_TO_TRY = [EPSILON]
 SOLVER_TO_TOL = {EPSILON: 1e-2}
 
@@ -234,9 +233,10 @@ def run_atom(atom, problem, obj_val, solver):
         print("solver", solver)
         tolerance = SOLVER_TO_TOL[solver]
         if solver == EPSILON:
-            # TODO(mwytock): Figure out why we need to run this to higher accuracy?
-            result = problem.solve(method=solver, rel_tol=1e-3, max_iterations=10000)
+            result = cvxpy_solver.solve(
+                problem, rel_tol=1e-3, max_iterations=10000)
             status = OPTIMAL
+            print result, status
         else:
             result = problem.solve(solver=solver, verbose=False)
             status = problem.status

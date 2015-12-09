@@ -38,7 +38,7 @@ def solve(cvxpy_prob, **kwargs):
 
     # Nothing to do in this case
     if not cvxpy_prob.variables():
-        return OPTIMAL
+        return cvxpy_prob.objective.value
 
     t0 = util.cpu_time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
