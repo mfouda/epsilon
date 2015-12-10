@@ -1,7 +1,7 @@
 # Epsilon [![Circle CI](https://circleci.com/gh/mwytock/epsilon.svg?style=svg)](https://circleci.com/gh/mwytock/epsilon)
 
 Epsilon is a general convex solver based on functions with efficient proximal
-operators. See [Wytock et al., Convex programming with fast proximal and linear
+operators. See [Wytock, Wang and Kolter. Convex programming with fast proximal and linear
 operators](http://arxiv.org/abs/1511.04815) for technical details.
 
 ## Installation instructions
