@@ -76,6 +76,7 @@ void OrthoInvariantProx::InitEigenProx(double lambda) {
   alpha_ = epigraph_ ? 1 : 1/sqrt(lambda);
   ProxFunction prox_function;
   prox_function.set_prox_function_type(eigen_prox_type_);
+  prox_function.set_alpha(1);
 
   AffineOperator affine_arg, affine_constraint;
   const int n = std::min(m_, n_);
