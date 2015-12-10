@@ -32,17 +32,17 @@ from epopt.problems.problem_instance import ProblemInstance
 # ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
 # ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
 
-# Need block cholesky decomposition
+# TODO(mwytock): Need block cholesky decomposition
 # ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=10000, n=1500, mu=0.1)),
+# ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
+# ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
-    ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.01)),
-    ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
