@@ -14,10 +14,11 @@ from epopt.compiler.transforms.transform_util import *
 from epopt.proto.epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
 
 class MatchResult(object):
-    def __init__(self, match, prox_expr=None, constrs=[]):
+    def __init__(self, match, prox_expr=None, raw_exprs=[], alpha=1):
         self.match = match
         self.prox_expr = prox_expr
-        self.constrs = constrs
+        self.raw_exprs = raw_exprs
+        self.alpha = alpha
 
 def convert_diagonal(expr):
     if not expr.dcp_props.affine:
@@ -40,6 +41,11 @@ def convert_affine(expr):
         return epi_transform(expr, "affine")
     return linear.transform_expr(expr), []
 
+def create_prox(**kwargs):
+    if "alpha" not in kwargs:
+        kwargs["alpha"] = 1
+    return ProxFunction(**kwargs)
+
 # Simple functions
 
 def prox_constant(expr):
@@ -47,7 +53,7 @@ def prox_constant(expr):
         return MatchResult(
             True,
             expression.prox_function(
-                ProxFunction(prox_function_type=ProxFunction.CONSTANT),
+                create_prox(prox_function_type=ProxFunction.CONSTANT),
                 linear.transform_expr(expr)))
     else:
         return MatchResult(False)
@@ -58,44 +64,37 @@ def prox_affine(expr):
         return MatchResult(
             True,
             expression.prox_function(
-                ProxFunction(prox_function_type=ProxFunction.AFFINE),
+                create_prox(prox_function_type=ProxFunction.AFFINE),
                 linear.transform_expr(expr)))
     else:
         return MatchResult(False)
 
+# Operators
+
+def prox_add(expr):
+    if expr.expression_type == Expression.ADD:
+        return MatchResult(True, None, expr.arg)
+    return MatchResult(False)
+
+def prox_multiply(expr):
+    if expr.expression_type == Expression.MULTIPLY and len(expr.arg) == 2:
+        for i, arg in enumerate(expr.arg):
+            if dim(arg) == 1 and arg.dcp_props.constant:
+                alpha = get_scalar_constant(arg)
+                f_expr = expr.arg[1-i]
+                break
+        else:
+            return MatchResult(False)
+
+        return MatchResult(
+            True,
+            None,
+            [f_expr],
+            alpha)
+
+    return MatchResult(False)
+
 # Cones
-
-def prox_second_order_cone(expr):
-    args = []
-    if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.SECOND_ORDER):
-        args = expr.arg
-    else:
-        f_expr, t_expr = get_epigraph(expr)
-        if (f_expr and
-            f_expr.expression_type == Expression.NORM_P and
-            f_expr.p == 2):
-            args = [t_expr, f_expr.arg[0]]
-            # make second argument a row vector
-            args[1] = expression.reshape(args[1], 1, dim(args[1]))
-    if not args:
-        return MatchResult(False)
-
-    scalar_arg0, constrs0 = convert_scalar(args[0])
-    scalar_arg1, constrs1 = convert_scalar(args[1])
-    return MatchResult(
-        True,
-        expression.prox_function(
-            ProxFunction(
-                prox_function_type=ProxFunction.SECOND_ORDER_CONE,
-                arg_size=[
-                    Size(dim=dims(args[0])),
-                    Size(dim=dims(args[1]))]),
-            scalar_arg0,
-            scalar_arg1),
-        constrs0 + constrs1)
-
-# Elementwise
 
 def prox_norm_1(expr):
     if (expr.expression_type == Expression.NORM_P and
@@ -108,7 +107,7 @@ def prox_norm_1(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.NORM_1),
+            create_prox(prox_function_type=ProxFunction.NORM_1),
             diagonal_arg),
         constrs)
 
@@ -123,7 +122,7 @@ def prox_non_negative(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.NON_NEGATIVE),
+            create_prox(prox_function_type=ProxFunction.NON_NEGATIVE),
             diagonal_arg),
         constrs)
 
@@ -144,7 +143,7 @@ def prox_sum_deadzone(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.SUM_DEADZONE,
                 scaled_zone_params=ProxFunction.ScaledZoneParams(m=-m)),
             diagonal_arg),
@@ -159,7 +158,7 @@ def prox_sum_hinge(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_HINGE),
+            create_prox(prox_function_type=ProxFunction.SUM_HINGE),
             diagonal_arg),
         constrs)
 
@@ -186,7 +185,7 @@ def prox_sum_quantile(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.SUM_QUANTILE,
                 scaled_zone_params=ProxFunction.ScaledZoneParams(
                     alpha=alpha,
@@ -205,7 +204,7 @@ def prox_sum_exp(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_EXP),
+            create_prox(prox_function_type=ProxFunction.SUM_EXP),
             diagonal_arg),
         constrs)
 
@@ -221,7 +220,7 @@ def prox_sum_inv_pos(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_INV_POS),
+            create_prox(prox_function_type=ProxFunction.SUM_INV_POS),
             diagonal_arg),
         constrs)
 
@@ -236,7 +235,7 @@ def prox_sum_logistic(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_LOGISTIC),
+            create_prox(prox_function_type=ProxFunction.SUM_LOGISTIC),
             diagonal_arg),
         constrs)
 
@@ -252,7 +251,7 @@ def prox_sum_neg_entr(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_NEG_ENTR),
+            create_prox(prox_function_type=ProxFunction.SUM_NEG_ENTR),
             diagonal_arg),
         constrs)
 
@@ -268,7 +267,7 @@ def prox_sum_neg_log(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_NEG_LOG),
+            create_prox(prox_function_type=ProxFunction.SUM_NEG_LOG),
             diagonal_arg),
         constrs)
 
@@ -284,7 +283,7 @@ def prox_sum_kl_div(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_KL_DIV),
+            create_prox(prox_function_type=ProxFunction.SUM_KL_DIV),
             diagonal_arg0,
             diagonal_arg1),
         constrs0 + constrs1)
@@ -301,7 +300,7 @@ def prox_max(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.MAX),
+            create_prox(prox_function_type=ProxFunction.MAX),
             scalar_arg),
         constrs)
 
@@ -315,7 +314,7 @@ def prox_norm_2(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.NORM_2),
+            create_prox(prox_function_type=ProxFunction.NORM_2),
             scalar_arg),
         constrs)
 
@@ -329,7 +328,7 @@ def prox_sum_largest(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.SUM_LARGEST,
                 sum_largest_params=ProxFunction.SumLargestParams(k=expr.k)),
             scalar_arg),
@@ -344,9 +343,39 @@ def prox_total_variation_1d(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.TOTAL_VARIATION_1D),
+            create_prox(prox_function_type=ProxFunction.TOTAL_VARIATION_1D),
             scalar_arg),
         constrs)
+
+def prox_second_order_cone(expr):
+    args = []
+    if (expr.expression_type == Expression.INDICATOR and
+        expr.cone.cone_type == Cone.SECOND_ORDER):
+        args = expr.arg
+    else:
+        f_expr, t_expr = get_epigraph(expr)
+        if (f_expr and
+            f_expr.expression_type == Expression.NORM_P and
+            f_expr.p == 2):
+            args = [t_expr, f_expr.arg[0]]
+            # make second argument a row vector
+            args[1] = expression.reshape(args[1], 1, dim(args[1]))
+    if not args:
+        return MatchResult(False)
+
+    scalar_arg0, constrs0 = convert_scalar(args[0])
+    scalar_arg1, constrs1 = convert_scalar(args[1])
+    return MatchResult(
+        True,
+        expression.prox_function(
+            create_prox(
+                prox_function_type=ProxFunction.SECOND_ORDER_CONE,
+                arg_size=[
+                    Size(dim=dims(args[0])),
+                    Size(dim=dims(args[1]))]),
+            scalar_arg0,
+            scalar_arg1),
+        constrs0 + constrs1)
 
 # Matrix
 
@@ -360,7 +389,7 @@ def prox_lambda_max(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.LAMBDA_MAX,
                 arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
@@ -377,7 +406,7 @@ def prox_neg_log_det(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.NEG_LOG_DET,
                 arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
@@ -394,7 +423,7 @@ def prox_semidefinite(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.SEMIDEFINITE,
                 arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
@@ -410,7 +439,7 @@ def prox_norm_nuclear(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(
+            create_prox(
                 prox_function_type=ProxFunction.NORM_NUCLEAR,
                 arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
@@ -430,7 +459,7 @@ def prox_sum_square(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.SUM_SQUARE),
+            create_prox(prox_function_type=ProxFunction.SUM_SQUARE),
             affine_arg),
         constrs)
 
@@ -445,7 +474,7 @@ def prox_zero(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            ProxFunction(prox_function_type=ProxFunction.ZERO),
+            create_prox(prox_function_type=ProxFunction.ZERO),
             affine_arg),
         constrs)
 
@@ -465,7 +494,7 @@ def epigraph(expr):
                     True,
                     expression.prox_function(
                         epi_function, *(result.prox_expr.arg + [t_expr])),
-                    result.constrs)
+                    result.raw_exprs)
 
         # No epigraph transform found, do conic transformation
         obj, constrs = conic.transform_expr(f_expr)
@@ -515,6 +544,10 @@ BASE_RULES = [
 
 
 PROX_RULES = [
+    # Operators
+    prox_add,
+    prox_multiply,
+
     # Affine
     prox_sum_square,
     prox_zero,
@@ -534,19 +567,23 @@ PROX_RULES += [
     transform_cone,
 ]
 
+def multiply_scalar(alpha, prox_expr):
+    prox_expr.prox_function.alpha *= alpha
+    return prox_expr
+
 def transform_expr(expr):
-    log_debug_expr("transform_expr", expr)
+    log_debug_expr("prox transform_expr", expr)
     for rule in PROX_RULES:
         result = rule(expr)
 
         if result.match:
-            logging.debug("rule match: %s", str(rule))
+            logging.debug("match %s", rule.__name__)
             if result.prox_expr:
                 yield result.prox_expr
 
-            for constr in result.constrs:
-                for f_expr in transform_expr(constr):
-                    yield f_expr
+            for raw_expr in result.raw_exprs:
+                for prox_expr in transform_expr(raw_expr):
+                    yield multiply_scalar(result.alpha, prox_expr)
             break
     else:
         raise TransformError("No rule matched")

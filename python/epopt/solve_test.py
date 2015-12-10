@@ -15,6 +15,9 @@ REL_TOL = {
     "tv_1d": 1e-4,
 }
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 # Add a multiclass classification problem w/ hinge loss
 #
 # Need 2D convolution operators or better splitting?
@@ -36,8 +39,6 @@ REL_TOL = {
 # TODO(mwytock): Fix and add back
 # ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
 # ProblemInstance("huber", huber.create, dict(m=20, n=10)),
-# ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10, rho=0.1)),
-# ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=5, n=10, rho=0.1, mu=0.5)),
 # ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
 
 # Variable not in constraints?
@@ -52,6 +53,8 @@ PROBLEMS = [
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=20, n=10, rho=1, mu=0.5)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=20, rho=0.1)),
     ProblemInstance("lasso_sparse", lasso.create, dict(m=5, n=20, rho=0.1, mu=0.5)),
+    ProblemInstance("logreg_l1", logreg_l1.create, dict(m=5, n=10, rho=0.1)),
+    ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=5, n=10, rho=0.1, mu=0.5)),
     ProblemInstance("lp", lp.create, dict(m=10, n=20)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=5, n=20, k=2, rho=0.1)),

@@ -10,10 +10,11 @@ class SumSquareProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
     const BlockMatrix& H = arg.affine_arg().A;
     const BlockMatrix& A = arg.affine_constraint().A;
-    g_ = arg.affine_arg().b;
+    const double alpha = arg.prox_function().alpha();
+    g_ = alpha*arg.affine_arg().b;
     HT_ = H.Transpose();
     AT_ = A.Transpose();
-    F_ = (2*HT_*H + AT_*A).Inverse();
+    F_ = (2*alpha*HT_*H + AT_*A).Inverse();
   }
 
   BlockVector Apply(const BlockVector& v) override {

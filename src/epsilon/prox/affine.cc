@@ -18,10 +18,11 @@ BlockVector GetLinear(const BlockMatrix& A) {
 class AffineProx final : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override {
     const BlockMatrix& A = arg.affine_constraint().A;
+    const double alpha = arg.prox_function().alpha();
     AT_ = A.Transpose();
     ATA_inv_ = (AT_*A).Inverse();
     b_ = arg.affine_constraint().b;
-    c_ = GetLinear(arg.affine_arg().A);
+    c_ = alpha*GetLinear(arg.affine_arg().A);
 
     VLOG(2) << "A: " << A.DebugString();
     VLOG(2) << "c: " << c_.DebugString();
