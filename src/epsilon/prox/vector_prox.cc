@@ -36,14 +36,17 @@ void VectorProx::Init(const ProxOperatorArg& arg) {
 
   // Must be a scalar/diagonal matrix
   // TODO(mwtyock): Support diagonal
-  input_.lambda_ = 1/GetScalar(MT_*M);
+  const double alpha = 1/GetScalar(MT_*M);
+  MT_ = alpha*MT_;
+
+  input_.lambda_ = arg.prox_function().alpha()*alpha;
   input_.lambda_vec_ = Eigen::VectorXd::Constant(A.n(), input_.lambda_);
   input_.elementwise_ = false;
-  MT_ = input_.lambda_*MT_;
 
   VLOG(2) << "MT: " << MT_.DebugString();
   VLOG(2) << "H_inv: " << H_inv_.DebugString();
   VLOG(2) << "g: " << g_.DebugString();
+  VLOG(2) << "lambda: " << input_.lambda_;
 }
 
 void VectorProx::PreProcessInput(const BlockVector& v) {

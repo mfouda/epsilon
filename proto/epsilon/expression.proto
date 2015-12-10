@@ -165,13 +165,16 @@ message ProxFunction {
   // The epigraph form, I(f(x) <= t)
   bool epigraph = 2;
 
+  // Scalar weighting alpha*f(x) (defaults to 1)
+  double alpha = 3;
+
   // Needed for matrix-valued functions operating on mat(x_i, m, n)
-  repeated Size arg_size = 3;
+  repeated Size arg_size = 4;
 
   message SumLargestParams {
     int32 k = 1;
   }
-  SumLargestParams sum_largest_params = 4;
+  SumLargestParams sum_largest_params = 5;
 
   message ScaledZoneParams {
     double alpha = 1;
@@ -179,7 +182,7 @@ message ProxFunction {
     double c = 3;
     double m = 4;
   }
-  ScaledZoneParams scaled_zone_params = 5;
+  ScaledZoneParams scaled_zone_params = 6;
 }
 
 // a/b

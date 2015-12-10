@@ -48,9 +48,10 @@ def node_contents_str(expr):
     elif expr.expression_type == Expression.LINEAR_MAP:
         c += [format_linear_map(expr.linear_map)]
     elif expr.expression_type == Expression.PROX_FUNCTION:
-        c += ["type: " + ProxFunction.Type.Name(
-            expr.prox_function.prox_function_type),
-              "epigraph: " + str(expr.prox_function.epigraph)]
+        prox = expr.prox_function
+        c += ["type: " + ProxFunction.Type.Name(prox.prox_function_type),
+              "epigraph: " + str(prox.epigraph),
+              "alpha: " + str(prox.alpha)]
 
     return "(" + ", ".join(c) + ")" if c else ""
 
