@@ -53,6 +53,5 @@ def test_tv_1d():
         tv_1d.create(n=10)))
     assert_items_equal(
         prox_ops(problem.objective),
-        [Prox.ZERO]*3 + [Prox.AFFINE] + [Prox.NON_NEGATIVE]*2 +
-        [Prox.SECOND_ORDER_CONE])
-    assert_equal(9, len(problem.constraint))
+        [Prox.TOTAL_VARIATION_1D] + [Prox.SUM_SQUARE])
+    assert_equal(1, len(problem.constraint))
