@@ -1,20 +1,33 @@
 # Epsilon [![Circle CI](https://circleci.com/gh/mwytock/epsilon.svg?style=svg)](https://circleci.com/gh/mwytock/epsilon)
 
 Epsilon is a general convex solver based on functions with efficient proximal
-operators.
+operators. See [Wytock et al., Convex programming with fast proximal and linear
+operators](http://arxiv.org/abs/1511.04815) for technical details.
 
 ## Installation instructions
 
-First, follow the instructions to install the numerical python environment
-including CVXPY.
+### NumPy, SciPy and CVXPY dependencies
 
-### Mac OS X
+Epsilon requires the basic numerical python environment that is also required
+for CVXPY. More [[detailed instructions][http://www.cvxpy.org/en/latest/install/index.html]] are available from the CVXPY
+website, in essence you need to first install the latest version of NumPy/SciPy:
+
+```
+pip install -U numpy scipy
+pip install -U cvxpy
+```
+
+### Installation with pip
+
+Once CVXPY is installed, Epsilon can be installed with pip
+
+#### Mac OS X
 
 ```
 pip install epopt
 ```
 
-### Linux
+#### Linux
 
 ```
 pip install http://epopt.s3.amazonaws.com/epopt-0.1.0-cp27-none-linux_x86_64.whl
@@ -44,53 +57,28 @@ print "Solution:"
 print x.value
 ```
 
-## Development Instructions
+## Development instructions
 
-These instructions are for setting up the development environment with the
-required C++ and numerical python envirnoment (cvxpy, numpy, scipy). For
-end-users the package should be pip-installable, with binaries provided
-for common environments.
+These instructions are for setting up the development environment required to
+compile Epsilon from source. The package is also pip-installable, and is
+intended to be used in this fashion by end-users.
 
-### C++ dependencies on Mac OS X
+### Build third-party C++ dependencies
 
-Install dependencies using Homebrew (or MacPorts):
-
+First, compile the third-party C++ dependencies (gflags, glog, protobuf) which
+are provided as git submodules linked from the main repository
 ```
-brew install glog gflags
-brew install --devel protobuf
+git submodule update --init
 ```
 
-### C++ dependencies on Ubuntu
-
-Install dependencies with the package manager
+A script is provided to to compile these libraries which must be built before
+compiling Epsilon.
 ```
-apt-get install libglog-dev libgflags-dev
-```
-
-The protocol buffer library must be >3.0.0 which is not yet included in
-apt-get. It can be downloaed from https://github.com/google/protobuf.
-```
-wget https://github.com/google/protobuf/releases/download/v3.0.0-beta-1/protobuf-cpp-3.0.0-beta-1.tar.gz
-tar zxvf protobuf-cpp-3.0.0-beta-1.tar.gz
-cd protobuf-cpp-3.0.0-beta-1
-./configure
-make install
-```
-
-### NumPy, SciPy and CVXPY dependencies
-
-Make sure to have the most recent version of numpy, scipy and cvxpy packages
-```
-pip install -U numpy scipy
-pip install -U cvxpy
+tools/build_third_party.sh
 ```
 
 ### Build Epsilon and run tests
 
-First, get the sub modules
-```
-git submodule update --init
-```
 Compile the C++ code and run tests
 ```
 make -j test
@@ -104,14 +92,14 @@ python setup.py develop --user
 Run python tests
 ```
 pip install nose
-nosetests epsilon
+nosetests epopt
 ```
 
 ## Benchmark results
 
 ### Epsilon
 ```
-python -m epsilon.problems.benchmark
+python -m epopt.problems.benchmark
 ```
 Problem       |   Time | Objective
 :------------- | ------:| ---------:
@@ -131,7 +119,7 @@ tv_denoise     |  24.17s|   1.15e+06
 
 ### SCS
 ```
-python -m epsilon.problems.benchmark --scs
+python -m epopt.problems.benchmark --scs
 ```
 
  Problem       |   Time | Objective
