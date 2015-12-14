@@ -28,9 +28,16 @@ if __name__ == "__main__":
         ax.bar(x+i*WIDTH,
                [results.get((p, benchmark), (0,0))[0] for p in problems],
                log=True, width=WIDTH, color=COLORS[i])
+
     plt.autoscale(tight=True)
-    plt.ylim((5e-2, 1e4))
-    plt.legend(("Epsilon", "CVXPY+SCS", "CVXPY+ECOS"), loc="best", ncol=3)
-    ax.get_xaxis().set_visible(False)
+
     plt.ylabel("Running time (seconds)")
+    plt.ylim((5e-2, 1e4))
+
+    plt.xticks(x+0.3, problems)
+    locs, labels = plt.xticks()
+    plt.setp(labels, rotation=90)
+
+    plt.legend(("Epsilon", "CVXPY+SCS", "CVXPY+ECOS"), loc="best", ncol=3)
+    plt.subplots_adjust(bottom=0.3)
     plt.savefig(sys.stdout, format="pdf")
