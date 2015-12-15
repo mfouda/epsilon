@@ -113,7 +113,7 @@ Eigen::VectorXd GetDiagonal(const LinearMap& linear_map);
 double GetScalar(const LinearMap& linear_map);
 
 ImplType ComputeType(OpType type, ImplType A, ImplType B);
-int Nonzeros(ImplType type, int m, int n);
+uint64_t Nonzeros(ImplType type, int m, int n);
 
 }  // namespace linear_map
 

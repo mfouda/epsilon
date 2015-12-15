@@ -28,13 +28,11 @@ from epopt.problems.problem_instance import ProblemInstance
 
 # TODO(mwytock): Add these back, once performance regressions fixed
 # ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-# ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
 # ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
 # ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
 
-# Slow?
-# ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
-# ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
+# Need new compiler rule
+# ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -44,10 +42,12 @@ PROBLEMS = [
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=10000, n=1500, mu=0.1)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.01)),
+    ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
+    ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),

@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epopt.proto.epsilon.expression_pb2 import ProxFunction
 from epopt.prox import eval_prox
 
-RANDOM_PROX_TRIALS = 1
+RANDOM_PROX_TRIALS = 10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -194,20 +194,6 @@ PROX_TESTS += [
     epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
-]
-
-PROX_TESTS = [
-    prox("ZERO", None, C_linear_equality),
-    prox("ZERO", None, C_linear_equality_matrix_lhs),
-    prox("ZERO", None, C_linear_equality_matrix_rhs),
-    prox("ZERO", None, C_linear_equality_multivariate),
-    prox("ZERO", None, C_linear_equality_multivariate2),
-    prox("ZERO", None, lambda: C_linear_equality_graph(20)),
-    prox("ZERO", None, lambda: C_linear_equality_graph(5)),
-    prox("ZERO", None, lambda: C_linear_equality_graph_lhs(10, 5)),
-    prox("ZERO", None, lambda: C_linear_equality_graph_lhs(5, 10)),
-    prox("ZERO", None, lambda: C_linear_equality_graph_rhs(10, 5)),
-    prox("ZERO", None, lambda: C_linear_equality_graph_rhs(5, 10)),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
