@@ -1,15 +1,25 @@
 
+#include <limits.h>
+
 #include "epsilon/vector/block_cholesky.h"
 
 // Compute the maximum number of nonzeros in VD^{-1}V^T where V is the
 // column of A corresponding to key and D is the diagonal block corresponding to
 // key.
 int ComputeFill(const BlockMatrix& A, const std::string& k) {
+  VLOG(2) << "ComputeFill: " << k;
   std::set<std::string> keys;
+  bool has_diagonal = false;
   for (const auto& iter : A.col(k)) {
-    if (k != iter.first)
+    if (k == iter.first) {
+      has_diagonal = true;
+    } else {
       keys.insert(iter.first);
+    }
   }
+
+  if (!has_diagonal)
+    return INT_MAX;
 
   int fill = 0;
   for (const std::string& i : keys) {
@@ -31,7 +41,7 @@ int ComputeFill(const BlockMatrix& A, const std::string& k) {
 // Choose the next key for the Cholesky decomposition, minimizing fill in.
 std::string NextKey(const BlockMatrix& A) {
   std::string best_key;
-  int best_fill = A.m()*A.n()+1;
+  int best_fill = INT_MAX;
   for (const std::string& key : A.col_keys()) {
     int fill = ComputeFill(A, key);
     if (fill < best_fill) {
@@ -39,6 +49,8 @@ std::string NextKey(const BlockMatrix& A) {
       best_fill = fill;
     }
   }
+  CHECK_NE(INT_MAX, best_fill);
+  VLOG(2) << "key: " << best_key << ", fill: " << best_fill;
   return best_key;
 }
 
@@ -67,8 +79,11 @@ BlockVector ForwardSub(
     const std::vector<std::string>& keys,
     BlockVector b) {
   for (auto j = keys.begin(); j != keys.end(); ++j) {
-    for (auto i = j + 1; i != keys.end(); ++i) {
-      b(*i) -= L(*i,*j)*b(*j);
+    if (b.has_key(*j)) {
+      for (auto i = j + 1; i != keys.end(); ++i) {
+        if (L.has_key(*i, *j))
+          b.InsertOrAdd(*i, -1*L(*i, *j)*b(*j));
+      }
     }
   }
   return b;
@@ -80,8 +95,11 @@ BlockVector BackSub(
     const std::vector<std::string>& keys,
     BlockVector b) {
   for (auto j = keys.rbegin(); j != keys.rend(); j++) {
-    for (auto i = j + 1; i != keys.rend(); i++) {
-      b(*i) -= L(*i,*j)*b(*j);
+    if (b.has_key(*j)) {
+      for (auto i = j + 1; i != keys.rend(); i++) {
+        if (L.has_key(*i, *j))
+          b.InsertOrAdd(*i, -1*L(*i,*j)*b(*j));
+      }
     }
   }
   return b;

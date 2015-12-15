@@ -36,6 +36,7 @@ class BlockMatrix {
       const std::string& row_key, const std::string& col_key);
   const linear_map::LinearMap& operator()(
       const std::string& row_key, const std::string& col_key) const;
+  bool has_key(const std::string& row_key, const std::string& col_key) const;
 
   std::string DebugString() const;
   int m() const;

@@ -3,26 +3,32 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/vector/block_cholesky.h"
 
 // ||H(x)||_2^2
 class SumSquareProx final : public ProxOperator {
  public:
   void Init(const ProxOperatorArg& arg) override {
     const BlockMatrix& H = arg.affine_arg().A;
+    const BlockVector& g = arg.affine_arg().b;
     const BlockMatrix& A = arg.affine_constraint().A;
-    const double alpha = arg.prox_function().alpha();
-    g_ = alpha*arg.affine_arg().b;
-    HT_ = H.Transpose();
-    AT_ = A.Transpose();
-    F_ = (2*alpha*HT_*H + AT_*A).Inverse();
+    const double alpha = sqrt(2*arg.prox_function().alpha());
+
+    // TODO(mwytock): Cholesky factorization should not require full matrix
+    // since it is symmetric.
+    BlockMatrix M = alpha*(H + H.Transpose()) + (A + A.Transpose())
+                    - H.LeftIdentity() - A.LeftIdentity();
+    VLOG(2) << "M: " << M.DebugString();
+    chol_.Compute(M);
+    b_ = -alpha*g;
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return F_*(AT_*v - 2*HT_*g_);
+    return chol_.Solve(b_ + v);
   }
 
  private:
-  BlockVector g_;
-  BlockMatrix AT_, HT_, F_;
+  BlockCholesky chol_;
+  BlockVector b_;
 };
 REGISTER_PROX_OPERATOR(SUM_SQUARE, SumSquareProx);

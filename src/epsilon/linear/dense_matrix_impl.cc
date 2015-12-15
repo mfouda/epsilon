@@ -7,16 +7,14 @@ namespace linear_map {
 LinearMapImpl* DenseMatrixImpl::Inverse() const {
   // NOTE(mwytock): This assumes matrix is symmetric, do we need non-symmetric?
   CHECK_EQ(m(), n());
-  Eigen::LLT<DenseMatrix> llt;
-  llt.compute(A_);
-
-  if (llt.info() == Eigen::Success)
-    return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
-
-  // Try adding some regularization
-  llt.compute(A_ + DenseMatrix::Identity(n(), n()));
-  CHECK_EQ(llt.info(), Eigen::Success);
-  return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
+  Eigen::LDLT<DenseMatrix> ldlt;
+  ldlt.compute(A_);
+  CHECK_EQ(ldlt.info(), Eigen::Success) << DebugString();
+  return new DenseMatrixImpl(ldlt.solve(DenseMatrix::Identity(n(), n())));
+  // // Try adding some regularization
+  // ldlt.compute(A_ + DenseMatrix::Identity(n(), n()));
+  // CHECK_EQ(llt.info(), Eigen::Success) << DebugString();
+  // return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
 }
 
 std::string DenseMatrixImpl::DebugString() const {

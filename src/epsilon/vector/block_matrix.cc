@@ -40,6 +40,17 @@ const linear_map::LinearMap& BlockMatrix::operator()(
   return block_iter->second;
 }
 
+bool BlockMatrix::has_key(
+    const std::string& row_key, const std::string& col_key) const {
+  auto col_iter = data_.find(col_key);
+  if (col_iter == data_.end())
+    return false;
+  auto block_iter = col_iter->second.find(row_key);
+  if (block_iter == col_iter->second.end())
+    return false;
+  return true;
+}
+
 BlockMatrix BlockMatrix::Transpose() const {
   BlockMatrix transpose;
   for (const auto& col_iter : data_) {
