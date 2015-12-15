@@ -14,6 +14,9 @@ class SumSquareProx final : public ProxOperator {
     const BlockMatrix& A = arg.affine_constraint().A;
     const double alpha = sqrt(2*arg.prox_function().alpha());
 
+    // [ 0   H'  A'][ x ] = [ 0 ]
+    // [ H  -I   0 ][ y ]   [-g ]
+    // [ A   0  -I ][ z ]   [ v ]
     // TODO(mwytock): Cholesky factorization should not require full matrix
     // since it is symmetric.
     BlockMatrix M = alpha*(H + H.Transpose()) + (A + A.Transpose())

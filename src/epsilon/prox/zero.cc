@@ -4,38 +4,31 @@
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/prox/prox.h"
-#include "epsilon/vector/block_matrix.h"
+#include "epsilon/vector/block_cholesky.h"
 
 // I(H(x) = 0)
 class ZeroProx final : public ProxOperator {
 public:
   void Init(const ProxOperatorArg& arg) override {
-    H_ = arg.affine_arg().A;
-    g_ = arg.affine_arg().b;
-    A_ = arg.affine_constraint().A;
-    b_ = arg.affine_constraint().b;
+    const BlockMatrix& H = arg.affine_arg().A;
+    const BlockVector& g = arg.affine_arg().b;
+    const BlockMatrix& A = arg.affine_constraint().A;
 
-    // Use Gaussian elimination to solve the system
-    // [ A'A  H' ][ x ] = [ A'(v - b) ]
-    // [ H    0  ][ y ]   [ -g        ]
-    AT_ = A_.Transpose();
-    HT_ = H_.Transpose();
-    ATA_inv_ = (AT_*A_).Inverse();
-    HHT_inv_ = (H_*ATA_inv_*HT_).Inverse();
-
-    VLOG(2) << "H:" << H_.DebugString();
-    VLOG(2) << "g:" << g_.DebugString();
-    VLOG(2) << "A:" << A_.DebugString();
+    // [ 0   H'  A'][ x ] = [ 0 ]
+    // [ H   0   0 ][ y ]   [-g ]
+    // [ A   0  -I ][ z ]   [ v ]
+    BlockMatrix M = H + H.Transpose() + A + A.Transpose() - A.LeftIdentity();
+    VLOG(2) << "M: " << M.DebugString();
+    chol_.Compute(M);
+    b_ = -1*g;
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    BlockVector u = ATA_inv_*(AT_*(v - b_));
-    BlockVector y = HHT_inv_*(H_*u + g_);
-    return u - ATA_inv_*(HT_*y);
+    return chol_.Solve(b_ + v);
   }
 
 private:
-  BlockMatrix A_, AT_, H_, HT_, ATA_inv_, HHT_inv_;
-  BlockVector b_, g_;
+  BlockCholesky chol_;
+  BlockVector b_;
 };
 REGISTER_PROX_OPERATOR(ZERO, ZeroProx);
