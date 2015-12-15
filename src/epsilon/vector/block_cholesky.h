@@ -11,8 +11,8 @@ class BlockCholesky {
   BlockVector Solve(const BlockVector& b);
 
  private:
-  std::vector<std::string> p_, p_rev_;
-  BlockMatrix D_inv_, L_;
+  std::vector<std::string> p_;
+  BlockMatrix D_inv_, L_, LT_;
 };
 
 #endif  // EPSILON_VECTOR_BLOCK_CHOLESKY_H

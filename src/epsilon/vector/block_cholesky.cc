@@ -42,29 +42,46 @@ std::string NextKey(const BlockMatrix& A) {
   return best_key;
 }
 
-// Remove the rows/columns corresponding to key
+// Remove the row/column corresponding to the given key and return a BlockMatrix
+// corresponding to the column but without the diagonal element.
 BlockMatrix RemoveKey(BlockMatrix* A, const std::string& key) {
   BlockMatrix V;
+  std::vector<std::pair<std::string, std::string>> to_remove;
   for (const auto& iter : A->col(key)) {
-    A->Remove(iter.first, key);
-    A->Remove(key, iter.first);
-    V(iter.first, key) = iter.second;
+    to_remove.push_back(std::make_pair(iter.first, key));
+    if (key != iter.first) {
+      to_remove.push_back(std::make_pair(key, iter.first));
+      V(iter.first, key) = iter.second;
+    }
+  }
+
+  for (const auto& iter : to_remove) {
+    A->Remove(iter.first, iter.second);
   }
   return V;
 }
 
-// Solve the system Lx = b where L is lower triangular when traversed in the
-// ordered specified by keys.
+// Solve the system Lx = b where L is lower triangular
+BlockVector ForwardSub(
+    const BlockMatrix& L,
+    const std::vector<std::string>& keys,
+    BlockVector b) {
+  for (auto j = keys.begin(); j != keys.end(); ++j) {
+    for (auto i = j + 1; i != keys.end(); ++i) {
+      b(*i) -= L(*i,*j)*b(*j);
+    }
+  }
+  return b;
+}
+
+// Solve the system L'x = b where L is lower triangular
 BlockVector BackSub(
     const BlockMatrix& L,
     const std::vector<std::string>& keys,
     BlockVector b) {
-  const int n = keys.size();
-  for (int idx_i = 0; idx_i < n; idx_i++) {
-    const std::string& i = keys[idx_i];
-    for (int idx_j = idx_i + 1; idx_j < n; idx_j++) {
-      const std::string& j = keys[idx_j];
-      b(j) -= L(j,i)*b(i);
+  for (auto j = keys.rbegin(); j != keys.rend(); j++) {
+    for (auto i = j + 1; i != keys.rend(); i++) {
+      b(*i) -= L(*i,*j)*b(*j);
     }
   }
   return b;
@@ -83,9 +100,9 @@ void BlockCholesky::Compute(BlockMatrix A) {
     A = A - V*Di_inv*V.Transpose();
     p_.push_back(key);
   }
-  std::reverse_copy(p_.begin(), p_.end(), p_rev_.begin());
+  LT_ = L_.Transpose();
 }
 
 BlockVector BlockCholesky::Solve(const BlockVector& b) {
-  return BackSub(L_, p_rev_, D_inv_*BackSub(L_, p_, b));
+  return BackSub(LT_, p_, D_inv_*ForwardSub(L_, p_, b));
 }
