@@ -12,7 +12,7 @@
 
 namespace linear_map {
 
-enum LinearMapImplType {
+enum ImplType {
   DENSE_MATRIX,
   SPARSE_MATRIX,
   DIAGONAL_MATRIX,
@@ -20,7 +20,13 @@ enum LinearMapImplType {
   KRONECKER_PRODUCT,
   // only supports Apply()
   BASIC,
-  NUM_LINEAR_MAP_IMPL_TYPES,
+  NUM_IMPL_TYPES,
+};
+
+enum OpType {
+  ADD,
+  MULTIPLY,
+  NUM_OP_TYPES,
 };
 
 class LinearMapImpl {
@@ -30,10 +36,10 @@ class LinearMapImpl {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> DenseVector;
   typedef Eigen::SparseMatrix<Scalar> SparseMatrix;
 
-  LinearMapImpl(LinearMapImplType type) : type_(type) {}
+  LinearMapImpl(ImplType type) : type_(type) {}
   virtual ~LinearMapImpl() {}
 
-  LinearMapImplType type() const { return type_; }
+  ImplType type() const { return type_; }
   virtual int m() const = 0;
   virtual int n() const = 0;
   virtual std::string DebugString() const = 0;
@@ -47,7 +53,7 @@ class LinearMapImpl {
   virtual DenseMatrix ApplyMatrix(const DenseMatrix& X) const = 0;
 
  private:
-  LinearMapImplType type_;
+  ImplType type_;
 };
 
 // A convenient wrapper around LinearMapImpl that can be passed by value,
@@ -105,6 +111,9 @@ LinearMap BuildLinearMap(const ::LinearMap& linear_map);
 
 Eigen::VectorXd GetDiagonal(const LinearMap& linear_map);
 double GetScalar(const LinearMap& linear_map);
+
+ImplType ComputeType(OpType type, ImplType A, ImplType B);
+int Nonzeros(ImplType type, int m, int n);
 
 }  // namespace linear_map
 

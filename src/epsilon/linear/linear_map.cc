@@ -121,4 +121,28 @@ double GetScalar(const LinearMap& linear_map) {
   }
 }
 
+ImplType ComputeType(OpType type, ImplType A, ImplType B) {
+  // Basic promotion
+  if (A <= SCALAR_MATRIX && B <= SCALAR_MATRIX) {
+    return A < B ? A : B;
+  }
+  LOG(FATAL) << "Not implemented";
+}
+
+int Nonzeros(ImplType type, int m, int n) {
+  switch (type) {
+    case DENSE_MATRIX:
+    case SPARSE_MATRIX:
+      return m*n;
+    case DIAGONAL_MATRIX:
+      CHECK_EQ(m, n);
+      return n;
+    case SCALAR_MATRIX:
+      return 1;
+    default:
+      LOG(FATAL) << "Not implemented";
+  }
+}
+
+
 }  // namespace linear_map

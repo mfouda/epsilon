@@ -1,9 +1,31 @@
 
 #include "epsilon/vector/block_cholesky.h"
 
-int ComputeFill(const BlockMatrix& A, const std::string& key) {
-  // TODO(mwytock): Implement this;
-  return 0;
+// Compute the maximum number of nonzeros in VD^{-1}V^T where V is the
+// column of A corresponding to key and D is the diagonal block corresponding to
+// key.
+int ComputeFill(const BlockMatrix& A, const std::string& k) {
+  std::set<std::string> keys;
+  for (const auto& iter : A.col(k)) {
+    if (k != iter.first)
+      keys.insert(iter.first);
+  }
+
+  int fill = 0;
+  for (const std::string& i : keys) {
+    linear_map::ImplType Aik_type = linear_map::ComputeType(
+        linear_map::MULTIPLY,
+        A(i, k).impl().type(),
+        A(k, k).impl().type());
+
+    for (const std::string& j : keys) {
+      linear_map::ImplType type = linear_map::ComputeType(
+          linear_map::MULTIPLY, Aik_type, A(j, k).impl().type());
+      fill += linear_map::Nonzeros(
+          type, A(i, k).impl().m(), A(j, k).impl().m());
+    }
+  }
+  return fill;
 }
 
 // Choose the next key for the Cholesky decomposition, minimizing fill in.
@@ -12,7 +34,7 @@ std::string NextKey(const BlockMatrix& A) {
   int best_fill = A.m()*A.n()+1;
   for (const std::string& key : A.col_keys()) {
     int fill = ComputeFill(A, key);
-    if (ComputeFill(A, key) < best_fill) {
+    if (fill < best_fill) {
       best_key = key;
       best_fill = fill;
     }
@@ -56,7 +78,6 @@ void BlockCholesky::Compute(BlockMatrix A) {
     BlockMatrix Di_inv;
     Di_inv(key, key) = A(key, key).Inverse();
     BlockMatrix V = RemoveKey(&A, key);
-
     L_ = L_ + V*Di_inv;
     D_inv_ = D_inv_ + Di_inv;
     A = A - V*Di_inv*V.Transpose();

@@ -227,7 +227,7 @@ LinearMapImpl* Multiply_NotImplemented(
 }
 
 LinearMapBinaryOp kMultiplyTable
-[NUM_LINEAR_MAP_IMPL_TYPES][NUM_LINEAR_MAP_IMPL_TYPES] = {
+[NUM_IMPL_TYPES][NUM_IMPL_TYPES] = {
   {
     &Multiply_DenseMatrix_DenseMatrix,
     &Multiply_DenseMatrix_SparseMatrix,

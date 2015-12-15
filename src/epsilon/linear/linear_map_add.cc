@@ -233,7 +233,7 @@ LinearMapImpl* Add_NotImplemented(
 }
 
 LinearMapBinaryOp kAddTable
-[NUM_LINEAR_MAP_IMPL_TYPES][NUM_LINEAR_MAP_IMPL_TYPES] = {
+[NUM_IMPL_TYPES][NUM_IMPL_TYPES] = {
   {
     &Add_DenseMatrix_DenseMatrix,
     &Add_DenseMatrix_SparseMatrix,
