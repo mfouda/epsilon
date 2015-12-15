@@ -126,7 +126,9 @@ ImplType ComputeType(OpType type, ImplType A, ImplType B) {
   if (A <= SCALAR_MATRIX && B <= SCALAR_MATRIX) {
     return A < B ? A : B;
   }
-  LOG(FATAL) << "Not implemented";
+  // TODO(mwytock): Improve this with more complete type information, e.g. for
+  // kronecker product.
+  return DENSE_MATRIX;
 }
 
 int Nonzeros(ImplType type, int m, int n) {

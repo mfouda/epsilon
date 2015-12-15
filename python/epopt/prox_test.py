@@ -196,11 +196,6 @@ PROX_TESTS += [
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
 ]
 
-PROX_TESTS = [
-    prox("SUM_SQUARE", f_least_squares_matrix),
-]
-
-
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     eval_prox(prox_function_type, prob, v_map, lam, epigraph)
     actual = {x: x.value for x in prob.variables()}
