@@ -57,6 +57,7 @@ class BlockMatrix {
 
   void InsertOrAdd(const std::string& row_key, const std::string& col_key,
                    linear_map::LinearMap value);
+  void Remove(const std::string& row_key, const std::string& col_key);
 
  private:
   // col -> row -> valu

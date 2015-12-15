@@ -85,6 +85,7 @@ common_cc = \
 	epsilon/util/file.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
+	epsilon/vector/block_cholesky.cc \
 	epsilon/vector/block_matrix.cc \
 	epsilon/vector/block_vector.cc \
 	epsilon/vector/vector_file.cc \
@@ -107,6 +108,7 @@ proto = \
 tests = \
 	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/linear_map_test \
+	epsilon/vector/block_cholesky_test \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test
 

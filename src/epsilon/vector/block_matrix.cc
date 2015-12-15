@@ -33,9 +33,10 @@ linear_map::LinearMap& BlockMatrix::operator()(
 const linear_map::LinearMap& BlockMatrix::operator()(
     const std::string& row_key, const std::string& col_key) const {
   auto col_iter = data_.find(col_key);
-  CHECK(col_iter != data_.end());
+  CHECK(col_iter != data_.end()) << "column: " << col_key << " not found";
   auto block_iter = col_iter->second.find(row_key);
-  CHECK(block_iter != col_iter->second.end());
+  CHECK(block_iter != col_iter->second.end())
+      << "row: " << row_key << " not found";
   return block_iter->second;
 }
 
@@ -220,4 +221,15 @@ std::string BlockMatrix::DebugString() const {
     }
   }
   return retval;
+}
+
+void BlockMatrix::Remove(
+    const std::string& row_key, const std::string& col_key) {
+  auto iter = data_.find(col_key);
+  CHECK(iter != data_.end());
+  auto iter2 = iter->second.find(row_key);
+  CHECK(iter2 != iter->second.end());
+  iter->second.erase(iter2);
+  if (iter->second.empty())
+    data_.erase(iter);
 }
