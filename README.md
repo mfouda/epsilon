@@ -9,7 +9,7 @@ operators](http://arxiv.org/abs/1511.04815) for technical details.
 ### NumPy, SciPy and CVXPY dependencies
 
 Epsilon requires the basic numerical python environment that is also required
-for CVXPY. More [[detailed instructions][http://www.cvxpy.org/en/latest/install/index.html]] are available from the CVXPY
+for CVXPY. More [detailed instructions](http://www.cvxpy.org/en/latest/install/index.html) are available from the CVXPY
 website, in essence you need to first install the latest version of NumPy/SciPy:
 
 ```
