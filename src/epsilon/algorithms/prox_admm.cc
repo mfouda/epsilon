@@ -62,8 +62,8 @@ void ProxADMMSolver::InitProxOperators() {
     std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
-      CHECK(constr_vars.find(var_id) != constr_vars.end())
-          << var_id << " not in constraints";
+      if (constr_vars.find(var_id) == constr_vars.end())
+        continue;
       for (auto iter : A_.col(var_id)) {
         A.A(iter.first, var_id) = sqrt_rho*iter.second;
       }
