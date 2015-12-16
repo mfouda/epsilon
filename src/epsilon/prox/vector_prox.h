@@ -46,9 +46,9 @@ class VectorProx : public ProxOperator {
   bool InitDiagonal(const ProxOperatorArg& arg);
 
   void PreProcessInput(const BlockVector& v);
-  BlockVector PostProcessOutput();
+  BlockVector PostProcessOutput(const BlockVector& v);
 
-  BlockMatrix B_, C_;
+  BlockMatrix B_, C_, D_;
   BlockVector g_;
 
   // Used in ApplyVector()
