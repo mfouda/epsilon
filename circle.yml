@@ -16,8 +16,5 @@ test:
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py install'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'nosetests epopt'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'python -m epopt.problems.benchmark'
-
-deployment:
-  override:
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py bdist_wheel'
     - cp $HOME/epsilon/dist/*.whl $CIRCLE_ARTIFACTS
