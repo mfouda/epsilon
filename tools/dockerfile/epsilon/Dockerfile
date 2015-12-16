@@ -29,8 +29,8 @@ RUN apt-get update && apt-get install -y \
 
 # Python with numpy/scipy and cvxpy
 RUN easy_install -U pip
-RUN pip install -U nose
 RUN pip install -U numpy scipy
 RUN pip install -U cvxpy
+RUN pip install -U nose wheel
 
 CMD ["bash"]
