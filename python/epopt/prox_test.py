@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epopt.proto.epsilon.expression_pb2 import ProxFunction
 from epopt.prox import eval_prox
 
-RANDOM_PROX_TRIALS = 10
+RANDOM_PROX_TRIALS = 1
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -54,6 +54,11 @@ def f_least_squares_matrix():
     B = np.random.randn(m, k)
     X = cp.Variable(n, k)
     return cp.sum_squares(A*X  - B)
+
+def f_norm1_weighted():
+    w = np.random.randn(n)
+    w[0] = 0
+    return cp.norm1(cp.mul_elemwise(w, x))
 
 def C_linear_equality():
     m = 5
@@ -118,6 +123,10 @@ def C_non_negative_scaled():
     alpha = np.random.randn()
     return [alpha*x >= 0]
 
+def C_non_negative_scaled_elemwise():
+    alpha = np.random.randn(n)
+    return [cp.mul_elemwise(alpha, x) >= 0]
+
 def C_soc_scaled():
     return [cp.norm2(randn()*x) <= randn()*t]
 
@@ -138,8 +147,10 @@ PROX_TESTS = [
     prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    prox("NON_NEGATIVE", None, C_non_negative_scaled_elemwise),
     prox("NON_NEGATIVE", None, lambda: [x >= 0]),
     prox("NORM_1", lambda: cp.norm1(x)),
+    prox("NORM_1", f_norm1_weighted),
     prox("NORM_2", lambda: cp.norm(X, "fro")),
     prox("NORM_2", lambda: cp.norm2(x)),
     prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
@@ -194,6 +205,11 @@ PROX_TESTS += [
     epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
+]
+
+PROX_TESTS = [
+    prox("NON_NEGATIVE", None, C_non_negative_scaled),
+    prox("NON_NEGATIVE", None, C_non_negative_scaled_elemwise),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):

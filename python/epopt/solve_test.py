@@ -65,7 +65,7 @@ PROBLEMS = [
 ]
 
 PROBLEMS = [
-    #ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
+    ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
 ]
 
 def solve_problem(problem_instance):

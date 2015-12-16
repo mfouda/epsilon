@@ -42,14 +42,13 @@ class VectorProx : public ProxOperator {
       VectorProxOutput* output) = 0;
 
  private:
-  void InitArgs(const AffineOperator& f);
-  void InitConstraints(const AffineOperator& f);
-  void InitInput();
+  bool InitScalar(const ProxOperatorArg& arg);
+  bool InitDiagonal(const ProxOperatorArg& arg);
 
   void PreProcessInput(const BlockVector& v);
   BlockVector PostProcessOutput();
 
-  BlockMatrix MT_, H_inv_;
+  BlockMatrix B_, C_;
   BlockVector g_;
 
   // Used in ApplyVector()

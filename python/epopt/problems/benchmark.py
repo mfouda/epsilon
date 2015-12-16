@@ -23,13 +23,10 @@ from epopt.problems.problem_instance import ProblemInstance
 
 # Fix general A for least squares
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
-
 # ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=50, p=1)),
 
 # TODO(mwytock): Add these back, once performance regressions fixed
 # ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
-
-# Need new compiler rule
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),

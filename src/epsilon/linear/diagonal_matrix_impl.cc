@@ -13,7 +13,13 @@ bool DiagonalMatrixImpl::operator==(const LinearMapImpl& other) const {
 }
 
 LinearMapImpl* DiagonalMatrixImpl::Inverse() const {
-  return new DiagonalMatrixImpl(A_.inverse());
+  const int n = A_.rows();
+  const Eigen::VectorXd& a = A_.diagonal();
+  Eigen::VectorXd ainv(n);
+  for (int i = 0; i < n; i++) {
+    ainv(i) = a(i) ? 1/a(i) : 0;
+  }
+  return new DiagonalMatrixImpl(ainv.asDiagonal());
 }
 
 
