@@ -83,9 +83,10 @@ BlockVector ForwardSub(
     BlockVector b) {
   for (auto j = keys.begin(); j != keys.end(); ++j) {
     if (b.has_key(*j)) {
+      Eigen::VectorXd neg_bj = -1*b(*j);
       for (auto i = j + 1; i != keys.end(); ++i) {
         if (L.has_key(*i, *j))
-          b.InsertOrAdd(*i, -1*L(*i, *j)*b(*j));
+          b.InsertOrAdd(*i, L(*i,*j)*neg_bj);
       }
     }
   }
@@ -99,9 +100,10 @@ BlockVector BackSub(
     BlockVector b) {
   for (auto j = keys.rbegin(); j != keys.rend(); j++) {
     if (b.has_key(*j)) {
+      Eigen::VectorXd neg_bj = -1*b(*j);
       for (auto i = j + 1; i != keys.rend(); i++) {
         if (L.has_key(*i, *j))
-          b.InsertOrAdd(*i, -1*L(*i,*j)*b(*j));
+          b.InsertOrAdd(*i, L(*i,*j)*neg_bj);
       }
     }
   }

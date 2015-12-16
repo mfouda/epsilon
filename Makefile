@@ -35,6 +35,7 @@ benchmark_LDLIBS = -lbenchmark
 # System-specific configuration
 SYSTEM = $(shell uname -s)
 
+LDLIBS += -lz
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
@@ -178,7 +179,7 @@ ifeq ($(SYSTEM),Darwin)
 endif
 
 $(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(link_obj)
-	$(LINK.cc) $^ $(LDLIBS) -o $@
+	$(LINK.cc) $^ $(LDLIBS) -all_load $(build_libs) -o $@
 
 $(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
 	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) -o $@
