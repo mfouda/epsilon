@@ -76,7 +76,10 @@ LinearMapImpl* SparseMatrixImpl::Inverse() const {
     std::unique_ptr<LinearMapImpl> impl(new ScalarMatrixImpl(n(), alpha));
     return impl->Inverse();
   } else {
-    return new SparseLDLImpl(A_);
+    // TODO(mwytock): This should instead return Matrix LL', likely need to
+    // extend matrix types to include triangular and product types.
+    std::unique_ptr<LinearMapImpl> impl(new DenseMatrixImpl(A_));
+    return impl->Inverse();
   }
 }
 

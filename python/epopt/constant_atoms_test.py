@@ -208,8 +208,7 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda x: mixed_norm(x,2,1), (1, 1), [ [[3,3],[4,4]] ],
-#          Constant([10])),
+#         (lambda x: pnorm(x, 3), (1, 1), [[1.1, 2, -3]], Constant([3.3120161866074733])),
 #     ], Minimize),
 # ]
 
