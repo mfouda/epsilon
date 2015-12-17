@@ -86,6 +86,8 @@ def multiply_elementwise_constant(expr):
 
     if expr.constant.constant_type == Constant.DENSE_MATRIX:
         return linear_map.diagonal_matrix(expr.constant)
+    if expr.constant.constant_type == Constant.SCALAR:
+        return linear_map.scalar(expr.constant.scalar, 1)
 
     raise TransformError("unknown constant type", expr)
 

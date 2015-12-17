@@ -14,5 +14,5 @@ def create(**kwargs):
     lam = 0.5*lambda_max
 
     x = cp.Variable(A.shape[1])
-    f = ep.logistic_loss(x, A, b)
+    f = ep.logistic_loss(x, A, b) + lam*cp.norm1(x)
     return cp.Problem(cp.Minimize(f))

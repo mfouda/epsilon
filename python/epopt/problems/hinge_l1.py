@@ -14,5 +14,5 @@ def create(**kwargs):
     lam = 0.5*sigma*np.sqrt(m*np.log(mu*n))
 
     x = cp.Variable(A.shape[1])
-    f =  ep.hinge_loss(x, A, b)
+    f =  ep.hinge_loss(x, A, b) + lam*cp.norm1(x)
     return cp.Problem(cp.Minimize(f))

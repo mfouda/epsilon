@@ -18,13 +18,9 @@ REL_TOL = {
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-# TODO(mwytock): add a multiclass classification problem w/ hinge loss
-#
-# TODO(mwytock): Huge expression tree. consider way to do graph problems?
+# TODO(mwytock): Fix transpose() linear map
 # ProblemInstance("map_inference", map_inference.create, dict(n=10)),
-#
-# Generalize proximal operator rules for scaled zone prox
-# ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
@@ -47,14 +43,11 @@ PROBLEMS = [
     ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=5, n=10, k=2, rho=0.1, mu=0.5)),
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=10)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=50, n=2)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3))
 ]
 
 def solve_problem(problem_instance):
