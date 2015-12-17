@@ -4,6 +4,8 @@ machine:
 
 dependencies:
   override:
+    - bundle install
+    - sudo pip install awscli
     - git submodule update --init
     - docker info
     - docker pull mwytock/epsilon
@@ -17,4 +19,9 @@ test:
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'nosetests epopt'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'python -m epopt.problems.benchmark'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py bdist_wheel'
-    - cp -v $HOME/epsilon/dist/*.whl $CIRCLE_ARTIFACTS
+
+deployment:
+  aws:
+    branch: master
+    commands:
+      - aws s3 cp $HOME/epsilon/dist/*.whl s3://epopt/
