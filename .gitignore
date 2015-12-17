@@ -1,5 +1,6 @@
 build
 build-cc
+build-deps
 *.pyc
 *_pb2.py
 *.egg-info
