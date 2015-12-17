@@ -28,5 +28,5 @@ make -j install
 # protobuf
 cd $third_party/protobuf
 ./autogen.sh
-./configure --enable-static --disable-shared --prefix=$build
+./configure --enable-static --disable-shared --without-zlib --prefix=$build
 make -j install

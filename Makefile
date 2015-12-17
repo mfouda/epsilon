@@ -35,7 +35,6 @@ benchmark_LDLIBS = -lbenchmark
 # System-specific configuration
 SYSTEM = $(shell uname -s)
 
-LDLIBS += -lz
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
