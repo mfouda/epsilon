@@ -4,7 +4,6 @@ machine:
 
 dependencies:
   override:
-    - bundle install
     - sudo pip install awscli
     - git submodule update --init
     - docker info
