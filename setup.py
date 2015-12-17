@@ -18,7 +18,7 @@ DEPS_DIR = "build-deps"
 PROTO_DIR = "proto"
 PYTHON_DIR = "python"
 PYTHON_PROTO_DIR = os.path.join(PYTHON_DIR, "epopt", "proto")
-PROTOC = os.path.join(BUILD_CC_DIR, "third_party", "bin", "protoc")
+PROTOC = os.path.join(DEPS, "bin", "protoc")
 
 class BuildPyCommand(build_py):
     def run(self):
