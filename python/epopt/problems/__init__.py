@@ -11,7 +11,6 @@ from epopt.problems import lasso
 from epopt.problems import least_abs_dev
 from epopt.problems import logreg_l1
 from epopt.problems import lp
-from epopt.problems import map_inference
 from epopt.problems import mnist
 from epopt.problems import portfolio
 from epopt.problems import qp

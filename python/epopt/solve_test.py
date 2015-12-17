@@ -18,10 +18,6 @@ REL_TOL = {
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-# TODO(mwytock): Fix transpose() linear map
-# ProblemInstance("map_inference", map_inference.create, dict(n=10)),
-
-
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
