@@ -19,7 +19,7 @@ def multiply_kronecker(K, A):
     return dense_type()
 
 def add_kronecker(K, A):
-    raise LinearMapError("not implemented", K, A)
+    return dense_type()
 
 class LinearMapType(object):
     """Handle type conversion for linear maps."""
