@@ -1,8 +1,9 @@
+*.egg-info
+*.pyc
+*_pb2.py
+.ipynb_checkpoints
+_solve.so
 build
 build-cc
 build-deps
-*.pyc
-*_pb2.py
-*.egg-info
-_solve.so
-.ipynb_checkpoints
+dist
