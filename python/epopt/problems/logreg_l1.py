@@ -2,6 +2,7 @@
 import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
+import epopt as ep
 from epopt.problems import problem_util
 
 def create(**kwargs):
@@ -13,5 +14,5 @@ def create(**kwargs):
     lam = 0.5*lambda_max
 
     x = cp.Variable(A.shape[1])
-    f = cp.sum_entries(cp.logistic(-sp.diags([b],[0])*A*x)) + lam*cp.norm1(x)
+    f = ep.logistic_loss(x, A, b)
     return cp.Problem(cp.Minimize(f))
