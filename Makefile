@@ -12,15 +12,16 @@ tools_dir = tools
 eigen_dir = third_party/eigen
 gtest_dir = third_party/googletest/googletest
 build_dir = build-cc
+deps_dir = build-deps
 
-PROTOC = $(build_dir)/third_party/bin/protoc
+PROTOC = $(deps_dir)/bin/protoc
 
 CFLAGS += $(OPTFLAGS)
 CXXFLAGS += $(OPTFLAGS) -std=c++14
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(src_dir) -I$(eigen_dir)  -I$(gtest_dir)/include
-CXXFLAGS += -I$(build_dir) -I$(build_dir)/third_party/include
+CXXFLAGS += -I$(build_dir) -I$(deps_dir)/include
 
 # Dont parallelize at Eigen level
 CXXFLAGS += -DEIGEN_DONT_PARALLELIZE
@@ -112,16 +113,13 @@ tests = \
 	epsilon/vector/block_matrix_test \
 	epsilon/vector/block_vector_test
 
-third_party_libs = \
+deps = \
 	gflags \
 	glog \
 	protobuf
 
 libs = epsilon
-
-binaries = \
-	epsilon/benchmark
-
+binaries = epsilon/benchmark
 
 # Google test
 gtest_srcs = $(gtest_dir)/src/*.cc $(gtest_dir)/src/*.h
@@ -131,18 +129,18 @@ proto_cc  = $(proto:%.proto=$(build_dir)/%.pb.cc)
 proto_obj = $(proto:%.proto=$(build_dir)/%.pb.o)
 common_obj = $(common_cc:%.cc=$(build_dir)/%.o)
 common_test_obj = $(common_test_cc:%.cc=$(build_dir)/%.o)
+common_test_obj += $(build_dir)/gtest-all.o
 build_tests = $(tests:%=$(build_dir)/%)
 build_binaries = $(binaries:%=$(build_dir)/%)
 build_sub_dirs = $(addprefix $(build_dir)/, $(dir $(common_cc)))
-build_libs = $(libs:%=$(build_dir)/lib%.a)
 
-# Third party
+# Add in third party objects
 build_sub_dirs += $(addprefix $(build_dir)/, $(dir $(third_party_obj)))
 common_obj += $(third_party_obj:%=$(build_dir)/%)
 
-# Static dependencies for linking
-link_obj = $(build_libs)
-link_obj += $(third_party_libs:%=$(build_dir)/third_party/lib/lib%.a)
+# Target libraries
+libs_obj = $(libs:%=$(build_dir)/lib%.a)
+deps_obj = $(deps:%=$(deps_dir)/lib/lib%.a)
 
 # Stop make from deleting intermediate files
 .SECONDARY:
@@ -150,8 +148,7 @@ link_obj += $(third_party_libs:%=$(build_dir)/third_party/lib/lib%.a)
 all: $(build_libs) $(build_binaries)
 
 clean:
-	rm -rf $(build_dir)/epsilon
-	rm -rf $(build_dir)/libepsilon.a
+	rm -rf $(build_dir)
 
 # Build rules
 $(build_dir)/epsilon:
@@ -170,15 +167,22 @@ $(build_dir)/%.o: $(src_dir)/%.cc $(proto_cc) | $(build_dir)/epsilon
 $(build_dir)/$(glmgen_dir)/%.o: $(glmgen_dir)/%.c | $(build_dir)/epsilon
 	$(COMPILE.c) $(glmgen_CFLAGS) $(OUTPUT_OPTION) $<
 
-# Targets
+# Libraries
 $(build_dir)/libepsilon.a: $(common_obj) $(proto_obj)
 	$(AR) rcs $@ $^
 ifeq ($(SYSTEM),Darwin)
 	ranlib $@
 endif
 
-$(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(link_obj)
-	$(LINK.cc) $^ $(LDLIBS) -all_load $(build_libs) -o $@
+ifeq ($(SYSTEM),Darwin)
+all_libs_obj=$(deps_obj) -all_load $(libs_obj)
+else
+all_libs_obj=$(deps_obj) -Wl,--whole-archive $(libs_obj) -Wl,--no-whole-archive
+endif
+
+# Binaries
+$(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(deps_obj) $(libs_obj)
+	$(LINK.cc) $< $(LDLIBS) $(all_libs_obj) -o $@
 
 $(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
 	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) -o $@
@@ -192,5 +196,5 @@ test: $(build_tests)
 $(build_dir)/gtest-all.o: $(gtest_srcs)
 	$(COMPILE.cc) -I$(gtest_dir) -Wno-missing-field-initializers -c $(gtest_dir)/src/gtest-all.cc -o $@
 
-$(build_dir)/%_test: $(build_dir)/%_test.o $(common_test_obj) $(build_dir)/gtest-all.o $(link_obj)
+$(build_dir)/%_test: $(build_dir)/%_test.o $(common_test_obj) $(deps_obj) $(libs_obj)
 	$(LINK.cc) $^ $(LDLIBS) -o $@

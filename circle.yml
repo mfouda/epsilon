@@ -3,16 +3,18 @@ machine:
     - docker
 
 dependencies:
+  cache_directories:
+    - ~/epsilon/build-deps
   override:
     - sudo pip install awscli
     - git submodule update --init
     - docker info
     - docker pull mwytock/epsilon
-    - docker run -d -v $HOME/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
+    - docker run -d -v ~/epsilon:/epsilon --name epsilon mwytock/epsilon tail -f /dev/null
+    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && tools/build_third_party.sh'
 
 test:
   override:
-    - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && tools/build_third_party.sh'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'make -j -C /epsilon test'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'cd /epsilon && python setup.py install'
     - sudo lxc-attach -n "$(docker inspect --format '{{.Id}}' epsilon)" -- bash -c 'nosetests epopt'
@@ -23,4 +25,4 @@ deployment:
   aws:
     branch: master
     commands:
-      - aws s3 cp $HOME/epsilon/dist/*.whl s3://epopt/
+      - aws s3 cp ~/epsilon/dist/*.whl s3://epopt/

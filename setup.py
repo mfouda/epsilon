@@ -14,10 +14,10 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 
 BUILD_CC_DIR = "build-cc"
+DEPS_DIR = "build-deps"
 PROTO_DIR = "proto"
 PYTHON_DIR = "python"
 PYTHON_PROTO_DIR = os.path.join(PYTHON_DIR, "epopt", "proto")
-THIRD_PARTY_DIR = os.path.join(BUILD_CC_DIR, "third_party")
 PROTOC = os.path.join(BUILD_CC_DIR, "third_party", "bin", "protoc")
 
 class BuildPyCommand(build_py):
@@ -65,9 +65,9 @@ class CleanCommand(Command):
         subprocess.check_call(cmd, shell=True)
 
 solve_libs = [
-    os.path.join(THIRD_PARTY_DIR, "lib", "libprotobuf.a"),
-    os.path.join(THIRD_PARTY_DIR, "lib", "libglog.a"),
-    os.path.join(THIRD_PARTY_DIR, "lib", "libgflags.a"),
+    os.path.join(DEPS_DIR, "lib", "libprotobuf.a"),
+    os.path.join(DEPS_DIR, "lib", "libglog.a"),
+    os.path.join(DEPS_DIR, "lib", "libgflags.a"),
 ]
 
 epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")
@@ -79,7 +79,7 @@ solve = Extension(
     extra_compile_args = ["-std=c++14"],
     depends = [epsilon_lib],
     include_dirs = [
-        os.path.join(THIRD_PARTY_DIR, "include"),
+        os.path.join(DEPS_DIR, "include"),
         BUILD_CC_DIR,
         "src",
         "third_party/eigen",

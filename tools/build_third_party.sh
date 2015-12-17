@@ -3,7 +3,7 @@
 # Build third_party dependencies (gflags, glog, protobuf)
 
 third_party=$PWD/third_party
-build=$PWD/build-cc/third_party
+build=$PWD/build-deps
 
 mkdir -p $build
 
