@@ -114,8 +114,8 @@ setup(
     ]},
     ext_modules = [solve],
     install_requires = [
-        "cvxpy==0.3.1",
-        "protobuf==3.0.0a3"
+        "cvxpy == 0.3.4",
+        "protobuf >= 3.0.0a3"
     ],
     cmdclass = {
         "build_py": BuildPyCommand,

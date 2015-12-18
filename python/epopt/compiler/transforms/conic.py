@@ -29,22 +29,12 @@ def transform_min_elementwise(expr):
 def transform_max_entries(expr):
     return transform_max_elementwise(expr)
 
-def transform_min_entries(expr):
-    return transform_min_elementwise(expr)
-
 def transform_lambda_max(expr):
     t = epi_var(expr, "lambda_max", size=(1,1))
     X = only_arg(expr)
     n = dim(X, 0)
     tI = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
     return t, [expression.psd_constraint(tI, X)]
-
-def transform_lambda_min(expr):
-    t = epi_var(expr, "lambda_min", size=(1,1))
-    X = only_arg(expr)
-    n = dim(X, 0)
-    tI = expression.diag_vec(expression.multiply(expression.ones(n, 1), t))
-    return t, [expression.psd_constraint(X, tI)]
 
 def transform_sigma_max(expr):
     X = only_arg(expr)
