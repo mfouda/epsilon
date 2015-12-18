@@ -47,11 +47,13 @@ def is_prox_friendly_constraint(graph, f):
         return False
 
     for var in graph.neighbors(f, VARIABLE):
-        var_id = var.expr.variable.variable_id
+        # If the variable only shows up as a scalar function this is fine
         assert len(f.expr.arg) == 1
+        var_id = var.expr.variable.variable_id
         if f.expr.arg[0].affine_props.linear_maps[var_id].scalar:
             continue
 
+        # Otherwise, other functions must be "least squares" type functions
         for g in graph.neighbors(var, FUNCTION):
             if not is_least_squares_function(g):
                 return False

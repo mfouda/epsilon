@@ -26,6 +26,7 @@ class AffineProx final : public ProxOperator {
       c_ = alpha*GetLinear(arg.affine_arg().A);
 
     VLOG(2) << "A: " << A.DebugString();
+    VLOG(2) << "b: " << b_.DebugString();
     VLOG(2) << "c: " << c_.DebugString();
   }
 

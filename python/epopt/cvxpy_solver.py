@@ -38,7 +38,7 @@ def solve(cvxpy_prob, **kwargs):
 
     # Nothing to do in this case
     if not cvxpy_prob.variables():
-        return cvxpy_prob.objective.value
+        return OPTIMAL, cvxpy_prob.objective.value
 
     t0 = util.cpu_time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
@@ -67,7 +67,7 @@ def solve(cvxpy_prob, **kwargs):
     logging.info("Epsilon solve: %f seconds", t2-t1)
 
     set_solution(cvxpy_prob, values)
-    return cvxpy_prob.objective.value
+    return status, cvxpy_prob.objective.value
 
 def validate_solver(constraints):
     return True
