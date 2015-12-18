@@ -72,15 +72,19 @@ void OrthoInvariantProx::ApplyVector(
 }
 
 void OrthoInvariantProx::InitEigenProx(double lambda) {
+  const int n = std::min(m_, n_);
+  const int num_args = epigraph_ ? 2 : 1;
+
   eigen_prox_ = CreateProxOperator(eigen_prox_type_, epigraph_);
   alpha_ = epigraph_ ? 1 : 1/sqrt(lambda);
   ProxFunction prox_function;
   prox_function.set_prox_function_type(eigen_prox_type_);
   prox_function.set_alpha(1);
+  Size* size = prox_function.add_arg_size();
+  size->add_dim(n);
+  size->add_dim(1);
 
   AffineOperator affine_arg, affine_constraint;
-  const int n = std::min(m_, n_);
-  const int num_args = epigraph_ ? 2 : 1;
   for (int i = 0; i < num_args; i++) {
     std::string key = affine::arg_key(i);
     affine_arg.A(key, key) = linear_map::Identity(n);

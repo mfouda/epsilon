@@ -18,11 +18,13 @@ REL_TOL = {
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+# TODO(mwytock): Fix this
+#ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
+
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
-    ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
+    #ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("fused_lasso", fused_lasso.create, dict(m=5, ni=2, k=5, rho=0.5)),
-    ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10, rho=0.1)),
     ProblemInstance("hinge_l1_sparse", hinge_l1.create, dict(m=5, n=20, rho=0.1, mu=0.5)),
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=20, n=10, rho=1)),
@@ -44,10 +46,6 @@ PROBLEMS = [
     ProblemInstance("robust_svm", robust_svm.create, dict(m=50, n=2)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
 ]
 
 def solve_problem(problem_instance):

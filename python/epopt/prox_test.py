@@ -155,7 +155,6 @@ PROX_TESTS = [
     prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
     prox("MAX", lambda: cp.max_entries(x)),
     prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
-    prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     prox("NON_NEGATIVE", None, C_non_negative_scaled),
     prox("NON_NEGATIVE", None, C_non_negative_scaled_elemwise),
     prox("NON_NEGATIVE", None, lambda: [x >= 0]),

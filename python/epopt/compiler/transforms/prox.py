@@ -116,7 +116,9 @@ def prox_norm_1(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            create_prox(prox_function_type=ProxFunction.NORM_1),
+            create_prox(
+                prox_function_type=ProxFunction.NORM_1,
+                arg_size=[Size(dim=dims(arg))]),
             diagonal_arg),
         constrs)
 
@@ -154,7 +156,8 @@ def prox_sum_deadzone(expr):
         expression.prox_function(
             create_prox(
                 prox_function_type=ProxFunction.SUM_DEADZONE,
-                scaled_zone_params=ProxFunction.ScaledZoneParams(m=-m)),
+                scaled_zone_params=ProxFunction.ScaledZoneParams(m=-m),
+                arg_size=[Size(dim=dims(arg))]),
             diagonal_arg),
         constrs)
 
@@ -167,7 +170,9 @@ def prox_sum_hinge(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            create_prox(prox_function_type=ProxFunction.SUM_HINGE),
+            create_prox(
+                prox_function_type=ProxFunction.SUM_HINGE,
+                arg_size=[Size(dim=dims(arg))]),
             diagonal_arg),
         constrs)
 
@@ -409,10 +414,9 @@ def prox_lambda_max(expr):
             scalar_arg),
         constrs)
 
-def prox_neg_log_det(expr):
-    if (expr.expression_type == Expression.NEGATE and
-        expr.arg[0].expression_type == Expression.LOG_DET):
-        arg = expr.arg[0].arg[0]
+def prox_log_det(expr):
+    if expr.expression_type == Expression.LOG_DET:
+        arg = expr.arg[0]
     else:
         return MatchResult(False)
 
@@ -421,6 +425,7 @@ def prox_neg_log_det(expr):
         True,
         expression.prox_function(
             create_prox(
+                alpha=-1,
                 prox_function_type=ProxFunction.NEG_LOG_DET,
                 arg_size=[Size(dim=dims(arg))]),
             scalar_arg),
@@ -530,7 +535,7 @@ def transform_cone(expr):
 BASE_RULES = [
     # Matrix
     prox_lambda_max,
-    prox_neg_log_det,
+    prox_log_det,
     prox_norm_nuclear,
     prox_semidefinite,
 

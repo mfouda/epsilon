@@ -37,16 +37,16 @@ def test_least_abs_deviations():
         least_abs_dev.create(m=10, n=5)))
     assert_items_equal(
         prox_ops(problem.objective),
-        [Prox.ZERO, Prox.NORM_1])
+        [Prox.CONSTANT, Prox.NORM_1])
     assert_equal(1, len(problem.constraint))
 
-# def test_tv_denoise():
-#     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
-#         tv_denoise.create(n=10, lam=1)))
-#     assert_items_equal(
-#         prox_ops(problem.objective),
-#         3*["LeastSquaresProx"] + ["NormL1L2Prox"] + ["LinearEqualityProx"])
-#     assert_equal(4, len(problem.constraint))
+def test_tv_denoise():
+    problem = compiler.compile_problem(cvxpy_expr.convert_problem(
+        tv_denoise.create(n=10, lam=1)))
+    assert_items_equal(
+        prox_ops(problem.objective),
+        3*[Prox.SUM_SQUARE] + [Prox.AFFINE] + [Prox.SECOND_ORDER_CONE])
+    assert_equal(2, len(problem.constraint))
 
 def test_tv_1d():
     problem = compiler.compile_problem(cvxpy_expr.convert_problem(
