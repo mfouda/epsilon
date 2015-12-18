@@ -66,6 +66,8 @@ void OrthoInvariantProx::ApplyVector(
     Eigen::MatrixXd X = U*x_tilde.asDiagonal()*V.transpose();
     if (add_residual_)
       X += R;
+    else if (symmetric_part_)
+      X = (X + X.transpose())/2;
 
     output->set_value(0, ToVector(X));
   }
