@@ -588,7 +588,9 @@ PROX_RULES += [
 ]
 
 def multiply_scalar(alpha, prox_expr):
-    prox_expr.prox_function.alpha *= alpha
+    assert prox_expr.expression_type == Expression.PROX_FUNCTION
+    if not is_indicator_prox(prox_expr.prox_function):
+        prox_expr.prox_function.alpha *= alpha
     return prox_expr
 
 def transform_expr(expr):

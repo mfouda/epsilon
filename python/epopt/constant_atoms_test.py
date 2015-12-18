@@ -30,8 +30,8 @@ SOLVER_TO_TOL = {EPSILON: 1e-2}
 v = cvxopt.matrix([-1,2,-2], tc='d')
 v_np = np.matrix([-1.,2,-2]).T
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # TODO(mwytock): Fix tests that are slow/broken:
 # - exp/log: requires exponential cone implementation
@@ -157,11 +157,11 @@ atoms = [
         # (entr, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ],
         #  Constant([[0, -math.e], [-2*math.e**2, 1.0/math.e]])),
         # (entr(0), Constant([0])),
-        # (log_det, (1, 1),
-        #        [ [[20, 8, 5, 2],
-        #           [8, 16, 2, 4],
-        #           [5, 2, 5, 2],
-        #           [2, 4, 2, 4]] ], Constant([7.7424020218157814])),
+        (log_det, (1, 1),
+         [ [[20, 8, 5, 2],
+            [8, 16, 2, 4],
+            [5, 2, 5, 2],
+            [2, 4, 2, 4]] ], Constant([7.7424020218157814])),
         (geo_mean, (1, 1), [[4, 1]], Constant([2])),
         (geo_mean, (1, 1), [[0.01, 7]], Constant([0.2645751311064591])),
         (geo_mean, (1, 1), [[63, 7]], Constant([21])),
@@ -206,11 +206,11 @@ atoms = [
      ], Maximize),
 ]
 
-# atoms = [
-#     ([
-#         (lambda x: pnorm(x, 3), (1, 1), [[1.1, 2, -3]], Constant([3.3120161866074733])),
-#     ], Minimize),
-# ]
+atoms = [
+     ([
+         (geo_mean, (1, 1), [[0.01, 7]], Constant([0.2645751311064591])),
+     ], Maximize),
+]
 
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?

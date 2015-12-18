@@ -8,7 +8,7 @@ from cvxpy.utilities import power_tools
 from epopt import error
 from epopt import expression
 from epopt.expression_util import *
-from epopt.proto.epsilon.expression_pb2 import Expression, Curvature, Cone
+from epopt.proto.epsilon.expression_pb2 import Expression, Curvature, Cone, ProxFunction
 from epopt.util import *
 
 class TransformError(error.ExpressionError):
@@ -148,3 +148,10 @@ def get_total_variation_arg(expr):
         var_id1 = expr.arg[0].arg[1].arg[0].arg[0].variable.variable_id
         if var_id0 == var_id1:
             return expr.arg[0].arg[0].arg[0]
+
+def is_indicator_prox(prox):
+    return prox.epigraph or prox.prox_function_type in (
+        ProxFunction.NON_NEGATIVE,
+        ProxFunction.SECOND_ORDER_CONE,
+        ProxFunction.SEMIDEFINITE,
+        ProxFunction.ZERO)

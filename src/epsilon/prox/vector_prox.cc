@@ -64,6 +64,7 @@ bool VectorProx::InitScalar(const ProxOperatorArg& arg) {
   input_.lambda_ = alpha*beta*beta/gamma;
   input_.lambda_vec_ = Eigen::VectorXd::Constant(A.n(), input_.lambda_);
   input_.elementwise_ = false;
+  CHECK_GE(input_.lambda_, 0);
   return true;
 }
 
@@ -117,6 +118,13 @@ void VectorProx::Init(const ProxOperatorArg& arg) {
   if (!InitScalar(arg) && !InitDiagonal(arg))
     LOG(FATAL) << "Affine transformation is not scalar or diagonal";
   g_ = arg.affine_arg().b;
+
+  VLOG(2) << "B: " << B_.DebugString();
+  VLOG(2) << "C: " << C_.DebugString();
+  if (input_.elementwise_)
+    VLOG(2) << "lambda: " << VectorDebugString(input_.lambda_vec_);
+  else
+    VLOG(2) << "lambda: " << input_.lambda_;
 }
 
 void VectorProx::PreProcessInput(const BlockVector& v) {
