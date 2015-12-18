@@ -25,8 +25,8 @@ def softmax_loss(Theta, X, y):
     n, k = Theta.size
     Y = sp.coo_matrix((np.ones(m), (np.arange(m), y)), shape=(m, k))
     print cp.__file__
-    return (cp.sum_entries(cp.mul_elemwise(Y, X*Theta)) -
-            cp.sum_entries(cp.log_sum_exp(X*Theta, axis=1)))
+    return (cp.sum_entries(cp.log_sum_exp(X*Theta, axis=1)) -
+            cp.sum_entries(cp.mul_elemwise(Y, X*Theta)))
 
 def poisson_loss(theta, X, y):
     return (cp.sum_entries(cp.exp(X*theta)) -

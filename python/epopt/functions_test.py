@@ -20,11 +20,13 @@ X = np.random.randn(m,n)
 y_binary = np.random.randint(2, size=(m,))
 y_multi = np.random.randint(k, size=(m,))
 
+# TODO(mwytock,xflash96): need log-sum-exp prox
+# lambda: ep.softmax_loss(Theta, X, y_multi) + 1e-2*cp.sum_squares(Theta),
+
 FUNCTION_TESTS = [
     lambda: ep.hinge_loss(theta, X, y_binary),
     lambda: ep.logistic_loss(theta, X, y_binary),
     lambda: ep.poisson_loss(theta, X, y_multi),
-    lambda: ep.softmax_loss(Theta, X, y_multi) + 1e-2*cp.sum_squares(Theta),
 ]
 
 def run_function(f):
