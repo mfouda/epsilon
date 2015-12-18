@@ -14,19 +14,22 @@ if [ "$(uname -s)" == "Linux" ]; then
 fi
 
 # gflags
-mkdir -p $third_party/gflags/build
-cd $third_party/gflags/build
-cmake $cmake_flags ..
+mkdir -p $build/gflags
+cd $build/gflags
+cmake $cmake_flags $third_party/gflags
 make -j install
 
 # glog
-mkdir -p $third_party/glog/build
-cd $third_party/glog/build
-cmake $cmake_flags ..
+mkdir -p $build/glog
+cd $build/glog
+cmake $cmake_flags $third_party/glog
 make -j install
 
 # protobuf
 cd $third_party/protobuf
 ./autogen.sh
-./configure --enable-static --disable-shared --without-zlib --prefix=$build
+mkdir -p $build/protobuf
+cd $build/protobuf
+$third_party/protobuf/configure \
+    --enable-static --disable-shared --without-zlib --prefix=$build
 make -j install
