@@ -11,7 +11,7 @@ from epopt import tree_format
 from epopt.compiler.transforms import conic
 from epopt.compiler.transforms import linear
 from epopt.compiler.transforms.transform_util import *
-from epopt.proto.epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size
+from epopt.proto.epsilon.expression_pb2 import Cone, Expression, ProxFunction, Problem, Size, Sign
 
 class MatchResult(object):
     def __init__(self, match, prox_expr=None, raw_exprs=[], alpha=1):
@@ -94,6 +94,15 @@ def prox_multiply(expr):
 
     return MatchResult(False)
 
+def prox_negate(expr):
+    if expr.expression_type == Expression.NEGATE:
+        return MatchResult(
+            True,
+            None,
+            [expr.arg[0]],
+            -1)
+    return MatchResult(False)
+
 # Cones
 
 def prox_norm_1(expr):
@@ -170,26 +179,31 @@ def prox_sum_quantile(expr):
 
         alpha, x = get_quantile_arg(expr.arg[0].arg[0])
         beta, y  = get_quantile_arg(expr.arg[0].arg[1])
-        if (x is not None and y is not None and x == y and
-            abs(alpha) <= 1 and abs(beta) <= 1):
-            if alpha <= 0 and beta > 0:
+        if (x is not None and y is not None and x == y):
+            if (alpha.sign.sign_type == Sign.NEGATIVE and
+                beta.sign.sign_type == Sign.POSITIVE):
+                alpha, beta = beta, expression.negate(alpha)
                 arg = x
-                alpha, beta = beta, abs(alpha)
-            elif beta <= 0 and alpha > 0:
+            elif (alpha.sign.sign_type == Sign.POSITIVE and
+                  beta.sign.sign_type == Sign.NEGATIVE):
+                beta = expression.negate(beta)
                 arg = x
-                beta = abs(beta)
+
     if not arg:
         return MatchResult(False)
 
+    alpha = linear.transform_expr(alpha)
+    beta = linear.transform_expr(beta)
     diagonal_arg, constrs = convert_diagonal(arg)
     return MatchResult(
         True,
         expression.prox_function(
             create_prox(
                 prox_function_type=ProxFunction.SUM_QUANTILE,
+                arg_size=[Size(dim=dims(arg))],
                 scaled_zone_params=ProxFunction.ScaledZoneParams(
-                    alpha=alpha,
-                    beta=beta)),
+                    alpha_expr=alpha.proto_with_args,
+                    beta_expr=beta.proto_with_args)),
             diagonal_arg),
         constrs)
 
@@ -547,6 +561,7 @@ PROX_RULES = [
     # Operators
     prox_add,
     prox_multiply,
+    prox_negate,
 
     # Affine
     prox_sum_square,

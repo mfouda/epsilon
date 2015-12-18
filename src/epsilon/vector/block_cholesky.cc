@@ -9,7 +9,6 @@ const uint64_t kFillMax = std::numeric_limits<uint64_t>::max();
 // column of A corresponding to key and D is the diagonal block corresponding to
 // key.
 uint64_t ComputeFill(const BlockMatrix& A, const std::string& k) {
-  VLOG(2) << "ComputeFill: " << k;
   std::set<std::string> keys;
   bool has_diagonal = false;
   for (const auto& iter : A.col(k)) {
@@ -38,6 +37,8 @@ uint64_t ComputeFill(const BlockMatrix& A, const std::string& k) {
           type, A(i, k).impl().m(), A(j, k).impl().m());
     }
   }
+
+  VLOG(2) << "ComputeFill: " << k << " " << fill;
   return fill;
 }
 

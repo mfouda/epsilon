@@ -35,6 +35,16 @@ def f_quantile():
     alpha = rand()
     return cp.sum_entries(cp.max_elemwise(alpha*x,(alpha-1)*x))
 
+def f_quantile_elemwise():
+    m = 4
+    k = 2
+    alphas = rand(k)
+    A = np.tile(alphas, (m, 1))
+    X = cp.Variable(m, k)
+    return cp.sum_entries(cp.max_elemwise(
+        cp.mul_elemwise( -A, X),
+        cp.mul_elemwise(1-A, X)))
+
 def f_dead_zone():
     eps = np.abs(randn())
     return cp.sum_entries(cp.max_elemwise(cp.abs(x)-eps, 0))
@@ -149,8 +159,8 @@ PROX_TESTS = [
     prox("NON_NEGATIVE", None, C_non_negative_scaled),
     prox("NON_NEGATIVE", None, C_non_negative_scaled_elemwise),
     prox("NON_NEGATIVE", None, lambda: [x >= 0]),
-    prox("NORM_1", lambda: cp.norm1(x)),
     prox("NORM_1", f_norm1_weighted),
+    prox("NORM_1", lambda: cp.norm1(x)),
     prox("NORM_2", lambda: cp.norm(X, "fro")),
     prox("NORM_2", lambda: cp.norm2(x)),
     prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
@@ -172,6 +182,7 @@ PROX_TESTS = [
     prox("SUM_NEG_ENTR", lambda: cp.sum_entries(-cp.entr(x))),
     prox("SUM_NEG_LOG", lambda: cp.sum_entries(-cp.log(x))),
     prox("SUM_QUANTILE", f_quantile),
+    prox("SUM_QUANTILE", f_quantile_elemwise),
     prox("SUM_SQUARE", f_least_squares_matrix),
     prox("SUM_SQUARE", lambda: f_least_squares(20)),
     prox("SUM_SQUARE", lambda: f_least_squares(5)),

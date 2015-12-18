@@ -181,6 +181,10 @@ message ProxFunction {
     double beta = 2;
     double c = 3;
     double m = 4;
+
+    // TODO(mwytock): Convert everything to expression form
+    Expression alpha_expr = 5;
+    Expression beta_expr = 6;
   }
   ScaledZoneParams scaled_zone_params = 6;
 }

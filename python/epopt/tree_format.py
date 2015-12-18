@@ -32,6 +32,7 @@ def node_contents_str(expr):
     c = []
 
     if expr.expression_type == Expression.CONSTANT:
+        c += ["sign: " + Sign.Type.Name(expr.sign.sign_type)]
         if not expr.constant.data_location:
             c += ["scalar: " + str(expr.constant.scalar)]
     elif expr.expression_type == Expression.VARIABLE:

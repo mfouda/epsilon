@@ -3,6 +3,7 @@
 
 #include <glog/logging.h>
 
+#include "epsilon/util/string.h"
 #include "epsilon/vector/block_matrix.h"
 
 bool InvertBlockDiagonal(const BlockMatrix& A, BlockMatrix* A_inv) {
@@ -223,7 +224,7 @@ const std::map<std::string, linear_map::LinearMap>& BlockMatrix::col(
 }
 
 std::string BlockMatrix::DebugString() const {
-  std::string retval = "";
+  std::string retval = StringPrintf("block matrix %d x %d", m(), n());
   for (const auto& col_iter : data_) {
     for (const auto& block_iter : col_iter.second) {
       if (retval != "") retval += "\n";

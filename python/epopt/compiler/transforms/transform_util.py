@@ -126,12 +126,11 @@ def get_hinge_arg(expr):
             return expr.arg[0].arg[0]
 
 def get_quantile_arg(expr):
-    if (expr.expression_type == Expression.MULTIPLY and
-        len(expr.arg) == 2):
-        for i, arg in enumerate(expr.arg):
-            alpha = get_scalar_constant(arg)
-            if alpha is not None:
-                return alpha, expr.arg[1-i]
+    if (((expr.expression_type == Expression.MULTIPLY and dim(expr.arg[0]) == 1) or
+         expr.expression_type == Expression.MULTIPLY_ELEMENTWISE) and
+        len(expr.arg) == 2 and
+        expr.arg[0].dcp_props.constant):
+        return expr.arg[0], expr.arg[1]
 
     return None, None
 

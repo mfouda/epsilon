@@ -30,6 +30,13 @@ def replace_var(expr, old_var_id, new_var):
         expr.proto,
         [replace_var(arg, old_var_id, new_var) for arg in expr.arg])
 
+def is_least_squares_function(f):
+    return f.expr.prox_function.prox_function_type in (
+        ProxFunction.AFFINE,
+        ProxFunction.CONSTANT,
+        ProxFunction.SUM_SQUARE,
+        ProxFunction.ZERO)
+
 def is_prox_friendly_constraint(graph, f):
     """Returns true if f represents a prox-friendly equality constraint.
 
@@ -39,12 +46,15 @@ def is_prox_friendly_constraint(graph, f):
     if not f.expr.prox_function.prox_function_type == ProxFunction.ZERO:
         return False
 
-    assert len(f.expr.arg) == 1
-    for f_var in graph.edges_by_function[f]:
-        edges = graph.edges_by_variable[f_var.variable]
-        if (len(edges) > 1 and
-            not f.expr.arg[0].affine_props.linear_maps[f_var.variable].scalar):
-            return False
+    for var in graph.neighbors(f, VARIABLE):
+        var_id = var.expr.variable.variable_id
+        assert len(f.expr.arg) == 1
+        if f.expr.arg[0].affine_props.linear_maps[var_id].scalar:
+            continue
+
+        for g in graph.neighbors(var, FUNCTION):
+            if not is_least_squares_function(g):
+                return False
 
     return True
 
@@ -100,14 +110,14 @@ def combine_affine_functions(graph):
 def move_equality_indicators(graph):
     """Move certain equality indicators from objective to constraints."""
     # Single prox case, dont move it
-    if len(graph.obj_terms) == 1:
+    if len(graph.nodes(FUNCTION)) == 1:
         return
 
-    for f in graph.obj_terms:
+    for f in graph.nodes(FUNCTION):
         if is_prox_friendly_constraint(graph, f):
             # Modify it to be an equality constraint
-            f.expr.CopyFrom(expression.indicator(Cone.ZERO, f.expr.arg[0]))
-            f.constraint = True
+            f.expr = expression.indicator(Cone.ZERO, f.expr.arg[0])
+            f.node_type = CONSTRAINT
 
 
 def separate_objective_terms(graph):
@@ -180,9 +190,9 @@ def build_graph(problem):
 
 # TODO(mwytock): Add back these optimizations when ready
 # combine_affine_functions
-# move_equality_indicators,
 
 GRAPH_TRANSFORMS = [
+    move_equality_indicators,
     separate_objective_terms,
     add_constant_prox,
 ]

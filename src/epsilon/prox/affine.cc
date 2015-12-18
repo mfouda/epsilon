@@ -22,7 +22,8 @@ class AffineProx final : public ProxOperator {
     AT_ = A.Transpose();
     ATA_inv_ = (AT_*A).Inverse();
     b_ = arg.affine_constraint().b;
-    c_ = alpha*GetLinear(arg.affine_arg().A);
+    if (arg.prox_function().prox_function_type() == ProxFunction::AFFINE)
+      c_ = alpha*GetLinear(arg.affine_arg().A);
 
     VLOG(2) << "A: " << A.DebugString();
     VLOG(2) << "c: " << c_.DebugString();

@@ -224,11 +224,18 @@ def ones(*dims):
         constant=_constant.store(np.ones(dims)),
         func_curvature=CONSTANT)
 
-def constant(m, n, scalar=None, constant=None):
+def constant(m, n, scalar=None, constant=None, sign=None):
     if scalar is not None:
         constant = expression_pb2.Constant(
             constant_type=expression_pb2.Constant.SCALAR,
             scalar=scalar)
+        if scalar > 0:
+            sign = Sign(sign_type=expression_pb2.Sign.POSITIVE)
+        elif scalar < 0:
+            sign = Sign(sign_type=expression_pb2.Sign.NEGATIVE)
+        else:
+            sign = Sign(sign_type=expression_pb2.Sign.ZERO)
+
     elif constant is None:
         raise ValueError("need either scalar or constant")
 
@@ -236,7 +243,8 @@ def constant(m, n, scalar=None, constant=None):
         expression_type=expression_pb2.Expression.CONSTANT,
         size=Size(dim=[m, n]),
         constant=constant,
-        func_curvature=Curvature(curvature_type=Curvature.CONSTANT))
+        func_curvature=Curvature(curvature_type=Curvature.CONSTANT),
+        sign=sign)
 
 def indicator(cone_type, *args):
     return Expression(

@@ -5,6 +5,8 @@
 namespace linear_map {
 
 LinearMapImpl* DenseMatrixImpl::Inverse() const {
+  VLOG(1) << "Factoring " << m() << " x " << n();
+
   // NOTE(mwytock): This assumes matrix is symmetric, do we need non-symmetric?
   CHECK_EQ(m(), n());
   Eigen::LDLT<DenseMatrix> ldlt;

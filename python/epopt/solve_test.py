@@ -46,6 +46,10 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
+PROBLEMS = [
+    ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
+]
+
 def solve_problem(problem_instance):
     np.random.seed(0)
     problem = problem_instance.create()

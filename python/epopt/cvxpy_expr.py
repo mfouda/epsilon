@@ -45,7 +45,12 @@ def convert_constant(expr):
     m, n = expr.size
     if isinstance(expr.value, (int, long, float)):
         return expression.constant(m, n, scalar=expr.value)
-    return expression.constant(m, n, constant=constant.store(expr.value))
+    else:
+        return expression.constant(
+            m, n,
+            constant=constant.store(expr.value),
+            sign=expression_pb2.Sign(
+                sign_type=expression_pb2.Sign.Type.Value(expr.sign)))
 
 def convert_generic(expression_type, expr):
     return expression.Expression(
