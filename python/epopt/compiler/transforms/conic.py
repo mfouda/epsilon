@@ -196,6 +196,11 @@ def transform_matrix_frac(expr):
         expression.eq_constraint(expression.index(M, n, n+1, n, n+1), t),
         expression.semidefinite(M)]
 
+def transform_exp(expr):
+    x = only_arg(expr)
+    t = epi_var(expr, "exp")
+    return t, expression.epigraph(expr, t)
+
 def transform_expr(expr):
     log_debug_expr("conic transform_expr", expr)
 

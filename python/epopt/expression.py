@@ -390,3 +390,6 @@ def prox_function(f, *args):
         size=Size(dim=[1, 1]),
         prox_function=f,
         arg=args)
+
+def epigraph(f, t):
+    return leq_constraint(a, b)

@@ -103,7 +103,7 @@ def prox_negate(expr):
             -1)
     return MatchResult(False)
 
-# Cones
+# Elementwise
 
 def prox_norm_1(expr):
     if (expr.expression_type == Expression.NORM_P and
@@ -209,6 +209,20 @@ def prox_sum_quantile(expr):
                 scaled_zone_params=ProxFunction.ScaledZoneParams(
                     alpha_expr=alpha.proto_with_args,
                     beta_expr=beta.proto_with_args)),
+            diagonal_arg),
+        constrs)
+
+def prox_exp(expr):
+    if (expr.expression_type == Expression.EXP):
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    diagonal_arg, constrs = convert_diagonal(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            create_prox(prox_function_type=ProxFunction.EXP),
             diagonal_arg),
         constrs)
 
@@ -547,6 +561,7 @@ BASE_RULES = [
     prox_total_variation_1d,
 
     # Elementwise
+    prox_exp,
     prox_norm_1,
     prox_sum_exp,
     prox_sum_inv_pos,

@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Common variable
 n = 10
 x = cp.Variable(n)
+z = cp.Variable(n)
 p = cp.Variable(3)
 X = cp.Variable(3,3)
 t = cp.Variable(1)
@@ -202,6 +203,7 @@ PROX_TESTS = [
 # Epigraph operators
 PROX_TESTS += [
     #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
+    #epigraph("EXP", None, lambda: [cp.exp(x) <= z])
     epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
     epigraph("MAX", None, lambda: [cp.max_entries(x) <= t]),
     epigraph("NORM_1", None, lambda: [cp.norm1(x) <= t]),

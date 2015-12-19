@@ -142,6 +142,7 @@ message ProxFunction {
     SUM_NEG_LOG = 29;
     SUM_QUAD_OVER_LIN = 30;
     SUM_QUANTILE = 31;
+    EXP = 32;
 
     // Vector
     LOG_SUM_EXP = 100;
