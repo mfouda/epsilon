@@ -8,7 +8,7 @@
 #include <cmath>
 
 // \sum_i 1/(xi)
-class InvPos final : public SmoothFunction {
+class InvPos final : public ElemwiseSmoothFunction {
 public:
   double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();
