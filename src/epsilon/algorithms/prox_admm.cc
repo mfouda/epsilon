@@ -42,6 +42,7 @@ void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
   x_.resize(N_);
+  y_.resize(N_);
 
   // See TODO below
   CHECK_EQ(1, params_.rho());
@@ -94,16 +95,17 @@ void ProxADMMSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
-    x_prev_ = x_;
+    y_prev_ = y_;
 
     u_ -= b_;
     for (int i = 0; i < N_; i++)
-      u_ -= A_*x_[i];
+      u_ -= y_[i];
 
     for (int i = 0; i < N_; i++) {
-      u_ += A_*x_[i];
+      u_ += y_[i];
       x_[i] = prox_[i]->Apply(u_);
-      u_ -= A_*x_[i];
+      y_[i] = A_*x_[i];
+      u_ -= y_[i];
       VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
     }
     VLOG(2) << "u: " << u_.DebugString();
@@ -156,7 +158,7 @@ void ProxADMMSolver::ComputeResiduals() {
   double s_norm_squared = 0;
   BlockVector Ax_diff;
   for (int i = N_ - 2; i >= 0; i--) {
-    Ax_diff += A_*(x_[i+1] - x_prev_[i+1]);
+    Ax_diff += y_[i+1] - y_prev_[i+1];
     const double s_norm_i = (AiT_[i]*Ax_diff).norm();
     s_norm_squared += s_norm_i*s_norm_i;
   }

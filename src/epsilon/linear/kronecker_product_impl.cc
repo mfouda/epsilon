@@ -1,5 +1,6 @@
 #include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/util/time.h"
 
 namespace linear_map {
 
@@ -39,10 +40,16 @@ LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
 
 LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
+  const double t0 = WallTime();
   DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
-  return ToVector(
+  DenseVector y = ToVector(
       A_.impl().ApplyMatrix(
           B_.impl().ApplyMatrix(X).transpose()).transpose());
+  LOG(INFO) << "Apply "
+            << "(" << A_.impl().m() << " x " << A_.impl().n() << ") x "
+            << "(" << B_.impl().m() << " x " << B_.impl().n() << "), "
+            << WallTime() - t0 << " seconds";
+  return y;
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {
