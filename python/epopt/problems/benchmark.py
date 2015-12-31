@@ -155,7 +155,9 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     if args.write:
-        benchmark_util.write_problems(problems, args.write)
+        for problem in problems:
+            benchmark_util.write_problem(
+                problem.create(), args.write, problem.name)
         sys.exit(0)
 
     for result in run_benchmarks([args.benchmark], problems):
