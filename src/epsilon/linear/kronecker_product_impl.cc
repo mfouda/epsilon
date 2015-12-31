@@ -40,16 +40,10 @@ LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
 
 LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
-  const double t0 = WallTime();
   DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
-  DenseVector y = ToVector(
+  return ToVector(
       A_.impl().ApplyMatrix(
           B_.impl().ApplyMatrix(X).transpose()).transpose());
-  LOG(INFO) << "Apply "
-            << "(" << A_.impl().m() << " x " << A_.impl().n() << ") x "
-            << "(" << B_.impl().m() << " x " << B_.impl().n() << "), "
-            << WallTime() - t0 << " seconds";
-  return y;
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {
