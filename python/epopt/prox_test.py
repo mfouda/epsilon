@@ -154,6 +154,7 @@ PROX_TESTS = [
     prox("AFFINE", lambda: randn(n).T*x),
     prox("CONSTANT", lambda: 0),
     prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
+    prox("LOG_SUM_EXP", lambda: cp.log_sum_exp(x)),
     prox("MAX", lambda: cp.max_entries(x)),
     prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     prox("NON_NEGATIVE", None, C_non_negative_scaled),
@@ -204,6 +205,7 @@ PROX_TESTS = [
 PROX_TESTS += [
     #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
     #epigraph("EXP", None, lambda: [cp.exp(x) <= z])
+    epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(x) <= t]),
     epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
     epigraph("MAX", None, lambda: [cp.max_entries(x) <= t]),
     epigraph("NORM_1", None, lambda: [cp.norm1(x) <= t]),
