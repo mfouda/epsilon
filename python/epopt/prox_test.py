@@ -32,6 +32,13 @@ def prox(prox_function_type, objective, constraint=None):
 def epigraph(prox_function_type, objective, constraint):
     return ProxTest(prox_function_type, objective, constraint, True)
 
+def f_quad_form():
+    m = 4
+    x = cp.Variable(m)
+    A = np.random.randn(m, m)
+    P = np.identity(m)*0.001
+    return cp.quad_form(x, P)
+
 def f_quantile():
     alpha = rand()
     return cp.sum_entries(cp.max_elemwise(alpha*x,(alpha-1)*x))
@@ -187,6 +194,7 @@ PROX_TESTS = [
     prox("SUM_SQUARE", f_least_squares_matrix),
     prox("SUM_SQUARE", lambda: f_least_squares(20)),
     prox("SUM_SQUARE", lambda: f_least_squares(5)),
+    prox("SUM_SQUARE", f_quad_form),
     prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
     prox("ZERO", None, C_linear_equality),
     prox("ZERO", None, C_linear_equality_matrix_lhs),
