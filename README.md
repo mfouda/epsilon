@@ -32,7 +32,7 @@ pip install -U epopt
 Install the latest wheel directly (PyPi does not currently support linux wheels).
 
 ```
-pip install -U http://epopt.s3.amazonaws.com/epopt-0.2.1-cp27-none-linux_x86_64.whl
+pip install -U http://epopt.s3.amazonaws.com/epopt-0.2.2-cp27-none-linux_x86_64.whl
 ```
 
 ## Usage

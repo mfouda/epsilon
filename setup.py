@@ -101,7 +101,7 @@ else:
 
 setup(
     name = "epopt",
-    version = "0.2.1",
+    version = "0.2.2",
     author = "Matt Wytock",
     url = "http://epopt.io/",
     author_email = "mwytock@gmail.com",
