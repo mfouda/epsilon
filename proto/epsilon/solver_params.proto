@@ -9,6 +9,9 @@ message SolverParams {
   optional double rho = 11 [default=1];
   optional bool normalize = 12 [default=false];
 
+  // If true, will log messages to stdout
+  optional bool verbose = 27 [default=false];
+
   // Parameters for SCS
   optional double scs_alpha = 3 [default=1.5];
   optional double scs_rho_x = 4 [default=1e-3];
@@ -31,6 +34,9 @@ message SolverParams {
 
   // Run solver for this many iterations uninterrupted
   optional int32 epoch_iterations = 18 [default=10];
+
+  // Log every nth iteration
+  optional int32 log_iterations = 28 [default=100];
 
   // Async mode parameters
   optional double consensus_scale = 19 [default=1];
