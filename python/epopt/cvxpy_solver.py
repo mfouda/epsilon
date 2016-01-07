@@ -5,9 +5,11 @@ import numpy
 
 from cvxpy.settings import OPTIMAL, OPTIMAL_INACCURATE, SOLVER_ERROR
 
+from epopt import __version__
 from epopt import _solve
 from epopt import constant
 from epopt import cvxpy_expr
+from epopt import text_format
 from epopt import util
 from epopt.compiler import compiler
 from epopt.proto.epsilon import solver_params_pb2
@@ -33,6 +35,11 @@ def cvxpy_status(solver_status):
         return OPTIMAL_INACCURATE
     return SOLVER_ERROR
 
+def log_verbose(verbose, msg, *args):
+    logging.info(msg, args)
+    if verbose:
+        print msg % args
+
 def solve(cvxpy_prob, **kwargs):
     """Solve optimziation problem."""
 
@@ -40,11 +47,17 @@ def solve(cvxpy_prob, **kwargs):
     if not cvxpy_prob.variables():
         return OPTIMAL, cvxpy_prob.objective.value
 
+    params = solver_params_pb2.SolverParams(**kwargs)
+
     t0 = util.cpu_time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
     problem = compiler.compile_problem(problem)
     t1 = util.cpu_time()
-    logging.info("Epsilon compile: %f seconds", t1-t0)
+
+    if params.verbose:
+        print "Epsilon %s, prox-affine form" % __version__
+        print text_format.format_problem(problem)
+    log_verbose(params.verbose, "Epsilon compile time: %.4f seconds", t1-t0)
 
     if len(problem.objective.arg) == 1 and not problem.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
@@ -64,13 +77,10 @@ def solve(cvxpy_prob, **kwargs):
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
     t2 = util.cpu_time()
-    logging.info("Epsilon solve: %f seconds", t2-t1)
+    log_verbose(params.verbose, "Epsilon solve time: %.4f seconds", t2-t1)
 
     set_solution(cvxpy_prob, values)
     return status, cvxpy_prob.objective.value
 
 def validate_solver(constraints):
     return True
-
-def register_epsilon():
-    cvxpy.Problem.register_solve(EPSILON, solve)

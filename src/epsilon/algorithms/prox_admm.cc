@@ -1,6 +1,8 @@
 
 #include "epsilon/algorithms/prox_admm.h"
 
+#include <iostream>
+
 #include <Eigen/OrderingMethods>
 #include <Eigen/SparseQR>
 
@@ -86,6 +88,7 @@ void ProxADMMSolver::Init() {
   VLOG(3) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
+
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
   VLOG(2) << "A:\n" << A_.DebugString() << "\n"
           << "b:\n" << b_.DebugString();
@@ -112,18 +115,21 @@ void ProxADMMSolver::Solve() {
 
     if (iter_ % params_.epoch_iterations() == 0) {
       ComputeResiduals();
-      LogStatus();
       if (status_.state() == SolverStatus::OPTIMAL)
         break;
+    }
+
+    if (iter_ % params_.log_iterations() == 0) {
+      LogStatus();
     }
   }
 
   if (iter_ == params_.max_iterations()) {
     ComputeResiduals();
-    LogStatus();
     status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   }
 
+  LogStatus();
   UpdateParameters();
   UpdateStatus(status_);
 }
@@ -181,11 +187,14 @@ void ProxADMMSolver::ComputeResiduals() {
 
 void ProxADMMSolver::LogStatus() {
   const SolverStatus::Residuals& r = status_.residuals();
-  VLOG(1) << StringPrintf(
+  std::string status = StringPrintf(
       "iter=%d residuals primal=%.2e [%.2e] dual=%.2e [%.2e]",
       status_.num_iterations(),
       r.r_norm(),
       r.epsilon_primal(),
       r.s_norm(),
       r.epsilon_dual());
+  VLOG(1) << status;
+  if (params_.verbose())
+    std::cout << status << std::endl;
 }
