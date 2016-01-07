@@ -1,8 +1,6 @@
 
 #include "epsilon/algorithms/prox_admm.h"
 
-#include <iostream>
-
 #include <Eigen/OrderingMethods>
 #include <Eigen/SparseQR>
 
@@ -10,6 +8,7 @@
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
+#include "epsilon/util/logging.h"
 #include "epsilon/util/string.h"
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
@@ -195,6 +194,5 @@ void ProxADMMSolver::LogStatus() {
       r.s_norm(),
       r.epsilon_dual());
   VLOG(1) << status;
-  if (params_.verbose())
-    std::cout << status << std::endl;
+  LogVerbose(status);
 }

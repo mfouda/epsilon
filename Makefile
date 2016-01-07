@@ -85,6 +85,7 @@ common_cc = \
 	epsilon/prox/vector_prox.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
+	epsilon/util/logging.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
 	epsilon/vector/block_cholesky.cc \
