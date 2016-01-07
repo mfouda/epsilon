@@ -2,6 +2,8 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/vector_prox.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/prox/newton.h"
+#include <cstdlib>
 
 class SumLargestProx : public VectorProx {
  public:
@@ -55,7 +57,29 @@ class SumLargestProx : public VectorProx {
     output->set_value(0, x);
   }
 
+  double Eval(const VectorProxOutput* output) override {
+    const Eigen::VectorXd& x = output->value_vec(0);
+    int n = x.rows();
+    double* y = new double[n]; 
+    memcpy(y, x.data(), sizeof(*y)*n);
+    sort(y, y+n, std::greater<double>());
+
+    double sum = 0;
+    for(int i=0; i<k_; i++) {
+      sum += y[i];
+    }
+
+    delete[] y; 
+    return sum;
+  }
+
  private:
   int k_;
 };
 REGISTER_PROX_OPERATOR(SUM_LARGEST, SumLargestProx);
+
+class SumLargestEpigraph : public BisectionEpigraph {
+public:
+  SumLargestEpigraph() : BisectionEpigraph(std::make_unique<SumLargestProx>()) {}
+};
+REGISTER_EPIGRAPH_OPERATOR(SUM_LARGEST, SumLargestEpigraph);

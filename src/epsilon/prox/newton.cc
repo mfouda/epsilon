@@ -57,10 +57,8 @@ Eigen::VectorXd ApplyNewtonProx(
   int iter = 0;
   int MAX_ITER = 100;
   for(; iter < MAX_ITER; iter++) {
-    Eigen::VectorXd hx = (
-        Eigen::VectorXd::Constant(n, 1.) + lambda.asDiagonal() * f.hessf(x));
     Eigen::VectorXd gx = ProxResidual(f, lambda, x, v);
-    Eigen::VectorXd dx = (gx.array() / hx.array()).matrix();
+    Eigen::VectorXd dx = f.hess_inv(lambda, x, gx);
     VLOG(3) << "Iter " << iter << " gx: " << VectorDebugString(gx);
 
     // line search
@@ -133,23 +131,22 @@ void NewtonEpigraph::ApplyVector(
   int iter = 0;
   int MAX_ITER = 100;
   for(; iter < MAX_ITER; iter++) {
-    Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lam * f.hessf(x);
     Eigen::VectorXd g = EpigraphResidual(f, lam, x, t, v, s);
     VLOG(2) << "Iter " << iter << "\n"
             << " lam: " << lam << "\n"
             << " x: " << VectorDebugString(x) << "\n"
-            << " g: " << VectorDebugString(g) << "\n"
-            << " hx: " << VectorDebugString(hx);
+            << " g: " << VectorDebugString(g);
 
-    // construct arrowhead hessian matrix
-    Eigen::VectorXd d(n+1);
-    d.head(n) = Eigen::VectorXd::Constant(n, 1.) + lam * f.hessf(x);
-    d(n) = 1;
-    Eigen::VectorXd z(n+1);
-    z.head(n) = g.head(n);
-    z(n) = -1.;
-    double alpha = 0;
-    Eigen::VectorXd step = SolveArrowheadSystem(d, z, alpha, g);
+    // construct arrowhead hessian matrix from newton step
+    Eigen::VectorXd nt_step = f.hess_inv(lam, x, g.head(n));
+    double nt_res = g.head(n).dot(nt_step);
+    Eigen::VectorXd step(n+2);
+    double scale = (-nt_res+g(n)+g(n+1))/(nt_res+1);
+    step.head(n) = (1+scale)*nt_step;
+    step(n) = g(n);
+    step(n+1) = 0;
+    step(n) -= scale;
+    step(n+1) -= scale;
     VLOG(2) << " step: " << VectorDebugString(step);
 
     // line search
@@ -215,9 +212,8 @@ void ImplicitNewtonEpigraph::ApplyVector(
     x = ApplyNewtonProx(*f_, lam, v);
 
     Eigen::VectorXd gx = f.gradf(x);
-    Eigen::VectorXd hx = f.hessf(x);
     double glam = f.eval(x) - lam - s;
-    double hlam = -(gx.cwiseQuotient((1.+lam*hx.array()).matrix()).dot(gx)) - 1;
+    double hlam = -(f.hess_inv(lam, x, gx).dot(gx)) - 1;
     VLOG(2) << "glam = " << glam << ", hlam = " << hlam << "\n";
 
     res = std::abs(glam);
@@ -237,4 +233,55 @@ void ImplicitNewtonEpigraph::ApplyVector(
 
   output->set_value(0, ApplyNewtonProx(*f_, lam, v));
   output->set_value(1, s+lam);
+}
+
+void BisectionEpigraph::ApplyVector(
+    const VectorProxInput& input_,
+    VectorProxOutput* output) {
+
+  const double s =  input_.value(1);
+
+  output->set_value(0, input_.value_vec(0));
+  double fval = prox_->Eval(output);
+  if (fval <= s) {
+    VLOG(2) << "Bisection: Easy case in epigraph.\n";
+    output->set_value(1, s);
+    return;
+  } 
+
+  double lam = 1;
+  double eps = 1e-5;
+  int iter = 0, max_iter=100;
+  double upper = lam, lower = 0;
+  bool upper_fixed = false;
+
+  VectorProxInput input(input_);
+  input.set_lambda(lam);
+
+  for(; iter<max_iter; iter++) {
+    prox_->ApplyVector(input, output);
+    double fval = prox_->Eval(output);
+
+    double g = fval-(lam+s); 
+    VLOG(2) << "Bisection: g = " << g 
+      << " lambda = " << lam 
+      << " in (" << lower << ", " << upper << ")\n";
+    if (fabs(g) <= eps) {
+      output->set_value(1, lam + s);
+      return;
+    } else {
+      if(g > 0 and not upper_fixed) {
+        lam *= 2;
+        upper = lam;
+      } else if (g > 0) {
+        lower = lam;
+        lam = (lam+upper)/2;
+      } else {
+        upper = lam;
+        lam = (lam+lower)/2;
+        upper_fixed = true;
+      }
+    }
+    input.set_lambda(lam);
+  }
 }

@@ -5,7 +5,7 @@
 #include "epsilon/vector/vector_util.h"
 #include <cmath>
 
-class Logistic final : public SmoothFunction {
+class Logistic final : public ElemwiseSmoothFunction {
 public:
   double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();

@@ -160,10 +160,28 @@ const Eigen::VectorXd& VectorProxInput::value_vec(int i) const {
   return v_(affine::arg_key(i));
 }
 
+void VectorProxInput::set_lambda(double lambda) {
+  if(elementwise_) {
+    lambda_vec_ = Eigen::VectorXd::Constant(lambda_vec_.rows(), lambda);
+  } else {
+    lambda_ = lambda;
+  }
+}
+
 void VectorProxOutput::set_value(int i, double x) {
   x_(affine::arg_key(i)) = Eigen::VectorXd::Constant(1, x);
 }
 
 void VectorProxOutput::set_value(int i, const Eigen::VectorXd& x) {
   x_(affine::arg_key(i)) = x;
+}
+
+double VectorProxOutput::value(int i) const {
+  const Eigen::VectorXd& val = value_vec(i);
+  CHECK_EQ(1, val.size());
+  return val(0);
+}
+
+const Eigen::VectorXd& VectorProxOutput::value_vec(int i) const {
+  return x_(affine::arg_key(i));
 }

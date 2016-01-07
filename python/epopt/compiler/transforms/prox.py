@@ -322,6 +322,19 @@ def prox_sum_kl_div(expr):
         constrs0 + constrs1)
 
 # Vector
+def prox_log_sum_exp(expr):
+    if expr.expression_type == Expression.LOG_SUM_EXP:
+        arg = expr.arg[0]
+    else:
+        return MatchResult(False)
+
+    scalar_arg, constrs = convert_scalar(arg)
+    return MatchResult(
+        True,
+        expression.prox_function(
+            create_prox(prox_function_type=ProxFunction.LOG_SUM_EXP),
+            scalar_arg),
+        constrs)
 
 def prox_max(expr):
     if expr.expression_type == Expression.MAX_ENTRIES:
@@ -485,6 +498,14 @@ def prox_sum_square(expr):
         expr.arg[1].expression_type == Expression.CONSTANT and
         expr.arg[1].constant.scalar == 1):
         arg = expr.arg[0]
+    elif (expr.expression_type == Expression.POWER and
+        expr.p == 2 and
+        expr.arg[0].expression_type == Expression.NORM_P and
+        expr.arg[0].p == 2 and
+        expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
+        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
+        expr.arg[0].arg[0].arg[1].expression_type == Expression.VARIABLE):
+        arg = expr.arg[0].arg[0]
     else:
         return MatchResult(False)
 
@@ -554,6 +575,7 @@ BASE_RULES = [
     prox_semidefinite,
 
     # Vector
+    prox_log_sum_exp,
     prox_max,
     prox_norm_2,
     prox_second_order_cone,
