@@ -234,3 +234,54 @@ void ImplicitNewtonEpigraph::ApplyVector(
   output->set_value(0, ApplyNewtonProx(*f_, lam, v));
   output->set_value(1, s+lam);
 }
+
+void BisectionEpigraph::ApplyVector(
+    const VectorProxInput& input_,
+    VectorProxOutput* output) {
+
+  const double s =  input_.value(1);
+
+  output->set_value(0, input_.value_vec(0));
+  double fval = prox_->Eval(output);
+  if (fval <= s) {
+    VLOG(2) << "Bisection: Easy case in epigraph.\n";
+    output->set_value(1, s);
+    return;
+  } 
+
+  double lam = 1;
+  double eps = 1e-5;
+  int iter = 0, max_iter=100;
+  double upper = lam, lower = 0;
+  bool upper_fixed = false;
+
+  VectorProxInput input(input_);
+  input.set_lambda(lam);
+
+  for(; iter<max_iter; iter++) {
+    prox_->ApplyVector(input, output);
+    double fval = prox_->Eval(output);
+
+    double g = fval-(lam+s); 
+    VLOG(2) << "Bisection: g = " << g 
+      << " lambda = " << lam 
+      << " in (" << lower << ", " << upper << ")\n";
+    if (fabs(g) <= eps) {
+      output->set_value(1, lam + s);
+      return;
+    } else {
+      if(g > 0 and not upper_fixed) {
+        lam *= 2;
+        upper = lam;
+      } else if (g > 0) {
+        lower = lam;
+        lam = (lam+upper)/2;
+      } else {
+        upper = lam;
+        lam = (lam+lower)/2;
+        upper_fixed = true;
+      }
+    }
+    input.set_lambda(lam);
+  }
+}

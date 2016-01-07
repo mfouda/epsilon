@@ -11,6 +11,8 @@ class VectorProxInput {
   double value(int i) const;
   const Eigen::VectorXd& value_vec(int i) const;
 
+  void set_lambda(double lambda);
+
  private:
   friend class VectorProx;
 
@@ -24,6 +26,9 @@ class VectorProxOutput {
  public:
   void set_value(int i, double x);
   void set_value(int i, const Eigen::VectorXd& x);
+
+  double value(int i) const;
+  const Eigen::VectorXd& value_vec(int i) const;
 
  private:
   friend class VectorProx;
@@ -40,6 +45,8 @@ class VectorProx : public ProxOperator {
   virtual void ApplyVector(
       const VectorProxInput& input,
       VectorProxOutput* output) = 0;
+
+  virtual double Eval(const VectorProxOutput* output) { return 0; };
 
  private:
   bool InitScalar(const ProxOperatorArg& arg);

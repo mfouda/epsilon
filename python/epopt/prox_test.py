@@ -223,10 +223,12 @@ PROX_TESTS += [
     epigraph("SUM_HINGE", None, lambda: [f_hinge() <= t]),
     epigraph("SUM_INV_POS", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     epigraph("SUM_KL_DIV", None, lambda: [cp.sum_entries(cp.kl_div(p1,q1)) <= t]),
+    epigraph("SUM_LARGEST", None, lambda: [cp.sum_largest(x, 4) <= t]),
     epigraph("SUM_LOGISTIC", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
     epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
+    #epigraph("SUM_SQUARE", None, lambda: [f_quad_form() <= t]),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):

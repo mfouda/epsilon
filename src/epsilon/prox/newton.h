@@ -72,9 +72,14 @@ class ImplicitNewtonEpigraph : public VectorProx {
   std::unique_ptr<SmoothFunction> f_;
 };
 
-class ImplicitGradientEpigraph : public VectorProx {
+class BisectionEpigraph : public VectorProx {
  public:
-  ImplicitGradientEpigraph(std::unique_ptr<VectorProx> f) : f_(std::move(f)) {}
+  BisectionEpigraph(std::unique_ptr<VectorProx> prox) : prox_(std::move(prox)) {}
+
+  void Init(const ProxOperatorArg& arg) override {
+    prox_->Init(arg);
+    VectorProx::Init(arg);
+  }
 
  protected:
   void ApplyVector(
@@ -82,7 +87,7 @@ class ImplicitGradientEpigraph : public VectorProx {
       VectorProxOutput* output) override;
 
  private:
-  std::unique_ptr<VectorProx> f_;
+  std::unique_ptr<VectorProx> prox_;
 };
 
 #endif  // EPSILON_PROX_NEWTON_H
