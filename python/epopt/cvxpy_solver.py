@@ -36,7 +36,7 @@ def cvxpy_status(solver_status):
     return SOLVER_ERROR
 
 def log_verbose(verbose, msg, *args):
-    logging.info(msg, args)
+    logging.info(msg, *args)
     if verbose:
         print msg % args
 
