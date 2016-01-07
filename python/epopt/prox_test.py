@@ -32,6 +32,13 @@ def prox(prox_function_type, objective, constraint=None):
 def epigraph(prox_function_type, objective, constraint):
     return ProxTest(prox_function_type, objective, constraint, True)
 
+def f_quad_form():
+    m = 4
+    x = cp.Variable(m)
+    A = np.random.randn(m, m)
+    P = np.identity(m)*0.001
+    return cp.quad_form(x, P)
+
 def f_quantile():
     alpha = rand()
     return cp.sum_entries(cp.max_elemwise(alpha*x,(alpha-1)*x))
@@ -154,6 +161,7 @@ PROX_TESTS = [
     prox("AFFINE", lambda: randn(n).T*x),
     prox("CONSTANT", lambda: 0),
     prox("LAMBDA_MAX", lambda: cp.lambda_max(X)),
+    prox("LOG_SUM_EXP", lambda: cp.log_sum_exp(x)),
     prox("MAX", lambda: cp.max_entries(x)),
     prox("NEG_LOG_DET", lambda: -cp.log_det(X)),
     prox("NON_NEGATIVE", None, C_non_negative_scaled),
@@ -186,6 +194,7 @@ PROX_TESTS = [
     prox("SUM_SQUARE", f_least_squares_matrix),
     prox("SUM_SQUARE", lambda: f_least_squares(20)),
     prox("SUM_SQUARE", lambda: f_least_squares(5)),
+    prox("SUM_SQUARE", f_quad_form),
     prox("TOTAL_VARIATION_1D", lambda: cp.tv(x)),
     prox("ZERO", None, C_linear_equality),
     prox("ZERO", None, C_linear_equality_matrix_lhs),
@@ -204,6 +213,7 @@ PROX_TESTS = [
 PROX_TESTS += [
     #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
     #epigraph("EXP", None, lambda: [cp.exp(x) <= z])
+    epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(x) <= t]),
     epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
     epigraph("MAX", None, lambda: [cp.max_entries(x) <= t]),
     epigraph("NORM_1", None, lambda: [cp.norm1(x) <= t]),
@@ -213,10 +223,12 @@ PROX_TESTS += [
     epigraph("SUM_HINGE", None, lambda: [f_hinge() <= t]),
     epigraph("SUM_INV_POS", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     epigraph("SUM_KL_DIV", None, lambda: [cp.sum_entries(cp.kl_div(p1,q1)) <= t]),
+    epigraph("SUM_LARGEST", None, lambda: [cp.sum_largest(x, 4) <= t]),
     epigraph("SUM_LOGISTIC", None, lambda: [cp.sum_entries(cp.logistic(x)) <= t]),
     epigraph("SUM_NEG_ENTR", None, lambda: [cp.sum_entries(-cp.entr(x)) <= t]),
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
+    #epigraph("SUM_SQUARE", None, lambda: [f_quad_form() <= t]),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):

@@ -61,6 +61,7 @@ common_cc = \
 	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/affine.cc \
 	epsilon/prox/lambda_max.cc \
+	epsilon/prox/log_sum_exp.cc \
 	epsilon/prox/max.cc \
 	epsilon/prox/neg_log_det.cc \
 	epsilon/prox/newton.cc \

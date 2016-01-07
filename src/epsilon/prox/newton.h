@@ -7,9 +7,27 @@ class SmoothFunction {
  public:
   virtual double eval(const Eigen::VectorXd& x) const = 0;
   virtual Eigen::VectorXd gradf(const Eigen::VectorXd& x) const = 0;
-  virtual Eigen::VectorXd hessf(const Eigen::VectorXd& x) const = 0;
+  // return (I+lambda*H(x))^{-1}v
+  virtual Eigen::VectorXd hess_inv(const Eigen::VectorXd& lambda,
+      const Eigen::VectorXd& x, const Eigen::VectorXd& v) const = 0;
+  virtual Eigen::VectorXd hess_inv(double lambda,
+      const Eigen::VectorXd& x, const Eigen::VectorXd& v) const {
+    int n = x.rows();
+    return hess_inv(Eigen::VectorXd::Constant(n, lambda), x, v);
+  }
   virtual Eigen::VectorXd proj_feasible(const Eigen::VectorXd& x) const {
     return x;
+  }
+};
+
+class ElemwiseSmoothFunction : public SmoothFunction {
+ public:
+  virtual Eigen::VectorXd hessf(const Eigen::VectorXd& x) const = 0;
+  virtual Eigen::VectorXd hess_inv(const Eigen::VectorXd& lambda,
+      const Eigen::VectorXd& x, const Eigen::VectorXd& v) const override {
+    int n = x.rows();
+    Eigen::VectorXd hx = Eigen::VectorXd::Constant(n, 1.) + lambda.asDiagonal()*hessf(x);
+    return (v.array() / hx.array()).matrix();
   }
 };
 
@@ -52,6 +70,24 @@ class ImplicitNewtonEpigraph : public VectorProx {
 
  private:
   std::unique_ptr<SmoothFunction> f_;
+};
+
+class BisectionEpigraph : public VectorProx {
+ public:
+  BisectionEpigraph(std::unique_ptr<VectorProx> prox) : prox_(std::move(prox)) {}
+
+  void Init(const ProxOperatorArg& arg) override {
+    prox_->Init(arg);
+    VectorProx::Init(arg);
+  }
+
+ protected:
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) override;
+
+ private:
+  std::unique_ptr<VectorProx> prox_;
 };
 
 #endif  // EPSILON_PROX_NEWTON_H

@@ -8,7 +8,7 @@
 #include <cmath>
 
 // \sum_i exp(x(i))
-class SumExp final : public SmoothFunction {
+class SumExp final : public ElemwiseSmoothFunction {
 public:
   double eval(const Eigen::VectorXd &x) const override {
     int n = x.rows();
