@@ -84,6 +84,9 @@ def linear_map_name(linear_map, name_map):
         assert len(linear_map.arg) == 2
         return "kron(" + ", ".join(linear_map_name(arg, name_map)
                                    for arg in linear_map.arg) + ")"
+    elif linear_map.linear_map_type == LinearMap.TRANSPOSE:
+        assert len(linear_map.arg) == 1
+        return "transpose(" + linear_map_name(linear_map.arg[0], name_map) + ")"
 
     raise ValueError("unknown linear map type: %d" % linear_map.linear_map_type)
 
