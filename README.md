@@ -24,12 +24,11 @@ Once CVXPY is installed, Epsilon can be installed with pip
 #### Mac OS X
 
 ```
-pip install -U epopt
+pip install -U http://epopt.s3.amazonaws.com/epopt-0.2.4-cp27-none-macosx_10_11_x86_64.whl
 ```
 
 #### Linux
 
-Install the latest wheel directly (PyPi does not currently support linux wheels).
 
 ```
 pip install -U http://epopt.s3.amazonaws.com/epopt-0.2.4-cp27-none-linux_x86_64.whl
