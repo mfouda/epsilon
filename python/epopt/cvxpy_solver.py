@@ -56,8 +56,8 @@ def solve(cvxpy_prob, **kwargs):
 
     if params.verbose:
         print "Epsilon %s, prox-affine form" % __version__
-        print text_format.format_problem(problem)
-    log_verbose(params.verbose, "Epsilon compile time: %.4f seconds", t1-t0)
+        print text_format.format_problem(problem),
+    log_verbose(params.verbose, "Epsilon compile time: %.4f seconds\n", t1-t0)
 
     if len(problem.objective.arg) == 1 and not problem.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
