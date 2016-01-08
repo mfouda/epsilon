@@ -30,6 +30,7 @@ html_theme_options = {
     'github_user': 'mwytock',
     'github_repo': 'epsilon',
     'github_button': True,
+    'analytics_id': 'UA-72208233-1',
 }
 
 html_sidebars = {
