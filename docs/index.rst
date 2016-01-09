@@ -98,5 +98,5 @@ solver, refer to the full paper [#epsilon]_.
 
    quick_start
    proximal_operators
-   applications
+   examples
    benchmarks
