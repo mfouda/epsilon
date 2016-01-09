@@ -143,7 +143,7 @@ EXPRESSION_TYPES = (
     (lambda_max, lambda e: convert_generic(Expression.LAMBDA_MAX, e)),
     (log, lambda e: convert_generic(Expression.LOG, e)),
     (log_det, lambda e: convert_generic(Expression.LOG_DET, e)),
-    (log_sum_exp, lambda e: convert_axis(Expression.LOG_SUM_EXP, e)),
+    (log_sum_exp, lambda e: convert_generic(Expression.LOG_SUM_EXP, e)),
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
     (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
