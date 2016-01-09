@@ -19,15 +19,29 @@ def transform_abs(expr):
                expression.leq_constraint(expression.negate(x), t)]
 
 def transform_max_elementwise(expr):
-    t = epi_var(expr, "max")
+    t = epi_var(expr, "max_elementwise")
     return t, [expression.leq_constraint(x, t) for x in expr.arg]
 
 def transform_min_elementwise(expr):
-    t = epi_var(expr, "min")
+    t = epi_var(expr, "min_elementwise")
     return t, [expression.leq_constraint(t, x) for x in expr.arg]
 
 def transform_max_entries(expr):
-    return transform_max_elementwise(expr)
+    x = only_arg(expr)
+    m, n = dims(x)
+    t = epi_var(expr, "max_entries")
+    if not expr.has_axis:
+        return t, [expression.leq_constraint(x, t)]
+    if expr.axis == 0:
+        return t, [
+            expression.leq_constraint(
+                x, expression.multiply(expression.ones(m, 1), t))]
+    if expr.axis == 1:
+        return t, [
+            expression.leq_constraint(
+                x, expression.multiply(t, expression.ones(1, n)))]
+
+    raise TransformError("unknown axis attribute", expr)
 
 def transform_lambda_max(expr):
     t = epi_var(expr, "lambda_max", size=(1,1))

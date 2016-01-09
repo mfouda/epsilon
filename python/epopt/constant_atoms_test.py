@@ -217,10 +217,10 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda_min, (1, 1), [ [[5,7],[7,-3]] ], Constant([-7.06225775])),
-#     ], Maximize),
+#         (lambda x: sum_entries(x, axis=0), (1,2), [ [[-5,2],[-3,1]] ], Constant([[-3], [-2]])),
+#         (lambda x: sum_entries(x, axis=1), (2,1), [ [[-5,2],[-3,1]] ], Constant([-8, 3])),
+#     ], Minimize),
 # ]
-
 
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?
