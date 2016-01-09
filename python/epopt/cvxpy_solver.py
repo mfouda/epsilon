@@ -35,11 +35,6 @@ def cvxpy_status(solver_status):
         return OPTIMAL_INACCURATE
     return SOLVER_ERROR
 
-def log_verbose(verbose, msg, *args):
-    logging.info(msg, *args)
-    if verbose:
-        print msg % args
-
 def solve(cvxpy_prob, **kwargs):
     """Solve optimziation problem."""
 
@@ -55,9 +50,12 @@ def solve(cvxpy_prob, **kwargs):
     t1 = util.cpu_time()
 
     if params.verbose:
-        print "Epsilon %s, prox-affine form" % __version__
+        print "Epsilon %s" % __version__
+        print "Compiled prox-affine form:"
         print text_format.format_problem(problem),
-    log_verbose(params.verbose, "Epsilon compile time: %.4f seconds\n", t1-t0)
+        print "Epsilon compile time: %.4f seconds" % t1-t0
+        print
+    logging.info("Epsilon compile time: %.4f seconds", t1-t0)
 
     if len(problem.objective.arg) == 1 and not problem.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
@@ -77,7 +75,10 @@ def solve(cvxpy_prob, **kwargs):
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
     t2 = util.cpu_time()
-    log_verbose(params.verbose, "Epsilon solve time: %.4f seconds", t2-t1)
+
+    logging.info("Epsilon solve time: %.4f seconds", t2-t1)
+    if params.verbose:
+        print "Epsilon solve time: %.4f seconds" % t2-t1
 
     set_solution(cvxpy_prob, values)
     return status, cvxpy_prob.objective.value
