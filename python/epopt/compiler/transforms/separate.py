@@ -15,7 +15,7 @@ def replace_var(expr, old_var_id, new_var):
     if (expr.expression_type == Expression.VARIABLE and
         expr.variable.variable_id == old_var_id):
         return new_var
-    return expression.Expression.FromProto(
+    return expression.from_proto(
         expr.proto,
         [replace_var(arg, old_var_id, new_var) for arg in expr.arg])
 
@@ -119,7 +119,7 @@ def build_graph(problem):
     for f_expr in problem.objective.arg:
         add_function(f_expr, FUNCTION, graph)
     for constr_expr in problem.constraint:
-        add_function(f_expr, CONSTRAINT, graph)
+        add_function(constr_expr, CONSTRAINT, graph)
     return graph
 
 GRAPH_TRANSFORMS = [
@@ -131,6 +131,7 @@ GRAPH_TRANSFORMS = [
 def transform_problem(problem):
     validate.check_sum_of_prox(problem)
     graph = build_graph(problem)
+
     if not graph.nodes(VARIABLE):
         return problem
 

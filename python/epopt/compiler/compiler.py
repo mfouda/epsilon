@@ -1,11 +1,13 @@
 import logging
 
 from epopt.compiler.transforms import prox
+from epopt.compiler.transforms import split
 from epopt.compiler.transforms import separate
 from epopt import tree_format
 
 TRANSFORMS = [
     prox.transform_problem,
+    split.transform_problem,
     separate.transform_problem,
 ]
 
