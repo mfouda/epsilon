@@ -53,7 +53,7 @@ def solve(cvxpy_prob, **kwargs):
         print "Epsilon %s" % __version__
         print "Compiled prox-affine form:"
         print text_format.format_problem(problem),
-        print "Epsilon compile time: %.4f seconds" % t1-t0
+        print "Epsilon compile time: %.4f seconds" % (t1-t0)
         print
     logging.info("Epsilon compile time: %.4f seconds", t1-t0)
 
@@ -78,7 +78,7 @@ def solve(cvxpy_prob, **kwargs):
 
     logging.info("Epsilon solve time: %.4f seconds", t2-t1)
     if params.verbose:
-        print "Epsilon solve time: %.4f seconds" % t2-t1
+        print "Epsilon solve time: %.4f seconds" % (t2-t1)
 
     set_solution(cvxpy_prob, values)
     return status, cvxpy_prob.objective.value
