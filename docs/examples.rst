@@ -1,6 +1,9 @@
 Examples
 ========
 
+Here we provide examples of Epsilon on various optimization problems starting with
+a few of the classic datasets from machine learning.
+
 Classic ML datasets
 -------------------
 
