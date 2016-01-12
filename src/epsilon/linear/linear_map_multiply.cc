@@ -8,7 +8,7 @@
 
 extern "C" {
 
-void dgemm(
+void dgemm_(
     char *transa, char *transb, int *m, int *n, int *k,
     double *alpha, double *A, int *lda, double *B, int *ldb,
     double *beta, double *C, int *ldc);
@@ -32,11 +32,11 @@ LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
   const Eigen::MatrixXd& A = static_cast<const DenseMatrixImpl&>(lhs).dense();
   const Eigen::MatrixXd& B = static_cast<const DenseMatrixImpl&>(rhs).dense();
   Eigen::MatrixXd C(m, n);
-  dgemm(&trans, &trans, &m, &n, &k, &alpha,
-        const_cast<double*>(A.data()), &m,
-        const_cast<double*>(B.data()), &k,
-        &beta,
-        C.data(), &m);
+  dgemm_(&trans, &trans, &m, &n, &k, &alpha,
+	 const_cast<double*>(A.data()), &m,
+	 const_cast<double*>(B.data()), &k,
+	 &beta,
+	 C.data(), &m);
 
   return new DenseMatrixImpl(C);
 }
