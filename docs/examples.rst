@@ -4,12 +4,12 @@ Examples
 Classic ML datasets
 -------------------
 
-- `20 newsgroups text classification <newsgroups.html>`_
-- `MNIST image classification <mnist.html>`_
-- `TIMIT speech recognition <speech.html>`_
+- 20 newsgroups text classification
+- `MNIST image classification <_static/mnist.html>`_
+- TIMIT speech recognition
 
 
 More complex convex models
 --------------------------
 
-- `Forecasting electricity prices with multiple quantile regression <quantile.html>`_
+- `Forecasting electricity prices with multiple quantile regression <_static/ercot.html>`_

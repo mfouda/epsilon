@@ -23,7 +23,7 @@ todo_include_todos = False
 
 # HTML output
 html_theme = 'alabaster'
-html_static_path = ['_static']
+html_static_path = ['../notebooks']
 
 html_theme_options = {
     'description': 'Scalable convex programming with fast linear and proximal operators.',
