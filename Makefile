@@ -191,7 +191,7 @@ $(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
 	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) $(all_libs_obj) -o $@
 
 # Tests
-test: $(build_tests)
+test: all $(build_tests)
 	@$(tools_dir)/run_tests.sh $(build_tests)
 
 # NOTE(mwytock): Add -Wno-missing-field-intializers to this rule to avoid error
