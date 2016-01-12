@@ -84,6 +84,12 @@ def one_hot(i, n):
 def sum(n):
     return dense_matrix(constant.store(np.ones((1,n))))
 
+def sum_left(m, n):
+    return left_matrix_product(dense_matrix(constant.store(np.ones((1,m)))), n)
+
+def sum_right(m, n):
+    return right_matrix_product(dense_matrix(constant.store(np.ones((n,1)))), m)
+
 def promote(n):
     return dense_matrix(constant.store(np.ones((n,1))))
 

@@ -194,5 +194,5 @@ void ProxADMMSolver::LogStatus() {
       r.s_norm(),
       r.epsilon_dual());
   VLOG(1) << status;
-  LogVerbose(status);
+  if (params_.verbose()) LogVerbose(status);
 }

@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+import time
 
 import cvxpy as cp
 import numpy as np
@@ -106,19 +107,19 @@ def run_benchmarks(benchmarks, problems):
     for problem in problems:
         logging.debug("problem %s", problem.name)
 
-        t0 = benchmark_util.cpu_time()
+        t0 = time.time()
         np.random.seed(0)
         cvxpy_prob = problem.create()
-        t1 = benchmark_util.cpu_time()
+        t1 = time.time()
         logging.debug("creation time %f seconds", t1-t0)
 
         data = [problem.name]
         for benchmark in benchmarks:
             logging.debug("running %s", benchmark)
 
-            t0 = benchmark_util.cpu_time()
+            t0 = time.time()
             value = BENCHMARKS[benchmark](cvxpy_prob)
-            t1 = benchmark_util.cpu_time()
+            t1 = time.time()
 
             logging.debug("done %f seconds", t1-t0)
             yield benchmark, "%-15s" % problem.name, t1-t0, value

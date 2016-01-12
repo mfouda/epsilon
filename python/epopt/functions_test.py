@@ -17,11 +17,12 @@ alphas = np.linspace(1./(k+1), 1-1./(k+1), k)
 
 np.random.seed(0)
 X = np.random.randn(m,n)
-y_binary = np.random.randint(2, size=(m,))
+y_binary = np.random.randint(2, size=(m,))*2-1
 y_multi = np.random.randint(k, size=(m,))
 
-# TODO(mwytock,xflash96): need log-sum-exp prox
-# lambda: ep.softmax_loss(Theta, X, y_multi) + 1e-2*cp.sum_squares(Theta),
+# TODO(mwytock): Need to handle axis=1 parameter
+# lambda: ep.softmax_loss(Theta, X, y_multi),
+# lambda: ep.multiclass_hinge_loss(Theta, X, y_multi),
 
 FUNCTION_TESTS = [
     lambda: ep.hinge_loss(theta, X, y_binary),
@@ -31,9 +32,8 @@ FUNCTION_TESTS = [
 
 def run_function(f):
     prob = cp.Problem(cp.Minimize(f()))
-    logging.debug(prob)
-
     obj_val0 = prob.solve()
+
     status, obj_val1 = ep.solve(prob)
     tol = 1e-2
     assert_equal(status, OPTIMAL)

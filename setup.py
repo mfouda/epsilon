@@ -75,6 +75,7 @@ epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")
 solve = Extension(
     name = "epopt._solve",
     sources = ["python/epopt/solvemodule.cc"],
+    libraries = ["blas"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
     depends = [epsilon_lib],
@@ -114,7 +115,7 @@ setup(
     ]},
     ext_modules = [solve],
     install_requires = [
-        "cvxpy == 0.3.4",
+        "cvxpy == 0.3.5",
         "protobuf >= 3.0.0a3"
     ],
     cmdclass = {

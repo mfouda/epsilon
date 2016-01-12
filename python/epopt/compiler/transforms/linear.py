@@ -114,9 +114,25 @@ def transform_negate(expr):
         transform_expr(only_arg(expr)))
 
 def transform_sum(expr):
-    return expression.linear_map(
-        linear_map.sum(dim(only_arg(expr))),
-        transform_expr(only_arg(expr)))
+    x = only_arg(expr)
+    m, n = dims(x)
+
+    if not expr.has_axis:
+        return expression.linear_map(
+            linear_map.sum(m*n),
+            transform_expr(x))
+
+    if expr.axis == 0:
+        return expression.linear_map(
+            linear_map.sum_left(m, n),
+            transform_expr(x))
+
+    if expr.axis == 1:
+        return expression.linear_map(
+            linear_map.sum_right(m, n),
+            transform_expr(x))
+
+    raise TransformError("unknown axis attribute", expr)
 
 def transform_hstack(expr):
     m = dim(expr, 0)
