@@ -117,9 +117,9 @@ tests = \
 	epsilon/vector/block_vector_test
 
 deps = \
-	gflags \
+	protobuf \
 	glog \
-	protobuf
+	gflags
 
 libs = epsilon
 binaries = epsilon/benchmark
@@ -180,7 +180,7 @@ endif
 ifeq ($(SYSTEM),Darwin)
 all_libs_obj=$(deps_obj) -all_load $(libs_obj)
 else
-all_libs_obj=$(deps_obj) -Wl,--whole-archive $(libs_obj) -Wl,--no-whole-archive
+all_libs_obj=-Wl,--whole-archive $(libs_obj) -Wl,--no-whole-archive $(deps_obj)
 endif
 
 # Binaries
