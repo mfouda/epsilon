@@ -75,6 +75,7 @@ epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")
 solve = Extension(
     name = "epopt._solve",
     sources = ["python/epopt/solvemodule.cc"],
+    libraries = ["blas"],
     language = "c++",
     extra_compile_args = ["-std=c++14"],
     depends = [epsilon_lib],
