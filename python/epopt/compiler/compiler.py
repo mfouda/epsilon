@@ -5,9 +5,11 @@ from epopt.compiler.transforms import split
 from epopt.compiler.transforms import separate
 from epopt import tree_format
 
+# TODO(mwytock): Add this back
+# split.transform_problem,
+
 TRANSFORMS = [
     prox.transform_problem,
-    split.transform_problem,
     separate.transform_problem,
 ]
 

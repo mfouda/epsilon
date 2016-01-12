@@ -2,6 +2,7 @@
 
 import logging
 import numpy
+import time
 
 from cvxpy.settings import OPTIMAL, OPTIMAL_INACCURATE, SOLVER_ERROR
 
@@ -44,10 +45,10 @@ def solve(cvxpy_prob, **kwargs):
 
     params = solver_params_pb2.SolverParams(**kwargs)
 
-    t0 = util.cpu_time()
+    t0 = time.time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
     problem = compiler.compile_problem(problem)
-    t1 = util.cpu_time()
+    t1 = time.time()
 
     if params.verbose:
         print "Epsilon %s" % __version__
@@ -74,7 +75,7 @@ def solve(cvxpy_prob, **kwargs):
             params.SerializeToString(),
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
-    t2 = util.cpu_time()
+    t2 = time.time()
 
     logging.info("Epsilon solve time: %.4f seconds", t2-t1)
     if params.verbose:

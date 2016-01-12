@@ -5,9 +5,13 @@ import scipy.sparse as sp
 
 # Classification
 def hinge_loss(theta, X, y):
+    if not all(np.unique(y) == [-1, 1]):
+        raise ValueError("y must have binary labels in {-1,1}")
     return cp.sum_entries(cp.max_elemwise(1 - sp.diags([y],[0])*X*theta, 0))
 
 def logistic_loss(theta, X, y):
+    if not all(np.unique(y) == [-1, 1]):
+        raise ValueError("y must have binary labels in {-1,1}")
     return cp.sum_entries(cp.logistic(-sp.diags([y],[0])*X*theta))
 
 # Multiclass classification
