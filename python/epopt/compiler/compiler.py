@@ -1,8 +1,12 @@
 import logging
 
 from epopt.compiler.transforms import prox
+from epopt.compiler.transforms import split
 from epopt.compiler.transforms import separate
 from epopt import tree_format
+
+# TODO(mwytock): Add this back
+# split.transform_problem,
 
 TRANSFORMS = [
     prox.transform_problem,

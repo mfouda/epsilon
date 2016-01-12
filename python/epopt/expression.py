@@ -53,14 +53,6 @@ class Expression(object):
         else:
             return False
 
-    @staticmethod
-    def FromProto(proto, arg):
-        assert not proto.arg
-        expr = Expression()
-        expr.proto = proto
-        expr.arg = arg
-        return expr
-
     @property
     def dcp_props(self):
         if self._dcp_props is None:
@@ -85,6 +77,13 @@ class Expression(object):
 
     def __getattr__(self, name):
         return getattr(self.proto, name)
+
+def from_proto(proto, arg):
+    assert not proto.arg
+    expr = Expression()
+    expr.proto = proto
+    expr.arg = arg
+    return expr
 
 def is_scalar(a):
     return a[0]*a[1] == 1

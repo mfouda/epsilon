@@ -6,6 +6,15 @@
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
 
+extern "C" {
+
+void dgemm(
+    char *transa, char *transb, int *m, int *n, int *k,
+    double *alpha, double *A, int *lda, double *B, int *ldb,
+    double *beta, double *C, int *ldc);
+
+}  // extern "C"
+
 namespace linear_map {
 
 LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
@@ -13,9 +22,23 @@ LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+  char trans = 'N';
+  int m = lhs.m();
+  int n = rhs.n();
+  int k = rhs.m();
+  double alpha = 1;
+  double beta = 0;
+
+  const Eigen::MatrixXd& A = static_cast<const DenseMatrixImpl&>(lhs).dense();
+  const Eigen::MatrixXd& B = static_cast<const DenseMatrixImpl&>(rhs).dense();
+  Eigen::MatrixXd C(m, n);
+  dgemm(&trans, &trans, &m, &n, &k, &alpha,
+        const_cast<double*>(A.data()), &m,
+        const_cast<double*>(B.data()), &k,
+        &beta,
+        C.data(), &m);
+
+  return new DenseMatrixImpl(C);
 }
 
 LinearMapImpl* Multiply_DenseMatrix_SparseMatrix(
@@ -198,7 +221,9 @@ LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(
 LinearMapImpl* Multiply_KroneckerProduct_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const KroneckerProductImpl&>(lhs).AsSparse()*
+      static_cast<const DiagonalMatrixImpl&>(rhs).diagonal());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_ScalarMatrix(
