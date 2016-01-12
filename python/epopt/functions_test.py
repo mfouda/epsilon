@@ -17,7 +17,7 @@ alphas = np.linspace(1./(k+1), 1-1./(k+1), k)
 
 np.random.seed(0)
 X = np.random.randn(m,n)
-y_binary = np.random.randint(2, size=(m,))
+y_binary = np.random.randint(2, size=(m,))*2-1
 y_multi = np.random.randint(k, size=(m,))
 
 # TODO(mwytock): Need to handle axis=1 parameter
