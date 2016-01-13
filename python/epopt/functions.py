@@ -25,12 +25,10 @@ def softmax_loss(Theta, X, y):
             cp.sum_entries(cp.mul_elemwise(one_hot(y, k), X*Theta)))
 
 def multiclass_hinge_loss(Theta, X, y):
-    n, k = Theta.size
-    ones = np.ones((k,k))
+    k = Theta.size[1]
     Y = one_hot(y, k)
-    Z = X*Theta
-    ZY = cp.mul_elemwise(Y, Z)*ones
-    return cp.sum_entries(cp.max_entries(Z - ZY + (1-Y), axis=1))
+    return (cp.sum_entries(cp.max_entries(X*Theta + 1 - Y, axis=1)) -
+            cp.sum_entries(cp.mul_elemwise(Y, X*Theta)))
 
 # Other probabilistic models
 def quantile_loss(alphas, Theta, X, y):
