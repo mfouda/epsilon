@@ -119,7 +119,7 @@ def transform_sum(expr):
 
     if not expr.has_axis:
         return expression.linear_map(
-            linear_map.sum(m*n),
+            linear_map.sum(m, n),
             transform_expr(x))
 
     if expr.axis == 0:
