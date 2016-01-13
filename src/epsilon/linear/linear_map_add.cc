@@ -285,6 +285,7 @@ LinearMapBinaryOp kAddTable
 };
 
 LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+  VLOG(2) << "linear_map_add " << lhs.type() << " " << rhs.type();
   return LinearMap((*kAddTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 

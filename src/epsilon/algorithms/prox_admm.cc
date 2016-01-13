@@ -52,6 +52,7 @@ void ProxADMMSolver::InitProxOperators() {
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
 
+    VLOG(1) << "prox " << i << " build affine operator";
     AffineOperator H;
     for (int i = 0; i < f_expr.arg_size(); i++) {
       affine::BuildAffineOperator(
@@ -73,10 +74,11 @@ void ProxADMMSolver::InitProxOperators() {
 
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
     bool epigraph = f_expr.prox_function().epigraph();
-    VLOG(2) << "prox " << i << ", initializing "
+    VLOG(1) << "prox " << i << ", initializing "
             << ProxFunction::Type_Name(type);
     prox_.emplace_back(CreateProxOperator(type, epigraph));
     prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
+    VLOG(1) << "prox " << i << " init done";
 
     // TODO(mwytock): This is scaled by rho now, figure out what to do here
     AiT_.push_back(A.A.Transpose());
