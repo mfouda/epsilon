@@ -21,14 +21,15 @@ def one_hot(y, k):
 
 def softmax_loss(Theta, X, y):
     k = Theta.size[1]
+    Y = one_hot(y, k)
     return (cp.sum_entries(cp.log_sum_exp(X*Theta, axis=1)) -
-            cp.sum_entries(cp.mul_elemwise(one_hot(y, k), X*Theta)))
+            cp.sum_entries(cp.mul_elemwise(X.T.dot(Y), Theta)))
 
 def multiclass_hinge_loss(Theta, X, y):
     k = Theta.size[1]
     Y = one_hot(y, k)
     return (cp.sum_entries(cp.max_entries(X*Theta + 1 - Y, axis=1)) -
-            cp.sum_entries(cp.mul_elemwise(Y, X*Theta)))
+            cp.sum_entries(cp.mul_elemwise(X.T.dot(Y), Theta)))
 
 # Other probabilistic models
 def quantile_loss(alphas, Theta, X, y):
