@@ -24,7 +24,6 @@ todo_include_todos = False
 # HTML output
 html_theme = 'alabaster'
 html_static_path = ['../notebooks']
-
 html_theme_options = {
     'description': 'Scalable convex programming with fast linear and proximal operators.',
     'github_user': 'mwytock',
@@ -32,10 +31,10 @@ html_theme_options = {
     'github_button': True,
     'analytics_id': 'UA-72208233-1',
 }
-
 html_sidebars = {
     '**': [
         'about.html',
         'navigation.html',
     ]
 }
+html_show_copyright = False
