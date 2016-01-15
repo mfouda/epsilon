@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>mnist</title>
+<title>Epsilon - MNIST image classification</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -128,14 +128,14 @@ div#notebook {
   div.cell {
     display: block;
     page-break-inside: avoid;
-  } 
-  div.output_wrapper { 
-    display: block;
-    page-break-inside: avoid; 
   }
-  div.output { 
+  div.output_wrapper {
     display: block;
-    page-break-inside: avoid; 
+    page-break-inside: avoid;
+  }
+  div.output {
+    display: block;
+    page-break-inside: avoid;
   }
 }
 </style>
@@ -176,14 +176,14 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="MNIST-image-classification">MNIST image classification<a class="anchor-link" href="#MNIST-image-classification">&#182;</a></h1><p>In this example, we consider the classic machine learning dataset MNIST and the task of classifying handwritten digits. By modern computer vision standards this dataset is considered small, yet it is sufficiently large that many standard classifiers (e.g. those in the Python package <code>sklearn</code>) require significant time to train a model. Nonetheless, <a href="http://epopt.io/">Epsilon</a> is able to fit a model that achieves near state-of-the-art accuracy in a few minutes.</p>
 <p><img src="mnist.png" /></p>
-<p>The standard task is to train a multiclass classifier that can correctly identify digits from their pixel intensity values. For the purposes of this example, we simplify this task slightly and instead consider the binary classification task of even vs. odd. To build our classifier we have a training set of 60K images of dimension 28x28 and a test set of 10K images.</p>
+<p>The standard task is to train a multiclass classifier that can correctly identify digits from their pixel intensity values. We will build a classifier to perform this task using <a href="http://jmlr.csail.mit.edu/papers/volume2/crammer01a/crammer01a.pdf">mutlticlass hinge loss</a>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="o">%</span><span class="k">matplotlib</span> inline
@@ -208,7 +208,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Hinge-loss-and-support-vector-machines">Hinge loss and support vector machines<a class="anchor-link" href="#Hinge-loss-and-support-vector-machines">&#182;</a></h2>
+<h2 id="Multiclass-hinge-loss">Multiclass hinge loss<a class="anchor-link" href="#Multiclass-hinge-loss">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -217,29 +217,35 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Mathematically we will set up our problem with a set of training examples $(X, y)$ where $y \in \{-1,1\}^m$ is the set of binary labels and $X$ is a matrix containing $m$ training examples with $n$ input features (the features for each, $x_i \in \mathbb{R}^n$, are arranged as the rows of matrix $X \in \mathbb{R}^{m \times n}$). Given this training set, we will fit the parameters of our model by minimizing a loss function over the training data
+<p>The multiclass hinge loss is a piecewise linear and a convex surrogate for the misclassification error in a multiclass problem; given a feature vector $x \in \mathbb{R}^n$ and label $y \in \{0,\ldots,k\}$ we incur loss
 $$
-\DeclareMathOperator{\minimize}{minimize} \minimize \;\; \ell(\theta; X, y), 
+\max_j \; \{\theta_j^Tx + 1 - \delta_{j,y} \} - \theta_y^Tx
 $$
-where $\theta \in \mathbb{R}^n$ denotes model parameters. A natural loss for classification is the 0-1 loss: we incur a penalty of 1 for each incorrect classification and 0 otherwise. This loss function is nonconvex and so instead we minimize a convex surrogate, the <em>hinge loss</em>
-$$
-\ell(\theta; X, y) = \sum_{i=1}^m \max \{0, 1 - y_i(\theta^Tx_i) \}.
-$$
-The hinge loss is in fact the tightest possible convex surrogate for the 0-1 loss as can be seen from the following picture:</p>
+where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,q}$ is equal to $1$ if $p = q$ and $0$ otherwise. Conceptually, ...</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In order to minimize this function using CVXPY and Epsilon, we must write down its definition in matrix form. For convenience, Epsilon provides the <code>multiclass_hinge_loss()</code> function as well as several other common loss functions occuring in machine learning, see <a href="https://github.com/mwytock/epsilon/blob/master/python/epopt/functions.py"><code>functions.py</code></a> for details.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="c"># z = y*p is the product of the label and the prediction, i.e. z&gt;0 is a correct prediction</span>
-<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">_</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">((</span><span class="s">&quot;0-1 loss&quot;</span><span class="p">,</span> <span class="s">&quot;hinge loss&quot;</span><span class="p">))</span>
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">Theta</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_entries</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">max_entries</span><span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="n">Theta</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+            <span class="n">cp</span><span class="o">.</span><span class="n">sum_entries</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">mul_elemwise</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="n">Theta</span><span class="p">)))</span>
 </pre></div>
 
 </div>
@@ -251,140 +257,10 @@ The hinge loss is in fact the tightest possible convex surrogate for the 0-1 los
 
 
 <div class="output_area"><div class="prompt"></div>
-
-
-<div class="output_png output_subarea ">
-<img src="data:image/png;base64,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
-"
->
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+</pre>
 </div>
-
 </div>
 
 </div>
@@ -396,67 +272,44 @@ woFuZlYnHOhmZnXi/wN0X7sgFOEXkwAAAABJRU5ErkJggg==
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In order to minimize this function using CVXPY and Epsilon, we must write down its definition which is a single line of Python. For convenience, Epsilon provides the <code>hinge_loss()</code> function as well as several others, see <a href="https://github.com/mwytock/epsilon/blob/master/python/epopt/functions.py"><code>functions.py</code></a> for more details.</p>
+<p>We will also add a bit of $\ell_2$-regularization on the parameter vectors $\theta_1, \ldots, \theta_k$ to prevent over-fitting. The final optimization problem is
+$$
+\minimize \;\; \sum_{i=1}^m \left( \max_j \; \{\theta_j^Tx_i + 1 - \delta_{j,y_i} \} - \theta_{y_i}^Tx_i \right) + \sum_{j=1}^k \lambda \|\theta_j\|_2^2
+$$
+where the parameter $\lambda > 0$ controls the regularization. We set up the problem in CVXPY and solve with Epsilon as follows:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">hinge_loss</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">sum_entries</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">max_elemwise</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">diags</span><span class="p">([</span><span class="n">y</span><span class="p">],[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">X</span><span class="o">*</span><span class="n">theta</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We will also add a bit of $\ell_2$-regularization on the parameter vector $\theta$, the final optimization problem is
-$$
-\minimize \;\; \ell(\theta; X, y) + \lambda \|\theta\|_2^2
-$$
-where the parameter $\lambda > 0$ controls the amount of regularization (and therefore, the bias-variance tradeoff between over/underfitting the data). Formulating this problem in CVXPY and solving it with Epsilon is done as follows:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="c"># Problem data</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;X&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>                  <span class="c"># raw pixel data scaled to [0, 1]</span>
-<span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span>  <span class="c"># labels converted to {-1,1}</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;X&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>   <span class="c"># raw pixel data scaled to [0, 1]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>  <span class="c"># labels {0, ..., 9}</span>
 <span class="n">Xtest</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Xtest&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>
-<span class="n">ytest</span> <span class="o">=</span> <span class="p">(</span><span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Ytest&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span>
+<span class="n">ytest</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Ytest&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
 
 <span class="c"># Parameters</span>
 <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
-<span class="n">theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">Theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
 <span class="n">lam</span> <span class="o">=</span> <span class="mi">1</span>
 
 <span class="c"># Form problem with CVXPY and solve with Epsilon</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">hinge_loss</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
 <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
 <span class="n">ep</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="c"># Get solution and evaluate 0-1 error</span>
-<span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>    
+<span class="c"># Get solution and compute train/test error</span>
+<span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
-<span class="n">theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta0</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">((</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta0</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ytest</span><span class="p">)</span>
+<span class="n">Theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">ytest</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -473,18 +326,21 @@ where the parameter $\lambda > 0$ controls the amount of regularization (and the
 Compiled prox-affine form:
 objective:
   add(
-    sum_hinge(var(x)),
-    sum_square(var(y)))
+    affine(dense(A)*var(x)),
+    non_negative(var(y)),
+    affine(kron(dense(B), dense(C))*diag(D)*var(Z)),
+    sum_square(var(W)))
 
 constraints:
-  zero(add(add(dense(a)*1.00, scalar(-1.00)*dense(B)*var(y)), scalar(-1.00)*var(x)))
-Epsilon compile time: 3.1065 seconds
+  zero(add(add(kron(transpose(dense(B)), scalar(1.00))*var(x), scalar(-1.00)*add(kron(scalar(1.00), dense(K))*var(W), dense(e)*1.00, scalar(-1.00)*const(F))), scalar(-1.00)*var(y)))
+  zero(add(var(Z), scalar(-1.00)*var(W)))
+Epsilon compile time: 1.4502 seconds
 
-iter=0 residuals primal=1.52e+02 [2.47e+00] dual=1.92e+02 [1.55e+00]
-iter=70 residuals primal=8.04e-01 [6.23e+00] dual=1.13e+00 [1.28e+00]
-Epsilon solve time: 24.0632 seconds
-Train error: 0.0961833333333
-Test error: 0.0979
+iter=0 residuals primal=1.29e+05 [1.29e+03] dual=2.24e+02 [1.29e+03]
+iter=40 residuals primal=9.62e+00 [1.02e+01] dual=2.54e+01 [1.29e+03]
+Epsilon solve time: 38.7465 seconds
+Train error: 0.0853166666667
+Test error: 0.0891
 </pre>
 </div>
 </div>
@@ -498,11 +354,7 @@ Test error: 0.0979
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Thus, a simple linear classifier on pixel intensities achieves a 9.8% error rate on this task. This forms a reasonable baseline, but raw pixel values are in fact poor predictors and we can do much better by considering a nonlinear decision functions which we explore next.</p>
-<p>First, its worth noting that the hinge loss also naturally arises in the derivation of  <a href="https://en.wikipedia.org/wiki/Support_vector_machine">support vector machines</a>. In addition, SVMs allow efficient learning of non-linear classification boundaries via their dual formulation and the "kernel trick". In fact, SVMs with Gaussian kernel<br>
-$$ k(x, x') = \exp\left( \frac{-\|x - x'\|^2}{2\sigma^2}  \right) $$
-are known to perform very well on MNIST.</p>
-<p>Unfortunately as the size of the training set is 60K, explicitly instantiating the kernel matrix (60K x 60K) is prohibitively expensive for this problem. Instead, we will use a recent method based on random Fourier features which approximates the kernel distance function.</p>
+<p>Thus, a simple linear classifier on pixel intensities achieves a 8.9% error rate on this task. This forms a reasonable baseline, but raw pixel values are in fact poor predictors and we can do much better by considering a nonlinear decision functions which we explore next.</p>
 
 </div>
 </div>
@@ -521,33 +373,32 @@ are known to perform very well on MNIST.</p>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Rather remarkably, it turns out that transforming the input data with random features
+<p>It turns out we can fit a non-linear decision function by approximating a Gaussian kernel using random Fourier features. In particular if we transform the input data by
 $$
 z(x) = \cos(Wx + b)
 $$
-with $W \in \mathbb{R}^{d \times n}$ and $b \in \mathbb{R}^d$; The elements of $W$ are sampled from a zero-mean Normal distribution $\mathcal{N}(0, \sigma^2)$ and the elements of $b$ are chosen uniformly at random from $[0, 2\pi]$. When the input features are transformed in this fashion, their inner product approximates the Gaussian kernel
+with $W \in \mathbb{R}^{d \times n}$ with elements sampled from a zero-mean Normal distribution and $b \in \mathbb{R}^d$ with chosen uniformly at random from $[0, 2\pi]$, then
 $$
-z(x)^Tz(x') \approx k(x, x'),
+z(x)^Tz(x') \approx \exp \left( \frac{-\|x - x'\|_2^2}{2} \right),
 $$
-for the complete mathematical details see <a href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Rahimi and Recht (2007)</a>.</p>
-<p>Our implementation of this idea (e.g. the use of PCA, median trick) is inspired by a <a href="http://arxiv.org/abs/1310.1949">recent paper</a> (<a href="https://github.com/fest/secondorderdemos">code</a>) which reports near state-of-the-art performance on the MNIST digit classification class.</p>
-<p>These transformations are straightforward to implement in a few lines of Python:</p>
+for details see <a href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Rahimi and Recht (2007)</a>.</p>
+<p>We will use this transformation to build a better classifier following this <a href="http://arxiv.org/abs/1310.1949">Agarwal et al. (2014)</a> (<a href="https://github.com/fest/secondorderdemos">code</a>). This is straightforward to implement in a few lines of Python:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[37]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">median_dist</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute the approximate median distance by sampling pairs.&quot;&quot;&quot;</span>
     <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">20</span>  <span class="c"># 1M random points</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Xp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
-    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Xp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">Xp</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">Xp</span><span class="p">[</span><span class="n">j</span><span class="p">,:])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-    
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">j</span><span class="p">,:])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+
 <span class="k">def</span> <span class="nf">pca</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Perform centered PCA.&quot;&quot;&quot;</span>
     <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -561,7 +412,7 @@ for the complete mathematical details see <a href="http://www.eecs.berkeley.edu/
 
 <span class="c"># Random features</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">4000</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">Xp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span>
 <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
 <span class="n">Xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Xtest&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
@@ -577,30 +428,31 @@ for the complete mathematical details see <a href="http://www.eecs.berkeley.edu/
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Given our transformed dataset we now have a larger feature matrix ($X \in \mathbb{R}^{60000 \times 4000}$) but we fit the model using the same method consisting of hinge loss and $\ell_2$-regularization.</p>
+<p>Given our transformed dataset we now have significantly more features (the feature matrix, $X \in \mathbb{R}^{60000 \times 4000}$) but we still fit the model using the same method CVXPY/Epsilon and the same method as before:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[41]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="c"># Parameters</span>
 <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
-<span class="n">theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">Theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
 <span class="n">lam</span> <span class="o">=</span> <span class="mi">10</span>
 
 <span class="c"># Form problem with CVXPY and solve with Epsilon</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">hinge_loss</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
 <span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
 <span class="n">ep</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="c"># Get solution</span>
-<span class="n">theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta0</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">((</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta0</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ytest</span><span class="p">)</span>
+<span class="c"># Get solution and compute train/test error</span>
+<span class="n">Theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">ytest</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -617,18 +469,21 @@ for the complete mathematical details see <a href="http://www.eecs.berkeley.edu/
 Compiled prox-affine form:
 objective:
   add(
-    sum_hinge(var(x)),
-    sum_square(var(y)))
+    affine(dense(A)*var(x)),
+    non_negative(var(y)),
+    affine(kron(dense(B), dense(C))*diag(D)*var(Z)),
+    sum_square(var(W)))
 
 constraints:
-  zero(add(add(dense(a)*1.00, scalar(-1.00)*dense(B)*var(y)), scalar(-1.00)*var(x)))
-Epsilon compile time: 9.6309 seconds
+  zero(add(add(kron(transpose(dense(B)), scalar(1.00))*var(x), scalar(-1.00)*add(kron(scalar(1.00), dense(K))*var(W), dense(e)*1.00, scalar(-1.00)*const(F))), scalar(-1.00)*var(y)))
+  zero(add(var(Z), scalar(-1.00)*var(W)))
+Epsilon compile time: 9.8725 seconds
 
-iter=0 residuals primal=7.23e+01 [2.47e+00] dual=2.33e+02 [1.07e+00]
-iter=80 residuals primal=4.63e-01 [6.14e+00] dual=1.54e+00 [1.59e+00]
-Epsilon solve time: 136.8507 seconds
-Train error: 0.00685
-Test error: 0.0129
+iter=0 residuals primal=7.12e+05 [7.12e+03] dual=2.71e+02 [7.12e+03]
+iter=30 residuals primal=6.94e+00 [7.43e+00] dual=1.70e+01 [7.12e+03]
+Epsilon solve time: 196.5668 seconds
+Train error: 0.00501666666667
+Test error: 0.0157
 </pre>
 </div>
 </div>
@@ -642,7 +497,7 @@ Test error: 0.0129
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Our classifier now achieves an error rate of 1.3% improving significantly over the baseline. The current version of Epsilon (0.2.4) is able to fit the parameters of this model in &lt;2.5 minutes which is itself significantly faster than several of the dedicated classifier implementations available in standard packages (e.g. Python's <code>sklearn</code>).</p>
+<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline. Critically, it only 3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
 
 </div>
 </div>
@@ -661,14 +516,7 @@ Test error: 0.0129
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This example provides a quick introduction to achieving very good results on the classical machine learning task MNIST. <a href="http://epopt.io/">Epsilon</a> along with the environment provided by <a href="http://cvxpy.org">CVXPY</a> and <a href="http://numpy.org">NumPy</a> make it very fast to iterate on this classifier, e.g. we could expeirment with different random features, add $\ell_1$-regularization instead of or in addition to the $\ell_2$-regularization, perform more careful cross-validation, etc...</p>
-<p>In addition to these refinements on this application, there are several items on the Epsilon roadmap which are relevant here</p>
-<ul>
-<li>proximal operators for multiclass classification (e.g. multiclass hinge loss, softmax, etc.) - would allow us to efficiently solve the standard MNIST problem directly </li>
-<li>warm start - would allow for more efficient cross-validation by caching work across nearly identical problem instances </li>
-<li>multicore support - splitting the data matrix by row would likely improve convergence speed significantly</li>
-<li>GPU support - in this problem the main bottleneck is dense linear algebra---this could be much faster with a GPU implementation</li>
-</ul>
+<p>This example provides a quick introduction to achieving very good results on the classical machine learning task MNIST using <a href="http://epopt.io/">Epsilon</a>. Its important to note that this environment provided by <a href="http://cvxpy.org">CVXPY</a> and <a href="http://numpy.org">NumPy</a> other numerical Python packages makes it very fast to iterate on this classifier, e.g. we could expeirment with different random features, add $\ell_1$-regularization instead of or in addition to the $\ell_2$-regularization, perform more careful cross-validation, etc...</p>
 
 </div>
 </div>

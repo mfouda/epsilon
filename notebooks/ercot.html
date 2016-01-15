@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>ercot</title>
+<title>Epsilon - Forecasting electricity prices with multiple quantile regression</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -128,14 +128,14 @@ div#notebook {
   div.cell {
     display: block;
     page-break-inside: avoid;
-  } 
-  div.output_wrapper { 
-    display: block;
-    page-break-inside: avoid; 
   }
-  div.output { 
+  div.output_wrapper {
     display: block;
-    page-break-inside: avoid; 
+    page-break-inside: avoid;
+  }
+  div.output {
+    display: block;
+    page-break-inside: avoid;
   }
 }
 </style>
@@ -1666,9 +1666,9 @@ QmCC
 <div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">plot_quantiles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">quantiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span> <span class="n">quantiles</span><span class="p">[:,</span><span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> 
+        <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span> <span class="n">quantiles</span><span class="p">[:,</span><span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                         <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
-        
+
 <span class="n">coverages</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">]</span>
 <span class="n">alphas</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">coverages</span><span class="p">]</span> <span class="o">+</span>
                 <span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">coverages</span><span class="p">]</span> <span class="o">+</span>
@@ -1969,16 +1969,16 @@ soTlAckXYnkAAAAASUVORK5CYII=
 <span class="c"># Periodic time features</span>
 <span class="k">def</span> <span class="nf">minute_of_day</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="o">/</span><span class="mf">24.</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">minute</span><span class="o">/</span><span class="mf">24.</span><span class="o">/</span><span class="mf">60.</span>
-<span class="k">def</span> <span class="nf">hour_of_week</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span> 
-    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">dayofweek</span><span class="o">/</span><span class="mf">7.</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="o">/</span><span class="mf">7.</span><span class="o">/</span><span class="mf">24.</span>    
-<span class="k">def</span> <span class="nf">day_of_year</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span> 
+<span class="k">def</span> <span class="nf">hour_of_week</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">dayofweek</span><span class="o">/</span><span class="mf">7.</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">hour</span><span class="o">/</span><span class="mf">7.</span><span class="o">/</span><span class="mf">24.</span>
+<span class="k">def</span> <span class="nf">day_of_year</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">dayofyear</span><span class="o">/</span><span class="mf">365.</span>
-    
+
 <span class="n">time_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">minute_of_day</span><span class="p">,</span> <span class="n">hour_of_week</span><span class="p">,</span> <span class="n">day_of_year</span><span class="p">]</span>
 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">time_features</span><span class="p">:</span>
     <span class="n">data</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s">&quot;_cos&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
     <span class="n">data</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s">&quot;_sin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
-    
+
 <span class="c"># Autoregressive features</span>
 <span class="n">ar_features</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="s">&quot;da_price&quot;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">12</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span>
@@ -1988,7 +1988,7 @@ soTlAckXYnkAAAAASUVORK5CYII=
 <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">shifts</span> <span class="ow">in</span> <span class="n">ar_features</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">shifts</span><span class="p">:</span>
         <span class="n">data</span><span class="p">[</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">_shift</span><span class="si">%+d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delta</span><span class="p">)]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span>
-        
+
 <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
@@ -2113,8 +2113,8 @@ In addition, in order to reduce computation time we fit the more sophisticated m
 <div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">sqdist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Squared euclidean distance for two sets of n-dimensional points&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> 
-        <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span> 
+        <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
         <span class="mi">2</span><span class="o">*</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
 
 <span class="n">X</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">selected</span><span class="p">)</span>

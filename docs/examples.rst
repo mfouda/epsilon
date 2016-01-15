@@ -1,16 +1,21 @@
 Examples
 ========
 
-Here we provide examples of Epsilon on various optimization problems starting with
-a few of the classic datasets from machine learning.
+Examples of using Epsilon to solve various optimization problems, especially
+those arising in statistics in machine learning. On :ref:`classic`, Epsilon
+rapidly reproduces (near) state-of-the-art results, while :ref:`complex`
+demonstrate the expressive power of declarative convex programming in developing
+sophisticated models.
+
+.. _classic:
 
 Classic ML datasets
 -------------------
 
-- 20 newsgroups text classification
+- `20 newsgroups text classification <_static/newsgroups.html>`_
 - `MNIST image classification <_static/mnist.html>`_
-- TIMIT speech recognition
 
+.. _complex:
 
 More complex convex models
 --------------------------
