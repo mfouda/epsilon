@@ -274,7 +274,7 @@ where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>We will also add a bit of $\ell_2$-regularization on the parameter vectors $\theta_1, \ldots, \theta_k$ to prevent over-fitting. The final optimization problem is
 $$
-\minimize \;\; \sum_{i=1}^m \left( \max_j \; \{\theta_j^Tx_i + 1 - \delta_{j,y_i} \} - \theta_{y_i}^Tx_i \right) + \sum_{j=1}^k \lambda \|\theta_j\|_2^2
+\DeclareMathOperator{\minimize}{minimize} \minimize \;\; \sum_{i=1}^m \left( \max_j \; \{\theta_j^Tx_i + 1 - \delta_{j,y_i} \} - \theta_{y_i}^Tx_i \right) + \sum_{j=1}^k \lambda \|\theta_j\|_2^2
 $$
 where the parameter $\lambda > 0$ controls the regularization. We set up the problem in CVXPY and solve with Epsilon as follows:</p>
 
@@ -497,26 +497,7 @@ Test error: 0.0157
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline. Critically, it only 3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Conclusions">Conclusions<a class="anchor-link" href="#Conclusions">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>This example provides a quick introduction to achieving very good results on the classical machine learning task MNIST using <a href="http://epopt.io/">Epsilon</a>. Its important to note that this environment provided by <a href="http://cvxpy.org">CVXPY</a> and <a href="http://numpy.org">NumPy</a> other numerical Python packages makes it very fast to iterate on this classifier, e.g. we could expeirment with different random features, add $\ell_1$-regularization instead of or in addition to the $\ell_2$-regularization, perform more careful cross-validation, etc...</p>
+<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline. Critically, it only takes &lt;3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
 
 </div>
 </div>
