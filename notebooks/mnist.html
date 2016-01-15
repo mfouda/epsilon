@@ -217,20 +217,11 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The multiclass hinge loss is a piecewise linear and a convex surrogate for the misclassification error in a multiclass problem; given a feature vector $x \in \mathbb{R}^n$ and label $y \in \{0,\ldots,k\}$ we incur loss
+<p>The multiclass hinge loss is a piecewise linear convex surrogate for the misclassification error in a multiclass problem; given a feature vector $x \in \mathbb{R}^n$ and label $y \in \{0,\ldots,k\}$ we incur loss
 $$
 \max_j \; \{\theta_j^Tx + 1 - \delta_{j,y} \} - \theta_y^Tx
 $$
-where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,q}$ is equal to $1$ if $p = q$ and $0$ otherwise. Conceptually, ...</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
+where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,q}$ is equal to $1$ if $p = q$ and $0$ otherwise.</p>
 <p>In order to minimize this function using CVXPY and Epsilon, we must write down its definition in matrix form. For convenience, Epsilon provides the <code>multiclass_hinge_loss()</code> function as well as several other common loss functions occuring in machine learning, see <a href="https://github.com/mwytock/epsilon/blob/master/python/epopt/functions.py"><code>functions.py</code></a> for details.</p>
 
 </div>
@@ -381,8 +372,7 @@ with $W \in \mathbb{R}^{d \times n}$ with elements sampled from a zero-mean Norm
 $$
 z(x)^Tz(x') \approx \exp \left( \frac{-\|x - x'\|_2^2}{2} \right),
 $$
-for details see <a href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Rahimi and Recht (2007)</a>.</p>
-<p>We will use this transformation to build a better classifier following this <a href="http://arxiv.org/abs/1310.1949">Agarwal et al. (2014)</a> (<a href="https://github.com/fest/secondorderdemos">code</a>). This is straightforward to implement in a few lines of Python:</p>
+for details see <a href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Rahimi and Recht (2007)</a>. We will use this transformation to build a better classifier, with preprocessing following that of <a href="http://arxiv.org/abs/1310.1949">Agarwal et al. (2014)</a>, <a href="https://github.com/fest/secondorderdemos">code available here</a>. This is straightforward to implement in a few lines of Python:</p>
 
 </div>
 </div>
@@ -497,7 +487,8 @@ Test error: 0.0157
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline. Critically, it only takes &lt;3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
+<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline.</p>
+<p>Critically, it only takes &lt;3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
 
 </div>
 </div>
