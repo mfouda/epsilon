@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>mnist</title>
+<title>newsgroups</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -174,28 +174,28 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="MNIST-image-classification">MNIST image classification<a class="anchor-link" href="#MNIST-image-classification">&#182;</a></h1><p>In this example, we consider the classic machine learning dataset MNIST and the task of classifying handwritten digits. By modern computer vision standards this dataset is considered small, yet it is sufficiently large that many standard classifiers (e.g. those in the Python package <code>sklearn</code>) require significant time to train a model. Nonetheless, <a href="http://epopt.io/">Epsilon</a> is able to fit a model that achieves near state-of-the-art accuracy in a few minutes.</p>
-<p><img src="mnist.png" /></p>
-<p>The standard task is to train a multiclass classifier that can correctly identify digits from their pixel intensity values. We will build a classifier to perform this task using <a href="http://jmlr.csail.mit.edu/papers/volume2/crammer01a/crammer01a.pdf">mutlticlass hinge loss</a>.</p>
+<h1 id="20-newsgroups-text-classification">20 newsgroups text classification<a class="anchor-link" href="#20-newsgroups-text-classification">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this example we consider a multiclass text classification problem based on the <a href="http://qwone.com/~jason/20Newsgroups/">20 newsgroups dataset</a> which contains the text of nearly 20,000 newsgroup posts partitioned across 20 different newsgroups. We fit our classifier by minimizing <a href="http://jmlr.csail.mit.edu/papers/volume2/crammer01a/crammer01a.pdf">multiclass hinge loss</a> combined with <a href="https://web.stanford.edu/~hastie/Papers/B67.2%20(2005)%20301-320%20Zou%20&%20Hastie.pdf">elastic net</a> regularization which combines the $\ell_1$- and $\ell_2$-penalty.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[39]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="o">%</span><span class="k">matplotlib</span> inline
-<span class="kn">import</span> <span class="nn">io</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
+<div class=" highlight hl-ipython2"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">cvxpy</span> <span class="kn">as</span> <span class="nn">cp</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="kn">as</span> <span class="nn">LA</span>
 <span class="kn">import</span> <span class="nn">epopt</span> <span class="kn">as</span> <span class="nn">ep</span>
-
-<span class="n">mnist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s">&quot;http://epopt.s3.amazonaws.com/mnist.npz&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
 </pre></div>
 
 </div>
@@ -208,7 +208,33 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Multiclass-hinge-loss">Multiclass hinge loss<a class="anchor-link" href="#Multiclass-hinge-loss">&#182;</a></h2>
+<p>This dataset is readily available from <code>sklearn</code> Python package, we load the training and test data using the 60/40% "by date" split which makes our results comparable to existing published work.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_20newsgroups</span>
+
+<span class="n">newsgroups_train</span> <span class="o">=</span> <span class="n">fetch_20newsgroups</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s">&quot;train&quot;</span><span class="p">)</span>
+<span class="n">newsgroups_test</span> <span class="o">=</span> <span class="n">fetch_20newsgroups</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s">&quot;test&quot;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Features">Features<a class="anchor-link" href="#Features">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -217,19 +243,151 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The multiclass hinge loss is a piecewise linear convex surrogate for the misclassification error in a multiclass problem; given a feature vector $x \in \mathbb{R}^n$ and label $y \in \{0,\ldots,k\}$ we incur loss
-$$
-\max_j \; \{\theta_j^Tx + 1 - \delta_{j,y} \} - \theta_y^Tx
-$$
-where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,q}$ is equal to $1$ if $p = q$ and $0$ otherwise.</p>
-<p>In order to minimize this function using CVXPY and Epsilon, we must write down its definition in matrix form. For convenience, Epsilon provides the <code>multiclass_hinge_loss()</code> function as well as several other common loss functions occuring in machine learning, see <a href="https://github.com/mwytock/epsilon/blob/master/python/epopt/functions.py"><code>functions.py</code></a> for details.</p>
+<p>The newsgroups data is simply the raw text:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[43]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">print</span> <span class="n">newsgroups_train</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>From: lerxst@wam.umd.edu (where&apos;s my thing)
+Subject: WHAT car is this!?
+Nntp-Posting-Host: rac3.wam.umd.edu
+Organization: University of Maryland, College Park
+Lines: 15
+
+ I was wondering if anyone out there could enlighten me on this car I saw
+the other day. It was a 2-door sports car, looked to be from the late 60s/
+early 70s. It was called a Bricklin. The doors were really small. In addition,
+the front bumper was separate from the rest of the body. This is 
+all I know. If anyone can tellme a model name, engine specs, years
+of production, where this car is made, history, or whatever info you
+have on this funky looking car, please e-mail.
+
+Thanks,
+- IL
+   ---- brought to you by your neighborhood Lerxst ----
+
+
+
+
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Thus, the first step is to convert this to a set of numerical features $x_1,\ldots,x_m \in \mathbb{R}^n$ that we can use for classification. We simply employ the standard tf-idf weighting scheme which weights terms by their term frequency times their inverse document frequency.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[35]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="kn">from</span> <span class="nn">sklearn.feature_extraction</span> <span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">vectorizer</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">TfidfVectorizer</span><span class="p">(</span><span class="n">max_features</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">newsgroups_train</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">newsgroups_train</span><span class="o">.</span><span class="n">target</span>
+<span class="n">Xtest</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">newsgroups_test</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="n">ytest</span> <span class="o">=</span> <span class="n">newsgroups_test</span><span class="o">.</span><span class="n">target</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>For the purposes of this example, we restrict ourselves to the top 5000 terms which gives a training set of size $X \in \mathbb{R}^{11314 \times 5000}$:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[46]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">print</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>(11314, 5000)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Multiclass-hinge-loss-with-elastic-net-regularization">Multiclass hinge loss with elastic net regularization<a class="anchor-link" href="#Multiclass-hinge-loss-with-elastic-net-regularization">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now, we fit the classifier by minimizing multiclass hinge loss combined with elastic net regularization. Let $\theta_j$ for $j = 1,\ldots,20$ denote the weights for class $j$, we fit the model by solving the optimization problem
+$$
+\DeclareMathOperator{\minimize}{minimize} \minimize \;\; \sum_{i=1}^m \left( \max_j \; \{\theta_j^Tx_i + 1 - \delta_{j,y_i} \} - \theta_{y_i}^Tx_i \right) + \sum_{j=1}^k \lambda_1 \|\theta_j\|_1 +  \sum_{j=1}^k \lambda_2 \|\theta_j\|_2^2
+$$
+where $\lambda_1 \ge 0$ and $\lambda_2 \ge 0$ are regularization parameters. The $\ell_1$ and $\ell_2$ penalty are straightforward to expression in CVXPY, and for multiclass hinge loss it is most efficient if we write the expression in matrix form</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[48]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
@@ -243,206 +401,36 @@ where $\theta_j \in \mathbb{R}^{n}$ is the weights for class $j$ and $\delta_{p,
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered">
 <div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We will also add a bit of $\ell_2$-regularization on the parameter vectors $\theta_1, \ldots, \theta_k$ to prevent over-fitting. The final optimization problem is
-$$
-\DeclareMathOperator{\minimize}{minimize} \minimize \;\; \sum_{i=1}^m \left( \max_j \; \{\theta_j^Tx_i + 1 - \delta_{j,y_i} \} - \theta_{y_i}^Tx_i \right) + \sum_{j=1}^k \lambda \|\theta_j\|_2^2
-$$
-where the parameter $\lambda > 0$ controls the regularization. We set up the problem in CVXPY and solve with Epsilon as follows:</p>
+<p>For convenience, this definition is provided as part of epsilon, see <a href="github.com"><code>functions.py</code></a> for details.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="c"># Problem data</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;X&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>   <span class="c"># raw pixel data scaled to [0, 1]</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>  <span class="c"># labels {0, ..., 9}</span>
-<span class="n">Xtest</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Xtest&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">255.</span>
-<span class="n">ytest</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Ytest&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-
-<span class="c"># Parameters</span>
-<span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">Theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-<span class="n">lam</span> <span class="o">=</span> <span class="mi">1</span>
-
-<span class="c"># Form problem with CVXPY and solve with Epsilon</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
-<span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-
-<span class="c"># Get solution and compute train/test error</span>
-<span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-
-<span class="n">Theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">ytest</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Epsilon 0.2.4
-Compiled prox-affine form:
-objective:
-  add(
-    affine(dense(A)*var(x)),
-    non_negative(var(y)),
-    affine(kron(dense(B), dense(C))*diag(D)*var(Z)),
-    sum_square(var(W)))
-
-constraints:
-  zero(add(add(kron(transpose(dense(B)), scalar(1.00))*var(x), scalar(-1.00)*add(kron(scalar(1.00), dense(K))*var(W), dense(e)*1.00, scalar(-1.00)*const(F))), scalar(-1.00)*var(y)))
-  zero(add(var(Z), scalar(-1.00)*var(W)))
-Epsilon compile time: 1.4502 seconds
-
-iter=0 residuals primal=1.29e+05 [1.29e+03] dual=2.24e+02 [1.29e+03]
-iter=40 residuals primal=9.62e+00 [1.02e+01] dual=2.54e+01 [1.29e+03]
-Epsilon solve time: 38.7465 seconds
-Train error: 0.0853166666667
-Test error: 0.0891
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Thus, a simple linear classifier on pixel intensities achieves a 8.9% error rate on this task. This forms a reasonable baseline, but raw pixel values are in fact poor predictors and we can do much better by considering a nonlinear decision functions which we explore next.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Non-linear-classifier-using-random-Fourier-features">Non-linear classifier using random Fourier features<a class="anchor-link" href="#Non-linear-classifier-using-random-Fourier-features">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>It turns out we can fit a non-linear decision function by approximating a Gaussian kernel using random Fourier features. In particular if we transform the input data by 
-$$
-z(x) = \cos(Wx + b)
-$$
-with $W \in \mathbb{R}^{d \times n}$ with elements sampled from a zero-mean Normal distribution and $b \in \mathbb{R}^d$ with chosen uniformly at random from $[0, 2\pi]$, then
-$$
-z(x)^Tz(x') \approx \exp \left( \frac{-\|x - x'\|_2^2}{2} \right),
-$$
-for details see <a href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Rahimi and Recht (2007)</a>. We will use this transformation to build a better classifier, with preprocessing following that of <a href="http://arxiv.org/abs/1310.1949">Agarwal et al. (2014)</a>, <a href="https://github.com/fest/secondorderdemos">code available here</a>. This is straightforward to implement in a few lines of Python:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">median_dist</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute the approximate median distance by sampling pairs.&quot;&quot;&quot;</span>
-    <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">20</span>  <span class="c"># 1M random points</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
-    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[</span><span class="n">j</span><span class="p">,:])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-    
-<span class="k">def</span> <span class="nf">pca</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Perform centered PCA.&quot;&quot;&quot;</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">))[</span><span class="mi">1</span><span class="p">][:,</span><span class="o">-</span><span class="n">dim</span><span class="p">:]</span>
-
-<span class="c"># PCA and median trick</span>
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">V</span> <span class="o">=</span> <span class="n">pca</span><span class="p">(</span><span class="n">mnist</span><span class="p">[</span><span class="s">&quot;X&quot;</span><span class="p">],</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">mnist</span><span class="p">[</span><span class="s">&quot;X&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
-<span class="n">sigma</span> <span class="o">=</span> <span class="n">median_dist</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-
-<span class="c"># Random features</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">4000</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
-<span class="n">Xtest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">mnist</span><span class="p">[</span><span class="s">&quot;Xtest&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Given our transformed dataset we now have significantly more features (the feature matrix, $X \in \mathbb{R}^{60000 \times 4000}$) but we still fit the model using the same method CVXPY/Epsilon and the same method as before:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[38]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="c"># Parameters</span>
 <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="n">Theta</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-<span class="n">lam</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">lam1</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">lam2</span> <span class="o">=</span> <span class="mi">1</span>
 
-<span class="c"># Form problem with CVXPY and solve with Epsilon</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
-<span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">multiclass_hinge_loss</span><span class="p">(</span><span class="n">Theta</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam1</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span> <span class="o">+</span> <span class="n">lam2</span><span class="o">*</span><span class="n">cp</span><span class="o">.</span><span class="n">sum_squares</span><span class="p">(</span><span class="n">Theta</span><span class="p">)</span>
+<span class="n">prob</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> 
 <span class="n">ep</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="c"># Get solution and compute train/test error</span>
 <span class="n">Theta0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Theta</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Train error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&quot;Test error:&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">ytest</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Train accuracy:&quot;</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Test accuracy:&quot;</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Xtest</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Theta0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">ytest</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -462,18 +450,20 @@ objective:
     affine(dense(A)*var(x)),
     non_negative(var(y)),
     affine(kron(dense(B), dense(C))*diag(D)*var(Z)),
-    sum_square(var(W)))
+    norm_1(var(W)),
+    sum_square(var(V)))
 
 constraints:
-  zero(add(add(kron(transpose(dense(B)), scalar(1.00))*var(x), scalar(-1.00)*add(kron(scalar(1.00), dense(K))*var(W), dense(e)*1.00, scalar(-1.00)*const(F))), scalar(-1.00)*var(y)))
-  zero(add(var(Z), scalar(-1.00)*var(W)))
-Epsilon compile time: 9.8725 seconds
+  zero(add(add(kron(transpose(dense(B)), scalar(1.00))*var(x), scalar(-1.00)*add(kron(scalar(1.00), sparse(K))*var(V), dense(e)*1.00, scalar(-1.00)*const(F))), scalar(-1.00)*var(y)))
+  zero(add(var(Z), scalar(-1.00)*var(V)))
+  zero(add(var(W), scalar(-1.00)*var(V)))
+Epsilon compile time: 0.0648 seconds
 
-iter=0 residuals primal=7.12e+05 [7.12e+03] dual=2.71e+02 [7.12e+03]
-iter=30 residuals primal=6.94e+00 [7.43e+00] dual=1.70e+01 [7.12e+03]
-Epsilon solve time: 196.5668 seconds
-Train error: 0.00501666666667
-Test error: 0.0157
+iter=0 residuals primal=8.61e+02 [8.71e+00] dual=8.46e+01 [8.76e+00]
+iter=40 residuals primal=1.18e+00 [4.95e+00] dual=6.83e+00 [8.88e+00]
+Epsilon solve time: 62.8336 seconds
+Train accuracy: 0.970567438572
+Test accuracy: 0.796601168348
 </pre>
 </div>
 </div>
@@ -487,8 +477,8 @@ Test error: 0.0157
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Our classifier now achieves an error rate of 1.57% improving significantly over the baseline.</p>
-<p>Critically, it only takes &lt;3.5 minutes to train this classifier which is significantly faster than many of the dedicated Python machine learning packages (e.g. those provided by <code>sklearn</code>).</p>
+<p>Thus, with this straightforward approach feature generation, and simple bag-of-words model we achieve ~80% accuracy. Note that its well-known that for this dataset the by date split tends to result in poorer than expected generalization error (presumably, due to the fact that the content of a particular newsgroup drifts over time).</p>
+<p>Nonetheless, we could no doubt improve upon this result by (for example) including <a href="http://papers.nips.cc/paper/4932-compressive-feature-learning.pdf">higher order n-grams</a>, considering <a href="http://nlp.stanford.edu/wiki/Software/Classifier/20_Newsgroups">more sophisticated NLP features</a> and various other approaches to feature engineering...</p>
 
 </div>
 </div>
