@@ -13,7 +13,9 @@ version = u'0.2.4'
 release = u'0.2.4'
 
 # Settings
-extensions = []
+extensions = [
+    'sphinx.ext.mathjax',
+]
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
@@ -23,7 +25,7 @@ todo_include_todos = False
 
 # HTML output
 html_theme = 'alabaster'
-html_static_path = ['../notebooks']
+html_static_path = ['_static', '../notebooks']
 html_theme_options = {
     'description': 'Scalable convex programming with fast linear and proximal operators.',
     'github_user': 'mwytock',

@@ -14,16 +14,26 @@ As with existing convex programming frameworks (e.g. `CVX
 <http://convexjl.readthedocs.org/en/latest/>`_, etc.), users specify convex
 optimization problems using a natural grammar for mathematical expressions,
 composing functions in a way that is guaranteed to be convex by the rules of
-disciplined convex programming. Given such an input, the Epsilon compiler
+disciplined convex programming.
+
+Given such an input, the `Epsilon compiler <compiler.html>`_
 transforms the optimization problem into a mathematically equivalent form
 consisting only of functions with efficient proximal operators---an intermediate
 representation we refer to as *prox-affine form*. By reducing problems to this
-form, Epsilon enables solving general convex problems using a large library of
-fast proximal and linear operators and is often faster than existing approaches
-by an order of magnitude or more.
+form, Epsilon enables `solving <solver.html>`_ general convex problems using a
+`large library of fast proximal and linear operators <proximal_operators.html>`_
+and is often `10-100x faster <benchmarks.html>`_ than existing approaches.
 
-In order to use Epsilon, form an optimization problem using CVXPY in the
-usual way but solve it using Epsilon.
+As an example, we can solve the lasso problem
+
+.. math::
+
+  \DeclareMathOperator{\minimize}{minimize} \minimize \;\; \|Ax - b\|_2^2 +
+  \lambda \|x\|_1
+
+..
+
+with the following short snippet
 
 .. code:: python
 
@@ -34,10 +44,11 @@ usual way but solve it using Epsilon.
    # Form lasso problem with CVXPY
    m = 5
    n = 10
+   lam = 1
    A = np.random.randn(m,n)
    b = np.random.randn(m)
    x = cp.Variable(n)
-   f = cp.sum_squares(A*x - b) + cp.norm1(x)
+   f = cp.sum_squares(A*x - b) + lam*cp.norm1(x)
    prob = cp.Problem(cp.Minimize(f))
 
    # Solve with Epsilon
@@ -51,10 +62,8 @@ usual way but solve it using Epsilon.
 ..
 
 Behind the scenes, the Epsilon compiler recognizes this problem is composed of
-two functions which have efficient proximal operators and applies an operator
-splitting algorithm to find the solution.
-
-The above code snippet produces the following output:
+two functions which have efficient proximal operators and applies an `operator
+splitting algorithm <solver.html#admm-algorithm>`_ to find the solution.
 
 .. code::
 
@@ -85,18 +94,21 @@ The above code snippet produces the following output:
     [ 1.08194075]]
 ..
 
-For further details on the design and implementation of the Epsilon compiler and
-solver, refer to the full paper [#epsilon]_.
+The documention provided here provides a high-level overview of the basic design
+and implementation of Epsilon, for a more complete description, refer to the
+reference paper [#epsilon]_.
 
 .. [#epsilon] `Convex programming with fast proximal and linear operators
 	      <http://arxiv.org/abs/1511.04815>`_. Matt Wytock, Po-Wei Wang and
-	      J. Zico Kolter, 2015.
+	      J. Zico Kolter, *Preprint*, 2015.
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
    quick_start
+   compiler
+   solver
    proximal_operators
    examples
    benchmarks
