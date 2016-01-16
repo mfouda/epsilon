@@ -21,7 +21,7 @@ interface. As an example, the proximal operator for the :math:`\ell_2`-norm is g
 by
 
 .. math::
-   \prox_{\|\cdot\|_2}(v) = \left\{  \begin{array}{cc} (1 - \lambda/\|v\|_2)v &
+   \prox_{\lambda \|\cdot\|_2}(v) = \left\{  \begin{array}{cc} (1 - \lambda/\|v\|_2)v &
    \lambda \le \|v\|_2 \\ 0 & \lambda > \|v\|_2
    \end{array} \right.
 ..
