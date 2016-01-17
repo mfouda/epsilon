@@ -203,6 +203,12 @@ def transform_power(expr):
 
     raise TransformError("Unexpected power exponent", expr)
 
+def transform_transpose(expr):
+    x = only_arg(expr)
+    return expression.linear_map(
+        linear_map.transpose_matrix(*dims(x)),
+        transform_expr(x))
+
 def transform_linear_expr(expr):
     log_debug_expr("transform_linear_expr", expr)
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()

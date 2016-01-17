@@ -5,6 +5,7 @@ rather than existing solvers.
 """
 
 from cvxpy.atoms import *
+from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.binary_operators import MulExpression
 from cvxpy.expressions.constants import Constant, Parameter
 from cvxpy.expressions.variables import Variable
@@ -152,6 +153,7 @@ atoms = [
 
         (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
         (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
+        (transpose, (2, 3), [ [[1,2,3],[4,5,6]] ], Constant([[1,2,3],[4,5,6]]).T)
 
         (tv, (1, 1), [ [1,-1,2] ], Constant([5])),
         (tv, (1, 1), [ [[1],[-1],[2]] ], Constant([5])),
@@ -217,9 +219,8 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda x: sum_entries(x, axis=0), (1,2), [ [[-5,2],[-3,1]] ], Constant([[-3], [-2]])),
-#         (lambda x: sum_entries(x, axis=1), (2,1), [ [[-5,2],[-3,1]] ], Constant([-8, 3])),
-#     ], Minimize),
+#         (transpose, (2, 3), [ [[1,2,3],[4,5,6]] ], Constant([[1,2,3],[4,5,6]]).T)
+#         ], Minimize),
 # ]
 
 def check_solver(prob, solver_name):
