@@ -50,15 +50,16 @@ Mathametically, this AST represents the problem
    \end{split}
 ..
 
-which is in the separable prox-affine form.
+which is in separable form allowing it to be solved by the operator splitting
+algorithm.
 
 
 ADMM algorithm
 --------------
 
-The Epsilon solver employs a variant of ADMM to solve problems in the separable
-prox-affine form. This approach can be motivated by considering the augmented
-Lagrangian
+The Epsilon solver employs an operator splitting algorithm that, a variant of
+`ADMM <http://stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf>`_. This
+approach can be motivated by considering the augmented Lagrangian
 
 .. math::
 
@@ -101,5 +102,5 @@ efficiently will depend on :math:`f_i` and :math:`A_i` (in the most common case
 :math:`A_i^TA_i = \alpha I`, a scalar matrix, which can be handled by any
 proximal operator); it is the responsibility of the compiler to ensure
 that the prox-affine problem has been put in the required form such that
-these evaluations map to efficient implementations from the proximal operator
-library.
+these evaluations map to efficient implementations from the `proximal operator
+library <proximal_operators.html>`_.
