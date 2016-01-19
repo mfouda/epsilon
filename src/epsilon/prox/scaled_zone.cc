@@ -256,8 +256,9 @@ void ScaledZoneEpigraph::ApplyVector(
   for(int kk=0; kk<n; kk++) {
     if(l > r)
       break;
-    int m = r;
+    int m = random() % (r-l+1) + l;
     double lam = std::fabs(y[m]);
+    std::swap(y[r], y[m]);
     VLOG(2) << "lam = " << lam;
     // 3 way partition (Segwick), invariant: [eq less ? more eq]
     // [p,i)==less, (j,q]==more
