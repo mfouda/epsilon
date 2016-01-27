@@ -39,6 +39,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
+    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=5000, n=200)),
     ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=100, p=1)),
