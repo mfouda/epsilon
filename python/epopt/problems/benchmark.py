@@ -75,6 +75,28 @@ PROBLEMS_SCALE += [ProblemInstance(
     dict(m=3*int(n), n=int(n)))
     for n in np.logspace(1, np.log10(1500), 20)]
 
+PROBLEM_SCALE_ICML = []
+#PROBLEM_SCALE_ICML += [ProblemInstance(
+#    "hinge_%d" % int(n),
+#    hinge.create,
+#    dict(n=10*int(n)))
+#    for n in np.logspace(1, np.log10(500000), 20)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "oneclass_svm_%d" % int(n),
+    oneclass_svm.create,
+    dict(m=10*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(5000), 20)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "covsel_%d" % int(n),
+    covsel.create,
+    dict(m=10*int(n), n=int(n), lam=0.1))
+    for n in np.logspace(1, np.log10(5000), 20)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "robust_svm_%d" % int(n),
+    robust_svm.create,
+    dict(m=10*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(5000), 20)]
+
 def benchmark_epsilon(cvxpy_prob):
     cvxpy_solver.solve(cvxpy_prob, rel_tol=1e-2, abs_tol=1e-4)
     return cvxpy_prob.objective.value

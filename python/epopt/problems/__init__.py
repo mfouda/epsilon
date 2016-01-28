@@ -4,6 +4,7 @@ from epopt.problems import basis_pursuit
 from epopt.problems import covsel
 from epopt.problems import fused_lasso
 from epopt.problems import group_lasso
+from epopt.problems import hinge
 from epopt.problems import hinge_l1
 from epopt.problems import hinge_l2
 from epopt.problems import huber
