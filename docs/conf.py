@@ -32,6 +32,7 @@ html_theme_options = {
     'github_repo': 'epsilon',
     'github_button': True,
     'analytics_id': 'UA-72208233-1',
+    'code_font_size': '0.8em'
 }
 html_sidebars = {
     '**': [
