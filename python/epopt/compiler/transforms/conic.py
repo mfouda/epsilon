@@ -73,17 +73,17 @@ def transform_quad_over_lin(expr):
     return t, [
         expression.soc_constraint(
             expression.add(y, t),
-            expression.vstack(
+            expression.hstack(
                 expression.add(y, expression.negate(t)),
                 expression.reshape(
                     expression.multiply(expression.scalar_constant(2), x),
-                    dim(x), 1))),
+                    1, dim(x)))),
         expression.leq_constraint(expression.scalar_constant(0), y)]
 
 def transform_norm_p(expr):
     p = expr.p
     x = only_arg(expr)
-    t = epi_var(expr, "norm_p", size=(1,1))
+    t = epi_var(expr, "norm_p")
 
     if p == float("inf"):
         return t, [expression.leq_constraint(x, t),
@@ -93,7 +93,16 @@ def transform_norm_p(expr):
         return transform_expr(expression.sum_entries(expression.abs_val(x)))
 
     if p == 2:
-        return t, [expression.soc_constraint(t, x)]
+        if not expr.has_axis:
+            return t, [expression.soc_constraint(
+                t,
+                expression.reshape(x, 1, dim(x)))]
+        if expr.axis == 0:
+            return t, [expression.soc_constraint(
+                expression.reshape(t, dim(x, 1), 1),
+                expression.transpose(x))]
+        if expr.axis == 1:
+            return t, [expression.soc_constraint(t, x)]
 
     r = epi_var(expr, "norm_p_r", size=dims(x))
     t1 = expression.multiply(expression.ones(*dims(x)), t)

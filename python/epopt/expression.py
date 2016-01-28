@@ -360,12 +360,11 @@ def eq_constraint(x, y):
 def leq_constraint(a, b):
     return indicator(Cone.NON_NEGATIVE, add(b, negate(a)))
 
+# Second order cone constraints are arranged over the rows of x
 def soc_constraint(t, x):
-    if dim(t) != 1:
-        raise ExpressionError("Second order cone, dim(t) != 1", t)
-
-    # make x a row vector to be compatible with elemwise version
-    return indicator(Cone.SECOND_ORDER, t, reshape(x, 1, dim(x)))
+    if dim(t, 1) != 1 or dim(t, 0) != dim(x, 0):
+        raise ExpressionError("Second order cone, invalid dimensions", t)
+    return indicator(Cone.SECOND_ORDER, t, x)
 
 def soc_elemwise_constraint(t, *args):
     t = reshape(t, dim(t), 1)

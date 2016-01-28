@@ -13,6 +13,7 @@ from cvxpy.atoms.affine.index import index
 from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.unary_operators import NegExpression
 from cvxpy.atoms.affine.upper_tri import upper_tri
+from cvxpy.atoms.axis_atom import AxisAtom
 from cvxpy.atoms.elementwise.norm2_elemwise import norm2_elemwise
 from cvxpy.constraints.eq_constraint import EqConstraint
 from cvxpy.constraints.leq_constraint import LeqConstraint
@@ -53,7 +54,7 @@ def convert_constant(expr):
                 sign_type=expression_pb2.Sign.Type.Value(expr.sign)))
 
 def convert_generic(expression_type, expr):
-    return expression.Expression(
+    proto = expression.Expression(
         expression_type=expression_type,
         size=expression_pb2.Size(dim=expr.size),
         func_curvature=expression_pb2.Curvature(
@@ -66,6 +67,12 @@ def convert_generic(expression_type, expr):
                 monotonicity_type=expression_pb2.Monotonicity.Type.Value(m))
             for m in expr.monotonicity()],
         arg=(convert_expression(arg) for arg in expr.args))
+
+    if isinstance(expr, AxisAtom) and expr.axis is not None:
+        proto.proto.has_axis = True
+        proto.proto.axis = expr.axis
+
+    return proto
 
 def convert_binary(f, expr):
     return f(*[convert_expression(arg) for arg in expr.args])
@@ -96,13 +103,6 @@ def convert_huber(expr):
 def convert_p(expression_type, expr):
     proto = convert_generic(expression_type, expr)
     proto.proto.p = float(expr.p)
-    return proto
-
-def convert_axis(expression_type, expr):
-    proto = convert_generic(expression_type, expr)
-    if expr.axis is not None:
-        proto.proto.has_axis = True
-        proto.proto.axis = expr.axis
     return proto
 
 def convert_fraction(fraction):
@@ -147,7 +147,7 @@ EXPRESSION_TYPES = (
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
     (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
-    (max_entries, lambda e: convert_axis(Expression.MAX_ENTRIES, e)),
+    (max_entries, lambda e: convert_generic(Expression.MAX_ENTRIES, e)),
     (min_elemwise, lambda e: convert_generic(Expression.MIN_ELEMENTWISE, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
@@ -157,7 +157,7 @@ EXPRESSION_TYPES = (
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
     (reshape, lambda e: convert_generic(Expression.RESHAPE, e)),
     (sigma_max, lambda e: convert_generic(Expression.SIGMA_MAX, e)),
-    (sum_entries, lambda e: convert_axis(Expression.SUM, e)),
+    (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
     (sum_largest, lambda e: convert_sum_largest(e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),
     (transpose, lambda e: convert_unary(expression.transpose, e)),
