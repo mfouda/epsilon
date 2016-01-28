@@ -20,9 +20,9 @@ Given such an input, the `Epsilon compiler <compiler.html>`_
 transforms the optimization problem into a mathematically equivalent form
 consisting only of functions with efficient proximal operators---an intermediate
 representation we refer to as *prox-affine form*. By reducing problems to this
-form, Epsilon enables `solving <solver.html>`_ general convex problems using a
+form, Epsilon enables solving general convex problems using a
 `large library of fast proximal and linear operators <proximal_operators.html>`_
-and is often `10-100x faster <benchmarks.html>`_ than existing approaches.
+and is often 10-100x faster than existing approaches.
 
 As an example, we can solve the lasso problem
 

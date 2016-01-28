@@ -24,3 +24,6 @@ More complex convex models
 
 - `Forecasting electricity prices with multiple quantile regression <_static/ercot.html>`_
 - `Optimization over graphs <_static/graphs.html>`_
+- `One-class support vector machine <_static/oneclass_svm.html>`_
+- `Sparse inverse covariance estimation <_static/covsel.html>`_
+- `Robust support vector machine <_static/robust_svm.html>`_
