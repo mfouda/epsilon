@@ -10,6 +10,11 @@ Python package ``sklearn``) require significant time to train a model.
 Nonetheless, `Epsilon <http://epopt.io/>`__ is able to fit a model that
 achieves near state-of-the-art accuracy in a few minutes.
 
+.. figure:: mnist.png
+   :alt: MNIST examples
+
+   MNIST examples
+
 The standard task is to train a multiclass classifier that can correctly
 identify digits from their pixel intensity values. We will build a
 classifier to perform this task using `mutlticlass hinge

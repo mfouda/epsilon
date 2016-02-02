@@ -45,6 +45,11 @@ http://ercot.com/mktinfo/prices/index.html. Although there are 1000s of
 LMPs in the ERCOT network, for settlement purposes ERCOT aggregates the
 LMPs in 4 zones: North, South, West and Houston, a map is shown below.
 
+.. figure:: ercot_texas.png
+   :alt: ERCOT zones
+
+   ERCOT zones
+
 The data is distributed as a set of Excel spreadsheets which we have
 transformed to CSV and joined to get a complete time series of the
 day-ahead and real-time price of electricity for 2015.
