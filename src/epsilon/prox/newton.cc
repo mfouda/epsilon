@@ -68,6 +68,7 @@ Eigen::VectorXd ApplyNewtonProx(
     double x_res = gx.norm();
     while(theta > eps) {
       Eigen::VectorXd nx = x - theta * dx;
+      nx = f.proj_feasible(nx);
       double nx_res = ProxResidual(f, lambda, nx, v).norm();
       if(nx_res <= (1-beta*theta)*x_res) {
         x = nx;
@@ -284,4 +285,39 @@ void BisectionEpigraph::ApplyVector(
     }
     input.set_lambda(lam);
   }
+}
+
+// Find the largest cubic root of a cubic
+// by the Durand-Kerner method;
+// solve x^3 + bx^2 + cx + d = 0
+double LargestRealCubicRoot(double b, double c, double d) {
+	double eps = 1e-12;
+	std::complex<double> p(0.4, 0.9), q=p*p, r=p*p*p;
+	int iter = 0, max_iter = 100;
+	for(; iter < max_iter; iter++) {
+		std::complex<double> fp = p*p*p + b*p*p + c*p + d;
+		std::complex<double> np = p - fp / ((p-q)*(p-r));
+		std::complex<double> fq = q*q*q + b*q*q + c*q + d;
+		std::complex<double> nq = q - fq / ((q-p)*(q-r));
+		std::complex<double> fr = r*r*r + b*r*r + c*r + d;
+		std::complex<double> nr = r - fr / ((r-p)*(r-q));
+		if(std::abs(fp)<eps and std::abs(fq)<eps and std::abs(fr)<eps)
+			break;
+		//VLOG(2) << "fp = " << fp << ", fq = " << fq << ", fr = " << fr << "\n";
+		p = np;
+		q = nq;
+		r = nr;
+	}
+	if(iter == max_iter)
+		VLOG(2) << "Cubic failed\n";
+	double m = -1e41;
+	VLOG(2) << "p = " << p << ", q = " << q << ", r = " << r << "\n";
+	if(std::abs(std::imag(p))<eps and std::real(p) > m)
+		m = std::real(p);
+	if(std::abs(std::imag(q))<eps and std::real(q) > m)
+		m = std::real(q);
+	if(std::abs(std::imag(r))<eps and std::real(r) > m)
+		m = std::real(r);
+	VLOG(2) << "Cubic iter = " << iter << ", f = " << m*m*m+b*m*m+c*m+d << "\n";
+	return m;
 }

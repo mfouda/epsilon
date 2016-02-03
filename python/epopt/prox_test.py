@@ -18,6 +18,7 @@ n = 10
 x = cp.Variable(n)
 z = cp.Variable(n)
 p = cp.Variable(3)
+q = cp.Variable(3)
 X = cp.Variable(3,3)
 t = cp.Variable(1)
 p1 = cp.Variable(1)
@@ -172,6 +173,7 @@ PROX_TESTS = [
     prox("NORM_2", lambda: cp.norm(X, "fro")),
     prox("NORM_2", lambda: cp.norm2(x)),
     prox("NORM_NUCLEAR", lambda: cp.norm(X, "nuc")),
+    #prox("QUAD_OVER_LIN", lambda: cp.quad_over_lin(p, q1)),
     prox("SECOND_ORDER_CONE", None, C_soc_scaled),
     prox("SECOND_ORDER_CONE", None, C_soc_scaled_translated),
     prox("SECOND_ORDER_CONE", None, C_soc_translated),
@@ -229,6 +231,7 @@ PROX_TESTS += [
     epigraph("SUM_NEG_LOG", None, lambda: [cp.sum_entries(-cp.log(x)) <= t]),
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
     #epigraph("SUM_SQUARE", None, lambda: [f_quad_form() <= t]),
+    epigraph("SUM_SQUARE", None, lambda: [cp.sum_squares(x) <= t]),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):

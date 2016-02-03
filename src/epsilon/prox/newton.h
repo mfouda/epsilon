@@ -90,4 +90,6 @@ class BisectionEpigraph : public VectorProx {
   std::unique_ptr<VectorProx> prox_;
 };
 
+double LargestRealCubicRoot(double b, double c, double d);
+
 #endif  // EPSILON_PROX_NEWTON_H

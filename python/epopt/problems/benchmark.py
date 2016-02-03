@@ -28,6 +28,7 @@ from epopt.problems.problem_instance import ProblemInstance
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
+    ProblemInstance("chebyshev", chebyshev.create, dict(m=100, n=200, k=3)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
@@ -43,6 +44,7 @@ PROBLEMS = [
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
+    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=5000, n=200)),
     ProblemInstance("portfolio", portfolio.create, dict(m=500, n=500000)),
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=100, p=1)),
@@ -76,6 +78,33 @@ PROBLEMS_SCALE += [ProblemInstance(
     robust_svm.create,
     dict(m=3*int(n), n=int(n)))
     for n in np.logspace(1, np.log10(1500), 20)]
+
+PROBLEM_SCALE_ICML = []
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "hinge_%d" % int(n),
+    hinge.create,
+    dict(n=10*int(n)))
+    for n in np.logspace(1, np.log10(500000), 20)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "oneclass_svm_%d" % int(n),
+    oneclass_svm.create,
+    dict(m=10*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(2000), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "covsel_%d" % int(n),
+    covsel.create,
+    dict(m=10*int(n), n=int(n), lam=0.1))
+    for n in np.logspace(1, np.log10(2000), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "robust_svm_%d" % int(n),
+    robust_svm.create,
+    dict(m=10*int(n), n=int(n)))
+    for n in np.logspace(1, np.log10(2000), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "chebyshev_%d" % int(n),
+    chebyshev.create,
+    dict(m=100, n=200, k=int(n)))
+    for n in np.logspace(1, np.log10(80), 10)]
 
 def benchmark_epsilon(cvxpy_prob):
     cvxpy_solver.solve(cvxpy_prob, rel_tol=1e-2, abs_tol=1e-4)
