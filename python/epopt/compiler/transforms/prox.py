@@ -592,6 +592,8 @@ BASE_RULES = [
     prox_sum_deadzone,
     prox_sum_quantile,
     prox_sum_hinge,
+
+    prox_sum_square,
 ]
 
 
@@ -602,7 +604,6 @@ PROX_RULES = [
     prox_negate,
 
     # Affine
-    prox_sum_square,
     prox_zero,
 
     # Simple

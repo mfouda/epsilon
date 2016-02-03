@@ -46,7 +46,9 @@ class VectorProx : public ProxOperator {
       const VectorProxInput& input,
       VectorProxOutput* output) = 0;
 
-  virtual double Eval(const VectorProxOutput* output) { return 0; };
+  virtual double Eval(const VectorProxOutput* output) {
+    throw "Eval not implemented.";
+  };
 
  private:
   bool InitScalar(const ProxOperatorArg& arg);

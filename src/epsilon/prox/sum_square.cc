@@ -4,6 +4,7 @@
 #include "epsilon/prox/prox.h"
 #include "epsilon/vector/vector_util.h"
 #include "epsilon/vector/block_cholesky.h"
+#include "epsilon/prox/newton.h"
 
 // ||H(x)||_2^2
 class SumSquareProx final : public ProxOperator {
@@ -35,3 +36,20 @@ class SumSquareProx final : public ProxOperator {
   BlockVector b_;
 };
 REGISTER_PROX_OPERATOR(SUM_SQUARE, SumSquareProx);
+
+class SumSquareEpigraph final : public VectorProx {
+  void ApplyVector(
+      const VectorProxInput& input,
+      VectorProxOutput* output) {
+    // solve |u|^2 - (lam+s)(1+2*lam)^2 = 0
+    const Eigen::VectorXd& u = input.value_vec(0);
+    const double s =  input.value(1);
+    double lam = LargestRealCubicRoot(1+s, 0.25+s, (s-u.squaredNorm())/4);
+    if(lam < 0)
+      lam = 0;
+    Eigen::VectorXd x = u/(1+2*lam);
+  output->set_value(0, x);
+  output->set_value(1, s+lam);
+  }
+};
+REGISTER_EPIGRAPH_OPERATOR(SUM_SQUARE, SumSquareEpigraph);
