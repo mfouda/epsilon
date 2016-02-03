@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
+    ProblemInstance("chebyshev", chebyshev.create, dict(m=10, n=20, k=3)),
     ProblemInstance("covsel", covsel.create, dict(m=10, n=20, lam=0.1)),
     ProblemInstance("fused_lasso", fused_lasso.create, dict(m=5, ni=2, k=5, rho=0.5)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=5, n=10, rho=0.1)),
@@ -39,6 +40,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=5, n=20, k=2, rho=0.1)),
     ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=5, n=10, k=2, rho=0.1, mu=0.5)),
+    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=50, n=10)),
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
