@@ -540,11 +540,18 @@ def epigraph(expr):
                 epi_function = result.prox_expr.prox_function
                 epi_function.epigraph = True
 
+                linear_t_expr = linear.transform_expr(t_expr)
+                if linear_t_expr.affine_props.scalar:
+                    constrs = []
+                else:
+                    linear_t_expr, constrs = epi_transform(
+                        linear_t_expr, "scalar")
+
                 return MatchResult(
                     True,
                     expression.prox_function(
-                        epi_function, *(result.prox_expr.arg + [t_expr])),
-                    result.raw_exprs)
+                        epi_function, *(result.prox_expr.arg + [linear_t_expr])),
+                    result.raw_exprs + constrs)
 
         # No epigraph transform found, do conic transformation
         obj, constrs = conic.transform_expr(f_expr)
