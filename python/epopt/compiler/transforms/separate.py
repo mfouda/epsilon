@@ -24,7 +24,7 @@ def is_least_squares_function(f):
         ProxFunction.AFFINE,
         ProxFunction.CONSTANT,
         ProxFunction.SUM_SQUARE,
-        ProxFunction.ZERO)
+        ProxFunction.ZERO) and not f.expr.prox_function.epigraph
 
 def separate_var(f_var):
     variable_id = "separate:%s:%s" % (
