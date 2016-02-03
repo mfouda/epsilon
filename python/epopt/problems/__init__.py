@@ -1,6 +1,7 @@
 
 
 from epopt.problems import basis_pursuit
+from epopt.problems import chebyshev
 from epopt.problems import covsel
 from epopt.problems import fused_lasso
 from epopt.problems import group_lasso
