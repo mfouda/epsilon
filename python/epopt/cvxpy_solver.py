@@ -56,6 +56,8 @@ def solve(cvxpy_prob, **kwargs):
         print text_format.format_problem(problem),
         print "Epsilon compile time: %.4f seconds" % (t1-t0)
         print
+    logging.debug("Compiled prox-affine form:\n%s",
+                  text_format.format_problem(problem))
     logging.info("Epsilon compile time: %.4f seconds", t1-t0)
 
     if len(problem.objective.arg) == 1 and not problem.constraint:
