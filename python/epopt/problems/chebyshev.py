@@ -20,6 +20,6 @@ def create(**kwargs):
     f = t
     C = []
     for i in range(k):
-        C += [cp.pnorm(A[i]*x, 1) <= t1, v <= t-t1, -v <= t-t1]
-    C += [v == B*x+c, t1 >= 0]
+        C += [cp.pnorm(A[i]*x, 1) <= t1]
+    C += [v == B*x+c, t1 >= 0, v <= (t-t1)*np.ones(k), -v <= (t-t1)*np.ones(k)]
     return cp.Problem(cp.Minimize(f), C)
