@@ -90,24 +90,6 @@ class BisectionEpigraph : public VectorProx {
   std::unique_ptr<VectorProx> prox_;
 };
 
-class ElementwiseEpigraph : public VectorProx {
- public:
-  ElementwiseEpigraph(std::unique_ptr<VectorProx> epigraph) : epi_(std::move(epigraph)) {}
-
-  void Init(const ProxOperatorArg& arg) override {
-    epi_->Init(arg);
-    VectorProx::Init(arg);
-  }
-
- protected:
-  void ApplyVector(
-      const VectorProxInput& input,
-      VectorProxOutput* output) override;
-
- private:
-  std::unique_ptr<VectorProx> epi_;
-};
-
 double LargestRealCubicRoot(double b, double c, double d);
 
 #endif  // EPSILON_PROX_NEWTON_H

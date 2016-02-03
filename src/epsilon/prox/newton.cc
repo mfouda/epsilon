@@ -287,29 +287,6 @@ void BisectionEpigraph::ApplyVector(
   }
 }
 
-void ElementwiseEpigraph::ApplyVector(
-    const VectorProxInput& input_,
-    VectorProxOutput* output_) {
-  const Eigen::VectorXd& v = input_.value_vec(0);
-  const Eigen::VectorXd& s = input_.value_vec(1);
-  CHECK_EQ(v.rows(), s.rows());
-  int n = v.rows();
-
-  VectorProxInput input;
-  VectorProxOutput output;
-  Eigen::VectorXd x(n), t(n);
-
-  for(int i=0; i<n; i++) {
-    input.set_value(0, v(i));
-    epi_->ApplyVector(input, &output);
-    x(i) = output.value(0);
-    t(i) = output.value(1);
-  }
-
-  output_->set_value(0, x);
-  output_->set_value(1, t);
-}
-
 // Find the largest cubic root of a cubic
 // by the Durand-Kerner method;
 // solve x^3 + bx^2 + cx + d = 0

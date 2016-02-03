@@ -8,9 +8,6 @@ class VectorProxInput {
   double lambda() const;
   const Eigen::VectorXd& lambda_vec() const;
 
-  void set_value(int i, double v);
-  void set_value(int i, const Eigen::VectorXd& v);
-
   double value(int i) const;
   const Eigen::VectorXd& value_vec(int i) const;
 

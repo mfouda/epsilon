@@ -168,14 +168,6 @@ void VectorProxInput::set_lambda(double lambda) {
   }
 }
 
-void VectorProxInput::set_value(int i, double v) {
-  v_(affine::arg_key(i)) = Eigen::VectorXd::Constant(1, v);
-}
-
-void VectorProxInput::set_value(int i, const Eigen::VectorXd& v) {
-  v_(affine::arg_key(i)) = v;
-}
-
 void VectorProxOutput::set_value(int i, double x) {
   x_(affine::arg_key(i)) = Eigen::VectorXd::Constant(1, x);
 }
