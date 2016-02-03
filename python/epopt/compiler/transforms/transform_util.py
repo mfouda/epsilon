@@ -88,21 +88,11 @@ def get_epigraph(expr):
             len(expr.arg[0].arg) == 2):
         return None, None
 
-    for i in xrange(2):
-        if expr.arg[0].arg[i].expression_type == Expression.NEGATE:
-            exprs = [expr.arg[0].arg[i].arg[0],
-                     expr.arg[0].arg[1-i]]
-            break
-    else:
-        return None, None
-
+    exprs = expr.arg[0].arg
     for i in xrange(2):
         if exprs[i].dcp_props.affine:
             t_expr = exprs[i]
-            f_expr = exprs[i-1]
-            break
-    else:
-        return None, None
+            f_expr = expression.negate(exprs[i-1])
 
     return f_expr, t_expr
 
