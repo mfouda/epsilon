@@ -113,9 +113,11 @@ def print_constraints(cvxpy_prob):
         print '[CONSTR]', c.__repr__(), c.value, np.linalg.norm(c.violation)
 
 def benchmark_epsilon(cvxpy_prob, **kwargs):
-    kwargs["abs_tol"] = 1e-8
-    kwargs["rel_tol"] = 1e-8
-    kwargs["max_iterations"] = 1000
+    if args.iterations:
+        kwargs["abs_tol"] = 1e-8
+        kwargs["rel_tol"] = 1e-8
+        kwargs["max_iterations"] = args.iterations
+
     cvxpy_solver.solve(cvxpy_prob, **kwargs)
     if args.debug:
         print_constraints(cvxpy_prob)
@@ -125,8 +127,12 @@ def benchmark_cvxpy(solver, cvxpy_prob):
     kwargs = {"solver": solver,
               "verbose": args.debug}
     if solver == cp.SCS:
-        kwargs["use_indirect"] = args.scs_indirect
-        kwargs["max_iters"] = 1000
+        if args.iterations:
+            kwargs["use_indirect"] = args.scs_indirect
+            kwargs["max_iters"] = args.iterations
+            kwargs["eps"] = 1e-8
+        else:
+            kwargs["max_iters"] = 10000
 
     try:
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
@@ -185,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("--problem-match")
     parser.add_argument("--problem-set", default="PROBLEMS")
     parser.add_argument("--scs-indirect", action="store_true")
+    parser.add_argument("--iterations", type=int)
     parser.add_argument("--write")
     args = parser.parse_args()
 
