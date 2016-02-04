@@ -22,9 +22,6 @@ from epopt.problems.problem_instance import ProblemInstance
 # Block cholesky very slow for this problem
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
 
-# Convergence issues
-# ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
-
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
@@ -50,6 +47,7 @@ PROBLEMS = [
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=100, p=1)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
+    ProblemInstance("robust_svm", robust_svm.create, dict(m=2000, n=600)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
@@ -108,6 +106,8 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
     for n in np.logspace(1, np.log10(80), 10)]
 
 def benchmark_epsilon(cvxpy_prob, **kwargs):
+    kwargs["abs_tol"] = 1e-5
+    kwargs["rel_tol"] = 1e-2
     cvxpy_solver.solve(cvxpy_prob, **kwargs)
     return cvxpy_prob.objective.value
 
