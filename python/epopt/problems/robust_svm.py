@@ -24,53 +24,14 @@ def create(m, n):
     lam = 1
     x = cp.Variable(A.shape[1])
 
-    # Straightforward formulation
+    # Straightforward formulation w/ no constraints
     # TODO(mwytock): Fix compiler so this works
-    # z = 1 - sp.diags([b],[0])*A*x + cp.norm1(P.T*x)
-    # f = lam*cp.sum_squares(x) + cp.sum_entries(cp.max_elemwise(z, 0))
+    z0 = 1 - sp.diags([b],[0])*A*x + cp.norm1(P.T*x)
+    f_eval = lambda: (lam*cp.sum_squares(x) + cp.sum_entries(cp.max_elemwise(z0, 0))).value
 
+    # Explicit epigraph constraint
     t = cp.Variable(1)
     z = 1 - sp.diags([b],[0])*A*x + t
     f = lam*cp.sum_squares(x) + cp.sum_entries(cp.max_elemwise(z, 0))
     C = [cp.norm1(P.T*x) <= t]
-    return cp.Problem(cp.Minimize(f), C)
-
-#return cp.Problem(cp.Minimize(f))
-
-    # ep.solve(prob)
-    # print f.args[0].value, f.args[1].value
-
-
-
-    # print f.value
-
-    # return cp.Problem(cp.Minimize(f))
-
-
-
-    # # Direct epigraph
-
-    # # Generate data
-    # X = np.hstack([np.random.randn(m,n), np.ones((m,1))])
-    # theta0 = np.random.randn(n+1)
-    # y = np.sign(X.dot(theta0) + 0.1*np.random.randn(m))
-    # X[y>0,:] += np.tile([theta0], (np.sum(y>0),1))
-    # X[y<0,:] -= np.tile([theta0], (np.sum(y<0),1))
-
-
-
-
-
-    # # TODO(mwytock): write this as:
-    # # f = (lam/2*cp.sum_squares(theta) +
-    # #      problem_util.hinge(1 - y[:,np.newaxis]*X*theta+cp.norm1(P.T*theta)))
-
-    # # already in prox form
-    # t1 = cp.Variable(m)
-    # t2 = cp.Variable(1)
-    # z = cp.Variable(n+1)
-    # f = lam/2*cp.sum_squares(theta) + problem_util.hinge(1-t1)
-    # C = [t1 == y[:,np.newaxis]*X*theta - t2,
-    #      cp.norm1(z) <= t2,
-    #      P.T*theta == z]
-    # return cp.Problem(cp.Minimize(f), C)
+    return cp.Problem(cp.Minimize(f), C), f_eval

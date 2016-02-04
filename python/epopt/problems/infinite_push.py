@@ -10,4 +10,6 @@ def create(m, n, d):
 
     theta = cp.Variable(d)
     f = ep.infinite_push(theta, Xp, Xn) + lam*cp.sum_squares(theta)
-    return cp.Problem(cp.Minimize(f))
+
+    f_eval = lambda: f.value
+    return cp.Problem(cp.Minimize(f)), f_eval

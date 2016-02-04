@@ -33,13 +33,15 @@ PROBLEMS = [
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=5000, n=1500)),
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=10000, n=1500, mu=0.1)),
     ProblemInstance("huber", huber.create, dict(m=5000, n=200)),
+    ProblemInstance("infinite_push", infinite_push.create, dict(m=100, n=200, d=20)),
     ProblemInstance("lasso", lasso.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("lasso_sparse", lasso.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=5000, n=200)),
     ProblemInstance("logreg_l1", logreg_l1.create, dict(m=1500, n=5000, rho=0.01)),
     ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
-    ProblemInstance("max_gaussian", max_gaussian.create, dict(m=100, n=200)),
+    ProblemInstance("max_gaussian", max_gaussian.create, dict(m=10, n=10, k=3)),
+    ProblemInstance("max_softmax", max_softmax.create, dict(m=100, n=200)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=5000, n=200)),
@@ -80,19 +82,9 @@ PROBLEMS_SCALE += [ProblemInstance(
 
 PROBLEM_SCALE_ICML = []
 PROBLEM_SCALE_ICML += [ProblemInstance(
-    "hinge_%d" % int(n),
-    hinge.create,
-    dict(n=10*int(n)))
-    for n in np.logspace(1, np.log10(500000), 20)]
-PROBLEM_SCALE_ICML += [ProblemInstance(
     "oneclass_svm_%d" % int(n),
     oneclass_svm.create,
     dict(m=10*int(n), n=int(n)))
-    for n in np.logspace(1, np.log10(2000), 10)]
-PROBLEM_SCALE_ICML += [ProblemInstance(
-    "covsel_%d" % int(n),
-    covsel.create,
-    dict(m=10*int(n), n=int(n), lam=0.1))
     for n in np.logspace(1, np.log10(2000), 10)]
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "robust_svm_%d" % int(n),
@@ -104,11 +96,29 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
     chebyshev.create,
     dict(m=100, n=100, k=int(n)))
     for n in np.logspace(1, np.log10(80), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "max_gaussian_%d" % int(n),
+    max_gaussian.create,
+    dict(m=100, n=100, k=int(n)))
+    for n in np.logspace(1, np.log10(80), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "infinite_push_%d" % int(n),
+    infinite_push.create,
+    dict(m=int(n), n=int(n), d=int(n)))
+    for n in np.logspace(1, np.log10(80), 10)]
+
+
+def print_constraints(cvxpy_prob):
+    for c in cvxpy_prob.constraints:
+        print '[CONSTR]', c.__repr__(), c.value, np.linalg.norm(c.violation)
 
 def benchmark_epsilon(cvxpy_prob, **kwargs):
-    kwargs["abs_tol"] = 1e-5
-    kwargs["rel_tol"] = 1e-2
+    kwargs["abs_tol"] = 1e-8
+    kwargs["rel_tol"] = 1e-8
+    kwargs["max_iterations"] = 1000
     cvxpy_solver.solve(cvxpy_prob, **kwargs)
+    if args.debug:
+        print_constraints(cvxpy_prob)
     return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):
@@ -116,12 +126,14 @@ def benchmark_cvxpy(solver, cvxpy_prob):
               "verbose": args.debug}
     if solver == cp.SCS:
         kwargs["use_indirect"] = args.scs_indirect
-        kwargs["max_iters"] = 10000
+        kwargs["max_iters"] = 1000
 
     try:
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
         # and kill after one hour?
         cvxpy_prob.solve(**kwargs)
+        if args.debug:
+            print_constraints(cvxpy_prob)
         return cvxpy_prob.objective.value
     except cp.error.SolverError:
         # Raised when solver cant handle a problem
@@ -141,6 +153,9 @@ def run_benchmarks(benchmarks, problems):
         t0 = time.time()
         np.random.seed(0)
         cvxpy_prob = problem.create()
+        f_eval = None
+        if isinstance(cvxpy_prob, tuple):
+            cvxpy_prob, f_eval = cvxpy_prob
         t1 = time.time()
         logging.debug("creation time %f seconds", t1-t0)
 
@@ -151,6 +166,11 @@ def run_benchmarks(benchmarks, problems):
             t0 = time.time()
             value = BENCHMARKS[benchmark](cvxpy_prob)
             t1 = time.time()
+
+            if f_eval:
+                if args.debug:
+                    print "Use corrected objective"
+                value = f_eval()
 
             logging.debug("done %f seconds", t1-t0)
             yield benchmark, "%-15s" % problem.name, t1-t0, value
