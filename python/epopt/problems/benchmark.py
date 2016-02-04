@@ -55,6 +55,8 @@ PROBLEMS = [
 
 # Each problem should take ~1 minute with 2000 iterations using SCS
 PROBLEMS_ICML = [
+    ProblemInstance("chebyshev", chebyshev.create, dict(m=200, n=300, k=60)),
+    ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
 ]
 
@@ -104,7 +106,7 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "max_gaussian_%d" % int(n),
     max_gaussian.create,
-    dict(m=100, n=100, k=int(n)))
+    dict(m=int(n), n=int(n), k=5))
     for n in np.logspace(1, np.log10(80), 10)]
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "infinite_push_%d" % int(n),
