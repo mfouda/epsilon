@@ -1,5 +1,5 @@
 
-
+import copy
 import logging
 
 import cvxpy as cp
@@ -8,11 +8,12 @@ import numpy as np
 from epopt import cvxpy_solver
 from epopt.problems import *
 from epopt.problems.problem_instance import ProblemInstance
-from epopt.solver_params_pb2 import SolverParams
+from epopt.proto.epsilon.solver_params_pb2 import SolverParams
 
 REL_TOL = {
     "hinge_l1": 1e-4,
     "hinge_l1_sparse": 1e-4,
+    "oneclass_svm": 1e-4,
     "tv_1d": 1e-4,
 }
 
@@ -52,23 +53,21 @@ PROBLEMS = [
 ]
 
 PARAMS = [
-    SolverParams(use_epigraph=True),
-    SolverParams(use_epigraph=False),
+    dict(use_epigraph=True),
+    dict(use_epigraph=False),
 ]
 
-def solve_problem(problem_instance):
+def solve_problem(problem_instance, params):
     np.random.seed(0)
     problem = problem_instance.create()
+    logging.debug(problem_instance.name)
 
     problem.solve(solver=cp.SCS)
     obj0 = problem.objective.value
 
-    logging.debug(problem_instance.name)
-
     # per-instance rel_tol
-    params = copy.deepcopy(params)
-    params.rel_tol = REL_TOL.get(problem_instance.name, 1e-3)
-    cvxpy_solver.solve(problem, params)
+    params["rel_tol"] = REL_TOL.get(problem_instance.name, 1e-3)
+    cvxpy_solver.solve(problem, **params)
     obj1 = problem.objective.value
 
     # A lower objective is okay
@@ -77,4 +76,4 @@ def solve_problem(problem_instance):
 def test_solve():
     for problem in PROBLEMS:
         for params in PARAMS:
-            yield solve_problem, problem, params
+            yield solve_problem, problem, dict(params)

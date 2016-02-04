@@ -1,9 +1,10 @@
 import logging
 
-from epopt.compiler.transforms import prox
-from epopt.compiler.transforms import split
-from epopt.compiler.transforms import separate
 from epopt import tree_format
+from epopt.compiler.transforms import prox
+from epopt.compiler.transforms import separate
+from epopt.compiler.transforms import split
+from epopt.proto.epsilon import solver_params_pb2
 
 # TODO(mwytock): Add this back
 # split.transform_problem,
@@ -16,7 +17,7 @@ TRANSFORMS = [
 def transform_name(transform):
     return ".".join((transform.__module__, transform.__name__))
 
-def compile_problem(problem, params):
+def compile_problem(problem, params=solver_params_pb2.SolverParams()):
     logging.debug("params:\n%s", params)
     logging.debug("input:\n%s", tree_format.format_problem(problem))
     for transform in TRANSFORMS:
