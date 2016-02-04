@@ -24,6 +24,7 @@ class VectorProxInput {
   // Axis handling
   ProxFunction prox_function_;
   int axis_iter_;
+  std::vector<Eigen::MatrixXd> V_;
 };
 
 class VectorProxOutput {
@@ -42,6 +43,7 @@ class VectorProxOutput {
   // Axis handling
   ProxFunction prox_function_;
   int axis_iter_;
+  std::vector<Eigen::MatrixXd> X_;
 };
 
 class VectorProx : public ProxOperator {

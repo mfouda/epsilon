@@ -173,8 +173,11 @@ def prox_sum_hinge(expr):
         expression.prox_function(
             create_prox(
                 prox_function_type=ProxFunction.SUM_HINGE,
-                arg_size=[Size(dim=dims(arg))]),
-            diagonal_arg),
+                arg_size=[Size(dim=dims(arg))],
+                has_axis=expr.has_axis,
+                axis=expr.axis),
+            diagonal_arg,
+            size=dims(expr)),
         constrs)
 
 def prox_sum_quantile(expr):
@@ -540,6 +543,7 @@ def epigraph(expr):
             if result.match:
                 epi_function = result.prox_expr.prox_function
                 epi_function.epigraph = True
+                epi_function.arg_size.add().CopyFrom(Size(dim=dims(t_expr)))
 
                 linear_t_expr = linear.transform_expr(t_expr)
                 if linear_t_expr.affine_props.scalar:

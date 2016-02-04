@@ -24,6 +24,9 @@ t = cp.Variable(1)
 p1 = cp.Variable(1)
 q1 = cp.Variable(1)
 
+t_vec = cp.Variable(3,1)
+t_rvec = cp.Variable(1,3)
+
 ProxTest = namedtuple(
     "ProxTest", ["prox_function_type", "objective", "constraint", "epigraph"])
 
@@ -60,6 +63,12 @@ def f_dead_zone():
 
 def f_hinge():
     return cp.sum_entries(cp.max_elemwise(x,0))
+
+def f_hinge_axis0():
+    return cp.sum_entries(cp.max_elemwise(X,0), axis=0)
+
+def f_hinge_axis1():
+    return cp.sum_entries(cp.max_elemwise(X,0), axis=1)
 
 def f_least_squares(m):
     A = np.random.randn(m, n)
@@ -223,6 +232,8 @@ PROX_TESTS += [
     epigraph("SUM_DEADZONE", None, lambda: [f_dead_zone() <= t]),
     epigraph("SUM_EXP", None, lambda: [cp.sum_entries(cp.exp(x)) <= t]),
     epigraph("SUM_HINGE", None, lambda: [f_hinge() <= t]),
+    epigraph("SUM_HINGE", None, lambda: [f_hinge_axis0() <= t_rvec]),
+    epigraph("SUM_HINGE", None, lambda: [f_hinge_axis1() <= t_vec]),
     epigraph("SUM_INV_POS", None, lambda: [cp.sum_entries(cp.inv_pos(x)) <= t]),
     epigraph("SUM_KL_DIV", None, lambda: [cp.sum_entries(cp.kl_div(p1,q1)) <= t]),
     epigraph("SUM_LARGEST", None, lambda: [cp.sum_largest(x, 4) <= t]),

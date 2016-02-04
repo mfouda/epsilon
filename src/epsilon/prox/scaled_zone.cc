@@ -32,8 +32,12 @@ Eigen::VectorXd Promote(const Eigen::VectorXd& x, int n) {
 }
 
 ScaledZoneParams GetParams(const ProxFunction& prox) {
-  CHECK_EQ(1, prox.arg_size_size());
-  const int n = prox.arg_size(0).dim(0)*prox.arg_size(0).dim(1);
+  int n;
+  if (prox.has_axis()) {
+    n = prox.arg_size(0).dim(prox.axis());
+  } else {
+    n = prox.arg_size(0).dim(0)*prox.arg_size(0).dim(1);
+  }
 
   ScaledZoneParams params;
   if (prox.prox_function_type() == ProxFunction::NORM_1) {
@@ -263,7 +267,7 @@ void ScaledZoneEpigraph::ApplyVector(
       break;
     }
   }
-        
+
   double lam = acc/(div+1);
 
   output->set_value(

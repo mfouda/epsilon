@@ -23,9 +23,6 @@ logging.basicConfig(level=logging.DEBUG)
 # TODO(mwytock): Fix this
 #ProblemInstance("group_lasso", group_lasso.create, dict(m=15, ni=5, K=10)),
 
-# Need elementwise epi for this
-# ProblemInstance("infinite_push", infinite_push.create, dict(m=20, n=20, d=10)),
-
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=10, n=30)),
     ProblemInstance("chebyshev", chebyshev.create, dict(m=10, n=20, k=3)),
@@ -36,6 +33,7 @@ PROBLEMS = [
     ProblemInstance("hinge_l2", hinge_l2.create, dict(m=20, n=10, rho=1)),
     ProblemInstance("hinge_l2_sparse", hinge_l2.create, dict(m=20, n=10, rho=1, mu=0.5)),
     ProblemInstance("huber", huber.create, dict(m=20, n=10)),
+    ProblemInstance("infinite_push", infinite_push.create, dict(m=20, n=20, d=10)),
     ProblemInstance("lasso", lasso.create, dict(m=5, n=20, rho=0.1)),
     ProblemInstance("lasso_sparse", lasso.create, dict(m=5, n=20, rho=0.1, mu=0.5)),
     ProblemInstance("least_abs_dev", least_abs_dev.create, dict(m=10, n=5)),

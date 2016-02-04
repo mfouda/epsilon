@@ -385,10 +385,12 @@ def semidefinite(X):
 def non_negative(x):
     return indicator(Cone.NON_NEGATIVE, x)
 
-def prox_function(f, *args):
+def prox_function(f, *args, **kwargs):
+    size = kwargs["size"] if "size" in kwargs else (1,1)
+
     return Expression(
         expression_type=expression_pb2.Expression.PROX_FUNCTION,
-        size=Size(dim=[1, 1]),
+        size=Size(dim=size),
         prox_function=f,
         arg=args)
 

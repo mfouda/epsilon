@@ -147,11 +147,32 @@ BlockVector VectorProx::Apply(const BlockVector& v) {
   PreProcessInput(v);
 
   if (prox_function_.has_axis()) {
-    const int k = 1 - prox_function_.axis();  // the other dimension
+    const int n = prox_function_.arg_size_size();
+
+    // Set up inputs
+    input_.V_.resize(n);
+    output_.X_.resize(n);
+    if (prox_function_.has_axis()) {
+      for (int i = 0; i < n; i++) {
+        const Size& dims = prox_function_.arg_size(i);
+        input_.V_[i] = ToMatrix(
+            input_.v_(affine::arg_key(i)), dims.dim(0), dims.dim(1));
+        output_.X_[i] = Eigen::MatrixXd(dims.dim(0), dims.dim(1));
+      }
+    }
+
+    // Iterate over the other dimension
+    const Size& dims = prox_function_.arg_size(0);
+    const int k = dims.dim(1 - prox_function_.axis());
     for (int i = 0; i < k; i++) {
       input_.axis_iter_ = i;
       output_.axis_iter_ = i;
       ApplyVector(input_, &output_);
+    }
+
+    // Copy outputs
+    for (int i = 0; i < n; i++) {
+      output_.x_(affine::arg_key(i)) = ToVector(output_.X_[i]);
     }
   } else {
     ApplyVector(input_, &output_);
@@ -176,17 +197,15 @@ double VectorProxInput::value(int i) const {
 }
 
 Eigen::VectorXd VectorProxInput::value_vec(int i) const {
-  Eigen::VectorXd v = v_(affine::arg_key(i));
   if (prox_function_.has_axis()) {
-    const Size& dims = prox_function_.arg_size(i);
-    Eigen::MatrixXd V = ToMatrix(v, dims.dim(0), dims.dim(1));
     if (prox_function_.axis() == 0) {
-      return V.col(axis_iter_);
+      return V_[i].col(axis_iter_);
     } else {
-      return V.row(axis_iter_);
+      return V_[i].row(axis_iter_);
     }
+  } else {
+    return v_(affine::arg_key(i));
   }
-  return v_(affine::arg_key(i));
 }
 
 void VectorProxInput::set_lambda(double lambda) {
@@ -203,8 +222,11 @@ void VectorProxOutput::set_value(int i, double x) {
 
 void VectorProxOutput::set_value(int i, const Eigen::VectorXd& x) {
   if (prox_function_.has_axis()) {
-    CHECK_EQ(1, x.size());
-    x_(affine::arg_key(i))(axis_iter_) = x(0);
+    if (prox_function_.axis() == 0) {
+      X_[i].col(axis_iter_) = x;
+    } else {
+      X_[i].row(axis_iter_) = x;
+    }
   } else {
     x_(affine::arg_key(i)) = x;
   }
