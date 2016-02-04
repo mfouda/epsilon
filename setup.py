@@ -115,7 +115,7 @@ setup(
     ]},
     ext_modules = [solve],
     install_requires = [
-        "cvxpy == 0.3.5",
+        "cvxpy == 0.3.6",
         "protobuf >= 3.0.0a3"
     ],
     cmdclass = {
