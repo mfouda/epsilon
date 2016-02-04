@@ -649,8 +649,8 @@ PROX_RULES = [
 PROX_RULES += BASE_RULES
 
 PROX_RULES += [
-    epigraph,
     neg_log_det_epigraph,
+    epigraph,
     prox_non_negative,
 
     # Lowest priority, transform to cone problem
