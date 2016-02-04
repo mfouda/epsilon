@@ -336,8 +336,13 @@ def prox_log_sum_exp(expr):
     return MatchResult(
         True,
         expression.prox_function(
-            create_prox(prox_function_type=ProxFunction.LOG_SUM_EXP),
-            scalar_arg),
+            create_prox(
+                prox_function_type=ProxFunction.LOG_SUM_EXP,
+                arg_size=[Size(dim=dims(arg))],
+                has_axis=expr.has_axis,
+                axis=expr.axis),
+            scalar_arg,
+            size=dims(expr)),
         constrs)
 
 def prox_max(expr):

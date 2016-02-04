@@ -146,6 +146,8 @@ BlockVector VectorProx::PostProcessOutput(const BlockVector& v) {
 BlockVector VectorProx::Apply(const BlockVector& v) {
   PreProcessInput(v);
 
+  LOG(INFO) << prox_function_.DebugString();
+
   if (prox_function_.has_axis()) {
     const int n = prox_function_.arg_size_size();
 
