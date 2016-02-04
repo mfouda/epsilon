@@ -8,7 +8,7 @@ from numpy.random import randn, rand
 from epopt.proto.epsilon.expression_pb2 import ProxFunction
 from epopt.prox import eval_prox
 
-RANDOM_PROX_TRIALS = 1
+RANDOM_PROX_TRIALS = 10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -245,11 +245,6 @@ PROX_TESTS += [
     epigraph("SUM_QUANTILE", None, lambda: [f_quantile() <= t]),
     #epigraph("SUM_SQUARE", None, lambda: [f_quad_form() <= t]),
     epigraph("SUM_SQUARE", None, lambda: [cp.sum_squares(x) <= t]),
-]
-
-PROX_TESTS = [
-    epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(X, axis=0) <= t_rvec]),
-    epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(X, axis=1) <= t_vec]),
 ]
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
