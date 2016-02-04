@@ -56,6 +56,7 @@ PROBLEMS = [
 # Each problem should take ~1 minute with 2000 iterations using SCS
 PROBLEMS_ICML = [
     ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
+    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=1500, n=150)),
 ]
 
 PROBLEMS_SCALE = []

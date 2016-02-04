@@ -43,7 +43,7 @@ PROBLEMS = [
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_TINY, n=10)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=5, n=20, k=2, rho=0.1)),
     ProblemInstance("mv_lasso_sparse", lasso.create, dict(m=5, n=10, k=2, rho=0.1, mu=0.5)),
-    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=50, n=10)),
+    ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=20, n=3)),
     ProblemInstance("portfolio", portfolio.create, dict(m=5, n=10)),
     ProblemInstance("qp", qp.create, dict(n=10)),
     ProblemInstance("quantile", quantile.create, dict(m=40, n=2, k=3)),
@@ -51,10 +51,6 @@ PROBLEMS = [
     ProblemInstance("robust_svm", robust_svm.create, dict(m=50, n=2)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=10)),
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
-]
-
-PROBLEMS = [
-    ProblemInstance("infinite_push", infinite_push.create, dict(m=20, n=20, d=10))
 ]
 
 PARAMS = [
@@ -66,7 +62,7 @@ def solve_problem(problem_instance, params):
     np.random.seed(0)
     problem = problem_instance.create()
     if isinstance(problem, tuple):
-        problem, f_eval = problem 
+        problem, f_eval = problem
     logging.debug(problem_instance.name)
 
     problem.solve(solver=cp.SCS)
