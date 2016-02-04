@@ -213,7 +213,7 @@ PROX_TESTS = [
 
 # Epigraph operators
 PROX_TESTS += [
-    #epigraph(NEG_LOG_DET, None, lambda: [cp.log_det(X) >= -t]),
+    epigraph("NEG_LOG_DET", None, lambda: [-cp.log_det(X) <= t]),
     #epigraph("EXP", None, lambda: [cp.exp(x) <= z])
     epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(x) <= t]),
     epigraph("LAMBDA_MAX", None, lambda: [cp.lambda_max(X) <= t]),
