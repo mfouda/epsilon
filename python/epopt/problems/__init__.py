@@ -13,6 +13,7 @@ from epopt.problems import lasso
 from epopt.problems import least_abs_dev
 from epopt.problems import logreg_l1
 from epopt.problems import lp
+from epopt.problems import max_gaussian
 from epopt.problems import mnist
 from epopt.problems import oneclass_svm
 from epopt.problems import portfolio

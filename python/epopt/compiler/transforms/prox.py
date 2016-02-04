@@ -564,6 +564,34 @@ def epigraph(expr):
     # Not in epigraph form
     return MatchResult(False)
 
+def neg_log_det_epigraph(expr):
+    if len(expr.arg[0].arg) != 2:
+        return MatchResult(False)
+
+    for i in xrange(2):
+        if expr.arg[0].arg[i].expression_type == Expression.LOG_DET:
+            exprs = [expr.arg[0].arg[i],
+                        expr.arg[0].arg[1-i]]
+            break
+    else:
+        return MatchResult(False)
+
+    arg = exprs[0].arg[0]
+    scalar_arg, constrs = convert_scalar(arg)
+
+    epi_function = create_prox(
+                alpha=1,
+                prox_function_type=ProxFunction.NEG_LOG_DET,
+                arg_size=[Size(dim=dims(arg))])
+    epi_function.epigraph = True
+
+    return MatchResult(
+        True,
+        expression.prox_function(
+            epi_function,
+            *[scalar_arg, exprs[1]]),
+        constrs)
+
 # Conic transform (catch-all default)
 
 def transform_cone(expr):
@@ -616,6 +644,9 @@ PROX_RULES = [
     # Simple
     prox_constant,
     prox_affine,
+
+    # Custom epigraph
+    neg_log_det_epigraph,
 ]
 
 def multiply_scalar(alpha, prox_expr):
