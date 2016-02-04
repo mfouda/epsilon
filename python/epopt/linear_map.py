@@ -24,13 +24,6 @@ def kronecker_product(A, B):
         n=A.n*B.n,
         arg=[A, B])
 
-def kronecker_product_single_arg(A, Bm, Bn):
-    return LinearMap(
-        linear_map_type=LinearMap.KRONECKER_PRODUCT,
-        m=A.m*Bm,
-        n=A*n*Bn,
-        arg=[A])
-
 def dense_matrix(constant):
     return LinearMap(
         linear_map_type=LinearMap.DENSE_MATRIX,
@@ -81,8 +74,16 @@ def one_hot(i, n):
     return sparse_matrix(
         constant.store(sp.coo_matrix(([1], ([i], [0])), shape=(n,1))))
 
-def sum(n):
-    return dense_matrix(constant.store(np.ones((1,n))))
+def sum(m, n):
+    return kronecker_product(
+        dense_matrix(constant.store(np.ones((1,n)))),
+        dense_matrix(constant.store(np.ones((1,m)))))
+
+def sum_left(m, n):
+    return left_matrix_product(dense_matrix(constant.store(np.ones((1,m)))), n)
+
+def sum_right(m, n):
+    return right_matrix_product(dense_matrix(constant.store(np.ones((n,1)))), m)
 
 def promote(n):
     return dense_matrix(constant.store(np.ones((n,1))))
@@ -95,6 +96,14 @@ def left_matrix_product(A, n):
 
 def right_matrix_product(B, m):
     return kronecker_product(transpose(B), identity(m))
+
+def transpose_matrix(m, n):
+    A = sp.coo_matrix(
+        (np.ones(m*n),
+         (np.arange(m*n),
+          np.tile(np.arange(n)*m, m) + np.repeat(np.arange(m), n))),
+        shape=(m*n, m*n))
+    return sparse_matrix(constant.store(A))
 
 # NOTE(mwytock): Represent the following functions as sparse matrices. This is
 # not very efficient, but we expect these to be relatively rare so the sparse

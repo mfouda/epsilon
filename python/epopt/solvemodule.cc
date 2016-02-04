@@ -10,8 +10,9 @@
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
 #include "epsilon/parameters/local_parameter_service.h"
-#include "epsilon/solver_params.pb.h"
 #include "epsilon/prox/prox.h"
+#include "epsilon/solver_params.pb.h"
+#include "epsilon/util/logging.h"
 
 // TODO(mwytock): Does failure handling need to be made threadsafe? Seems like
 // making these threadlocal would do
@@ -203,6 +204,10 @@ void HandleFailure() {
   longjmp(failure_buf, 1);
 }
 
+void LogVerbose_PySys(const std::string& msg) {
+  PySys_WriteStdout("%s\n", msg.c_str());
+}
+
 static PyMethodDef SolveMethods[] = {
   {"prox_admm_solve", ProxADMMSolve, METH_VARARGS,
    "Solve a problem with epsilon."},
@@ -211,6 +216,7 @@ static PyMethodDef SolveMethods[] = {
   {nullptr, nullptr, 0, nullptr}
 };
 
+
 static bool initialized = false;
 PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
@@ -218,6 +224,10 @@ PyMODINIT_FUNC init_solve() {
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
     google::InstallFailureFunction(&HandleFailure);
+    SetVerboseLogger(&LogVerbose_PySys);
+
+    // TODO(mwytock): Should we set up glog so that VLOG uses PySys_WriteStderr?
+
     initialized = true;
   }
 

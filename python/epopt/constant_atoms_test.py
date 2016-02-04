@@ -5,6 +5,7 @@ rather than existing solvers.
 """
 
 from cvxpy.atoms import *
+from cvxpy.atoms.affine.transpose import transpose
 from cvxpy.atoms.affine.binary_operators import MulExpression
 from cvxpy.expressions.constants import Constant, Parameter
 from cvxpy.expressions.variables import Variable
@@ -63,6 +64,8 @@ atoms = [
 
         # (lambda x: lambda_sum_largest(x, 2), (1, 1), [ [[1, 2, 3], [2,4,5], [3,5,6]] ], Constant([11.51572947])),
         # (log_sum_exp, (1, 1), [ [[5, 7], [0, -3]] ], Constant([7.1277708268])),
+        # (log_sum_exp_axis_0, (1,2), [ [[5, 7], [0, -3]] ], Constant([7.12692801, 0.04858735]).T),
+        # (log_sum_exp_axis_1, (2,1), [ [[5, 7], [0, -3]] ], Constant([5.00671535, 7.0000454])),
         # (logistic, (2, 2),
         #  [
         #      [[math.log(5), math.log(7)],
@@ -84,6 +87,8 @@ atoms = [
          Constant([[5,4],[0,2]])),
         (max_entries, (1, 1), [ [[-5,2],[-3,1]] ], Constant([2])),
         (max_entries, (1, 1), [ [-5,-10] ], Constant([-5])),
+        (lambda x: max_entries(x, axis=0), (1, 2), [ [[-5,2],[-3,1]] ], Constant([2, 1]).T),
+        (lambda x: max_entries(x, axis=1), (2, 1), [ [[-5,2],[-3,1]] ], Constant([-3, 2])),
 
         (lambda x: norm(x, 2), (1, 1), [v], Constant([3])),
         (lambda x: norm(x, "fro"), (1, 1), [ [[-1, 2],[3, -4]] ],
@@ -138,6 +143,9 @@ atoms = [
         (lambda x: norm(x, 2), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([22.368559552680377])),
         (lambda x: scalene(x, 2, 3), (2, 2), [ [[-5,2],[-3,1]] ], Constant([[15,4],[9,2]])),
         (square, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[25,4],[9,1]])),
+        (sum_entries, (1,1), [ [[-5,2],[-3,1]] ], Constant(-5)),
+        (lambda x: sum_entries(x, axis=0), (1,2), [ [[-5,2],[-3,1]] ], Constant([[-3], [-2]])),
+        (lambda x: sum_entries(x, axis=1), (2,1), [ [[-5,2],[-3,1]] ], Constant([-8, 3])),
         (lambda x: (x + Constant(0))**2, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[25,4],[9,1]])),
         (lambda x: sum_largest(x, 3), (1, 1), [ [1,2,3,4,5] ], Constant([5+4+3])),
         (lambda x: sum_largest(x, 3), (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([9+10+11])),
@@ -145,6 +153,7 @@ atoms = [
 
         (trace, (1, 1), [ [[3,4,5],[6,7,8],[9,10,11]] ], Constant([3 + 7 + 11])),
         (trace, (1, 1), [ [[-5,2],[-3,1]]], Constant([-5 + 1])),
+        (transpose, (2, 3), [ [[1,2,3],[4,5,6]] ], Constant([[1,2,3],[4,5,6]]).T),
 
         (tv, (1, 1), [ [1,-1,2] ], Constant([5])),
         (tv, (1, 1), [ [[1],[-1],[2]] ], Constant([5])),
@@ -210,10 +219,9 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda_min, (1, 1), [ [[5,7],[7,-3]] ], Constant([-7.06225775])),
-#     ], Maximize),
+#         (transpose, (2, 3), [ [[1,2,3],[4,5,6]] ], Constant([[1,2,3],[4,5,6]]).T)
+#         ], Minimize),
 # ]
-
 
 def check_solver(prob, solver_name):
     """Can the solver solve the problem?

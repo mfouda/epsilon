@@ -2,6 +2,7 @@
 *.pyc
 *_pb2.py
 .ipynb_checkpoints
+_build
 _solve.so
 build
 build-cc

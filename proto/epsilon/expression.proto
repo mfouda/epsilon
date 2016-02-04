@@ -321,6 +321,10 @@ message Expression {
     repeated Fraction w_dyad = 2;
   }
   GeoMeanParams geo_mean_params = 20;
+
+  // MAX_ENTRIES, SUM_ENTRIES, LOG_SUM_EXP
+  bool has_axis = 21;
+  int32 axis = 22;
 }
 
 // Arbitrary convex problem of the form

@@ -23,19 +23,20 @@ CXXFLAGS += -Wno-sign-compare -Wno-unused-parameter
 CXXFLAGS += -I$(src_dir) -I$(eigen_dir)  -I$(gtest_dir)/include
 CXXFLAGS += -I$(build_dir) -I$(deps_dir)/include
 
-# Dont parallelize at Eigen level
-CXXFLAGS += -DEIGEN_DONT_PARALLELIZE
+# For benchmark only
+CXXFLAGS += -I/usr/local/include
 
 # Third-party library, glmgen
 glmgen_dir = third_party/glmgen/c_lib/glmgen
 glmgen_CFLAGS = -I$(glmgen_dir)/include
 
 # Third-party library, Google benchmark
-benchmark_LDLIBS = -lbenchmark
+benchmark_LDLIBS = -L/usr/local/lib -lbenchmark
 
 # System-specific configuration
 SYSTEM = $(shell uname -s)
 
+LDLIBS = -lblas
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
@@ -85,6 +86,7 @@ common_cc = \
 	epsilon/prox/vector_prox.cc \
 	epsilon/prox/zero.cc \
 	epsilon/util/file.cc \
+	epsilon/util/logging.cc \
 	epsilon/util/string.cc \
 	epsilon/util/time.cc \
 	epsilon/vector/block_cholesky.cc \
@@ -115,9 +117,9 @@ tests = \
 	epsilon/vector/block_vector_test
 
 deps = \
-	gflags \
+	protobuf \
 	glog \
-	protobuf
+	gflags
 
 libs = epsilon
 binaries = epsilon/benchmark
@@ -178,7 +180,7 @@ endif
 ifeq ($(SYSTEM),Darwin)
 all_libs_obj=$(deps_obj) -all_load $(libs_obj)
 else
-all_libs_obj=$(deps_obj) -Wl,--whole-archive $(libs_obj) -Wl,--no-whole-archive
+all_libs_obj=-Wl,--whole-archive $(libs_obj) -Wl,--no-whole-archive $(deps_obj)
 endif
 
 # Binaries
@@ -186,10 +188,10 @@ $(build_dir)/epsilon/benchmark: $(build_dir)/epsilon/benchmark.o $(deps_obj) $(l
 	$(LINK.cc) $< $(LDLIBS) $(all_libs_obj) -o $@
 
 $(build_dir)/epsilon/linear/benchmarks: $(build_dir)/epsilon/linear/benchmarks.o
-	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) -o $@
+	$(LINK.cc) $^ $(benchmark_LDLIBS) $(LDLIBS) $(all_libs_obj) -o $@
 
 # Tests
-test: $(build_tests)
+test: all $(build_tests)
 	@$(tools_dir)/run_tests.sh $(build_tests)
 
 # NOTE(mwytock): Add -Wno-missing-field-intializers to this rule to avoid error

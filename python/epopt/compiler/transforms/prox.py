@@ -499,12 +499,8 @@ def prox_sum_square(expr):
         expr.arg[1].constant.scalar == 1):
         arg = expr.arg[0]
     elif (expr.expression_type == Expression.POWER and
-        expr.p == 2 and
-        expr.arg[0].expression_type == Expression.NORM_P and
-        expr.arg[0].p == 2 and
-        expr.arg[0].arg[0].expression_type == Expression.MULTIPLY and
-        expr.arg[0].arg[0].arg[0].expression_type == Expression.CONSTANT and
-        expr.arg[0].arg[0].arg[1].expression_type == Expression.VARIABLE):
+          expr.arg[0].expression_type == Expression.NORM_P and
+          expr.p == 2 and expr.arg[0].p == 2):
         arg = expr.arg[0].arg[0]
     else:
         return MatchResult(False)
@@ -544,11 +540,18 @@ def epigraph(expr):
                 epi_function = result.prox_expr.prox_function
                 epi_function.epigraph = True
 
+                linear_t_expr = linear.transform_expr(t_expr)
+                if linear_t_expr.affine_props.scalar:
+                    constrs = []
+                else:
+                    linear_t_expr, constrs = epi_transform(
+                        linear_t_expr, "scalar")
+
                 return MatchResult(
                     True,
                     expression.prox_function(
-                        epi_function, *(result.prox_expr.arg + [t_expr])),
-                    result.raw_exprs)
+                        epi_function, *(result.prox_expr.arg + [linear_t_expr])),
+                    result.raw_exprs + constrs)
 
         # No epigraph transform found, do conic transformation
         obj, constrs = conic.transform_expr(f_expr)

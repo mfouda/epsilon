@@ -1,9 +1,12 @@
 #include "epsilon/linear/kronecker_product_impl.h"
 #include "epsilon/vector/vector_util.h"
+#include "epsilon/util/time.h"
 
 namespace linear_map {
 
 LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
+  VLOG(1) << "Converting kron to dense (" << m() << " x " << n() << ")";
+
   DenseMatrix A = A_.impl().AsDense();
   DenseMatrix B = B_.impl().AsDense();
   DenseMatrix C(m(), n());
@@ -18,6 +21,8 @@ LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
 }
 
 LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
+  VLOG(1) << "Converting kron to sparse (" << m() << " x " << n() << ")";
+
   DenseMatrix A = A_.impl().AsDense();
   DenseMatrix B = B_.impl().AsDense();
   SparseMatrix C(m(), n());

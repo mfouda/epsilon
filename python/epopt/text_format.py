@@ -2,7 +2,7 @@
 
 from epopt import expression_util
 from epopt.compiler import validate
-from epopt.proto.epsilon.expression_pb2 import Expression, Cone, LinearMap
+from epopt.proto.epsilon.expression_pb2 import Expression, Cone, LinearMap, ProxFunction
 
 NAMES = {
     Expression.VARIABLE: "xyzwvutsrq",
@@ -46,6 +46,9 @@ class NameMap(object):
 def function_name(proto):
     if proto.expression_type == Expression.INDICATOR:
         return Cone.Type.Name(proto.cone.cone_type).lower()
+    elif proto.expression_type == Expression.PROX_FUNCTION:
+        return ProxFunction.Type.Name(
+            proto.prox_function.prox_function_type).lower()
     return Expression.Type.Name(proto.expression_type).lower()
 
 def format_params(proto):
@@ -81,6 +84,9 @@ def linear_map_name(linear_map, name_map):
         assert len(linear_map.arg) == 2
         return "kron(" + ", ".join(linear_map_name(arg, name_map)
                                    for arg in linear_map.arg) + ")"
+    elif linear_map.linear_map_type == LinearMap.TRANSPOSE:
+        assert len(linear_map.arg) == 1
+        return "transpose(" + linear_map_name(linear_map.arg[0], name_map) + ")"
 
     raise ValueError("unknown linear map type: %d" % linear_map.linear_map_type)
 

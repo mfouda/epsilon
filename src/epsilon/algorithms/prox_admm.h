@@ -52,13 +52,14 @@ private:
   int iter_;
   BlockVector u_;
   std::vector<BlockVector> x_;
+  std::vector<BlockVector> y_;
   std::vector<std::unique_ptr<ProxOperator> > prox_;
 
   // Iteration variables
   SolverStatus status_;
 
   // For computing residuals
-  std::vector<BlockVector> x_prev_;
+  std::vector<BlockVector> y_prev_;
   BlockMatrix AT_;
 
   friend class ProxADMMSolverTest;

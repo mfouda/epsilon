@@ -8,6 +8,7 @@
 #include "epsilon/expression/expression.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/prox/prox.h"
+#include "epsilon/util/logging.h"
 #include "epsilon/util/string.h"
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
@@ -42,6 +43,7 @@ void ProxADMMSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
   x_.resize(N_);
+  y_.resize(N_);
 
   // See TODO below
   CHECK_EQ(1, params_.rho());
@@ -50,6 +52,7 @@ void ProxADMMSolver::InitProxOperators() {
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
 
+    VLOG(1) << "prox " << i << " build affine operator";
     AffineOperator H;
     for (int i = 0; i < f_expr.arg_size(); i++) {
       affine::BuildAffineOperator(
@@ -71,10 +74,11 @@ void ProxADMMSolver::InitProxOperators() {
 
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
     bool epigraph = f_expr.prox_function().epigraph();
-    VLOG(2) << "prox " << i << ", initializing "
+    VLOG(1) << "prox " << i << ", initializing "
             << ProxFunction::Type_Name(type);
     prox_.emplace_back(CreateProxOperator(type, epigraph));
     prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
+    VLOG(1) << "prox " << i << " init done";
 
     // TODO(mwytock): This is scaled by rho now, figure out what to do here
     AiT_.push_back(A.A.Transpose());
@@ -85,6 +89,7 @@ void ProxADMMSolver::Init() {
   VLOG(3) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
+
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
   VLOG(2) << "A:\n" << A_.DebugString() << "\n"
           << "b:\n" << b_.DebugString();
@@ -94,34 +99,38 @@ void ProxADMMSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
-    x_prev_ = x_;
+    y_prev_ = y_;
 
     u_ -= b_;
     for (int i = 0; i < N_; i++)
-      u_ -= A_*x_[i];
+      u_ -= y_[i];
 
     for (int i = 0; i < N_; i++) {
-      u_ += A_*x_[i];
+      u_ += y_[i];
       x_[i] = prox_[i]->Apply(u_);
-      u_ -= A_*x_[i];
+      y_[i] = A_*x_[i];
+      u_ -= y_[i];
       VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
     }
     VLOG(2) << "u: " << u_.DebugString();
 
     if (iter_ % params_.epoch_iterations() == 0) {
       ComputeResiduals();
-      LogStatus();
       if (status_.state() == SolverStatus::OPTIMAL)
         break;
+    }
+
+    if (iter_ % params_.log_iterations() == 0) {
+      LogStatus();
     }
   }
 
   if (iter_ == params_.max_iterations()) {
     ComputeResiduals();
-    LogStatus();
     status_.set_state(SolverStatus::MAX_ITERATIONS_REACHED);
   }
 
+  LogStatus();
   UpdateParameters();
   UpdateStatus(status_);
 }
@@ -156,7 +165,7 @@ void ProxADMMSolver::ComputeResiduals() {
   double s_norm_squared = 0;
   BlockVector Ax_diff;
   for (int i = N_ - 2; i >= 0; i--) {
-    Ax_diff += A_*(x_[i+1] - x_prev_[i+1]);
+    Ax_diff += y_[i+1] - y_prev_[i+1];
     const double s_norm_i = (AiT_[i]*Ax_diff).norm();
     s_norm_squared += s_norm_i*s_norm_i;
   }
@@ -179,11 +188,13 @@ void ProxADMMSolver::ComputeResiduals() {
 
 void ProxADMMSolver::LogStatus() {
   const SolverStatus::Residuals& r = status_.residuals();
-  VLOG(1) << StringPrintf(
+  std::string status = StringPrintf(
       "iter=%d residuals primal=%.2e [%.2e] dual=%.2e [%.2e]",
       status_.num_iterations(),
       r.r_norm(),
       r.epsilon_primal(),
       r.s_norm(),
       r.epsilon_dual());
+  VLOG(1) << status;
+  if (params_.verbose()) LogVerbose(status);
 }

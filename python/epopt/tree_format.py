@@ -8,6 +8,7 @@ def key_str(expr):
 
 LINEAR_MAP_NAMES = {
     LinearMap.DENSE_MATRIX: "dense",
+    LinearMap.DIAGONAL_MATRIX: "diag",
     LinearMap.KRONECKER_PRODUCT: "kron",
     LinearMap.SPARSE_MATRIX: "sparse",
 }

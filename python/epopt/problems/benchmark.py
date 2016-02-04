@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+import time
 
 import cvxpy as cp
 import numpy as np
@@ -20,6 +21,9 @@ from epopt.problems.problem_instance import ProblemInstance
 
 # Block cholesky very slow for this problem
 # ProblemInstance("group_lasso", group_lasso.create, dict(m=1500, ni=50, K=200)),
+
+# Convergence issues
+# ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
 
 
 PROBLEMS = [
@@ -45,7 +49,6 @@ PROBLEMS = [
     ProblemInstance("qp", qp.create, dict(n=1000)),
     ProblemInstance("quantile", quantile.create, dict(m=400, n=10, k=100, p=1)),
     ProblemInstance("robust_pca", robust_pca.create, dict(n=100)),
-    ProblemInstance("robust_svm", robust_svm.create, dict(m=5000, n=1500)),
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
@@ -133,19 +136,19 @@ def run_benchmarks(benchmarks, problems):
     for problem in problems:
         logging.debug("problem %s", problem.name)
 
-        t0 = benchmark_util.cpu_time()
+        t0 = time.time()
         np.random.seed(0)
         cvxpy_prob = problem.create()
-        t1 = benchmark_util.cpu_time()
+        t1 = time.time()
         logging.debug("creation time %f seconds", t1-t0)
 
         data = [problem.name]
         for benchmark in benchmarks:
             logging.debug("running %s", benchmark)
 
-            t0 = benchmark_util.cpu_time()
+            t0 = time.time()
             value = BENCHMARKS[benchmark](cvxpy_prob)
-            t1 = benchmark_util.cpu_time()
+            t1 = time.time()
 
             logging.debug("done %f seconds", t1-t0)
             yield benchmark, "%-15s" % problem.name, t1-t0, value
@@ -184,7 +187,9 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     if args.write:
-        benchmark_util.write_problems(problems, args.write)
+        for problem in problems:
+            benchmark_util.write_problem(
+                problem.create(), args.write, problem.name)
         sys.exit(0)
 
     for result in run_benchmarks([args.benchmark], problems):

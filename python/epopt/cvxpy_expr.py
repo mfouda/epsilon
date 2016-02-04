@@ -98,6 +98,13 @@ def convert_p(expression_type, expr):
     proto.proto.p = float(expr.p)
     return proto
 
+def convert_axis(expression_type, expr):
+    proto = convert_generic(expression_type, expr)
+    if expr.axis is not None:
+        proto.proto.has_axis = True
+        proto.proto.axis = expr.axis
+    return proto
+
 def convert_fraction(fraction):
     return expression_pb2.Fraction(
         a=fraction.numerator,
@@ -140,7 +147,7 @@ EXPRESSION_TYPES = (
     (logistic, lambda e: convert_generic(Expression.LOGISTIC, e)),
     (matrix_frac, lambda e: convert_generic(Expression.MATRIX_FRAC, e)),
     (max_elemwise, lambda e: convert_generic(Expression.MAX_ELEMENTWISE, e)),
-    (max_entries, lambda e: convert_generic(Expression.MAX_ENTRIES, e)),
+    (max_entries, lambda e: convert_axis(Expression.MAX_ENTRIES, e)),
     (min_elemwise, lambda e: convert_generic(Expression.MIN_ELEMENTWISE, e)),
     (mul_elemwise, lambda e: convert_binary(expression.multiply_elemwise, e)),
     (norm2_elemwise, lambda e: convert_generic(Expression.NORM_2_ELEMENTWISE, e)),
@@ -150,7 +157,7 @@ EXPRESSION_TYPES = (
     (quad_over_lin, lambda e: convert_generic(Expression.QUAD_OVER_LIN, e)),
     (reshape, lambda e: convert_generic(Expression.RESHAPE, e)),
     (sigma_max, lambda e: convert_generic(Expression.SIGMA_MAX, e)),
-    (sum_entries, lambda e: convert_generic(Expression.SUM, e)),
+    (sum_entries, lambda e: convert_axis(Expression.SUM, e)),
     (sum_largest, lambda e: convert_sum_largest(e)),
     (trace, lambda e: convert_generic(Expression.TRACE, e)),
     (transpose, lambda e: convert_unary(expression.transpose, e)),

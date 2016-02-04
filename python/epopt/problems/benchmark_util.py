@@ -23,6 +23,12 @@ def modify_data_location(expr, f):
     if expr.expression_type == Expression.LINEAR_MAP:
         modify_data_location_linear_map(expr.linear_map, f)
 
+    if (expr.expression_type == Expression.PROX_FUNCTION and
+        expr.prox_function.HasField("scaled_zone_params")):
+        params = expr.prox_function.scaled_zone_params
+        modify_data_location(params.alpha_expr, f)
+        modify_data_location(params.beta_expr, f)
+
     for arg in expr.arg:
         modify_data_location(arg, f)
 
@@ -34,7 +40,7 @@ def makedirs_existok(path):
             pass
         else: raise
 
-def write_problems(problems, location):
+def write_problem(cvxpy_prob, location, name):
     """Utility function to write problems for analysis."""
 
     mem_prefix = "/mem/"
@@ -44,23 +50,22 @@ def write_problems(problems, location):
         return file_prefix + name[len(mem_prefix):]
 
     makedirs_existok(location)
-    for problem in problems:
-        prob_proto = cvxpy_expr.convert_problem(problem.create())
-        prob_proto = compiler.compile_problem(prob_proto)
+    prob_proto = cvxpy_expr.convert_problem(cvxpy_prob)
+    prob_proto = compiler.compile_problem(prob_proto)
 
-        modify_data_location(prob_proto.objective, rewrite_location)
-        for constraint in prob_proto.constraint:
-            modify_data_location(constraint, rewrite_location)
+    modify_data_location(prob_proto.objective, rewrite_location)
+    for constraint in prob_proto.constraint:
+        modify_data_location(constraint, rewrite_location)
 
-        with open(os.path.join(location, problem.name), "w") as f:
-            f.write(prob_proto.SerializeToString())
+    with open(os.path.join(location, name), "w") as f:
+        f.write(prob_proto.SerializeToString())
 
-        for name, value in constant.global_data_map.items():
-            assert name[:len(mem_prefix)] == mem_prefix
-            filename = os.path.join(location, name[len(mem_prefix):])
-            makedirs_existok(os.path.dirname(filename))
-            with open(filename, "w") as f:
-                f.write(value)
+    for name, value in constant.global_data_map.items():
+        assert name[:len(mem_prefix)] == mem_prefix
+        filename = os.path.join(location, name[len(mem_prefix):])
+        makedirs_existok(os.path.dirname(filename))
+        with open(filename, "w") as f:
+            f.write(value)
 
 def cpu_time():
     return resource.getrusage(resource.RUSAGE_SELF).ru_utime

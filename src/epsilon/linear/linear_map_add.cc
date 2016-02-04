@@ -91,7 +91,9 @@ LinearMapImpl* Add_SparseMatrix_ScalarMatrix(
 LinearMapImpl* Add_SparseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  LOG(FATAL) << "Not implemented";
+  return new SparseMatrixImpl(
+      static_cast<const SparseMatrixImpl&>(lhs).sparse() +
+      static_cast<const KroneckerProductImpl&>(rhs).AsSparse());
 }
 
 LinearMapImpl* Add_DiagonalMatrix_DenseMatrix(
@@ -220,9 +222,7 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   } else if (K1.B() == K2.B()) {
     return new KroneckerProductImpl(K1.A() + K2.A(), K1.B());
   } else {
-    LOG(FATAL) << "Adding incompatible kronecker products\n"
-               << "K1: " << K1.DebugString() << "\n"
-               << "K2: " << K2.DebugString();
+    return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
   }
 }
 
@@ -285,6 +285,7 @@ LinearMapBinaryOp kAddTable
 };
 
 LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+  VLOG(2) << "linear_map_add " << lhs.type() << " " << rhs.type();
   return LinearMap((*kAddTable[lhs.type()][rhs.type()])(lhs, rhs));
 }
 
