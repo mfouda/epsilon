@@ -47,3 +47,13 @@ def quantile_loss(alphas, Theta, X, y):
 def poisson_loss(theta, X, y):
     return (cp.sum_entries(cp.exp(X*theta)) -
             cp.sum_entries(sp.diags([y],[0])*X*theta))
+
+
+# Ranking loss
+
+def infinite_push(theta, Xp, Xn):
+    m, d = Xp.shape
+    n = Xn.shape[0]
+    Z = cp.max_elemwise(
+        1 - (Xp*theta*np.ones((1,n)) - (Xn*theta*np.ones((1,m))).T), 0)
+    return cp.max_entries(cp.sum_entries(Z, axis=0))

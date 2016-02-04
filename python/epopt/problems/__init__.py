@@ -9,6 +9,7 @@ from epopt.problems import hinge
 from epopt.problems import hinge_l1
 from epopt.problems import hinge_l2
 from epopt.problems import huber
+from epopt.problems import infinite_push
 from epopt.problems import lasso
 from epopt.problems import least_abs_dev
 from epopt.problems import logreg_l1
