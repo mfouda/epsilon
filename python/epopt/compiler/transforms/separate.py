@@ -128,7 +128,7 @@ GRAPH_TRANSFORMS = [
     add_constant_prox,
 ]
 
-def transform_problem(problem):
+def transform_problem(problem, params):
     validate.check_sum_of_prox(problem)
     graph = build_graph(problem)
 

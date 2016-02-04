@@ -215,6 +215,9 @@ def transform_exp(expr):
     t = epi_var(expr, "exp")
     return t, expression.epigraph(expr, t)
 
+def transform_indicator(expr):
+    return expression.scalar_constant(0, size=dims(expr)), [expr]
+
 def transform_expr(expr):
     log_debug_expr("conic transform_expr", expr)
 

@@ -106,8 +106,8 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
     dict(m=100, n=200, k=int(n)))
     for n in np.logspace(1, np.log10(80), 10)]
 
-def benchmark_epsilon(cvxpy_prob):
-    cvxpy_solver.solve(cvxpy_prob, rel_tol=1e-2, abs_tol=1e-4)
+def benchmark_epsilon(cvxpy_prob, **kwargs):
+    cvxpy_solver.solve(cvxpy_prob, **kwargs)
     return cvxpy_prob.objective.value
 
 def benchmark_cvxpy(solver, cvxpy_prob):
@@ -127,7 +127,8 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         return float("nan")
 
 BENCHMARKS = {
-    "epsilon": benchmark_epsilon,
+    "epsilon": lambda p: benchmark_epsilon(p),
+    "epsilon_no_epi": lambda p: benchmark_epsilon(p, use_epigraph=False),
     "scs": lambda p: benchmark_cvxpy(cp.SCS, p),
     "ecos": lambda p: benchmark_cvxpy(cp.ECOS, p),
 }

@@ -55,4 +55,7 @@ message SolverParams {
   // Enforce minimum time between updates
   optional int32 consensus_rate_limit_usec = 25 [default = 0];
   optional int32 status_rate_limit_usec = 26 [default = 100000];
+
+  // Whether to use the epigraph operators
+  optional bool use_epigraph = 29 [default = true];
 }

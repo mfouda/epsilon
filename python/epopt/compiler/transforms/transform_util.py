@@ -26,10 +26,12 @@ def epi(f_expr, t_expr):
     if f_curvature == Curvature.CONVEX:
         return expression.leq_constraint(f_expr, t_expr)
     elif f_curvature == Curvature.CONCAVE:
-        return expression.leq_constraint(negate(f_expr), negate(t_expr))
+        return expression.leq_constraint(
+            expression.negate(f_expr), expression.negate(t_expr))
     elif f_curvature == Curvature.AFFINE:
         return expression.eq_constraint(f_expr, t_expr);
-    raise TransformError("Unknown curvature", f_expr)
+    raise TransformError(
+        "Unknown curvature: %s" % Curvature.Type.Name(f_curvature), f_expr)
 
 def epi_var(expr, name, size=None):
     if size is None:

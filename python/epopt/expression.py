@@ -12,6 +12,7 @@ from epopt.proto.epsilon.expression_pb2 import Monotonicity, Curvature, Sign, Si
 
 # Shorthand convenience
 SIGNED = Monotonicity(monotonicity_type=Monotonicity.SIGNED)
+INCREASING = Monotonicity(monotonicity_type=Monotonicity.INCREASING)
 
 AFFINE = Curvature(curvature_type=Curvature.AFFINE)
 CONSTANT = Curvature(curvature_type=Curvature.CONSTANT)
@@ -137,6 +138,7 @@ def add(*args):
         size=Size(
             dim=reduce(lambda a, b: elementwise_dims(a, b),
                        (dims(a) for a in args))),
+        arg_monotonicity=len(args)*[INCREASING],
         func_curvature=AFFINE)
 
 def multiply(*args):

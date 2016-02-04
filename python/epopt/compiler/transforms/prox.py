@@ -124,7 +124,8 @@ def prox_norm_1(expr):
 
 def prox_non_negative(expr):
     if (expr.expression_type == Expression.INDICATOR and
-        expr.cone.cone_type == Cone.NON_NEGATIVE):
+        expr.cone.cone_type == Cone.NON_NEGATIVE and
+        expr.arg[0].dcp_props.affine):
         arg = expr.arg[0]
     else:
         return MatchResult(False)
@@ -603,7 +604,6 @@ BASE_RULES = [
     prox_sum_square,
 ]
 
-
 PROX_RULES = [
     # Operators
     prox_add,
@@ -618,25 +618,15 @@ PROX_RULES = [
     prox_affine,
 ]
 
-PROX_RULES += BASE_RULES
-
-PROX_RULES += [
-    epigraph,
-    prox_non_negative,
-
-    # Lowest priority, transform to cone problem
-    transform_cone,
-]
-
 def multiply_scalar(alpha, prox_expr):
     assert prox_expr.expression_type == Expression.PROX_FUNCTION
     if not is_indicator_prox(prox_expr.prox_function):
         prox_expr.prox_function.alpha *= alpha
     return prox_expr
 
-def transform_expr(expr):
+def transform_expr(prox_rules, expr):
     log_debug_expr("prox transform_expr", expr)
-    for rule in PROX_RULES:
+    for rule in prox_rules:
         result = rule(expr)
 
         if result.match:
@@ -645,14 +635,22 @@ def transform_expr(expr):
                 yield result.prox_expr
 
             for raw_expr in result.raw_exprs:
-                for prox_expr in transform_expr(raw_expr):
+                for prox_expr in transform_expr(prox_rules, raw_expr):
                     yield multiply_scalar(result.alpha, prox_expr)
             break
     else:
         raise TransformError("No rule matched")
 
-def transform_problem(problem):
-    f_exprs = list(transform_expr(problem.objective))
+def transform_problem(problem, params):
+    prox_rules = PROX_RULES + BASE_RULES
+
+    # Epigraph/cone rules
+    if params.use_epigraph:
+        prox_rules.append(epigraph)
+    prox_rules.append(prox_non_negative)
+    prox_rules.append(transform_cone)
+
+    f_exprs = list(transform_expr(prox_rules, problem.objective))
     for constr in problem.constraint:
-        f_exprs += list(transform_expr(constr))
+        f_exprs += list(transform_expr(prox_rules, constr))
     return expression.Problem(objective=expression.add(*f_exprs))

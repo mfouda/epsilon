@@ -8,6 +8,7 @@ import numpy as np
 from epopt import cvxpy_solver
 from epopt.problems import *
 from epopt.problems.problem_instance import ProblemInstance
+from epopt.solver_params_pb2 import SolverParams
 
 REL_TOL = {
     "hinge_l1": 1e-4,
@@ -50,6 +51,11 @@ PROBLEMS = [
     ProblemInstance("tv_denoise", tv_denoise.create, dict(n=10, lam=1)),
 ]
 
+PARAMS = [
+    SolverParams(use_epigraph=True),
+    SolverParams(use_epigraph=False),
+]
+
 def solve_problem(problem_instance):
     np.random.seed(0)
     problem = problem_instance.create()
@@ -58,8 +64,11 @@ def solve_problem(problem_instance):
     obj0 = problem.objective.value
 
     logging.debug(problem_instance.name)
-    cvxpy_solver.solve(
-        problem, rel_tol=REL_TOL.get(problem_instance.name, 1e-3))
+
+    # per-instance rel_tol
+    params = copy.deepcopy(params)
+    params.rel_tol = REL_TOL.get(problem_instance.name, 1e-3)
+    cvxpy_solver.solve(problem, params)
     obj1 = problem.objective.value
 
     # A lower objective is okay
@@ -67,4 +76,5 @@ def solve_problem(problem_instance):
 
 def test_solve():
     for problem in PROBLEMS:
-        yield solve_problem, problem
+        for params in PARAMS:
+            yield solve_problem, problem, params

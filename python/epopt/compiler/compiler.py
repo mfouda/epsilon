@@ -16,10 +16,11 @@ TRANSFORMS = [
 def transform_name(transform):
     return ".".join((transform.__module__, transform.__name__))
 
-def compile_problem(problem):
+def compile_problem(problem, params):
+    logging.debug("params:\n%s", params)
     logging.debug("input:\n%s", tree_format.format_problem(problem))
     for transform in TRANSFORMS:
-        problem = transform(problem)
+        problem = transform(problem, params)
         logging.debug(
             "%s:\n%s",
             transform_name(transform),

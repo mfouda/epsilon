@@ -47,7 +47,7 @@ def solve(cvxpy_prob, **kwargs):
 
     t0 = time.time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
-    problem = compiler.compile_problem(problem)
+    problem = compiler.compile_problem(problem, params)
     t1 = time.time()
 
     if params.verbose:
