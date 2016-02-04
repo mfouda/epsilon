@@ -53,6 +53,11 @@ PROBLEMS = [
     ProblemInstance("tv_1d", tv_1d.create, dict(n=100000)),
 ]
 
+# Each problem should take ~1 minute with 2000 iterations using SCS
+PROBLEMS_ICML = [
+    ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
+]
+
 PROBLEMS_SCALE = []
 PROBLEMS_SCALE += [ProblemInstance(
     "lasso_%d" % int(m),
@@ -147,7 +152,7 @@ def benchmark_cvxpy(solver, cvxpy_prob):
 
 BENCHMARKS = {
     "epsilon": lambda p: benchmark_epsilon(p),
-    "epsilon_no_epi": lambda p: benchmark_epsilon(p, use_epigraph=False),
+    "no_epi": lambda p: benchmark_epsilon(p, use_epigraph=False),
     "scs": lambda p: benchmark_cvxpy(cp.SCS, p),
     "ecos": lambda p: benchmark_cvxpy(cp.ECOS, p),
 }
