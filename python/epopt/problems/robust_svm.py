@@ -30,4 +30,10 @@ def create(m, n):
     C = [t1 == y[:,np.newaxis]*X*theta - t2,
          cp.norm1(z) <= t2,
          P.T*theta == z]
-    return cp.Problem(cp.Minimize(f), C)
+
+
+    z_eval = lambda: (P.T*theta).value
+    t2_eval = lambda: cp.norm1(z_eval()).value
+    f_eval = lambda: (lam/2*cp.sum_squares(theta) + problem_util.hinge(1-y[:, np.newaxis]*X*theta-t2_eval())).value
+
+    return cp.Problem(cp.Minimize(f), C), f_eval

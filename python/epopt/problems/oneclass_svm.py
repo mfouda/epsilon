@@ -16,4 +16,8 @@ def create(**kwargs):
     t = cp.Variable(1)
     f = cp.sum_entries(cp.max_elemwise(
         1-2*A.T*x+t-rho, 0)) + lam * rho
-    return cp.Problem(cp.Minimize(f), [rho >= 0, cp.sum_squares(x) <= t])
+    
+    sq_eval = lambda: cp.sum_squares(x).value
+    f_eval = lambda: (cp.sum_entries(cp.max_elemwise(1-2*A.T*x+sq_eval()-rho, 0)) + lam*cp.max_elemwise(0,rho)).value
+
+    return cp.Problem(cp.Minimize(f), [rho >= 0, cp.sum_squares(x) <= t]), f_eval

@@ -19,4 +19,9 @@ def create(**kwargs):
     z = K*cp.reshape(sigma, n*n, 1)
     C = [-cp.log_det(sigma) <= tdet, t == z]
 
-    return cp.Problem(cp.Minimize(f), C)
+    det_eval = lambda: -cp.log_det(sigma).value
+    z_eval = lambda: (K*cp.reshape(sigma, n*n, 1)).value
+    f_eval = lambda: cp.sum_largest(z_eval()+det_eval(), k).value
+
+
+    return cp.Problem(cp.Minimize(f), C), f_eval
