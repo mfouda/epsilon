@@ -65,6 +65,8 @@ PARAMS = [
 def solve_problem(problem_instance, params):
     np.random.seed(0)
     problem = problem_instance.create()
+    if isinstance(problem, tuple):
+        problem, f_eval = problem 
     logging.debug(problem_instance.name)
 
     problem.solve(solver=cp.SCS)
