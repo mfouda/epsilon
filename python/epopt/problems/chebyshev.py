@@ -22,4 +22,7 @@ def create(**kwargs):
     for i in range(k):
         C += [cp.pnorm(A[i]*x, 1) <= t1[i]]
     C += [v == B*x+c, v <= (t-t1), -v <= (t-t1)]
-    return cp.Problem(cp.Minimize(f), C)
+
+    f_eval = lambda: cp.sum_largest(np.array([cp.pnorm(A[i]*x, 1).value for i in range(k)]) + (B*x+c).value, p).value
+
+    return cp.Problem(cp.Minimize(f), C), f_eval
