@@ -188,6 +188,10 @@ message ProxFunction {
     Expression beta_expr = 6;
   }
   ScaledZoneParams scaled_zone_params = 6;
+
+  // Axis parameters
+  bool has_axis = 7;
+  int32 axis = 8;
 }
 
 // a/b

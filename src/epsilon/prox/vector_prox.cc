@@ -125,6 +125,14 @@ void VectorProx::Init(const ProxOperatorArg& arg) {
     VLOG(2) << "lambda: " << VectorDebugString(input_.lambda_vec_);
   else
     VLOG(2) << "lambda: " << input_.lambda_;
+
+  InitAxis(arg);
+}
+
+void VectorProx::InitAxis(const ProxOperatorArg& arg) {
+  prox_function_ = arg.prox_function();
+  input_.prox_function_ = arg.prox_function();
+  output_.prox_function_ = arg.prox_function();
 }
 
 void VectorProx::PreProcessInput(const BlockVector& v) {
@@ -137,7 +145,18 @@ BlockVector VectorProx::PostProcessOutput(const BlockVector& v) {
 
 BlockVector VectorProx::Apply(const BlockVector& v) {
   PreProcessInput(v);
-  ApplyVector(input_, &output_);
+
+  if (prox_function_.has_axis()) {
+    const int k = 1 - prox_function_.axis();  // the other dimension
+    for (int i = 0; i < k; i++) {
+      input_.axis_iter_ = i;
+      output_.axis_iter_ = i;
+      ApplyVector(input_, &output_);
+    }
+  } else {
+    ApplyVector(input_, &output_);
+  }
+
   return PostProcessOutput(v);
 }
 
@@ -156,7 +175,17 @@ double VectorProxInput::value(int i) const {
   return val(0);
 }
 
-const Eigen::VectorXd& VectorProxInput::value_vec(int i) const {
+Eigen::VectorXd VectorProxInput::value_vec(int i) const {
+  Eigen::VectorXd v = v_(affine::arg_key(i));
+  if (prox_function_.has_axis()) {
+    const Size& dims = prox_function_.arg_size(i);
+    Eigen::MatrixXd V = ToMatrix(v, dims.dim(0), dims.dim(1));
+    if (prox_function_.axis() == 0) {
+      return V.col(axis_iter_);
+    } else {
+      return V.row(axis_iter_);
+    }
+  }
   return v_(affine::arg_key(i));
 }
 
@@ -169,11 +198,16 @@ void VectorProxInput::set_lambda(double lambda) {
 }
 
 void VectorProxOutput::set_value(int i, double x) {
-  x_(affine::arg_key(i)) = Eigen::VectorXd::Constant(1, x);
+  set_value(i, Eigen::VectorXd::Constant(1, x));
 }
 
 void VectorProxOutput::set_value(int i, const Eigen::VectorXd& x) {
-  x_(affine::arg_key(i)) = x;
+  if (prox_function_.has_axis()) {
+    CHECK_EQ(1, x.size());
+    x_(affine::arg_key(i))(axis_iter_) = x(0);
+  } else {
+    x_(affine::arg_key(i)) = x;
+  }
 }
 
 double VectorProxOutput::value(int i) const {

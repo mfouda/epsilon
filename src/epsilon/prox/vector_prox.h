@@ -9,7 +9,7 @@ class VectorProxInput {
   const Eigen::VectorXd& lambda_vec() const;
 
   double value(int i) const;
-  const Eigen::VectorXd& value_vec(int i) const;
+  Eigen::VectorXd value_vec(int i) const;
 
   void set_lambda(double lambda);
 
@@ -20,6 +20,10 @@ class VectorProxInput {
   Eigen::VectorXd lambda_vec_;
   double lambda_;
   BlockVector v_;
+
+  // Axis handling
+  ProxFunction prox_function_;
+  int axis_iter_;
 };
 
 class VectorProxOutput {
@@ -34,6 +38,10 @@ class VectorProxOutput {
   friend class VectorProx;
 
   BlockVector x_;
+
+  // Axis handling
+  ProxFunction prox_function_;
+  int axis_iter_;
 };
 
 class VectorProx : public ProxOperator {
@@ -41,7 +49,7 @@ class VectorProx : public ProxOperator {
   void Init(const ProxOperatorArg& arg) override;
   BlockVector Apply(const BlockVector& v) override;
 
-  // To be overriden by subclasses
+  // To be overridden by subclasses
   virtual void ApplyVector(
       const VectorProxInput& input,
       VectorProxOutput* output) = 0;
@@ -53,6 +61,7 @@ class VectorProx : public ProxOperator {
  private:
   bool InitScalar(const ProxOperatorArg& arg);
   bool InitDiagonal(const ProxOperatorArg& arg);
+  void InitAxis(const ProxOperatorArg& arg);
 
   void PreProcessInput(const BlockVector& v);
   BlockVector PostProcessOutput(const BlockVector& v);
@@ -65,6 +74,9 @@ class VectorProx : public ProxOperator {
   // threadsafe which may be a consideration in future
   VectorProxInput input_;
   VectorProxOutput output_;
+
+  // Axis handling
+  ProxFunction prox_function_;
 };
 
 #endif  // EPSILON_PROX_VECTOR_H
