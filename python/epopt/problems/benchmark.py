@@ -41,7 +41,7 @@ PROBLEMS = [
     ProblemInstance("logreg_l1_sparse", logreg_l1.create, dict(m=1500, n=50000, rho=0.01, mu=0.1)),
     ProblemInstance("lp", lp.create, dict(m=800, n=1000)),
     ProblemInstance("max_gaussian", max_gaussian.create, dict(m=10, n=10, k=3)),
-    ProblemInstance("max_softmax", max_softmax.create, dict(m=100, n=200)),
+    ProblemInstance("max_softmax", max_softmax.create, dict(m=100, k=20, n=50, epsilon_eps=1e-3)),
     ProblemInstance("mnist", mnist.create, dict(data=mnist.DATA_SMALL, n=1000)),
     ProblemInstance("mv_lasso", lasso.create, dict(m=1500, n=5000, k=10, rho=0.01)),
     ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=5000, n=200)),
@@ -106,12 +106,17 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "max_gaussian_%d" % int(n),
     max_gaussian.create,
-    dict(m=int(n), n=int(n), k=5))
+    dict(m=int(n), n=100, k=5, epsilon_eps=1e-2, scs_eps=1e-2))
     for n in np.logspace(1, np.log10(80), 10)]
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "infinite_push_%d" % int(n),
     infinite_push.create,
     dict(m=int(n), n=int(n), d=int(n)))
+    for n in np.logspace(1, np.log10(80), 10)]
+PROBLEM_SCALE_ICML += [ProblemInstance(
+    "max_softmax_%d" % int(n),
+    max_softmax.create,
+    dict(m=int(n)*10, k=int(n)*3, n=10, scs_eps=9e-3))
     for n in np.logspace(1, np.log10(80), 10)]
 
 
