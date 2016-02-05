@@ -178,7 +178,7 @@ void NewtonEpigraph::ApplyVector(
     VLOG(2) << "XRES = "<< x_res << ", theta = " << theta <<"\n";
 
     if(x_res < eps) {
-      VLOG(1) << "Using " << iter+1 << " Newton iteration.\n";
+      VLOG(2) << "Using " << iter+1 << " Newton iteration.\n";
       break;
     } else if(iter == MAX_ITER-1) {
       VLOG(1) << "Newton Method won't converge for epigraph.\n";
