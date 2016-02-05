@@ -31,4 +31,4 @@ def create(**kwargs):
         + cp.sum_entries(cp.log_sum_exp(X*Theta, axis=1)).value \
         + cp.sum_squares(Theta).value
     
-    return cp.Problem(cp.Minimize(f), C), f_val
+    return cp.Problem(cp.Minimize(f), C), f_eval
