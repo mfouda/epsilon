@@ -25,7 +25,7 @@ from epopt.problems.problem_instance import ProblemInstance
 
 PROBLEMS = [
     ProblemInstance("basis_pursuit", basis_pursuit.create, dict(m=1000, n=3000)),
-    ProblemInstance("chebyshev", chebyshev.create, dict(m=100, n=200, k=3)),
+    ProblemInstance("chebyshev", chebyshev.create, dict(m=100, n=200)),
     ProblemInstance("covsel", covsel.create, dict(m=100, n=200, lam=0.1)),
     ProblemInstance("fused_lasso", fused_lasso.create, dict(m=1000, ni=10, k=1000)),
     ProblemInstance("hinge_l1", hinge_l1.create, dict(m=1500, n=5000, rho=0.01)),
@@ -55,7 +55,7 @@ PROBLEMS = [
 
 # Each problem should take ~1 minute with 2000 iterations using SCS
 PROBLEMS_ICML = [
-    ProblemInstance("chebyshev", chebyshev.create, dict(m=200, n=300, k=60)),
+    ProblemInstance("chebyshev", chebyshev.create, dict(m=5000, n=200)),
     ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
 ]
@@ -101,8 +101,8 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "chebyshev_%d" % int(n),
     chebyshev.create,
-    dict(m=100, n=100, k=int(n)))
-    for n in np.logspace(1, np.log10(80), 10)]
+    dict(m=100*int(n), n=100))
+    for n in np.logspace(1.3, np.log10(200), 10)]
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "max_gaussian_%d" % int(n),
     max_gaussian.create,
@@ -124,6 +124,8 @@ def benchmark_epsilon(cvxpy_prob, **kwargs):
         kwargs["abs_tol"] = 1e-8
         kwargs["rel_tol"] = 1e-8
         kwargs["max_iterations"] = args.iterations
+    else:
+        kwargs["max_iterations"] = 50000
 
     cvxpy_solver.solve(cvxpy_prob, **kwargs)
     if args.debug:
@@ -140,6 +142,7 @@ def benchmark_cvxpy(solver, cvxpy_prob):
             kwargs["eps"] = 1e-8
         else:
             kwargs["max_iters"] = 10000
+            kwargs["eps"] = 1e-3
 
     try:
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
