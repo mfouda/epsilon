@@ -57,6 +57,7 @@ PROBLEMS = [
 PROBLEMS_ICML = [
     ProblemInstance("chebyshev", chebyshev.create, dict(m=5000, n=200)),
     ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5)),
+    ProblemInstance("max_softmax", max_softmax.create, dict(m=150, k=45, n=10)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
 ]
 
