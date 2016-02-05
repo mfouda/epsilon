@@ -101,7 +101,7 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "chebyshev_%d" % int(n),
     chebyshev.create,
-    dict(m=100*int(n), n=100))
+    dict(m=100*int(n), n=100, epsilon_eps=7e-4/n, scs_eps=1e-1))
     for n in np.logspace(1.3, np.log10(200), 10)]
 PROBLEM_SCALE_ICML += [ProblemInstance(
     "max_gaussian_%d" % int(n),
@@ -127,6 +127,10 @@ def benchmark_epsilon(cvxpy_prob, **kwargs):
     else:
         kwargs["max_iterations"] = 50000
 
+	if "epsilon_eps" in cvxpy_prob.kwargs:
+		kwargs["abs_tol"] = cvxpy_prob.kwargs["epsilon_eps"]
+		kwargs["rel_tol"] = cvxpy_prob.kwargs["epsilon_eps"]/100.
+
     cvxpy_solver.solve(cvxpy_prob, **kwargs)
     if args.debug:
         print_constraints(cvxpy_prob)
@@ -143,6 +147,8 @@ def benchmark_cvxpy(solver, cvxpy_prob):
         else:
             kwargs["max_iters"] = 10000
             kwargs["eps"] = 1e-3
+        if "scs_eps" in cvxpy_prob.kwargs:
+            kwargs["eps"] = cvxpy_prob.kwargs["scs_eps"]
 
     try:
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
