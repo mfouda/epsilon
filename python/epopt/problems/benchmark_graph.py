@@ -13,8 +13,8 @@ import matplotlib
 
 LABELS = {
     'epsilon': 'Epsilon',
-    'scs': 'CVXPY+SCS',
-    'ecos': 'CVXPY+ECOS',
+    'scs': 'SCS',
+    'ecos': 'ECOS',
 }
 
 if __name__ == "__main__":

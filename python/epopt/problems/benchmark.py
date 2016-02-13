@@ -54,12 +54,12 @@ PROBLEMS = [
 ]
 
 # Each problem should take ~1 minute with 2000 iterations using SCS
+# ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5))
 PROBLEMS_ICML = [
     ProblemInstance("chebyshev", chebyshev.create, dict(m=5000, n=200)),
-    ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5)),
-    ProblemInstance("max_softmax", max_softmax.create, dict(m=150, k=45, n=10)),
-    ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
+    ProblemInstance("max_softmax", max_softmax.create, dict(m=400, k=120, n=10)),
     ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=6000, n=600)),
+    ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
 ]
 
 PROBLEMS_SCALE = []
@@ -120,6 +120,7 @@ PROBLEM_SCALE_ICML += [ProblemInstance(
     max_softmax.create,
     dict(m=int(n)*10, k=int(n)*3, n=10, scs_eps=9e-3))
     for n in np.logspace(1, np.log10(80), 10)]
+
 
 
 def print_constraints(cvxpy_prob):
