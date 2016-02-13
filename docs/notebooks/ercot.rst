@@ -6,8 +6,8 @@ In this example, we explore statistical modeling of electricity prices
 in wholesale electricity market, applying a probabilistic model that
 goes beyond standard point forecasts and is able to represent
 uncertainty over future possible outcomes. In particular, we employ
-*multiple quantile regression*, a well-established technique from the
-staistical community, see e.g. `Koenker and Hallock
+*multiple quantile regression*, a well-established technique, see e.g.
+`Koenker and Hallock
 (2001) <http://www.econ.uiuc.edu/~roger/research/rq/QRJEP.pdf>`__.
 
 The dataset we will consider is taken from the wholesale electricity
@@ -15,13 +15,14 @@ markets in Texas, administered by `ERCOT <http://ercot.com>`__. The
 complete details of the market function are beyond the scope of this
 document, but in essence due to the fact electricity cannot easily be
 stored, the market must explicitly account for constraints of the
-transmission network. This is done through *location marginal pricing*
-(see e.g. `Bohn, Caramanis and Schweppe (1984) <lmp>`__) and results in
-different electricity prices in different parts of the grid. In addition
-the electricity market is a multi-settlement market in which
-participants submit both day-ahead and "real-time" (every 15 minutes)
-bids: the majority of transactions clear in the day-ahead market and the
-deviations from these committments is settled at the real-time price.
+transmission network. This is done through *locationial marginal
+pricing* (see e.g. `Bohn, Caramanis and Schweppe (1984) <lmp>`__) and
+results in different electricity prices in different parts of the grid.
+To reduce volatility, the electricity market is structure as a
+multi-settlement market in which participants submit both day-ahead and
+"real-time" (every 15 minutes) bids and offers; the majority of
+transactions clear in the day-ahead market and the deviations from these
+committments is settled at the real-time price.
 
 The goal of this example will be to build a model of real-time
 prices---such a model has many possible uses, including to inform the
@@ -39,20 +40,21 @@ bidding strategy of market participants.
 ERCOT market data
 -----------------
 
-We begin by loading historical data for day-ahead and real-time markets
-which is published on the ERCOT website at
-http://ercot.com/mktinfo/prices/index.html. Although there are 1000s of
-LMPs in the ERCOT network, for settlement purposes ERCOT aggregates the
-LMPs in 4 zones: North, South, West and Houston, a map is shown below.
+Historical data for day-ahead and real-time markets is published on the
+ERCOT website at http://ercot.com/mktinfo/prices/index.html. The map
+shown below below divides the ERCOT area into the 4 zones that were
+historically used for settlement.
 
 .. figure:: ercot_texas.png
    :alt: ERCOT zones
 
    ERCOT zones
 
-The data is distributed as a set of Excel spreadsheets which we have
-transformed to CSV and joined to get a complete time series of the
-day-ahead and real-time price of electricity for 2015.
+In 2010, ERCOT switched to a nodal market, settling transactions at
+individual nodes for each generation resource (roughly, <1000 nodes),
+explicitly accounting for transmission constraints with a process based
+on LMPs. In this example we use data that has been aggregated to a
+single zone as that is readily available from the ERCOT site.
 
 .. code:: python
 
@@ -70,16 +72,6 @@ In the following figure we see that the maximum real-time price
 difference across the 4 zones is greater than $10/MWh in less than 4% of
 the intervals observed in 2015 and we will focus on forecasting the real
 time price in this regime for the purposes of this notebook.
-
-The occassions where prices vary wildly across zones are typically
-dominated by planned and unplanned anomalous events (e.g. transmission
-line failures, extreme weather, etc.). These situations are also
-important to understand and likely deserve a different model that
-attempts to explicitly forecast the occurence of such extreme events (as
-a side note, price differences across nodes have been securitized in the
-form of congestion revenue rights, see e.g. `Traders Lured to Bet on
-Power Overloads Worth
-Billions <http://www.bloomberg.com/news/articles/2014-08-14/traders-lured-to-bet-on-power-overloads-worth-billions>`__).
 
 .. code:: python
 
@@ -125,9 +117,19 @@ Billions <http://www.bloomberg.com/news/articles/2014-08-14/traders-lured-to-bet
 .. image:: ercot_files/ercot_6_2.png
 
 
-In what follows we focus on forecasting the real-time price for the West
-zone which has the greatest amount of variability (due to wind power
-penetration). We also filter out extreme events of >$100/MWh prices.
+The occassions where prices vary wildly across nodes are typically
+caused by planned and unplanned anomalous events (e.g. transmission line
+failures, extreme weather, etc.). In practice, these situations are
+important to understand and likely deserve a different model that
+attempts to explicitly forecast the occurence of such extreme events
+taking into account the network of the grid, contingency plans, etc. As
+a side note, price differences across nodes have been securitized in the
+form of congestion revenue rights, see e.g. `Traders Lured to Bet on
+Power Overloads Worth
+Billions <http://www.bloomberg.com/news/articles/2014-08-14/traders-lured-to-bet-on-power-overloads-worth-billions>`__.
+
+In what follows we focus on forecasting the real-time price for the west
+zone, filtering out extreme events with >$100/MWh prices.
 
 .. code:: python
 
@@ -146,11 +148,11 @@ to the real-time price.
 
 
 
-.. image:: ercot_files/ercot_10_0.png
+.. image:: ercot_files/ercot_11_0.png
 
 
 
-.. image:: ercot_files/ercot_10_1.png
+.. image:: ercot_files/ercot_11_1.png
 
 
 Quantitatively, we will compare a time series of prices using mean
@@ -207,7 +209,7 @@ hour-of-day as follows.
 
 
 
-.. image:: ercot_files/ercot_14_1.png
+.. image:: ercot_files/ercot_15_1.png
 
 
 With this method we see that the median price in 2015 is relatively
@@ -510,11 +512,11 @@ bidding <https://www.caiso.com/1807/1807996f7020.html>`__).
 
 
 
-.. image:: ercot_files/ercot_25_0.png
+.. image:: ercot_files/ercot_26_0.png
 
 
 
-.. image:: ercot_files/ercot_25_1.png
+.. image:: ercot_files/ercot_26_1.png
 
 
 Multiple quantile regression
@@ -664,11 +666,11 @@ winter.
 
 
 
-.. image:: ercot_files/ercot_31_0.png
+.. image:: ercot_files/ercot_32_0.png
 
 
 
-.. image:: ercot_files/ercot_31_1.png
+.. image:: ercot_files/ercot_32_1.png
 
 
 We can also zoom into to get a more detailed view of how the price
@@ -681,11 +683,11 @@ distribution evolves over the period of a single day.
 
 
 
-.. image:: ercot_files/ercot_33_0.png
+.. image:: ercot_files/ercot_34_0.png
 
 
 
-.. image:: ercot_files/ercot_33_1.png
+.. image:: ercot_files/ercot_34_1.png
 
 
 Final notes
