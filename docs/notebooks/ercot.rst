@@ -3,7 +3,7 @@ Forecasting electricity prices with multiple quantile regression
 ================================================================
 
 In this example, we explore statistical modeling of electricity prices
-in wholesale electricity market, applying a probabilistic model that
+in the wholesale electricity market, applying a probabilistic model that
 goes beyond standard point forecasts and is able to represent
 uncertainty over future possible outcomes. In particular, we employ
 *multiple quantile regression*, a well-established technique, see e.g.
@@ -13,16 +13,17 @@ uncertainty over future possible outcomes. In particular, we employ
 The dataset we will consider is taken from the wholesale electricity
 markets in Texas, administered by `ERCOT <http://ercot.com>`__. The
 complete details of the market function are beyond the scope of this
-document, but in essence due to the fact electricity cannot easily be
-stored, the market must explicitly account for constraints of the
-transmission network. This is done through *locationial marginal
-pricing* (see e.g. `Bohn, Caramanis and Schweppe (1984) <lmp>`__) and
-results in different electricity prices in different parts of the grid.
-To reduce volatility, the electricity market is structure as a
-multi-settlement market in which participants submit both day-ahead and
-"real-time" (every 15 minutes) bids and offers; the majority of
-transactions clear in the day-ahead market and the deviations from these
-committments is settled at the real-time price.
+example, but in essence due to the fact electricity cannot easily be
+stored, the operator must ensure that supply and demand are equal at all
+times while explicitly accounting for constraints of the transmission
+network. This is done through *locationial marginal pricing* (`Bohn,
+Caramanis and Schweppe (1984) <lmp>`__) and results in different
+electricity prices in different parts of the grid. To reduce volatility,
+the electricity market is structure as a multi-settlement market in
+which participants submit both day-ahead and "real-time" (every 15
+minutes) bids and offers; the majority of transactions clear in the
+day-ahead market and the deviations from these committments is settled
+at the real-time price.
 
 The goal of this example will be to build a model of real-time
 prices---such a model has many possible uses, including to inform the
@@ -51,10 +52,11 @@ historically used for settlement.
    ERCOT zones
 
 In 2010, ERCOT switched to a nodal market, settling transactions at
-individual nodes for each generation resource (roughly, <1000 nodes),
-explicitly accounting for transmission constraints with a process based
-on LMPs. In this example we use data that has been aggregated to a
-single zone as that is readily available from the ERCOT site.
+individual nodes for each generation resource (on the order of 1000
+nodes), explicitly accounting for transmission constraints with a
+process based on locational marginal prices (LMPs). In this example we
+use historical price data that has been aggregated to a single zone as
+that is readily available from the ERCOT site.
 
 .. code:: python
 
@@ -64,14 +66,28 @@ single zone as that is readily available from the ERCOT site.
         converters={"Time": pd.to_datetime})
     prices = prices.tz_localize("UTC", level=1).tz_convert("US/Central", level=1)
 
-The prices at each zone is determined by an average of the LMPs for
-nodes assigned to each zone. Typically the network is uncongested and
-the network constraints imposed by transmission limitations are
-non-binding which results in prices that are the same across all zones.
+The occassions where prices vary wildly across nodes are typically
+caused by planned and unplanned anomalous events (e.g. transmission line
+failures, extreme weather, etc.). In practice, these situations are
+important to understand and likely deserve a more sophisticated model
+than we will propose here---such a model a model could explicitly
+forecast the occurence of such extreme events taking into account
+network constraints, contingency plans, etc. As a side note, in addition
+to bidding on energy via the day-ahead and real-time markets, the price
+differences across nodes have been directly securitized in the form of
+congestion revenue rights, see e.g. `Traders Lured to Bet on Power
+Overloads Worth
+Billions <http://www.bloomberg.com/news/articles/2014-08-14/traders-lured-to-bet-on-power-overloads-worth-billions>`__.
+
+However, at any particular time the network is typically uncongested and
+thus the constraints imposed by transmission limitations are
+non-binding, resulting in prices that are the same across all nodes.
+This is the regime we will focus on forecasting for the purposes of this
+notebook.
+
 In the following figure we see that the maximum real-time price
 difference across the 4 zones is greater than $10/MWh in less than 4% of
-the intervals observed in 2015 and we will focus on forecasting the real
-time price in this regime for the purposes of this notebook.
+the intervals observed in 2015.
 
 .. code:: python
 
@@ -117,17 +133,6 @@ time price in this regime for the purposes of this notebook.
 .. image:: ercot_files/ercot_6_2.png
 
 
-The occassions where prices vary wildly across nodes are typically
-caused by planned and unplanned anomalous events (e.g. transmission line
-failures, extreme weather, etc.). In practice, these situations are
-important to understand and likely deserve a different model that
-attempts to explicitly forecast the occurence of such extreme events
-taking into account the network of the grid, contingency plans, etc. As
-a side note, price differences across nodes have been securitized in the
-form of congestion revenue rights, see e.g. `Traders Lured to Bet on
-Power Overloads Worth
-Billions <http://www.bloomberg.com/news/articles/2014-08-14/traders-lured-to-bet-on-power-overloads-worth-billions>`__.
-
 In what follows we focus on forecasting the real-time price for the west
 zone, filtering out extreme events with >$100/MWh prices.
 
@@ -148,16 +153,16 @@ to the real-time price.
 
 
 
-.. image:: ercot_files/ercot_11_0.png
+.. image:: ercot_files/ercot_10_0.png
 
 
 
-.. image:: ercot_files/ercot_11_1.png
+.. image:: ercot_files/ercot_10_1.png
 
 
 Quantitatively, we will compare a time series of prices using mean
-absolute error. As a starting point, the MAE between the day-ahead price
-and the real-time price is given by
+absolute error (MAE). As a starting point, the MAE between the day-ahead
+price and the real-time price is
 
 .. code:: python
 
@@ -209,28 +214,28 @@ hour-of-day as follows.
 
 
 
-.. image:: ercot_files/ercot_15_1.png
+.. image:: ercot_files/ercot_14_1.png
 
 
 With this method we see that the median price in 2015 is relatively
 consistent near $20/MWh and we capture the variability that occurs in
-the afternoon. For simplicitly, we summarize the accuracy of this model
-using the mean absolute error of the empirical median. In what follows
-we will develop a more sophisticated forecasting model which we will see
-improves on this metric while simultaneously estimating the distribution
-over future prices.
+the afternoon. Even though we are interested in how well our model
+captures the probability distribution over future prices, for
+simplicitly we will summarize the accuracy of a model using MAE to get a
+rough comparison between methods.
 
 Forecasting model
 -----------------
 
-| Here we develop a basic forecasting models with two types of features:
-  - Periodic features for day, week, year
-| - Autoregressive features for previous observed - Day-ahead price
+Our basic forecasting model has three types of features: - Periodic
+features for hour, day, week, year, etc. - Autoregressive features for
+previously observed prices (e.g. price 24-hours ago) - Day-ahead price
 
-The goal of this forecasting model is to predict a day ahead-of-time
-(i.e. when bids are due for the day-ahead market), the real-time price.
-As such, the model only includes features that we can reasonably expect
-to observe in this scenario.
+To ground this task in a real world scenario, we imagine predicting the
+real-time prices for the following day with information that is
+available before the day-ahead market closes. As such, the model only
+includes features that we can reasonably expect to observe in this
+scenario.
 
 .. code:: python
 
@@ -275,9 +280,9 @@ to observe in this scenario.
     MAE: 3.70856043086
 
 
-As can be seen above, a simple linear model improves significantly with
-the features over the naive estimator (the empirical median). Next, we
-will consider a nonlinear estimator by explicitly incorporating
+As can be seen above, even a simple linear model improves significantly
+with the features over the naive estimator (the empirical median). Next,
+we will consider a nonlinear estimator by explicitly incorporating
 nonlinear feature transforms using radial-basis functions. First, we
 reduce the number of features to consider using a simple forward feature
 selection process: at each iteration we add the feature that most
@@ -337,16 +342,16 @@ features with radial basis functions (RBFs) taking the form
 
 where the parameter :math:`\mu_j` determines the center and
 :math:`\sigma_j` specifies the bandwidth of the :math:`j`\ th RBF
-feature. In order to ensure that the radial basis functions cover the
-subset of the feature space, we choose the centers using K-Means
-clustering and the bandwidths using the median trick:
+feature. In order to ensure that the radial basis functions cover a
+reasonable subset of the feature space, we choose the centers using
+K-Means clustering and the bandwidths using the median trick:
 
 .. math::  \DeclareMathOperator*{\median}{median} \sigma_j = \median_{\ell \ne j} \| \mu_j - \mu_\ell\|_2 
 
 In addition, in order to reduce computation time we fit the more
 sophisticated model on a 10% sample of the original dataset. This is
 simply expedient here as we have significantly more examples than
-features but in general more data will only increase performance
+features and in general more data will only increase performance
 (assuming overfitting is controlled, e.g. with cross-validation).
 
 .. code:: python
@@ -408,25 +413,21 @@ Least absolute deviations
 
 So far in the development of our forecasting model we have focused on
 feature selection and simply employed the ordinary least squares model
-with :math:`\ell_2`-regularization (also known as ridge regression). In
-particular the ``sklearn`` method we have been using fits the parameters
-:math:`\theta` by solving the optimization problem
+with :math:`\ell_2`-regularization (ridge regression). In particular the
+``sklearn`` method we have been using fits the parameters :math:`\theta`
+by solving the optimization problem
 
 .. math::  \DeclareMathOperator{\minimize}{minimize} \minimize \;\; (1/2) \|X\theta - y\|_2^2 + \lambda \|\theta\|_2^2 
 
 where :math:`X` and :math:`y` are the training data. However, in this
-problem our error metric is actually the :math:`\ell_1` loss and so we
-can get better performance by minimizing that function directly. In
-addition, since we have significantly expanded the number of features
-using RBFs, it makes sense to employ some :math:`\ell_1`-regularization
-in order to fit a sparse model. Putting these ideas together, our new
-optimization problem is
+problem our error metric is actually the :math:`\ell_1` loss (mean
+absolute error) and so we can get better performance by minimizing that
+function directly. In addition, since we have significantly expanded the
+number of features using RBFs, it makes sense to employ some
+:math:`\ell_1` regularization rather than the :math:`\ell_2` ridge
+penalty. Our new optimization problem is
 
 .. math::  \minimize \;\; \|X\theta - y\|_1 + \lambda \|\theta\|_1 
-
-In order to fit this model we employ `CVXPY <http://cvxpy.org>`__ and
-`Epsilon <http://epopt.io>`__ which allows us to specify the
-optimization problem directly.
 
 .. code:: python
 
@@ -496,9 +497,8 @@ optimization problem directly.
 With our new model, we can compare our predicted real-time price to the
 actual real-time price and see qualitatively that improves significantly
 over the day-ahead price. In theory, we could employ such a model to
-make virtual bids in the Ercot and others (e.g. CAISO refers to this
-practice as `convergence
-bidding <https://www.caiso.com/1807/1807996f7020.html>`__).
+make virtual bids in the ERCOT and other and electricity markets (e.g.
+`CAISO <https://www.caiso.com/1807/1807996f7020.html>`__).
 
 .. code:: python
 
@@ -512,11 +512,11 @@ bidding <https://www.caiso.com/1807/1807996f7020.html>`__).
 
 
 
-.. image:: ercot_files/ercot_26_0.png
+.. image:: ercot_files/ercot_25_0.png
 
 
 
-.. image:: ercot_files/ercot_26_1.png
+.. image:: ercot_files/ercot_25_1.png
 
 
 Multiple quantile regression
@@ -544,16 +544,7 @@ where :math:`\psi_\alpha` is the asymmetric absolute loss
 
    \psi_\alpha(z) = \max \{\alpha z, (\alpha - 1)z\}.
 
-In estimating the parameters with this new loss function we will
-maintain the :math:`\ell_1`-penalty to encourage sparsity.
-
-With standard statistical software, replacing the loss function would
-require a new package to be developed, new numerical algorithms to be
-studied and implemented, requiring significant effort. However, in the
-declarative model provided by CVXPY/Epsilon, this modification is
-straightforward. The main change necessary is to write the quantile loss
-function as a series of numpy matrix operations. One way to do this is
-as follows:
+This is written in Python as:
 
 .. code:: python
 
@@ -569,7 +560,7 @@ as follows:
                 cp.mul_elemwise(1-A, Z)))
 
 Then, we simply specify the desired and quantiles and substitute this
-function in place of our existing least absolute deviations term
+function in place of our existing least absolute deviations term.
 
 .. code:: python
 
@@ -588,9 +579,6 @@ function in place of our existing least absolute deviations term
     f = quantile_loss(alphas, Theta, X, y) + lam*cp.norm1(Theta)
     prob = cp.Problem(cp.Minimize(f))
     ep.solve(prob, rel_tol=1e-3, verbose=True)
-    
-    # NOTE(mwytock): SCS exhausts memory on this problem
-    # prob.solver(solver=cp.SCS)
     
     print "MAE:", mae(y_full, X_full.dot(Theta.value[:,k/2]))
     print "nonzero:", nz(Theta.value)
@@ -666,11 +654,11 @@ winter.
 
 
 
-.. image:: ercot_files/ercot_32_0.png
+.. image:: ercot_files/ercot_31_0.png
 
 
 
-.. image:: ercot_files/ercot_32_1.png
+.. image:: ercot_files/ercot_31_1.png
 
 
 We can also zoom into to get a more detailed view of how the price
@@ -683,11 +671,11 @@ distribution evolves over the period of a single day.
 
 
 
-.. image:: ercot_files/ercot_34_0.png
+.. image:: ercot_files/ercot_33_0.png
 
 
 
-.. image:: ercot_files/ercot_34_1.png
+.. image:: ercot_files/ercot_33_1.png
 
 
 Final notes
@@ -697,12 +685,14 @@ In this example we have developed a probabilistic forecasting model for
 real-time energy prices in the ERCOT market using
 `Epsilon <http//epopt.io/>`__ and `CVXPY <http://cvxpy.org/>`__.
 Although the input features considered here are relatively simple
-(namely just autoregressive features and periodic time features) the
-results are a significant improvement over naive baselines. Augmenting
-the set of features to include relevant weather data (wind speeds,
-temperatures, etc.) as well as the output of a load forecasting model
-would likely improve performance further. Finally, in this example we
-have explicitly excluded extreme events (price spikes) which likely
-deserve their own dedicated treatment and although they may be harder to
-predict directly, would likely be amenable to the probabilistic
-forecasting approach presented here.
+(namely just the day-ahead price, autoregressive features and periodic
+time features) the results are a significant improvement over naive
+baselines. Augmenting the set of features to include relevant weather
+data (wind speeds, temperatures, etc.) as well as the output of a load
+forecasting model would likely improve performance further.
+
+In addition, we have explicitly excluded extreme events (price spikes)
+which likely deserve their own dedicated treatment and although they may
+be harder to predict directly, would likely be amenable to the
+probabilistic forecasting approach presented here combined with a more
+sophisticated physical model of the grid, etc.
