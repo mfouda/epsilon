@@ -3,6 +3,14 @@ import cvxpy as cp
 import numpy as np
 import scipy.sparse as sp
 
+# Utility functions
+def sqdist(X, Y):
+    """Squared Euclidean distance for two sets of n-dimensional points."""
+    return (
+        np.tile(np.sum(X**2, axis=1), (Y.shape[0],1)).T +
+        np.tile(np.sum(Y**2, axis=1), (X.shape[0],1)) -
+        2*X.dot(Y.T))
+
 # Classification
 def hinge_loss(theta, X, y):
     if not all(np.unique(y) == [-1, 1]):
@@ -50,7 +58,6 @@ def poisson_loss(theta, X, y):
 
 
 # Ranking loss
-
 def infinite_push(theta, Xp, Xn):
     m, d = Xp.shape
     n = Xn.shape[0]
