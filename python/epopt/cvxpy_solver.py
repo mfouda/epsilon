@@ -72,7 +72,7 @@ def solve(cvxpy_prob, **kwargs):
         status = OPTIMAL
     else:
         params = solver_params_pb2.SolverParams(**kwargs)
-        status_str, values = _solve.prox_admm_solve(
+        status_str, values = _solve.solve(
             problem.SerializeToString(),
             params.SerializeToString(),
             constant.global_data_map)

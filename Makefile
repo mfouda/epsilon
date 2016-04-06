@@ -46,6 +46,7 @@ endif
 common_cc = \
 	epsilon/affine/affine.cc \
 	epsilon/algorithms/prox_admm.cc \
+	epsilon/algorithms/prox_admm_two_block.cc \
 	epsilon/algorithms/solver.cc \
 	epsilon/expression/expression.cc \
 	epsilon/expression/expression_util.cc \

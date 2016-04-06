@@ -50,6 +50,7 @@ class BlockVector {
 
   // Gets the desired key or returns a vector of zeros
   DenseVector Get(const std::string& key, int n) const;
+  BlockVector Select(const std::set<std::string>& keys) const;
 
   BlockVector& operator+=(const BlockVector& rhs);
   BlockVector& operator-=(const BlockVector& rhs);

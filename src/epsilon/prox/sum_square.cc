@@ -25,15 +25,17 @@ class SumSquareProx final : public ProxOperator {
     VLOG(2) << "M: " << M.DebugString();
     chol_.Compute(M);
     b_ = -alpha*g;
+    var_keys_ = H.col_keys();
   }
 
   BlockVector Apply(const BlockVector& v) override {
-    return chol_.Solve(b_ + v);
+    return chol_.Solve(b_ + v).Select(var_keys_);
   }
 
  private:
   BlockCholesky chol_;
   BlockVector b_;
+  std::set<std::string> var_keys_;
 };
 REGISTER_PROX_OPERATOR(SUM_SQUARE, SumSquareProx);
 

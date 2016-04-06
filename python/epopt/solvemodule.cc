@@ -6,6 +6,7 @@
 #include <glog/logging.h>
 
 #include "epsilon/algorithms/prox_admm.h"
+#include "epsilon/algorithms/prox_admm_two_block.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
@@ -82,7 +83,7 @@ void WriteConstants(PyObject* data) {
 }
 
 
-static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
+static PyObject* Solve(PyObject* self, PyObject* args) {
   const char* problem_str;
   const char* params_str;
   int problem_str_len, params_str_len;
@@ -108,14 +109,24 @@ static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
 
   InitLogging();
   WriteConstants(data);
-  ProxADMMSolver solver(
-      problem, params,
-      std::unique_ptr<ParameterService>(new LocalParameterService));
+  std::unique_ptr<Solver> solver;
+  std::unique_ptr<ParameterService> parameter_service(
+      new LocalParameterService);
+
+  if (params.solver() == SolverParams::PROX_ADMM) {
+    solver.reset(new ProxADMMSolver(
+        problem, params, std::move(parameter_service)));
+  } else if (params.solver() == SolverParams::PROX_ADMM_TWO_BLOCK) {
+    solver.reset(new ProxADMMTwoBlockSolver(
+        problem, params, std::move(parameter_service)));
+  } else {
+    LOG(FATAL) << "Unknown solver: " << params.solver();
+  }
 
   if (!setjmp(failure_buf)) {
     // Standard execution path
-    solver.Solve();
-    std::string status_str = solver.status().SerializeAsString();
+    solver->Solve();
+    std::string status_str = solver->status().SerializeAsString();
 
     // Get results
     PyObject* vars = PyDict_New();
@@ -123,7 +134,7 @@ static PyObject* ProxADMMSolve(PyObject* self, PyObject* args) {
       LocalParameterService parameter_service;
       for (const Expression* expr : GetVariables(problem)) {
         const std::string& var_id = expr->variable().variable_id();
-        uint64_t param_id = VariableParameterId(solver.problem_id(), var_id);
+        uint64_t param_id = VariableParameterId(solver->problem_id(), var_id);
         Eigen::VectorXd x = parameter_service.Fetch(param_id);
 
         PyObject* val = PyString_FromStringAndSize(
@@ -209,7 +220,7 @@ void LogVerbose_PySys(const std::string& msg) {
 }
 
 static PyMethodDef SolveMethods[] = {
-  {"prox_admm_solve", ProxADMMSolve, METH_VARARGS,
+  {"solve", Solve, METH_VARARGS,
    "Solve a problem with epsilon."},
   {"eval_prox", EvalProx, METH_VARARGS,
    "Test a proximal operator."},

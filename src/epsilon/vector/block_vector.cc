@@ -66,6 +66,16 @@ BlockVector::DenseVector BlockVector::Get(const std::string& key, int n) const {
   return iter->second;
 }
 
+BlockVector BlockVector::Select(const std::set<std::string>& keys) const {
+  BlockVector retval;
+  for (const std::string& key : keys) {
+    auto iter = data_.find(key);
+    if (iter != data_.end())
+      retval.data_.insert(*iter);
+  }
+  return retval;
+}
+
 int BlockVector::n() const {
   int n = 0;
   for (const auto& iter : data_) {

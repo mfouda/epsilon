@@ -56,6 +56,7 @@ PROBLEMS = [
 PARAMS = [
     dict(use_epigraph=True),
     dict(use_epigraph=False),
+    dict(solver="PROX_ADMM_TWO_BLOCK"),
 ]
 
 def solve_problem(problem_instance, params):

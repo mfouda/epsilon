@@ -1,8 +1,5 @@
 
-#include "epsilon/algorithms/prox_admm.h"
-
-#include <Eigen/OrderingMethods>
-#include <Eigen/SparseQR>
+#include "epsilon/algorithms/prox_admm_two_block.h"
 
 #include "epsilon/affine/affine.h"
 #include "epsilon/expression/expression.h"
@@ -13,7 +10,7 @@
 #include "epsilon/vector/vector_operator.h"
 #include "epsilon/vector/vector_util.h"
 
-ProxADMMSolver::ProxADMMSolver(
+ProxADMMTwoBlockSolver::ProxADMMTwoBlockSolver(
     const Problem& problem,
     const SolverParams& params,
     std::unique_ptr<ParameterService> parameter_service)
@@ -21,7 +18,10 @@ ProxADMMSolver::ProxADMMSolver(
       params_(params),
       parameter_service_(std::move(parameter_service)) {}
 
-void ProxADMMSolver::InitConstraints() {
+void ProxADMMTwoBlockSolver::InitConstraints() {
+  const double sqrt_rho = sqrt(params_.rho());
+
+  AffineOperator H, A;
   for (int i = 0; i < problem_.constraint_size(); i++) {
     const Expression& constr = problem_.constraint(i);
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
@@ -30,25 +30,29 @@ void ProxADMMSolver::InitConstraints() {
     affine::BuildAffineOperator(
         problem_.constraint(i).arg(0),
         affine::constraint_key(i),
-        &A_, &b_);
-    u_(affine::constraint_key(i)) = BlockVector::DenseVector::Zero(
-        GetDimension(problem_.constraint(i).arg(0)));
+        &H.A, &H.b);
+
+    for (const Expression* expr : GetVariables(constr)) {
+      const std::string& var_id = expr->variable().variable_id();
+      A.A(var_id, var_id) =
+          sqrt_rho*linear_map::Identity(GetDimension(*expr));
+      z_(var_id) = BlockVector::DenseVector::Zero(GetDimension(*expr));
+    }
   }
-  AT_ = A_.Transpose();
-  m_ = A_.m();
-  n_ = A_.n();
+  // Prox for I(Ax + b = 0) constraint
+  constr_prox_ = CreateProxOperator(ProxFunction::ZERO, false);
+  constr_prox_->Init(ProxOperatorArg(ProxFunction(), H, A));
+  VLOG(1) << "constr prox init done";
+
+  m_ = H.A.m();
+  n_ = H.A.n();
 }
 
-void ProxADMMSolver::InitProxOperators() {
+void ProxADMMTwoBlockSolver::InitProxOperators() {
   CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
   N_ = problem_.objective().arg_size();
-  x_.resize(N_);
-  y_.resize(N_);
 
-  // See TODO below
-  CHECK_EQ(1, params_.rho());
   const double sqrt_rho = sqrt(params_.rho());
-
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem_.objective().arg(i);
 
@@ -62,14 +66,10 @@ void ProxADMMSolver::InitProxOperators() {
     }
 
     AffineOperator A;
-    std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
-      if (constr_vars.find(var_id) == constr_vars.end())
-        continue;
-      for (auto iter : A_.col(var_id)) {
-        A.A(iter.first, var_id) = sqrt_rho*iter.second;
-      }
+      A.A(var_id, var_id) =
+          sqrt_rho*linear_map::Identity(GetDimension(*expr));
     }
 
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
@@ -79,42 +79,34 @@ void ProxADMMSolver::InitProxOperators() {
     prox_.emplace_back(CreateProxOperator(type, epigraph));
     prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
     VLOG(1) << "prox " << i << " init done";
-
-    // TODO(mwytock): This is scaled by rho now, figure out what to do here
-    AiT_.push_back(A.A.Transpose());
   }
 }
 
-void ProxADMMSolver::Init() {
+void ProxADMMTwoBlockSolver::Init() {
   VLOG(3) << problem_.DebugString();
   InitConstraints();
   InitProxOperators();
 
-  VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
-  VLOG(2) << "A:\n" << A_.DebugString() << "\n"
-          << "b:\n" << b_.DebugString();
-  LogVerbose(
-      StringPrintf("constraints, m = %d, variables, n = %d", m_, n_));
-
+  VLOG(1) << "Prox ADMM (two block), m = " << m_ << ", n = " << n_
+          << ", N = " << N_;
 }
 
-void ProxADMMSolver::Solve() {
+void ProxADMMTwoBlockSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
-    y_prev_ = y_;
+    z_prev_ = z_;
 
-    u_ -= b_;
-    for (int i = 0; i < N_; i++)
-      u_ -= y_[i];
-
+    BlockVector zu = z_ - u_;
+    x_ = BlockVector();
     for (int i = 0; i < N_; i++) {
-      u_ += y_[i];
-      x_[i] = prox_[i]->Apply(u_);
-      y_[i] = A_*x_[i];
-      u_ -= y_[i];
-      VLOG(2) << "x[" << i << "]: " << x_[i].DebugString();
+      x_ += prox_[i]->Apply(zu);
+      VLOG(2) << "x[" << i << "]: " << x_.DebugString();
     }
+    z_ = constr_prox_->Apply(x_ + u_);
+    VLOG(2) << "z: " << z_.DebugString();
+
+    u_ += x_ - z_;
     VLOG(2) << "u: " << u_.DebugString();
 
     if (iter_ % params_.epoch_iterations() == 0) {
@@ -138,46 +130,28 @@ void ProxADMMSolver::Solve() {
   UpdateStatus(status_);
 }
 
-void ProxADMMSolver::UpdateParameters() {
+void ProxADMMTwoBlockSolver::UpdateParameters() {
   for (int i = 0; i < N_; i++) {
     for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
       const std::string& var_id = expr->variable().variable_id();
       uint64_t param_id = VariableParameterId(problem_id(), var_id);
-      parameter_service_->Update(param_id, x_[i](var_id));
+      parameter_service_->Update(param_id, x_(var_id));
     }
   }
 }
 
-void ProxADMMSolver::ComputeResiduals() {
+void ProxADMMTwoBlockSolver::ComputeResiduals() {
   SolverStatus::Residuals* r = status_.mutable_residuals();
 
   const double abs_tol = params_.abs_tol();
   const double rel_tol = params_.rel_tol();
   const double rho = params_.rho();
 
-  VLOG(3) << "compute r norm";
-  BlockVector Ax_b = b_;
-  double max_Ai_xi_norm = b_.norm();
-  for (int i = 0; i < N_; i++) {
-    BlockVector Ai_xi = A_*x_[i];
-    max_Ai_xi_norm = fmax(max_Ai_xi_norm, Ai_xi.norm());
-    Ax_b += Ai_xi;
-  }
-
-  VLOG(3) << "compute s norm";
-  double s_norm_squared = 0;
-  BlockVector Ax_diff;
-  for (int i = N_ - 2; i >= 0; i--) {
-    Ax_diff += y_[i+1] - y_prev_[i+1];
-    const double s_norm_i = (AiT_[i]*Ax_diff).norm();
-    s_norm_squared += s_norm_i*s_norm_i;
-  }
-
   VLOG(3) << "set residuals";
-  r->set_r_norm(Ax_b.norm());
-  r->set_s_norm(rho*sqrt(s_norm_squared));
-  r->set_epsilon_primal(abs_tol*sqrt(m_) + rel_tol*max_Ai_xi_norm);
-  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*(AT_*u_).norm());
+  r->set_r_norm((x_ - z_).norm());
+  r->set_s_norm(rho*(z_ - z_prev_).norm());
+  r->set_epsilon_primal(abs_tol*sqrt(n_) + rel_tol*fmax(x_.norm(), z_.norm()));
+  r->set_epsilon_dual(  abs_tol*sqrt(n_) + rel_tol*rho*u_.norm());
 
   if (r->r_norm() <= r->epsilon_primal() &&
       r->s_norm() <= r->epsilon_dual()) {
@@ -189,7 +163,7 @@ void ProxADMMSolver::ComputeResiduals() {
   status_.set_num_iterations(iter_);
 }
 
-void ProxADMMSolver::LogStatus() {
+void ProxADMMTwoBlockSolver::LogStatus() {
   const SolverStatus::Residuals& r = status_.residuals();
   std::string status = StringPrintf(
       "iter=%d residuals primal=%.2e [%.2e] dual=%.2e [%.2e]",

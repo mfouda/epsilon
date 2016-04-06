@@ -58,4 +58,11 @@ message SolverParams {
 
   // Whether to use the epigraph operators
   optional bool use_epigraph = 29 [default = true];
+
+  // Which algorithm to use
+  enum Solver {
+    PROX_ADMM = 0;
+    PROX_ADMM_TWO_BLOCK = 1;
+  }
+  optional Solver solver = 30 [default = PROX_ADMM];
 }
