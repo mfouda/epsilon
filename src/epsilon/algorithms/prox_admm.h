@@ -10,7 +10,6 @@
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/parameters/parameter_service.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/vector/block_matrix.h"

@@ -3,7 +3,6 @@
 #include <glog/logging.h>
 
 #include "epsilon/expression.pb.h"
-#include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/util/file.h"
 #include "epsilon/algorithms/prox_admm.h"

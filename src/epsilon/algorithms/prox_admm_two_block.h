@@ -5,7 +5,6 @@
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/expression/var_offset_map.h"
-#include "epsilon/parameters/parameter_service.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/vector/block_matrix.h"
@@ -41,9 +40,6 @@ private:
 
   // Inputs
   SolverParams params_;
-
-  // Stores parameter
-  std::unique_ptr<ParameterService> parameter_service_;
 
   // Problem parameters
   int m_, n_, N_;
