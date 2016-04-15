@@ -49,6 +49,7 @@ bool GetDiagonal(const BlockMatrix& A, Eigen::VectorXd* alpha) {
 }
 
 bool VectorProx::InitScalar(const ProxOperatorArg& arg) {
+
   const double alpha = arg.prox_function().alpha();
   const BlockMatrix& H = arg.affine_arg().A;
   const BlockMatrix& A = arg.affine_constraint().A;

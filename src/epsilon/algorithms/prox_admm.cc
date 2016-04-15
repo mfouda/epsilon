@@ -21,14 +21,14 @@ ProxADMMSolver::ProxADMMSolver(
       initialized_(false) {}
 
 void ProxADMMSolver::InitConstraints() {
+  A_ = BlockMatrix();
+  b_ = BlockVector();
   for (int i = 0; i < problem().constraint_size(); i++) {
     const Expression& constr = problem().constraint(i);
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
 
-    A_ = BlockMatrix();
-    b_ = BlockVector();
     affine::BuildAffineOperator(
         problem().constraint(i).arg(0),
         affine::constraint_key(i),
@@ -65,13 +65,17 @@ void ProxADMMSolver::InitProxOperators() {
     std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
-      if (constr_vars.find(var_id) == constr_vars.end())
+      if (constr_vars.find(var_id) == constr_vars.end()) {
+        VLOG(1) << var_id << " not in constraints";
         continue;
+      }
       for (auto iter : A_.col(var_id)) {
         A.A(iter.first, var_id) = sqrt_rho*iter.second;
       }
     }
 
+    VLOG(2) << "H:\n" << H.A.DebugString();
+    VLOG(2) << "A:\n" << A.A.DebugString();
     ProxFunction::Type type = f_expr.prox_function().prox_function_type();
     bool epigraph = f_expr.prox_function().epigraph();
     VLOG(1) << "prox " << i << ", initializing "
