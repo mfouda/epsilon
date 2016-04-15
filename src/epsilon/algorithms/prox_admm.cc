@@ -49,7 +49,6 @@ void ProxADMMSolver::InitProxOperators() {
 
   prox_.clear();
   AiT_.clear();
-
   for (int i = 0; i < N_; i++) {
     const Expression& f_expr = problem().objective().arg(i);
 
@@ -66,7 +65,6 @@ void ProxADMMSolver::InitProxOperators() {
     std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
-      LOG(INFO) << i << " " << var_id;
       if (constr_vars.find(var_id) == constr_vars.end())
         continue;
       for (auto iter : A_.col(var_id)) {
@@ -106,8 +104,8 @@ void ProxADMMSolver::Init() {
 
   InitConstraints();
   InitProxOperators();
-  InitVariables();
   if (!params_.warm_start() || !initialized_) {
+    InitVariables();
     initialized_ = true;
   } else {
     VLOG(1) << "Using warm start";
@@ -134,6 +132,7 @@ BlockVector ProxADMMSolver::Solve() {
 
     for (int i = 0; i < N_; i++) {
       u_ += y_[i];
+      LOG(INFO) << "u: " << u_.DebugString();
       x_[i] = prox_[i]->Apply(u_);
       y_[i] = A_*x_[i];
       u_ -= y_[i];

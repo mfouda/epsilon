@@ -206,7 +206,7 @@ def variable(m, n, variable_id):
             elementwise=True,
             scalar_multiple=True))
 
-def parameter(m, n, parameter_id):
+def parameter(m, n, parameter_id, constant_type, sign):
     # NOTE(mwytock): we assume all parameters are dense matrices for purposes of
     # symbolic transformation.
     return Expression(
@@ -214,8 +214,8 @@ def parameter(m, n, parameter_id):
         size=Size(dim=[m, n]),
         func_curvature=CONSTANT,
         constant=expression_pb2.Constant(
-            constant_type=expression_pb2.Constant.DENSE_MATRIX,
-            parameter_id=parameter_id, m=m, n=n))
+            constant_type=constant_type, parameter_id=parameter_id, m=m, n=n),
+        sign=sign)
 
 def scalar_constant(scalar, size=None):
     if size is None:

@@ -108,7 +108,6 @@ bool Solver::HasExternalStop() {
 
 void Solver::SetParameterValue(
     const std::string& parameter_id, const Constant& value) {
-  LOG(INFO) << parameter_id << "\n" << value.DebugString();
   auto iter = parameter_map_.find(parameter_id);
   CHECK(iter != parameter_map_.end());
   for (Constant* constant : iter->second) {

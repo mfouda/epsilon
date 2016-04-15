@@ -47,7 +47,15 @@ def convert_variable(expr):
 
 def convert_parameter(expr):
     m, n = expr.size
-    return expression.parameter(m, n, parameter_id(expr))
+
+    if m*n == 1:
+        constant_type = expression_pb2.Constant.SCALAR
+    else:
+        constant_type = expression_pb2.Constant.DENSE_MATRIX
+
+    sign = expression_pb2.Sign(
+        sign_type=expression_pb2.Sign.Type.Value(expr.sign))
+    return expression.parameter(m, n, parameter_id(expr), constant_type, sign)
 
 def convert_constant(expr):
     m, n = expr.size
