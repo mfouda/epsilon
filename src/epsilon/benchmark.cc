@@ -19,8 +19,6 @@ int main(int argc, char **argv) {
 
   SolverParams params;
   params.set_rel_tol(1e-3);
-  ProxADMMSolver solver(
-      problem, params,
-      std::unique_ptr<ParameterService>(new LocalParameterService));
+  ProxADMMSolver solver(problem, params);
   solver.Solve();
 }

@@ -18,9 +18,10 @@ class NameMap(object):
         }
 
     def constant_name(self, constant):
-        assert constant.data_location
+        assert constant.data_location or constant.parameter_id
         return self.name(
-            constant.data_location,
+            constant.data_location if constant.data_location else
+            constant.parameter_id,
             Expression.CONSTANT,
             constant.n != 1)
 

@@ -66,5 +66,6 @@ message SolverParams {
   }
   optional Solver solver = 30 [default = PROX_ADMM];
 
-  optional bool warm_start = 31[ default = false];
+  optional bool warm_start = 31 [ default = false];
+  optional string warm_start_key = 32;
 }

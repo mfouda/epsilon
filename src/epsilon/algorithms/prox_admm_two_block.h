@@ -28,9 +28,8 @@ class ProxADMMTwoBlockSolver final : public Solver {
 public:
   ProxADMMTwoBlockSolver(
       const Problem& problem,
-      const SolverParams& params,
-      std::unique_ptr<ParameterService> parameter_service);
-  void Solve() override;
+      const SolverParams& params);
+  BlockVector Solve() override;
 
 private:
   void Init();
@@ -39,10 +38,8 @@ private:
 
   void ComputeResiduals();
   void LogStatus();
-  void UpdateParameters();
 
   // Inputs
-  Problem problem_;
   SolverParams params_;
 
   // Stores parameter

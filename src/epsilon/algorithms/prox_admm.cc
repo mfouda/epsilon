@@ -15,25 +15,24 @@
 
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
-    const SolverParams& params,
-    std::unique_ptr<ParameterService> parameter_service)
-    : problem_(problem),
+    const SolverParams& params)
+    : Solver(problem),
       params_(params),
-      parameter_service_(std::move(parameter_service)),
       initialized_(false) {}
 
 void ProxADMMSolver::InitConstraints() {
-  for (int i = 0; i < problem_.constraint_size(); i++) {
-    const Expression& constr = problem_.constraint(i);
+  for (int i = 0; i < problem().constraint_size(); i++) {
+    const Expression& constr = problem().constraint(i);
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
+
+    A_ = BlockMatrix();
+    b_ = BlockVector();
     affine::BuildAffineOperator(
-        problem_.constraint(i).arg(0),
+        problem().constraint(i).arg(0),
         affine::constraint_key(i),
         &A_, &b_);
-    u_(affine::constraint_key(i)) = BlockVector::DenseVector::Zero(
-        GetDimension(problem_.constraint(i).arg(0)));
   }
   AT_ = A_.Transpose();
   m_ = A_.m();
@@ -41,17 +40,18 @@ void ProxADMMSolver::InitConstraints() {
 }
 
 void ProxADMMSolver::InitProxOperators() {
-  CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
-  N_ = problem_.objective().arg_size();
-  x_.resize(N_);
-  y_.resize(N_);
+  CHECK_EQ(Expression::ADD, problem().objective().expression_type());
+  N_ = problem().objective().arg_size();
 
   // See TODO below
   CHECK_EQ(1, params_.rho());
   const double sqrt_rho = sqrt(params_.rho());
 
+  prox_.clear();
+  AiT_.clear();
+
   for (int i = 0; i < N_; i++) {
-    const Expression& f_expr = problem_.objective().arg(i);
+    const Expression& f_expr = problem().objective().arg(i);
 
     VLOG(1) << "prox " << i << " build affine operator";
     AffineOperator H;
@@ -66,6 +66,7 @@ void ProxADMMSolver::InitProxOperators() {
     std::set<std::string> constr_vars = A_.col_keys();
     for (const Expression* expr : GetVariables(f_expr)) {
       const std::string& var_id = expr->variable().variable_id();
+      LOG(INFO) << i << " " << var_id;
       if (constr_vars.find(var_id) == constr_vars.end())
         continue;
       for (auto iter : A_.col(var_id)) {
@@ -86,13 +87,30 @@ void ProxADMMSolver::InitProxOperators() {
   }
 }
 
-void ProxADMMSolver::Init() {
-  VLOG(3) << problem_.DebugString();
+void ProxADMMSolver::InitVariables() {
+  x_.resize(N_);
+  y_.resize(N_);
+  for (int i = 0; i < N_; i++) {
+    x_[i] = BlockVector();
+    y_[i] = BlockVector();
+  }
 
+  for (int i = 0; i < problem().constraint_size(); i++) {
+    u_(affine::constraint_key(i)) = BlockVector::DenseVector::Zero(
+        GetDimension(problem().constraint(i).arg(0)));
+  }
+}
+
+void ProxADMMSolver::Init() {
+  VLOG(3) << problem().DebugString();
+
+  InitConstraints();
+  InitProxOperators();
+  InitVariables();
   if (!params_.warm_start() || !initialized_) {
-    InitConstraints();
-    InitProxOperators();
     initialized_ = true;
+  } else {
+    VLOG(1) << "Using warm start";
   }
 
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
@@ -104,7 +122,7 @@ void ProxADMMSolver::Init() {
   }
 }
 
-void ProxADMMSolver::Solve() {
+BlockVector ProxADMMSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
@@ -140,18 +158,15 @@ void ProxADMMSolver::Solve() {
   }
 
   LogStatus();
-  UpdateParameters();
   UpdateStatus(status_);
+  return GetSolution();
 }
 
-void ProxADMMSolver::UpdateParameters() {
-  for (int i = 0; i < N_; i++) {
-    for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
-      const std::string& var_id = expr->variable().variable_id();
-      uint64_t param_id = VariableParameterId(problem_id(), var_id);
-      parameter_service_->Update(param_id, x_[i](var_id));
-    }
-  }
+BlockVector ProxADMMSolver::GetSolution() {
+  BlockVector retval;
+  for (int i = 0; i < N_; i++)
+    retval += x_[i];
+  return retval;
 }
 
 void ProxADMMSolver::ComputeResiduals() {

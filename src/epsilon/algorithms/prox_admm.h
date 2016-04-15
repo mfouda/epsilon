@@ -22,25 +22,22 @@ class ProxADMMSolver final : public Solver {
 public:
   ProxADMMSolver(
       const Problem& problem,
-      const SolverParams& params,
-      std::unique_ptr<ParameterService> parameter_service);
-  void Solve() override;
+      const SolverParams& params);
+  BlockVector Solve() override;
 
 private:
   void Init();
   void InitConstraints();
   void InitProxOperators();
+  void InitVariables();
 
   void ComputeResiduals();
   void LogStatus();
-  void UpdateParameters();
+  BlockVector GetSolution();
 
   // Inputs
   Problem problem_;
   SolverParams params_;
-
-  // Stores parameter
-  std::unique_ptr<ParameterService> parameter_service_;
 
   bool initialized_;
 
@@ -49,13 +46,13 @@ private:
   BlockMatrix A_;
   BlockVector b_;
   std::vector<BlockMatrix> AiT_;
+  std::vector<std::unique_ptr<ProxOperator> > prox_;
 
   // Iteration variables
   int iter_;
   BlockVector u_;
   std::vector<BlockVector> x_;
   std::vector<BlockVector> y_;
-  std::vector<std::unique_ptr<ProxOperator> > prox_;
 
   // Iteration variables
   SolverStatus status_;

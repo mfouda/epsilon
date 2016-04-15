@@ -34,7 +34,6 @@ def transform_index(expr):
         transform_expr(only_arg(expr)))
 
 def multiply_constant(expr, n):
-    # TODO(mwytock): Handle this case
     if expr.expression_type == Expression.CONSTANT:
         if expr.constant.constant_type == Constant.SCALAR:
             return linear_map.scalar(expr.constant.scalar, n)
@@ -44,7 +43,6 @@ def multiply_constant(expr, n):
             return linear_map.sparse_matrix(expr.constant)
     elif expr.expression_type == Expression.TRANSPOSE:
         return linear_map.transpose(multiply_constant(only_arg(expr), n))
-
     raise TransformError("unknown constant type", expr)
 
 def transform_multiply(expr):

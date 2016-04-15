@@ -27,7 +27,38 @@ private:
   SolverStatSeries series_;
 };
 
-Solver::Solver() : problem_id_(std::hash<uint64_t>()(WallTime_Usec())) {}
+Solver::Solver(Problem problem) :
+    problem_(std::move(problem)),
+    problem_id_(std::hash<uint64_t>()(WallTime_Usec())) {
+  InitParameterMap(problem_.mutable_objective());
+  for (Expression& constr : *problem_.mutable_constraint())
+    InitParameterMap(&constr);
+}
+
+void Solver::InitParameterMap(Expression* expr) {
+  if (expr->expression_type() == Expression::CONSTANT &&
+      expr->constant().parameter_id() != "") {
+    parameter_map_[expr->constant().parameter_id()].push_back(
+        expr->mutable_constant());
+  }
+
+  if (expr->expression_type() == Expression::LINEAR_MAP) {
+    InitParameterMap(expr->mutable_linear_map());
+  }
+
+  for (Expression& arg : *expr->mutable_arg())
+    InitParameterMap(&arg);
+}
+
+void Solver::InitParameterMap(LinearMap* linear_map) {
+  if (linear_map->constant().parameter_id() != "") {
+    parameter_map_[linear_map->constant().parameter_id()].push_back(
+        linear_map->mutable_constant());
+  }
+
+  for (LinearMap& arg : *linear_map->mutable_arg())
+    InitParameterMap(&arg);
+}
 
 Stat* Solver::GetStat(const std::string& name) {
   std::lock_guard<std::mutex> l(mutex_);
@@ -73,4 +104,14 @@ bool Solver::HasExternalStop() {
     return false;
 
   return stop_callback_();
+}
+
+void Solver::SetParameterValue(
+    const std::string& parameter_id, const Constant& value) {
+  LOG(INFO) << parameter_id << "\n" << value.DebugString();
+  auto iter = parameter_map_.find(parameter_id);
+  CHECK(iter != parameter_map_.end());
+  for (Constant* constant : iter->second) {
+    *constant = value;
+  }
 }

@@ -36,7 +36,8 @@ def epi(f_expr, t_expr):
 def epi_var(expr, name, size=None):
     if size is None:
         size = expr.size.dim
-    name += ":%x" % random.getrandbits(32)
+    name += ":%x" % id(expr)
+    print "epi_var:", name
     return expression.variable(size[0], size[1], name)
 
 def epi_transform(f_expr, name):

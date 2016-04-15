@@ -34,7 +34,9 @@ def node_contents_str(expr):
 
     if expr.expression_type == Expression.CONSTANT:
         c += ["sign: " + Sign.Type.Name(expr.sign.sign_type)]
-        if not expr.constant.data_location:
+        if expr.constant.parameter_id:
+            c += ["parameter_id: " + expr.constant.parameter_id]
+        elif not expr.constant.data_location:
             c += ["scalar: " + str(expr.constant.scalar)]
     elif expr.expression_type == Expression.VARIABLE:
         c += ["variable_id: " + expr.variable.variable_id]

@@ -20,6 +20,8 @@ message Constant {
 
   string data_location = 6;
   bytes data_value = 7;
+
+  string parameter_id = 8;
 }
 
 message Variable {

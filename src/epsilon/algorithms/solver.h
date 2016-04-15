@@ -11,8 +11,10 @@
 
 #include <glog/logging.h>
 
-#include "epsilon/util/time.h"
+#include "epsilon/expression.pb.h"
 #include "epsilon/solver.pb.h"
+#include "epsilon/util/time.h"
+#include "epsilon/vector/block_vector.h"
 
 class Solution;
 class WorkerPool;
@@ -39,11 +41,11 @@ class Timer {
 
 class Solver {
  public:
-  Solver();
+  Solver(Problem problem);
   virtual ~Solver() {}
 
   // Implemented by sub classes
-  virtual void Solve() = 0;
+  virtual BlockVector Solve() = 0;
 
   // Returns current problem status
   SolverStatus status();
@@ -66,6 +68,11 @@ class Solver {
   Stat* GetStat(const std::string& id);
   std::vector<Stat*> GetStats(const std::string& prefix);
 
+  // Set parameters and get problem with parameters
+  void SetParameterValue(const std::string& parameter_id, const Constant& value);
+
+  const Problem& problem() { return problem_; }
+
   uint64_t problem_id() { return problem_id_; }
   void set_problem_id(uint64_t problem_id) { problem_id_ = problem_id; }
 
@@ -77,8 +84,14 @@ class Solver {
   bool HasExternalStop();
 
  private:
+  void InitParameterMap(Expression* expr);
+  void InitParameterMap(LinearMap* linear_map);
+
+  Problem problem_;
+
   std::mutex mutex_;
   std::unordered_map<std::string, std::unique_ptr<Stat> > stat_map_;
+  std::unordered_map<std::string, std::vector<Constant*> > parameter_map_;
   SolverStatus status_;
   Timer timer_;
 

@@ -60,7 +60,6 @@ common_cc = \
 	epsilon/linear/linear_map_multiply.cc \
 	epsilon/linear/scalar_matrix_impl.cc \
 	epsilon/linear/sparse_matrix_impl.cc \
-	epsilon/parameters/local_parameter_service.cc \
 	epsilon/prox/affine.cc \
 	epsilon/prox/lambda_max.cc \
 	epsilon/prox/log_sum_exp.cc \

@@ -12,23 +12,21 @@
 
 ProxADMMTwoBlockSolver::ProxADMMTwoBlockSolver(
     const Problem& problem,
-    const SolverParams& params,
-    std::unique_ptr<ParameterService> parameter_service)
-    : problem_(problem),
-      params_(params),
-      parameter_service_(std::move(parameter_service)) {}
+    const SolverParams& params)
+    : Solver(problem),
+      params_(params) {}
 
 void ProxADMMTwoBlockSolver::InitConstraints() {
   const double sqrt_rho = sqrt(params_.rho());
 
   AffineOperator H, A;
-  for (int i = 0; i < problem_.constraint_size(); i++) {
-    const Expression& constr = problem_.constraint(i);
+  for (int i = 0; i < problem().constraint_size(); i++) {
+    const Expression& constr = problem().constraint(i);
     CHECK_EQ(Expression::INDICATOR, constr.expression_type());
     CHECK_EQ(Cone::ZERO, constr.cone().cone_type());
     CHECK_EQ(1, constr.arg_size());
     affine::BuildAffineOperator(
-        problem_.constraint(i).arg(0),
+        problem().constraint(i).arg(0),
         affine::constraint_key(i),
         &H.A, &H.b);
 
@@ -49,12 +47,12 @@ void ProxADMMTwoBlockSolver::InitConstraints() {
 }
 
 void ProxADMMTwoBlockSolver::InitProxOperators() {
-  CHECK_EQ(Expression::ADD, problem_.objective().expression_type());
-  N_ = problem_.objective().arg_size();
+  CHECK_EQ(Expression::ADD, problem().objective().expression_type());
+  N_ = problem().objective().arg_size();
 
   const double sqrt_rho = sqrt(params_.rho());
   for (int i = 0; i < N_; i++) {
-    const Expression& f_expr = problem_.objective().arg(i);
+    const Expression& f_expr = problem().objective().arg(i);
 
     VLOG(1) << "prox " << i << " build affine operator";
     AffineOperator H;
@@ -83,7 +81,7 @@ void ProxADMMTwoBlockSolver::InitProxOperators() {
 }
 
 void ProxADMMTwoBlockSolver::Init() {
-  VLOG(3) << problem_.DebugString();
+  VLOG(3) << problem().DebugString();
   InitConstraints();
   InitProxOperators();
 
@@ -91,7 +89,7 @@ void ProxADMMTwoBlockSolver::Init() {
           << ", N = " << N_;
 }
 
-void ProxADMMTwoBlockSolver::Solve() {
+BlockVector ProxADMMTwoBlockSolver::Solve() {
   Init();
 
   for (iter_ = 0; iter_ < params_.max_iterations(); iter_++) {
@@ -126,18 +124,8 @@ void ProxADMMTwoBlockSolver::Solve() {
   }
 
   LogStatus();
-  UpdateParameters();
   UpdateStatus(status_);
-}
-
-void ProxADMMTwoBlockSolver::UpdateParameters() {
-  for (int i = 0; i < N_; i++) {
-    for (const Expression* expr : GetVariables(problem_.objective().arg(i))) {
-      const std::string& var_id = expr->variable().variable_id();
-      uint64_t param_id = VariableParameterId(problem_id(), var_id);
-      parameter_service_->Update(param_id, x_(var_id));
-    }
-  }
+  return x_;
 }
 
 void ProxADMMTwoBlockSolver::ComputeResiduals() {

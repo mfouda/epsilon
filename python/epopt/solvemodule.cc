@@ -10,7 +10,6 @@
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
 #include "epsilon/file/file.h"
-#include "epsilon/parameters/local_parameter_service.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/util/logging.h"
@@ -21,7 +20,6 @@ static jmp_buf failure_buf;
 static PyObject* SolveError;
 
 std::unordered_map<std::string, std::unique_ptr<Solver>> global_solver_cache;
-
 
 BlockVector GetVariableVector(PyObject* vars) {
   BlockVector x;
@@ -63,8 +61,6 @@ void InitLogging() {
     FLAGS_v = atoi(v);
 }
 
-
-
 void WriteConstants(PyObject* data) {
   // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
   // to Py_DECREF() them.
@@ -87,34 +83,50 @@ void WriteConstants(PyObject* data) {
 
 std::unique_ptr<Solver> CreateSolver(
     const Problem& problem,
-    const SolverParams& params,
-    std::unique_ptr<ParameterService> parameter_service) {
+    const SolverParams& params) {
   if (params.solver() == SolverParams::PROX_ADMM) {
-    return std::unique_ptr<Solver>(
-        new ProxADMMSolver(problem, params, std::move(parameter_service)));
+    return std::unique_ptr<Solver>(new ProxADMMSolver(problem, params));
   } else if (params.solver() == SolverParams::PROX_ADMM_TWO_BLOCK) {
-    return std::unique_ptr<Solver>(
-        new ProxADMMTwoBlockSolver(
-            problem, params, std::move(parameter_service)));
+    return std::unique_ptr<Solver>(new ProxADMMTwoBlockSolver(problem, params));
   } else {
     LOG(FATAL) << "Unknown solver: " << params.solver();
   }
 }
 
-extern "C" {
+void SetParameterValues(PyObject* parameters, Solver* solver) {
+  PyObject* iter = PyObject_GetIter(parameters);
+  PyObject* item ;
+  CHECK(iter != nullptr);
+  while ((item = PyIter_Next(iter))) {
+    const char* parameter_id = PyString_AsString(PyTuple_GetItem(item, 0));
 
+    Constant constant;
+    PyObject* val = PyTuple_GetItem(item, 1);
+    CHECK(constant.ParseFromArray(PyString_AsString(val), PyString_Size(val)));
+
+    solver->SetParameterValue(parameter_id, constant);
+    Py_DECREF(item);
+  }
+
+  Py_DECREF(iter);
+  CHECK(!PyErr_Occurred());
+}
+
+extern "C" {
 
 static PyObject* Solve(PyObject* self, PyObject* args) {
   const char* problem_str;
-  const char* params_str;
-  int problem_str_len, params_str_len;
+  const char* solver_params_str;
+  int problem_str_len, solver_params_str_len;
   PyObject* data;
+  PyObject* parameters;
 
   // prox_admm_solve(problem_str, params_str, data)
   if (!PyArg_ParseTuple(
-          args, "s#s#O",
+          args, "s#Os#O",
           &problem_str, &problem_str_len,
-          &params_str, &params_str_len,
+          &parameters,
+          &solver_params_str, &solver_params_str_len,
           &data)) {
     // TODO(mwytock): Need to set the appropriate exceptions when passed
     // incorrect arguments.
@@ -122,49 +134,45 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
   }
 
   Problem problem;
-  SolverParams params;
+  SolverParams solver_params;
   if (!problem.ParseFromArray(problem_str, problem_str_len))
     return nullptr;
-  if (!params.ParseFromArray(params_str, params_str_len))
+  if (!solver_params.ParseFromArray(solver_params_str, solver_params_str_len))
     return nullptr;
 
   InitLogging();
   WriteConstants(data);
-
-  std::unique_ptr<ParameterService> parameter_service(
-      new LocalParameterService);
   Solver* solver;
   std::unique_ptr<Solver> solver_gc;
 
   // In warm start mode, cache the solver object
-  if (params.warm_start()) {
+  if (solver_params.warm_start()) {
     auto iter = global_solver_cache.find(problem_str);
     if (iter == global_solver_cache.end()) {
       auto retval = global_solver_cache.insert(
           make_pair(
               problem_str,
-              CreateSolver(problem, params, std::move(parameter_service))));
+              CreateSolver(problem, solver_params)));
       iter = retval.first;
     }
     solver = iter->second.get();
   } else {
-    solver_gc = CreateSolver(problem, params, std::move(parameter_service));
+    solver_gc = CreateSolver(problem, solver_params);
     solver = solver_gc.get();
   }
+  SetParameterValues(parameters, solver);
 
   if (!setjmp(failure_buf)) {
     // Standard execution path
-    solver->Solve();
+    BlockVector block_x = solver->Solve();
     std::string status_str = solver->status().SerializeAsString();
 
     // Get results
     PyObject* vars = PyDict_New();
     {
-      LocalParameterService parameter_service;
       for (const Expression* expr : GetVariables(problem)) {
         const std::string& var_id = expr->variable().variable_id();
-        uint64_t param_id = VariableParameterId(solver->problem_id(), var_id);
-        Eigen::VectorXd x = parameter_service.Fetch(param_id);
+        Eigen::VectorXd x = block_x(var_id);
 
         PyObject* val = PyString_FromStringAndSize(
             reinterpret_cast<const char*>(x.data()),
@@ -263,7 +271,7 @@ PyMODINIT_FUNC init_solve() {
   if (!initialized) {
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    google::InstallFailureFunction(&HandleFailure);
+    //google::InstallFailureFunction(&HandleFailure);
     SetVerboseLogger(&LogVerbose_PySys);
 
     // TODO(mwytock): Should we set up glog so that VLOG uses PySys_WriteStderr?

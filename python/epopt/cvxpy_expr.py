@@ -36,11 +36,18 @@ def index_value(index, size):
     return index
 
 def variable_id(expr):
-    return "cvxpy:" + str(expr.id)
+    return "var:" + str(expr.id)
+
+def parameter_id(expr):
+    return "param:" + str(expr.id)
 
 def convert_variable(expr):
     m, n = expr.size
     return expression.variable(m, n, variable_id(expr))
+
+def convert_parameter(expr):
+    m, n = expr.size
+    return expression.parameter(m, n, parameter_id(expr))
 
 def convert_constant(expr):
     m, n = expr.size
@@ -127,7 +134,7 @@ EXPRESSION_TYPES = (
     (MulExpression, lambda e: convert_binary(expression.multiply, e)),
     (RMulExpression, lambda e: convert_binary(expression.multiply, e)),
     (NegExpression, lambda e: convert_unary(expression.negate, e)),
-    (Parameter, convert_constant),
+    (Parameter, convert_parameter),
     (Variable, convert_variable),
     (abs, lambda e: convert_generic(Expression.ABS, e)),
     (diag_mat, lambda e: convert_generic(Expression.DIAG_MAT, e)),

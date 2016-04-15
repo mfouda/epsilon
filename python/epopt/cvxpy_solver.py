@@ -17,6 +17,8 @@ from epopt.proto.epsilon import solver_params_pb2
 from epopt.proto.epsilon import solver_pb2
 from epopt.proto.epsilon.solver_pb2 import SolverStatus
 
+problem_cache = {}
+
 EPSILON = "epsilon"
 
 class SolverError(Exception):
@@ -36,19 +38,18 @@ def cvxpy_status(solver_status):
         return OPTIMAL_INACCURATE
     return SOLVER_ERROR
 
-def solve(cvxpy_prob, **kwargs):
-    # Nothing to do in this case
-    if not cvxpy_prob.variables():
-        return OPTIMAL, cvxpy_prob.objective.value
+def parameter_values(cvxpy_prob):
+    return [(cvxpy_expr.parameter_id(param),
+             constant.store(param.value).SerializeToString())
+            for param in cvxpy_prob.parameters()]
 
-    params = solver_params_pb2.SolverParams(**kwargs)
-
+def compile_problem(cvxpy_prob, solver_params):
     t0 = time.time()
     problem = cvxpy_expr.convert_problem(cvxpy_prob)
-    problem = compiler.compile_problem(problem, params)
+    problem = compiler.compile_problem(problem, solver_params)
     t1 = time.time()
 
-    if params.verbose:
+    if solver_params.verbose:
         print "Epsilon %s" % __version__
         print "Compiled prox-affine form:"
         print text_format.format_problem(problem),
@@ -58,6 +59,23 @@ def solve(cvxpy_prob, **kwargs):
                   text_format.format_problem(problem))
     logging.info("Epsilon compile time: %.4f seconds", t1-t0)
 
+    return problem
+
+def solve(cvxpy_prob, **kwargs):
+    # Nothing to do in this case
+    if not cvxpy_prob.variables():
+        return OPTIMAL, cvxpy_prob.objective.value
+
+    solver_params = solver_params_pb2.SolverParams(**kwargs)
+    if solver_params.warm_start:
+        problem = problem_cache.get(id(cvxpy_prob))
+        if not problem:
+            problem = compile_problem(cvxpy_prob, solver_params)
+            problem_cache[id(cvxpy_prob)] = problem
+    else:
+        problem = compile_problem(cvxpy_prob, solver_params)
+
+    t0 = time.time()
     if len(problem.objective.arg) == 1 and not problem.constraint:
         # TODO(mwytock): Should probably parameterize the proximal operators so
         # they can take A=0 instead of just using a large lambda here
@@ -69,17 +87,17 @@ def solve(cvxpy_prob, **kwargs):
             {})
         status = OPTIMAL
     else:
-        params = solver_params_pb2.SolverParams(**kwargs)
         status_str, values = _solve.solve(
             problem.SerializeToString(),
-            params.SerializeToString(),
+            parameter_values(cvxpy_prob),
+            solver_params.SerializeToString(),
             constant.global_data_map)
         status = cvxpy_status(SolverStatus.FromString(status_str))
-    t2 = time.time()
+    t1 = time.time()
 
-    logging.info("Epsilon solve time: %.4f seconds", t2-t1)
-    if params.verbose:
-        print "Epsilon solve time: %.4f seconds" % (t2-t1)
+    logging.info("Epsilon solve time: %.4f seconds", t1-t0)
+    if solver_params.verbose:
+        print "Epsilon solve time: %.4f seconds" % (t1-t0)
 
     set_solution(cvxpy_prob, values)
     return status, cvxpy_prob.objective.value
