@@ -19,7 +19,8 @@ ProxADMMSolver::ProxADMMSolver(
     std::unique_ptr<ParameterService> parameter_service)
     : problem_(problem),
       params_(params),
-      parameter_service_(std::move(parameter_service)) {}
+      parameter_service_(std::move(parameter_service)),
+      initialized_(false) {}
 
 void ProxADMMSolver::InitConstraints() {
   for (int i = 0; i < problem_.constraint_size(); i++) {
@@ -87,15 +88,20 @@ void ProxADMMSolver::InitProxOperators() {
 
 void ProxADMMSolver::Init() {
   VLOG(3) << problem_.DebugString();
-  InitConstraints();
-  InitProxOperators();
+
+  if (!params_.warm_start() || !initialized_) {
+    InitConstraints();
+    InitProxOperators();
+    initialized_ = true;
+  }
 
   VLOG(1) << "Prox ADMM, m = " << m_ << ", n = " << n_ << ", N = " << N_;
   VLOG(2) << "A:\n" << A_.DebugString() << "\n"
           << "b:\n" << b_.DebugString();
-  LogVerbose(
-      StringPrintf("constraints, m = %d, variables, n = %d", m_, n_));
-
+  if (params_.verbose()) {
+    LogVerbose(
+        StringPrintf("constraints, m = %d, variables, n = %d", m_, n_));
+  }
 }
 
 void ProxADMMSolver::Solve() {

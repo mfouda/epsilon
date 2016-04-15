@@ -42,6 +42,8 @@ private:
   // Stores parameter
   std::unique_ptr<ParameterService> parameter_service_;
 
+  bool initialized_;
+
   // Problem parameters
   int m_, n_, N_;
   BlockMatrix A_;

@@ -20,6 +20,9 @@
 static jmp_buf failure_buf;
 static PyObject* SolveError;
 
+std::unordered_map<std::string, std::unique_ptr<Solver>> global_solver_cache;
+
+
 BlockVector GetVariableVector(PyObject* vars) {
   BlockVector x;
 
@@ -60,7 +63,7 @@ void InitLogging() {
     FLAGS_v = atoi(v);
 }
 
-extern "C" {
+
 
 void WriteConstants(PyObject* data) {
   // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
@@ -81,6 +84,24 @@ void WriteConstants(PyObject* data) {
     }
   }
 }
+
+std::unique_ptr<Solver> CreateSolver(
+    const Problem& problem,
+    const SolverParams& params,
+    std::unique_ptr<ParameterService> parameter_service) {
+  if (params.solver() == SolverParams::PROX_ADMM) {
+    return std::unique_ptr<Solver>(
+        new ProxADMMSolver(problem, params, std::move(parameter_service)));
+  } else if (params.solver() == SolverParams::PROX_ADMM_TWO_BLOCK) {
+    return std::unique_ptr<Solver>(
+        new ProxADMMTwoBlockSolver(
+            problem, params, std::move(parameter_service)));
+  } else {
+    LOG(FATAL) << "Unknown solver: " << params.solver();
+  }
+}
+
+extern "C" {
 
 
 static PyObject* Solve(PyObject* self, PyObject* args) {
@@ -109,18 +130,26 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
 
   InitLogging();
   WriteConstants(data);
-  std::unique_ptr<Solver> solver;
+
   std::unique_ptr<ParameterService> parameter_service(
       new LocalParameterService);
+  Solver* solver;
+  std::unique_ptr<Solver> solver_gc;
 
-  if (params.solver() == SolverParams::PROX_ADMM) {
-    solver.reset(new ProxADMMSolver(
-        problem, params, std::move(parameter_service)));
-  } else if (params.solver() == SolverParams::PROX_ADMM_TWO_BLOCK) {
-    solver.reset(new ProxADMMTwoBlockSolver(
-        problem, params, std::move(parameter_service)));
+  // In warm start mode, cache the solver object
+  if (params.warm_start()) {
+    auto iter = global_solver_cache.find(problem_str);
+    if (iter == global_solver_cache.end()) {
+      auto retval = global_solver_cache.insert(
+          make_pair(
+              problem_str,
+              CreateSolver(problem, params, std::move(parameter_service))));
+      iter = retval.first;
+    }
+    solver = iter->second.get();
   } else {
-    LOG(FATAL) << "Unknown solver: " << params.solver();
+    solver_gc = CreateSolver(problem, params, std::move(parameter_service));
+    solver = solver_gc.get();
   }
 
   if (!setjmp(failure_buf)) {

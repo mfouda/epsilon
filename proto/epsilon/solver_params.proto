@@ -65,4 +65,6 @@ message SolverParams {
     PROX_ADMM_TWO_BLOCK = 1;
   }
   optional Solver solver = 30 [default = PROX_ADMM];
+
+  optional bool warm_start = 31[ default = false];
 }

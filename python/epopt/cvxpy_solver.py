@@ -37,8 +37,6 @@ def cvxpy_status(solver_status):
     return SOLVER_ERROR
 
 def solve(cvxpy_prob, **kwargs):
-    """Solve optimziation problem."""
-
     # Nothing to do in this case
     if not cvxpy_prob.variables():
         return OPTIMAL, cvxpy_prob.objective.value
