@@ -136,7 +136,6 @@ BlockVector ProxADMMSolver::Solve() {
 
     for (int i = 0; i < N_; i++) {
       u_ += y_[i];
-      LOG(INFO) << "u: " << u_.DebugString();
       x_[i] = prox_[i]->Apply(u_);
       y_[i] = A_*x_[i];
       u_ -= y_[i];
