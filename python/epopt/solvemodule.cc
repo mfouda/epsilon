@@ -140,7 +140,6 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
   if (!solver_params.ParseFromArray(solver_params_str, solver_params_str_len))
     return nullptr;
 
-  InitLogging();
   WriteConstants(data);
   Solver* solver;
   std::unique_ptr<Solver> solver_gc;
@@ -212,7 +211,6 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
   if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
     return nullptr;
 
-  InitLogging();
   WriteConstants(data);
   if (!setjmp(failure_buf)) {
     CHECK_EQ(Expression::PROX_FUNCTION, f_expr.expression_type());
@@ -271,7 +269,8 @@ PyMODINIT_FUNC init_solve() {
   if (!initialized) {
     google::InitGoogleLogging("_solve");
     google::LogToStderr();
-    //google::InstallFailureFunction(&HandleFailure);
+    google::InstallFailureFunction(&HandleFailure);
+    InitLogging();
     SetVerboseLogger(&LogVerbose_PySys);
 
     // TODO(mwytock): Should we set up glog so that VLOG uses PySys_WriteStderr?
