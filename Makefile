@@ -118,8 +118,7 @@ tests = \
 
 deps = \
 	protobuf \
-	glog \
-	gflags
+	glog
 
 libs = epsilon
 binaries = epsilon/benchmark

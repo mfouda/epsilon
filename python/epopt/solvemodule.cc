@@ -55,12 +55,6 @@ PyObject* GetVariableMap(const BlockVector& x) {
   return vars;
 }
 
-void InitLogging() {
-  const char* v = getenv("EPSILON_VLOG");
-  if (v != nullptr)
-    FLAGS_v = atoi(v);
-}
-
 void WriteConstants(PyObject* data) {
   // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
   // to Py_DECREF() them.
@@ -254,6 +248,17 @@ void LogVerbose_PySys(const std::string& msg) {
   PySys_WriteStdout("%s\n", msg.c_str());
 }
 
+void InitLogging() {
+  google::InitGoogleLogging("epopt");
+  // const char* v = getenv("EPSILON_VLOG");
+  // if (v != nullptr)
+  //   FLAGS_v = atoi(v);
+
+  google::InstallFailureFunction(&HandleFailure);
+  SetVerboseLogger(&LogVerbose_PySys);
+  // TODO(mwytock): Should we set up glog so that VLOG uses PySys_WriteStderr?
+}
+
 static PyMethodDef SolveMethods[] = {
   {"solve", Solve, METH_VARARGS,
    "Solve a problem with epsilon."},
@@ -267,14 +272,7 @@ static bool initialized = false;
 PyMODINIT_FUNC init_solve() {
   // TODO(mwytock): Increase logging verbosity based on environment variable
   if (!initialized) {
-    google::InitGoogleLogging("_solve");
-    google::LogToStderr();
-    google::InstallFailureFunction(&HandleFailure);
     InitLogging();
-    SetVerboseLogger(&LogVerbose_PySys);
-
-    // TODO(mwytock): Should we set up glog so that VLOG uses PySys_WriteStderr?
-
     initialized = true;
   }
 

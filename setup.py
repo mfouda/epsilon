@@ -67,7 +67,6 @@ class CleanCommand(Command):
 solve_libs = [
     os.path.join(DEPS_DIR, "lib", "libprotobuf.a"),
     os.path.join(DEPS_DIR, "lib", "libglog.a"),
-    os.path.join(DEPS_DIR, "lib", "libgflags.a"),
 ]
 
 epsilon_lib = os.path.join(BUILD_CC_DIR, "libepsilon.a")

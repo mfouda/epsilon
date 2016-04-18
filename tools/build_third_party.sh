@@ -13,16 +13,10 @@ if [ "$(uname -s)" == "Linux" ]; then
     export CXXFLAGS=-fPIC
 fi
 
-# gflags
-mkdir -p $build/gflags
-cd $build/gflags
-cmake $cmake_flags $third_party/gflags
-make -j install
-
 # glog
 mkdir -p $build/glog
 cd $build/glog
-cmake $cmake_flags $third_party/glog
+cmake $cmake_flags -DWITH_GFLAGS=OFF $third_party/glog
 make -j install
 
 # protobuf
