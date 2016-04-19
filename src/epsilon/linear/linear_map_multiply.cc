@@ -17,7 +17,7 @@ void dgemm_(
 
 namespace linear_map {
 
-LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
+LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 
 LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
@@ -195,11 +195,11 @@ LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
     const LinearMapImpl& rhs) {
   auto const& S = static_cast<const ScalarMatrixImpl&>(lhs);
   auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
-  ScalarMatrixImpl S1(K.A().impl().m(), S.alpha());
-  ScalarMatrixImpl S2(K.B().impl().m(), 1);
+  ScalarMatrixImpl S1(K.A().m(), S.alpha());
+  ScalarMatrixImpl S2(K.B().m(), 1);
   return new KroneckerProductImpl(
-      Multiply(S1, K.A().impl()),
-      Multiply(S2, K.B().impl()));
+      Multiply(S1, K.A()),
+      Multiply(S2, K.B()));
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
@@ -237,11 +237,11 @@ LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
     const LinearMapImpl& rhs) {
   const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(lhs);
   const KroneckerProductImpl& D = static_cast<const KroneckerProductImpl&>(rhs);
-  if (C.A().impl().n() == D.A().impl().m() &&
-      C.B().impl().n() == D.B().impl().m()) {
+  if (C.A().n() == D.A().m() &&
+      C.B().n() == D.B().m()) {
   return new KroneckerProductImpl(
-      Multiply(C.A().impl(), D.A().impl()),
-      Multiply(C.B().impl(), D.B().impl()));
+      Multiply(C.A(), D.A()),
+      Multiply(C.B(), D.B()));
   }
 
   return new SparseMatrixImpl(C.AsSparse()*D.AsSparse());
@@ -305,12 +305,12 @@ LinearMapBinaryOp kMultiplyTable
   },
 };
 
-LinearMap Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
   VLOG(2) << "linear_map_multiply " << lhs.type() << " " << rhs.type();
   CHECK_EQ(lhs.n(), rhs.m())
       << "A: " << lhs.DebugString() << "\n"
       << "B: " << rhs.DebugString();
-  return LinearMap((*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs));
+  return (*kMultiplyTable[lhs.type()][rhs.type()])(lhs, rhs);
 }
 
 LinearMap operator*(const LinearMap& lhs, const LinearMap& rhs) {

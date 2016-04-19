@@ -36,44 +36,48 @@ LinearMap operator*(const LinearMap& A, double alpha) {
   return alpha*A;
 }
 
-LinearMap KroneckerProduct(
+LinearMapImpl* BuildLinearMapImpl(
+  const ::LinearMap& linear_map, const DataMap& data_map);
+
+LinearMapImpl* KroneckerProduct(
     const ::LinearMap& proto, const DataMap& data_map) {
   CHECK_EQ(2, proto.arg_size());
-  return LinearMap(new KroneckerProductImpl(
-      BuildLinearMap(proto.arg(0), data_map),
-      BuildLinearMap(proto.arg(1), data_map)));
+  return new KroneckerProductImpl(
+      BuildLinearMapImpl(proto.arg(0), data_map),
+      BuildLinearMapImpl(proto.arg(1), data_map));
 }
 
-LinearMap DenseMatrix(
+LinearMapImpl* DenseMatrix(
     const ::LinearMap& proto, const DataMap& data_map) {
-  return LinearMap(new DenseMatrixImpl(
-      BuildMatrix(proto.constant(), data_map)));
+  return new DenseMatrixImpl(
+      BuildMatrix(proto.constant(), data_map));
 }
 
-LinearMap DiagonalMatrix(
+LinearMapImpl* DiagonalMatrix(
     const ::LinearMap& proto, const DataMap& data_map) {
-  return LinearMap(new DiagonalMatrixImpl(
-      ToVector(BuildMatrix(proto.constant(), data_map)).asDiagonal()));
+  return new DiagonalMatrixImpl(
+      ToVector(BuildMatrix(proto.constant(), data_map)).asDiagonal());
 }
 
-LinearMap Scalar(
+LinearMapImpl* Scalar(
     const ::LinearMap& proto, const DataMap& data_map) {
-  return LinearMap(new ScalarMatrixImpl(proto.n(), proto.scalar()));
+  return new ScalarMatrixImpl(proto.n(), proto.scalar());
 }
 
-LinearMap Transpose(
+LinearMapImpl* Transpose(
     const ::LinearMap& proto, const DataMap& data_map) {
   CHECK_EQ(1, proto.arg_size());
-  return BuildLinearMap(proto.arg(0), data_map).Transpose();
+  std::unique_ptr<LinearMapImpl> A(BuildLinearMapImpl(proto.arg(0), data_map));
+  return A->Transpose();
 }
 
-LinearMap SparseMatrix(
+LinearMapImpl* SparseMatrix(
     const ::LinearMap& proto, const DataMap& data_map) {
-return LinearMap(new SparseMatrixImpl(
-    BuildSparseMatrix(proto.constant(), data_map)));
+  return new SparseMatrixImpl(
+    BuildSparseMatrix(proto.constant(), data_map));
 }
 
-typedef LinearMap(*LinearMapFunction)(
+typedef LinearMapImpl*(*LinearMapFunction)(
     const ::LinearMap& linear_map, const DataMap& data_map);
 
 std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
@@ -85,13 +89,18 @@ std::unordered_map<int, LinearMapFunction> kLinearMapFunctions = {
   {::LinearMap::TRANSPOSE, &Transpose},
 };
 
-LinearMap BuildLinearMap(const ::LinearMap& linear_map, const DataMap& data_map) {
+LinearMapImpl* BuildLinearMapImpl(
+  const ::LinearMap& linear_map, const DataMap& data_map) {
   auto iter = kLinearMapFunctions.find(linear_map.linear_map_type());
   if (iter == kLinearMapFunctions.end()) {
     LOG(FATAL) << "No linear map function for "
                << ::LinearMap::Type_Name(linear_map.linear_map_type());
   }
   return iter->second(linear_map, data_map);
+}
+
+LinearMap BuildLinearMap(const ::LinearMap& linear_map, const DataMap& data_map) {
+  return LinearMap(BuildLinearMapImpl(linear_map, data_map));
 }
 
 LinearMap Identity(int n) {

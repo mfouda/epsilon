@@ -7,8 +7,8 @@ namespace linear_map {
 LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
   VLOG(1) << "Converting kron to dense (" << m() << " x " << n() << ")";
 
-  DenseMatrix A = A_.impl().AsDense();
-  DenseMatrix B = B_.impl().AsDense();
+  DenseMatrix A = A_->AsDense();
+  DenseMatrix B = B_->AsDense();
   DenseMatrix C(m(), n());
 
   for (int i = 0; i < A.rows(); i++) {
@@ -23,8 +23,8 @@ LinearMap::DenseMatrix KroneckerProductImpl::AsDense() const {
 LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
   VLOG(1) << "Converting kron to sparse (" << m() << " x " << n() << ")";
 
-  DenseMatrix A = A_.impl().AsDense();
-  DenseMatrix B = B_.impl().AsDense();
+  DenseMatrix A = A_->AsDense();
+  DenseMatrix B = B_->AsDense();
   SparseMatrix C(m(), n());
 
   {
@@ -44,10 +44,10 @@ LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
 
 LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
-  DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
+  DenseMatrix X = ToMatrix(x, B_->n(), A_->n());
   return ToVector(
-      A_.impl().ApplyMatrix(
-          B_.impl().ApplyMatrix(X).transpose()).transpose());
+      A_->ApplyMatrix(
+          B_->ApplyMatrix(X).transpose()).transpose());
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {

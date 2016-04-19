@@ -36,6 +36,7 @@ class ProxOperatorArg {
 // Abstract interface for proximal operator implementations
 class ProxOperator {
  public:
+  virtual ~ProxOperator() {}
   virtual void Init(const ProxOperatorArg& arg) {}
   virtual BlockVector Apply(const BlockVector& v) = 0;
 };

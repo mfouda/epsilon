@@ -19,6 +19,10 @@ LinearMapImpl* DenseMatrixImpl::Inverse() const {
   // return new DenseMatrixImpl(llt.solve(DenseMatrix::Identity(n(), n())));
 }
 
+LinearMapImpl* DenseMatrixImpl::Transpose() const {
+  return new DenseMatrixImpl(A_.transpose());
+}
+
 std::string DenseMatrixImpl::DebugString() const {
   return StringPrintf(
       "dense matrix %d x %d\n%s", m(), n(), MatrixDebugString(A_).c_str());

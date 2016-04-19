@@ -19,9 +19,7 @@ class DenseMatrixImpl final : public LinearMapImpl {
   DenseMatrix ApplyMatrix(const DenseMatrix& X) const override { return A_*X; }
   DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
-  LinearMapImpl* Transpose() const override {
-    return new DenseMatrixImpl(A_.transpose());
-  }
+  LinearMapImpl* Transpose() const override;
   LinearMapImpl* Inverse() const override;
 
   bool operator==(const LinearMapImpl& other) const override;

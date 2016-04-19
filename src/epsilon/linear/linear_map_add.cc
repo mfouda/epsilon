@@ -8,7 +8,7 @@
 
 namespace linear_map {
 
-LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
+LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 
 LinearMapImpl* Add_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
@@ -169,20 +169,20 @@ LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
 
   // kron(A, alpha*I) + beta*I  can be rewritten as
   // kron(A + beta/alpha*I, alpha*I)
-  if (K.A().impl().type() == SCALAR_MATRIX) {
-    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A().impl());
-    ScalarMatrixImpl S1(K.A().impl().n(), 0);
-    ScalarMatrixImpl S2(K.B().impl().n(), S.alpha()/KS.alpha());
+  if (K.A().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A());
+    ScalarMatrixImpl S1(K.A().n(), 0);
+    ScalarMatrixImpl S2(K.B().n(), S.alpha()/KS.alpha());
     return new KroneckerProductImpl(
-        Add(S1, K.A().impl()),
-        Add(S2, K.B().impl()));
-  } else if (K.B().impl().type() == SCALAR_MATRIX) {
-    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B().impl());
-    ScalarMatrixImpl S1(K.A().impl().n(), S.alpha()/KS.alpha());
-    ScalarMatrixImpl S2(K.B().impl().n(), 0);
+        Add(S1, K.A()),
+        Add(S2, K.B()));
+  } else if (K.B().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B());
+    ScalarMatrixImpl S1(K.A().n(), S.alpha()/KS.alpha());
+    ScalarMatrixImpl S2(K.B().n(), 0);
     return new KroneckerProductImpl(
-        Add(S1, K.A().impl()),
-        Add(S2, K.B().impl()));
+        Add(S1, K.A()),
+        Add(S2, K.B()));
   }
   return new SparseMatrixImpl(S.AsSparse() + K.AsSparse());
 }
@@ -217,13 +217,14 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   auto const& K1 = static_cast<const KroneckerProductImpl&>(lhs);
   auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
 
-  if (K1.A() == K2.A()) {
-    return new KroneckerProductImpl(K1.A(), K1.B() + K2.B());
-  } else if (K1.B() == K2.B()) {
-    return new KroneckerProductImpl(K1.A() + K2.A(), K1.B());
-  } else {
-    return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
-  }
+  // TODO(mwytock): Fix this, need a way to copy LinearMapImpl
+  // if (K1.A() == K2.A()) {
+  //   return new KroneckerProductImpl(K1.A(), Add(K1.B(), K2.B()));
+  // } else if (K1.B() == K2.B()) {
+  //   return new KroneckerProductImpl(Add(K1.A(), K2.A()), K1.B());
+  // } else {
+  return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
+  //}
 }
 
 LinearMapImpl* Add_NotImplemented(
@@ -284,13 +285,13 @@ LinearMapBinaryOp kAddTable
   },
 };
 
-LinearMap Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
+LinearMapImpl* Add(const LinearMapImpl& lhs, const LinearMapImpl& rhs) {
   VLOG(2) << "linear_map_add " << lhs.type() << " " << rhs.type();
-  return LinearMap((*kAddTable[lhs.type()][rhs.type()])(lhs, rhs));
+  return (*kAddTable[lhs.type()][rhs.type()])(lhs, rhs);
 }
 
 LinearMap operator+(const LinearMap& lhs, const LinearMap& rhs) {
-  return Add(lhs.impl(), rhs.impl());
+  return LinearMap(Add(lhs.impl(), rhs.impl()));
 }
 
 }  // namespace linear_map
