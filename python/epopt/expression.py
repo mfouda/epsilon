@@ -37,8 +37,9 @@ class Problem(object):
 
     def expression_data(self):
         retval = self.objective.expression_data()
-        for constr in constraint:
+        for constr in self.constraint:
             retval.update(constr.expression_data())
+        return retval
 
 ARG_FIELD = "arg"
 DATA_FIELD = "data"
@@ -89,11 +90,11 @@ class Expression(object):
     def __getattr__(self, name):
         return getattr(self.proto, name)
 
-    # def expression_data(self):
-    #     retval = dict(self.data)
-    #     for arg in self.arg:
-    #         retval.update(arg.expression_data())
-    #     return retval
+    def expression_data(self):
+        retval = dict(self.data)
+        for arg in self.arg:
+            retval.update(arg.expression_data())
+        return retval
 
 def from_proto(proto, arg, data):
     assert not proto.arg
@@ -272,6 +273,7 @@ def constant(m, n, scalar=None, constant=None, sign=None, data={}):
 
     return Expression(
         expression_type=expression_pb2.Expression.CONSTANT,
+        data=data,
         size=Size(dim=[m, n]),
         constant=constant,
         func_curvature=Curvature(curvature_type=Curvature.CONSTANT),
