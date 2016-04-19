@@ -11,8 +11,8 @@ TEST(KroneckerProductImplTest, Apply) {
   Eigen::MatrixXd A = Eigen::MatrixXd::Random(2,3);
   Eigen::MatrixXd B = Eigen::MatrixXd::Random(4,5);
   LinearMap C(new KroneckerProductImpl(
-      LinearMap(new DenseMatrixImpl(A)),
-      LinearMap(new DenseMatrixImpl(B))));
+      new DenseMatrixImpl(A),
+      new DenseMatrixImpl(B)));
 
   Eigen::MatrixXd X = Eigen::MatrixXd::Random(5,3);
   EXPECT_TRUE(VectorEquals(
