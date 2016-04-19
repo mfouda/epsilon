@@ -58,7 +58,8 @@ def diagonal_matrix(constant, data):
     n = constant.m*constant.n
     return LinearMap(
         linear_map_type=expression_pb2.LinearMap.DIAGONAL_MATRIX, m=n, n=n,
-        constant=constant, data=data)
+        constant=constant,
+        data=data)
 
 def scalar(alpha, n):
     return LinearMap(

@@ -83,7 +83,7 @@ def multiply_elementwise_constant(expr):
         raise TransformError("multiply constant is not leaf", expr)
 
     if expr.constant.constant_type == Constant.DENSE_MATRIX:
-        return linear_map.diagonal_matrix(expr.constant)
+        return linear_map.diagonal_matrix(expr.constant, expr.data)
     if expr.constant.constant_type == Constant.SCALAR:
         return linear_map.scalar(expr.constant.scalar, 1)
 

@@ -203,6 +203,9 @@ def prox_sum_quantile(expr):
 
     alpha = linear.transform_expr(alpha)
     beta = linear.transform_expr(beta)
+    data = alpha.expression_data()
+    data.update(beta.expression_data())
+
     diagonal_arg, constrs = convert_diagonal(arg)
     return MatchResult(
         True,
@@ -213,7 +216,8 @@ def prox_sum_quantile(expr):
                 scaled_zone_params=ProxFunction.ScaledZoneParams(
                     alpha_expr=alpha.proto_with_args,
                     beta_expr=beta.proto_with_args)),
-            diagonal_arg),
+            diagonal_arg,
+            data=data),
         constrs)
 
 def prox_exp(expr):

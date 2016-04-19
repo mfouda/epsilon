@@ -38,7 +38,7 @@ def eval_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     values = _solve.eval_prox(
         f_expr.SerializeToString(),
         lam,
-        constant.global_data_map,
+        problem.expression_data(),
         v_bytes_map)
 
     cvxpy_solver.set_solution(prob, values)

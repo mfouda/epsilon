@@ -83,7 +83,7 @@ def solve(cvxpy_prob, **kwargs):
         values = _solve.eval_prox(
             problem.objective.arg[0].SerializeToString(),
             lam,
-            problem.data,
+            problem.expression_data(),
             {})
         status = OPTIMAL
     else:
