@@ -19,14 +19,15 @@ def transform_linear_map(expr, constrs):
             not (A*B).kronecker_product):
             t, epi_constrs = epi_transform(expr.arg[0], "split_linear_map")
             constrs += [linear.transform_expr(x) for x in epi_constrs]
-            return expression.from_proto(expr.proto, [t])
+            return expression.from_proto(expr.proto, [t], expr.data)
 
     return expr
 
 def transform_expr(expr, constrs):
     expr = expression.from_proto(
         expr.proto,
-        [transform_expr(arg, constrs) for arg in expr.arg])
+        [transform_expr(arg, constrs) for arg in expr.arg],
+        expr.data)
 
     f_name = "transform_" + Expression.Type.Name(expr.expression_type).lower()
     if f_name in globals():

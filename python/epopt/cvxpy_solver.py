@@ -38,9 +38,9 @@ def cvxpy_status(solver_status):
         return OPTIMAL_INACCURATE
     return SOLVER_ERROR
 
-def parameter_values(cvxpy_prob):
+def parameter_values(cvxpy_prob, data):
     return [(cvxpy_expr.parameter_id(param),
-             constant.store(param.value).SerializeToString())
+             constant.store(param.value, data).SerializeToString())
             for param in cvxpy_prob.parameters()]
 
 def compile_problem(cvxpy_prob, solver_params):
@@ -83,15 +83,16 @@ def solve(cvxpy_prob, **kwargs):
         values = _solve.eval_prox(
             problem.objective.arg[0].SerializeToString(),
             lam,
-            constant.global_data_map,
+            problem.data,
             {})
         status = OPTIMAL
     else:
+        data = problem.expression_data()
         status_str, values = _solve.solve(
             problem.SerializeToString(),
-            parameter_values(cvxpy_prob),
+            parameter_values(cvxpy_prob, data),
             solver_params.SerializeToString(),
-            constant.global_data_map)
+            data)
         status = cvxpy_status(SolverStatus.FromString(status_str))
     t1 = time.time()
 

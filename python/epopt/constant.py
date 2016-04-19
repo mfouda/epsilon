@@ -4,9 +4,6 @@ import scipy.sparse as sp
 
 from epopt.proto.epsilon.expression_pb2 import Constant
 
-# Global store of all constants
-global_data_map = {}
-
 def value_location(value):
     return "/mem/data/" + str(abs(hash(value)))
 
@@ -36,9 +33,9 @@ def value_data(value):
 
     return constant, value_bytes
 
-def store(value):
+def store(value, data_map):
     constant, value_bytes = value_data(value)
     location = value_location(value_bytes)
-    global_data_map[location] = value_bytes
+    data_map[location] = value_bytes
     constant.data_location = location
     return constant

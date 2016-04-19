@@ -38,9 +38,9 @@ def multiply_constant(expr, n):
         if expr.constant.constant_type == Constant.SCALAR:
             return linear_map.scalar(expr.constant.scalar, n)
         if expr.constant.constant_type == Constant.DENSE_MATRIX:
-            return linear_map.dense_matrix(expr.constant)
+            return linear_map.dense_matrix(expr.constant, expr.data)
         if expr.constant.constant_type == Constant.SPARSE_MATRIX:
-            return linear_map.sparse_matrix(expr.constant)
+            return linear_map.sparse_matrix(expr.constant, expr.data)
     elif expr.expression_type == Expression.TRANSPOSE:
         return linear_map.transpose(multiply_constant(only_arg(expr), n))
     raise TransformError("unknown constant type", expr)

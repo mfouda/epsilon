@@ -20,13 +20,14 @@ CONSTANT = Curvature(curvature_type=Curvature.CONSTANT)
 # Thin wrappers around Expression/Problem protobuf, making them immutable and
 # with reference semantics for args.
 class Problem(object):
-    def __init__(self, objective, constraint=[]):
+    def __init__(self, objective, constraint=[], data={}):
         assert type(objective) is Expression
         for constr in constraint:
             assert type(constr) is Expression
 
         self.objective = objective
         self.constraint = constraint
+        self.data = data
 
     def SerializeToString(self):
         proto = expression_pb2.Problem(
@@ -34,14 +35,23 @@ class Problem(object):
             constraint=[c.proto_with_args for c in self.constraint])
         return proto.SerializeToString()
 
+    def expression_data(self):
+        retval = self.objective.expression_data()
+        for constr in constraint:
+            retval.update(constr.expression_data())
+
 ARG_FIELD = "arg"
+DATA_FIELD = "data"
 class Expression(object):
     def __init__(self, **kwargs):
         self.arg = list(kwargs.get(ARG_FIELD, []))
+        self.data = kwargs.get(DATA_FIELD, {})
         for arg in self.arg:
             assert type(arg) is Expression
 
         kwargs[ARG_FIELD] = []
+        if DATA_FIELD in kwargs:
+            del kwargs[DATA_FIELD]
         self.proto = expression_pb2.Expression(**kwargs)
 
         # Lazily computed properties
@@ -79,11 +89,18 @@ class Expression(object):
     def __getattr__(self, name):
         return getattr(self.proto, name)
 
-def from_proto(proto, arg):
+    # def expression_data(self):
+    #     retval = dict(self.data)
+    #     for arg in self.arg:
+    #         retval.update(arg.expression_data())
+    #     return retval
+
+def from_proto(proto, arg, data):
     assert not proto.arg
     expr = Expression()
     expr.proto = proto
     expr.arg = arg
+    expr.data = data
     return expr
 
 def is_scalar(a):
@@ -230,13 +247,15 @@ def scalar_constant(scalar, size=None):
         func_curvature=CONSTANT)
 
 def ones(*dims):
+    data = {}
     return Expression(
         expression_type=expression_pb2.Expression.CONSTANT,
         size=Size(dim=dims),
-        constant=_constant.store(np.ones(dims)),
+        data=data,
+        constant=_constant.store(np.ones(dims), data),
         func_curvature=CONSTANT)
 
-def constant(m, n, scalar=None, constant=None, sign=None):
+def constant(m, n, scalar=None, constant=None, sign=None, data={}):
     if scalar is not None:
         constant = expression_pb2.Constant(
             constant_type=expression_pb2.Constant.SCALAR,
@@ -362,7 +381,8 @@ def linear_map(A, x):
         expression_type=expression_pb2.Expression.LINEAR_MAP,
         size=Size(dim=[A.m, 1]),
         func_curvature=AFFINE,
-        linear_map=A,
+        linear_map=A.proto,
+        data=A.data,
         arg=[x])
 
 def eq_constraint(x, y):

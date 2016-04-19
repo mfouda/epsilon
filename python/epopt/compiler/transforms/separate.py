@@ -17,7 +17,8 @@ def replace_var(expr, old_var_id, new_var):
         return new_var
     return expression.from_proto(
         expr.proto,
-        [replace_var(arg, old_var_id, new_var) for arg in expr.arg])
+        [replace_var(arg, old_var_id, new_var) for arg in expr.arg],
+        expr.data)
 
 def is_least_squares_function(f):
     return f.expr.prox_function.prox_function_type in (

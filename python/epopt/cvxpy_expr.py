@@ -62,9 +62,11 @@ def convert_constant(expr):
     if isinstance(expr.value, (int, long, float)):
         return expression.constant(m, n, scalar=expr.value)
     else:
+        data = {}
         return expression.constant(
             m, n,
-            constant=constant.store(expr.value),
+            data=data,
+            constant=constant.store(expr.value, data),
             sign=expression_pb2.Sign(
                 sign_type=expression_pb2.Sign.Type.Value(expr.sign)))
 

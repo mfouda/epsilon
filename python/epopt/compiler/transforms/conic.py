@@ -238,7 +238,7 @@ def transform_expr(expr):
         constrs += constr
 
     # Create the same expression but now with linear arguments.
-    obj_linear = expression.from_proto(expr.proto, transformed_args)
+    obj_linear = expression.from_proto(expr.proto, transformed_args, expr.data)
 
     if not obj_linear.dcp_props.affine:
         f_name = ("transform_" +
