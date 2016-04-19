@@ -51,7 +51,6 @@ common_cc = \
 	epsilon/expression/expression.cc \
 	epsilon/expression/expression_util.cc \
 	epsilon/expression/var_offset_map.cc \
-	epsilon/file/file.cc \
 	epsilon/linear/dense_matrix_impl.cc \
 	epsilon/linear/diagonal_matrix_impl.cc \
 	epsilon/linear/kronecker_product_impl.cc \
@@ -92,7 +91,6 @@ common_cc = \
 	epsilon/vector/block_cholesky.cc \
 	epsilon/vector/block_matrix.cc \
 	epsilon/vector/block_vector.cc \
-	epsilon/vector/vector_file.cc \
 	epsilon/vector/vector_util.cc
 
 third_party_obj = \

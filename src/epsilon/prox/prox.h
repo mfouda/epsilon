@@ -12,19 +12,23 @@ class ProxOperatorArg {
  public:
   ProxOperatorArg(
       const ProxFunction& prox_function,
+      const DataMap& data_map,
       const AffineOperator& affine_arg,
       const AffineOperator& affine_constraint)
       : prox_function_(prox_function),
+        data_map_(data_map),
         affine_arg_(affine_arg),
         affine_constraint_(affine_constraint) {}
 
   const ProxFunction& prox_function() const { return prox_function_; }
+  const DataMap& data_map() const { return data_map_; }
   const AffineOperator& affine_arg() const { return affine_arg_; }
   const AffineOperator& affine_constraint() const { return affine_constraint_; }
 
  private:
   // Not owned by us
   const ProxFunction& prox_function_;
+  const DataMap& data_map_;
   const AffineOperator& affine_arg_;
   const AffineOperator& affine_constraint_;
 };

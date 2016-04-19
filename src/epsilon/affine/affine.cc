@@ -16,13 +16,13 @@
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
 #include "epsilon/util/string.h"
-#include "epsilon/vector/vector_file.h"
 #include "epsilon/vector/vector_util.h"
 
 namespace affine {
 
 void BuildAffineOperatorImpl(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
@@ -30,16 +30,18 @@ void BuildAffineOperatorImpl(
 
 void Add(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   for (const Expression& arg : expr.arg())
-    BuildAffineOperatorImpl(arg, row_key, L, A, b);
+    BuildAffineOperatorImpl(arg, data_map, row_key, L, A, b);
 }
 
 void Variable(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
@@ -49,6 +51,7 @@ void Variable(
 
 void Constant(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
@@ -60,7 +63,7 @@ void Constant(
     // Handle promotion if necessary by using L
     b_dense = Eigen::VectorXd::Constant(L.impl().n(), c.scalar());
   } else {
-    b_dense = ToVector(ReadMatrixData(c));
+    b_dense = ToVector(BuildMatrix(c, data_map));
   }
 
   b->InsertOrAdd(row_key, L*b_dense);
@@ -68,19 +71,22 @@ void Constant(
 
 void LinearMap(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
       GetOnlyArg(expr),
+      data_map,
       row_key,
-      L*linear_map::BuildLinearMap(expr.linear_map()),
+      L*linear_map::BuildLinearMap(expr.linear_map(), data_map),
       A, b);
 }
 
 typedef void(*LinearFunction)(
     const Expression&,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
@@ -96,6 +102,7 @@ std::unordered_map<int, LinearFunction> kLinearFunctions = {
 
 void BuildAffineOperatorImpl(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     linear_map::LinearMap L,
     BlockMatrix* A,
@@ -109,16 +116,17 @@ void BuildAffineOperatorImpl(
     LOG(FATAL) << "No linear function for "
                << Expression::Type_Name(expr.expression_type());
   }
-  iter->second(expr, row_key, L, A, b);
+  iter->second(expr, data_map, row_key, L, A, b);
 }
 
 void BuildAffineOperator(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     BlockMatrix* A,
     BlockVector* b) {
   BuildAffineOperatorImpl(
-      expr, row_key, linear_map::Identity(GetDimension(expr)), A, b);
+      expr, data_map, row_key, linear_map::Identity(GetDimension(expr)), A, b);
 }
 
 const std::string kConstraintPrefix = "constraint:";

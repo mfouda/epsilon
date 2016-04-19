@@ -9,11 +9,13 @@
 int main(int argc, char **argv) {
   google::InitGoogleLogging(argv[0]);
 
-  Problem problem;
-  CHECK(problem.ParseFromString(ReadStringFromFile(argv[1])));
+  // TODO(mwytock): Populate DataMap and bring this back
 
-  SolverParams params;
-  params.set_rel_tol(1e-3);
-  ProxADMMSolver solver(problem, params);
-  solver.Solve();
+  // Problem problem;
+  // CHECK(problem.ParseFromString(ReadStringFromFile(argv[1])));
+
+  // SolverParams params;
+  // params.set_rel_tol(1e-3);
+  // ProxADMMSolver solver(problem, params);
+  // solver.Solve();
 }

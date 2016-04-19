@@ -5,6 +5,7 @@
 
 #include "epsilon/expression/var_offset_map.h"
 #include "epsilon/vector/block_matrix.h"
+#include "epsilon/vector/vector_util.h"
 
 class BlockMatrix;
 class BlockVector;
@@ -25,6 +26,7 @@ std::string arg_key(int i);
 // expressions and puts the result in row_key in the BlockMatrix
 void BuildAffineOperator(
     const Expression& expr,
+    const DataMap& data_map,
     const std::string& row_key,
     BlockMatrix* A,
     BlockVector* b);

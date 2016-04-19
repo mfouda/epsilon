@@ -12,8 +12,10 @@
 
 ProxADMMTwoBlockSolver::ProxADMMTwoBlockSolver(
     const Problem& problem,
+    const DataMap& data_map,
     const SolverParams& params)
     : Solver(problem),
+      data_map_(data_map),
       params_(params) {}
 
 void ProxADMMTwoBlockSolver::InitConstraints() {
@@ -27,6 +29,7 @@ void ProxADMMTwoBlockSolver::InitConstraints() {
     CHECK_EQ(1, constr.arg_size());
     affine::BuildAffineOperator(
         problem().constraint(i).arg(0),
+        data_map_,
         affine::constraint_key(i),
         &H.A, &H.b);
 
@@ -39,7 +42,7 @@ void ProxADMMTwoBlockSolver::InitConstraints() {
   }
   // Prox for I(Ax + b = 0) constraint
   constr_prox_ = CreateProxOperator(ProxFunction::ZERO, false);
-  constr_prox_->Init(ProxOperatorArg(ProxFunction(), H, A));
+  constr_prox_->Init(ProxOperatorArg(ProxFunction(), data_map_, H, A));
   VLOG(1) << "constr prox init done";
 
   m_ = H.A.m();
@@ -59,6 +62,7 @@ void ProxADMMTwoBlockSolver::InitProxOperators() {
     for (int i = 0; i < f_expr.arg_size(); i++) {
       affine::BuildAffineOperator(
           f_expr.arg(i),
+          data_map_,
           affine::arg_key(i),
           &H.A, &H.b);
     }
@@ -75,7 +79,7 @@ void ProxADMMTwoBlockSolver::InitProxOperators() {
     VLOG(1) << "prox " << i << ", initializing "
             << ProxFunction::Type_Name(type);
     prox_.emplace_back(CreateProxOperator(type, epigraph));
-    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
+    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), data_map_, H, A));
     VLOG(1) << "prox " << i << " init done";
   }
 }

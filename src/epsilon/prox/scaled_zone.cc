@@ -31,7 +31,9 @@ Eigen::VectorXd Promote(const Eigen::VectorXd& x, int n) {
   LOG(FATAL) << x.rows() << " != " << n;
 }
 
-ScaledZoneParams GetParams(const ProxFunction& prox) {
+ScaledZoneParams GetParams(
+    const ProxFunction& prox,
+    const DataMap& data_map) {
   int n;
   if (prox.has_axis()) {
     n = prox.arg_size(0).dim(prox.axis());
@@ -58,9 +60,10 @@ ScaledZoneParams GetParams(const ProxFunction& prox) {
   } else if (prox.prox_function_type() == ProxFunction::SUM_QUANTILE) {
     BlockVector tmp;
     affine::BuildAffineOperator(
-        prox.scaled_zone_params().alpha_expr(), "alpha", nullptr, &tmp);
+        prox.scaled_zone_params().alpha_expr(), data_map, "alpha", nullptr,
+        &tmp);
     affine::BuildAffineOperator(
-        prox.scaled_zone_params().beta_expr(), "beta", nullptr, &tmp);
+        prox.scaled_zone_params().beta_expr(), data_map, "beta", nullptr, &tmp);
     params.alpha = Promote(tmp("alpha"), n);
     params.beta = Promote(tmp("beta"), n);
     params.C = 0;
@@ -102,7 +105,7 @@ Eigen::VectorXd ApplyScaledZoneProx(
 
 void ScaledZoneProx::Init(const ProxOperatorArg& arg) {
   VectorProx::Init(arg);
-  params_ = GetParams(arg.prox_function());
+  params_ = GetParams(arg.prox_function(), arg.data_map());
 }
 
 void ScaledZoneProx::ApplyVector(
@@ -121,7 +124,7 @@ class ScaledZoneEpigraph : public VectorProx {
  public:
   void Init(const ProxOperatorArg& arg) override {
     VectorProx::Init(arg);
-    params_ = GetParams(arg.prox_function());
+    params_ = GetParams(arg.prox_function(), arg.data_map());
   }
 
  protected:

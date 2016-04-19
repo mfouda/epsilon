@@ -21,6 +21,7 @@ class ProxADMMSolver final : public Solver {
 public:
   ProxADMMSolver(
       const Problem& problem,
+      const DataMap& data_map,
       const SolverParams& params);
   BlockVector Solve() override;
 
@@ -36,6 +37,7 @@ private:
 
   // Inputs
   Problem problem_;
+  const DataMap& data_map_;
   SolverParams params_;
 
   bool initialized_;

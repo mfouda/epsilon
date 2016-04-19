@@ -2,9 +2,13 @@
 #define UTIL_VECTOR_H
 
 #include <memory>
+#include <unordered_map>
 
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
+
+#include "epsilon/expression.pb.h"
+#include "epsilon/vector/vector_util.h"
 
 using Eigen::CwiseNullaryOp;
 using Eigen::EigenBase;
@@ -15,6 +19,8 @@ typedef Eigen::SparseMatrix<double> SparseXd;
 typedef void(*VectorFunction)(
     const std::vector<const VectorXd*>& input,
     const std::vector<VectorXd*>& output);
+
+typedef std::unordered_map<std::string, std::string> DataMap;
 
 // Create a block diagonal matrix with A repeated k times
 SparseXd BlockDiag(const MatrixXd& A, int k);
@@ -58,5 +64,9 @@ void AppendBlockTriplets(const Eigen::MatrixXd& A, int i, int j,
 SparseXd BuildSparseMatrix(
     int m, int n, const std::vector<Eigen::Triplet<double>>& coeffs);
 
+// Build matrices from protos + raw data
+Eigen::MatrixXd BuildMatrix(const Constant& constant, const DataMap& data_map);
+Eigen::SparseMatrix<double> BuildSparseMatrix(
+    const Constant& constant, const DataMap& data_map);
 
 #endif  // UTIL_VECTOR_H

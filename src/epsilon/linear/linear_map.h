@@ -9,6 +9,7 @@
 #include <Eigen/SparseCore>
 
 #include "epsilon/expression.pb.h"
+#include "epsilon/vector/vector_util.h"
 
 namespace linear_map {
 
@@ -108,7 +109,8 @@ LinearMap Identity(int n);
 LinearMap Diagonal(const Eigen::VectorXd& a);
 LinearMap Scalar(double alpha, int n);
 
-LinearMap BuildLinearMap(const ::LinearMap& linear_map);
+LinearMap BuildLinearMap(
+    const ::LinearMap& linear_map, const DataMap& data_map);
 
 Eigen::VectorXd GetDiagonal(const LinearMap& linear_map);
 double GetScalar(const LinearMap& linear_map);

@@ -27,6 +27,7 @@ class ProxADMMTwoBlockSolver final : public Solver {
 public:
   ProxADMMTwoBlockSolver(
       const Problem& problem,
+      const DataMap& data_map,
       const SolverParams& params);
   BlockVector Solve() override;
 
@@ -39,6 +40,7 @@ private:
   void LogStatus();
 
   // Inputs
+  const DataMap& data_map_;
   SolverParams params_;
 
   // Problem parameters

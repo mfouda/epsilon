@@ -15,8 +15,10 @@
 
 ProxADMMSolver::ProxADMMSolver(
     const Problem& problem,
+    const DataMap& data_map,
     const SolverParams& params)
     : Solver(problem),
+      data_map_(data_map),
       params_(params),
       initialized_(false) {}
 
@@ -31,6 +33,7 @@ void ProxADMMSolver::InitConstraints() {
 
     affine::BuildAffineOperator(
         problem().constraint(i).arg(0),
+        data_map_,
         affine::constraint_key(i),
         &A_, &b_);
   }
@@ -57,6 +60,7 @@ void ProxADMMSolver::InitProxOperators() {
     for (int i = 0; i < f_expr.arg_size(); i++) {
       affine::BuildAffineOperator(
           f_expr.arg(i),
+          data_map_,
           affine::arg_key(i),
           &H.A, &H.b);
     }
@@ -81,7 +85,7 @@ void ProxADMMSolver::InitProxOperators() {
     VLOG(1) << "prox " << i << ", initializing "
             << ProxFunction::Type_Name(type);
     prox_.emplace_back(CreateProxOperator(type, epigraph));
-    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
+    prox_.back()->Init(ProxOperatorArg(f_expr.prox_function(), data_map_, H, A));
     VLOG(1) << "prox " << i << " init done";
 
     // TODO(mwytock): This is scaled by rho now, figure out what to do here
