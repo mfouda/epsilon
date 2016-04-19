@@ -181,6 +181,7 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
     return retval;
   }
 
+  // Error execution path
   PyErr_SetString(SolveError, "CHECK failed");
   return nullptr;
 }

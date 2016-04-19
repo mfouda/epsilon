@@ -9,7 +9,6 @@
 
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/file/file.h"
 #include "epsilon/linear/dense_matrix_impl.h"
 #include "epsilon/linear/diagonal_matrix_impl.h"
 #include "epsilon/linear/kronecker_product_impl.h"
