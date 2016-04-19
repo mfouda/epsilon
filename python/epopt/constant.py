@@ -38,5 +38,4 @@ def store(value, data_map):
     location = value_location(value_bytes)
     data_map[location] = value_bytes
     constant.data_location = location
-    print location
     return constant

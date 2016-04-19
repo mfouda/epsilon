@@ -88,7 +88,6 @@ def solve(cvxpy_prob, **kwargs):
         status = OPTIMAL
     else:
         data = problem.expression_data()
-        print data
         status_str, values = _solve.solve(
             problem.SerializeToString(),
             parameter_values(cvxpy_prob, data),
