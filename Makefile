@@ -98,7 +98,6 @@ third_party_obj = \
 
 common_test_cc = \
 	epsilon/algorithms/algorithm_testutil.cc \
-	epsilon/expression/expression_testutil.cc \
 	epsilon/util/test_main.cc \
 	epsilon/vector/vector_testutil.cc
 
