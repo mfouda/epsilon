@@ -9,10 +9,10 @@
 #include "epsilon/algorithms/prox_admm_two_block.h"
 #include "epsilon/expression.pb.h"
 #include "epsilon/expression/expression_util.h"
-#include "epsilon/file/file.h"
 #include "epsilon/prox/prox.h"
 #include "epsilon/solver_params.pb.h"
 #include "epsilon/util/logging.h"
+#include "epsilon/vector/vector_util.h"
 
 // TODO(mwytock): Does failure handling need to be made threadsafe? Seems like
 // making these threadlocal would do
@@ -55,7 +55,7 @@ PyObject* GetVariableMap(const BlockVector& x) {
   return vars;
 }
 
-void WriteConstants(PyObject* data) {
+void WriteConstants(PyObject* data, DataMap* data_map) {
   // NOTE(mwytock): References returned by PyDict_Next() are borrowed so no need
   // to Py_DECREF() them.
   Py_ssize_t pos = 0;
@@ -66,22 +66,21 @@ void WriteConstants(PyObject* data) {
     const char* value_str = PyString_AsString(value);
     CHECK(key_str);
     CHECK(value_str);
-
-    {
-      std::unique_ptr<file::File> f = file::Open(key_str, file::kWriteMode);
-      f->Write(std::string(value_str, PyString_Size(value)));
-      f->Close();
-    }
+    data_map->insert(
+        std::make_pair(key_str, std::string(value_str, PyString_Size(value))));
   }
 }
 
 std::unique_ptr<Solver> CreateSolver(
     const Problem& problem,
+    const DataMap& data_map,
     const SolverParams& params) {
   if (params.solver() == SolverParams::PROX_ADMM) {
-    return std::unique_ptr<Solver>(new ProxADMMSolver(problem, params));
+    return std::unique_ptr<Solver>(
+        new ProxADMMSolver(problem, data_map, params));
   } else if (params.solver() == SolverParams::PROX_ADMM_TWO_BLOCK) {
-    return std::unique_ptr<Solver>(new ProxADMMTwoBlockSolver(problem, params));
+    return std::unique_ptr<Solver>(
+        new ProxADMMTwoBlockSolver(problem, data_map, params));
   } else {
     LOG(FATAL) << "Unknown solver: " << params.solver();
   }
@@ -134,7 +133,8 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
   if (!solver_params.ParseFromArray(solver_params_str, solver_params_str_len))
     return nullptr;
 
-  WriteConstants(data);
+  DataMap data_map;
+  WriteConstants(data, &data_map);
   Solver* solver;
   std::unique_ptr<Solver> solver_gc;
 
@@ -145,12 +145,12 @@ static PyObject* Solve(PyObject* self, PyObject* args) {
       auto retval = global_solver_cache.insert(
           make_pair(
               problem_str,
-              CreateSolver(problem, solver_params)));
+              CreateSolver(problem, data_map, solver_params)));
       iter = retval.first;
     }
     solver = iter->second.get();
   } else {
-    solver_gc = CreateSolver(problem, solver_params);
+    solver_gc = CreateSolver(problem, data_map, solver_params);
     solver = solver_gc.get();
   }
   SetParameterValues(parameters, solver);
@@ -205,13 +205,15 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
   if (!f_expr.ParseFromArray(f_expr_str, f_expr_str_len))
     return nullptr;
 
-  WriteConstants(data);
+  DataMap data_map;
+  WriteConstants(data, &data_map);
   if (!setjmp(failure_buf)) {
     CHECK_EQ(Expression::PROX_FUNCTION, f_expr.expression_type());
 
     AffineOperator H, A;
     for (int i = 0; i < f_expr.arg_size(); i++) {
-      affine::BuildAffineOperator(f_expr.arg(i), affine::arg_key(i), &H.A, &H.b);
+      affine::BuildAffineOperator(
+          f_expr.arg(i), data_map, affine::arg_key(i), &H.A, &H.b);
     }
 
     // Set up affine function for constraints for (1/2)||A(x) - v||^2 form
@@ -226,7 +228,7 @@ static PyObject* EvalProx(PyObject* self, PyObject* args) {
     std::unique_ptr<ProxOperator> op = CreateProxOperator(
         f_expr.prox_function().prox_function_type(),
         f_expr.prox_function().epigraph());
-    op->Init(ProxOperatorArg(f_expr.prox_function(), H, A));
+    op->Init(ProxOperatorArg(f_expr.prox_function(), data_map, H, A));
     BlockVector x = op->Apply(v);
     PyObject* vars = GetVariableMap(x);
     PyObject* retval = Py_BuildValue("O", vars);

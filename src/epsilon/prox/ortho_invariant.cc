@@ -92,8 +92,9 @@ void OrthoInvariantProx::InitEigenProx(double lambda) {
     affine_arg.A(key, key) = linear_map::Identity(n);
     affine_constraint.A(key, key) = linear_map::Scalar(alpha_, n);
   }
+  DataMap data_map;
   eigen_prox_->Init(
-      ProxOperatorArg(prox_function, affine_arg, affine_constraint));
+      ProxOperatorArg(prox_function, data_map, affine_arg, affine_constraint));
 }
 
 Eigen::VectorXd OrthoInvariantProx::ApplyEigenProx(const Eigen::VectorXd& v) {
