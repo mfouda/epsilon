@@ -47,6 +47,7 @@ class LinearMapImpl {
   virtual DenseMatrix AsDense() const = 0;
   virtual LinearMapImpl* Transpose() const = 0;
   virtual LinearMapImpl* Inverse() const = 0;
+  virtual LinearMapImpl* Clone() const = 0;
   virtual bool operator==(const LinearMapImpl& other) const = 0;
 
   // Works for either vector or matrix

@@ -36,6 +36,10 @@ class KroneckerProductImpl final : public LinearMapImpl {
     return new KroneckerProductImpl(A_->Inverse(), B_->Inverse());
   }
 
+  LinearMapImpl* Clone() const override {
+    return new KroneckerProductImpl(A_->Clone(), B_->Clone());
+  }
+
   bool operator==(const LinearMapImpl& other) const override;
 
   // Kronecker product specific methods

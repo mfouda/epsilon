@@ -217,14 +217,13 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   auto const& K1 = static_cast<const KroneckerProductImpl&>(lhs);
   auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
 
-  // TODO(mwytock): Fix this, need a way to copy LinearMapImpl
-  // if (K1.A() == K2.A()) {
-  //   return new KroneckerProductImpl(K1.A(), Add(K1.B(), K2.B()));
-  // } else if (K1.B() == K2.B()) {
-  //   return new KroneckerProductImpl(Add(K1.A(), K2.A()), K1.B());
-  // } else {
-  return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
-  //}
+  if (K1.A() == K2.A()) {
+    return new KroneckerProductImpl(K1.A().Clone(), Add(K1.B(), K2.B()));
+  } else if (K1.B() == K2.B()) {
+    return new KroneckerProductImpl(Add(K1.A(), K2.A()), K1.B().Clone());
+  } else {
+    return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
+  }
 }
 
 LinearMapImpl* Add_NotImplemented(

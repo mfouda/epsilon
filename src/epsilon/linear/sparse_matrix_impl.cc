@@ -47,6 +47,10 @@ public:
     LOG(FATAL) << "Not implemented";
   }
 
+  LinearMapImpl* Clone() const override {
+    LOG(FATAL) << "Not implemented";
+  }
+
   bool operator==(const LinearMapImpl& other) const override {
     LOG(FATAL) << "Not implemented";
   }

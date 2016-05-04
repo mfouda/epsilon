@@ -21,6 +21,7 @@ class DenseMatrixImpl final : public LinearMapImpl {
 
   LinearMapImpl* Transpose() const override;
   LinearMapImpl* Inverse() const override;
+  LinearMapImpl* Clone() const override;
 
   bool operator==(const LinearMapImpl& other) const override;
 

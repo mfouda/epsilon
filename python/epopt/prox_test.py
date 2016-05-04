@@ -6,7 +6,7 @@ import cvxpy as cp
 from numpy.random import randn, rand
 
 from epopt.proto.epsilon.expression_pb2 import ProxFunction
-from epopt.prox import eval_prox
+from epopt.prox import eval_prox_impl
 
 RANDOM_PROX_TRIALS = 10
 
@@ -247,8 +247,13 @@ PROX_TESTS += [
     epigraph("SUM_SQUARE", None, lambda: [cp.sum_squares(x) <= t]),
 ]
 
+PROX_TESTS = [
+    prox("ZERO", None, C_linear_equality),
+]
+
+
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
-    eval_prox(prox_function_type, prob, v_map, lam, epigraph)
+    eval_prox_impl(prob, v_map, lam, prox_function_type, epigraph)
     actual = {x: x.value for x in prob.variables()}
 
     # Compare to solution with cvxpy

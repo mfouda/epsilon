@@ -28,6 +28,9 @@ class SparseMatrixImpl final : public LinearMapImpl {
     return new SparseMatrixImpl(A_.transpose());
   }
   LinearMapImpl* Inverse() const override;
+  LinearMapImpl* Clone() const override {
+    return new SparseMatrixImpl(A_);
+  }
 
   bool operator==(const LinearMapImpl& other) const override;
 
