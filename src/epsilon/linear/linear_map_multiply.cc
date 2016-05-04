@@ -195,11 +195,11 @@ LinearMapImpl* Multiply_ScalarMatrix_KroneckerProduct(
     const LinearMapImpl& rhs) {
   auto const& S = static_cast<const ScalarMatrixImpl&>(lhs);
   auto const& K = static_cast<const KroneckerProductImpl&>(rhs);
-  ScalarMatrixImpl S1(K.A().m(), S.alpha());
-  ScalarMatrixImpl S2(K.B().m(), 1);
+  ScalarMatrixImpl S1(K.A().impl().m(), S.alpha());
+  ScalarMatrixImpl S2(K.B().impl().m(), 1);
   return new KroneckerProductImpl(
-      Multiply(S1, K.A()),
-      Multiply(S2, K.B()));
+      LinearMap(Multiply(S1, K.A().impl())),
+      LinearMap(Multiply(S2, K.B().impl())));
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
@@ -237,11 +237,9 @@ LinearMapImpl* Multiply_KroneckerProduct_KroneckerProduct(
     const LinearMapImpl& rhs) {
   const KroneckerProductImpl& C = static_cast<const KroneckerProductImpl&>(lhs);
   const KroneckerProductImpl& D = static_cast<const KroneckerProductImpl&>(rhs);
-  if (C.A().n() == D.A().m() &&
-      C.B().n() == D.B().m()) {
-  return new KroneckerProductImpl(
-      Multiply(C.A(), D.A()),
-      Multiply(C.B(), D.B()));
+  if (C.A().impl().n() == D.A().impl().m() &&
+      C.B().impl().n() == D.B().impl().m()) {
+    return new KroneckerProductImpl(C.A()*D.A(), C.B()*D.B());
   }
 
   return new SparseMatrixImpl(C.AsSparse()*D.AsSparse());

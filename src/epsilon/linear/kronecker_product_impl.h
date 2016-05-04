@@ -10,16 +10,16 @@ namespace linear_map {
 
 class KroneckerProductImpl final : public LinearMapImpl {
  public:
-  KroneckerProductImpl(LinearMapImpl* A, LinearMapImpl* B)
+  KroneckerProductImpl(LinearMap A, LinearMap B)
       : LinearMapImpl(KRONECKER_PRODUCT), A_(A), B_(B) {}
 
-  int m() const override { return A_->m()*B_->m(); }
-  int n() const override { return A_->n()*B_->n(); }
+  int m() const override { return A_.impl().m()*B_.impl().m(); }
+  int n() const override { return A_.impl().n()*B_.impl().n(); }
 
   std::string DebugString() const override {
     return StringPrintf("kronecker product\nA: %s\nB: %s",
-                        A_->DebugString().c_str(),
-                        B_->DebugString().c_str());
+                        A_.impl().DebugString().c_str(),
+                        B_.impl().DebugString().c_str());
   }
 
   DenseMatrix AsDense() const override;
@@ -29,26 +29,22 @@ class KroneckerProductImpl final : public LinearMapImpl {
   }
 
   LinearMapImpl* Transpose() const override {
-    return new KroneckerProductImpl(A_->Transpose(), B_->Transpose());
+    return new KroneckerProductImpl(A_.Transpose(), B_.Transpose());
   }
 
   LinearMapImpl* Inverse() const override {
-    return new KroneckerProductImpl(A_->Inverse(), B_->Inverse());
-  }
-
-  LinearMapImpl* Clone() const override {
-    return new KroneckerProductImpl(A_->Clone(), B_->Clone());
+    return new KroneckerProductImpl(A_.Inverse(), B_.Inverse());
   }
 
   bool operator==(const LinearMapImpl& other) const override;
 
   // Kronecker product specific methods
-  const LinearMapImpl& A() const { return *A_; }
-  const LinearMapImpl& B() const { return *B_; }
+  const LinearMap& A() const { return A_; }
+  const LinearMap& B() const { return B_; }
   SparseMatrix AsSparse() const;
 
  private:
-  std::unique_ptr<LinearMapImpl> A_, B_;
+  LinearMap A_, B_;
 };
 
 }  // namespace linear_map

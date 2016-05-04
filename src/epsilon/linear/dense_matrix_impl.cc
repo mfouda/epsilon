@@ -23,10 +23,6 @@ LinearMapImpl* DenseMatrixImpl::Transpose() const {
   return new DenseMatrixImpl(A_.transpose());
 }
 
-LinearMapImpl* DenseMatrixImpl::Clone() const {
-  return new DenseMatrixImpl(A_);
-}
-
 std::string DenseMatrixImpl::DebugString() const {
   return StringPrintf(
       "dense matrix %d x %d\n%s", m(), n(), MatrixDebugString(A_).c_str());

@@ -43,8 +43,8 @@ LinearMapImpl* KroneckerProduct(
     const ::LinearMap& proto, const DataMap& data_map) {
   CHECK_EQ(2, proto.arg_size());
   return new KroneckerProductImpl(
-      BuildLinearMapImpl(proto.arg(0), data_map),
-      BuildLinearMapImpl(proto.arg(1), data_map));
+      BuildLinearMap(proto.arg(0), data_map),
+      BuildLinearMap(proto.arg(1), data_map));
 }
 
 LinearMapImpl* DenseMatrix(

@@ -28,10 +28,6 @@ class DiagonalMatrixImpl final : public LinearMapImpl {
   }
   LinearMapImpl* Inverse() const override;
 
-  LinearMapImpl* Clone() const override {
-    return new DiagonalMatrixImpl(A_);
-  }
-
   bool operator==(const LinearMapImpl& other) const override;
 
   // Diagonal matrix API

@@ -30,9 +30,6 @@ class ScalarMatrixImpl final : public LinearMapImpl {
   LinearMapImpl* Inverse() const override {
     return new ScalarMatrixImpl(n_, 1/alpha_);
   }
-  LinearMapImpl* Clone() const override {
-    return new ScalarMatrixImpl(n_, alpha_);
-  }
 
   bool operator==(const LinearMapImpl& other) const override;
 

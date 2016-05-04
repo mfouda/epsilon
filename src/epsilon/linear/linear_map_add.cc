@@ -169,20 +169,16 @@ LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
 
   // kron(A, alpha*I) + beta*I  can be rewritten as
   // kron(A + beta/alpha*I, alpha*I)
-  if (K.A().type() == SCALAR_MATRIX) {
-    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A());
-    ScalarMatrixImpl S1(K.A().n(), 0);
-    ScalarMatrixImpl S2(K.B().n(), S.alpha()/KS.alpha());
-    return new KroneckerProductImpl(
-        Add(S1, K.A()),
-        Add(S2, K.B()));
-  } else if (K.B().type() == SCALAR_MATRIX) {
-    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B());
-    ScalarMatrixImpl S1(K.A().n(), S.alpha()/KS.alpha());
-    ScalarMatrixImpl S2(K.B().n(), 0);
-    return new KroneckerProductImpl(
-        Add(S1, K.A()),
-        Add(S2, K.B()));
+  if (K.A().impl().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A().impl());
+    LinearMap S1 = linear_map::Scalar(K.A().impl().n(), 0);
+    LinearMap S2 = linear_map::Scalar(K.B().impl().n(), S.alpha()/KS.alpha());
+    return new KroneckerProductImpl(S1 + K.A(), S2 + K.B());
+  } else if (K.B().impl().type() == SCALAR_MATRIX) {
+    auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B().impl());
+    LinearMap S1 = linear_map::Scalar(K.A().impl().n(), S.alpha()/KS.alpha());
+    LinearMap S2 = linear_map::Scalar(K.B().impl().n(), 0);
+    return new KroneckerProductImpl(S1 + K.A(), S2 + K.B());
   }
   return new SparseMatrixImpl(S.AsSparse() + K.AsSparse());
 }
@@ -218,9 +214,9 @@ LinearMapImpl* Add_KroneckerProduct_KroneckerProduct(
   auto const& K2 = static_cast<const KroneckerProductImpl&>(rhs);
 
   if (K1.A() == K2.A()) {
-    return new KroneckerProductImpl(K1.A().Clone(), Add(K1.B(), K2.B()));
+    return new KroneckerProductImpl(K1.A(), K1.B() + K2.B());
   } else if (K1.B() == K2.B()) {
-    return new KroneckerProductImpl(Add(K1.A(), K2.A()), K1.B().Clone());
+    return new KroneckerProductImpl(K1.A() + K2.A(), K1.B());
   } else {
     return new SparseMatrixImpl(K1.AsSparse() + K2.AsSparse());
   }
