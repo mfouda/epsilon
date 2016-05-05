@@ -44,8 +44,16 @@ LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
 
 LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
-  LinearMap X(new DenseMatrixImpl(
-      ToMatrix(x, B_.impl().n(), A_.impl().n())));
+  const int m = B_.impl().n();
+  const int n = A_.impl().n();
+
+  // Have to make copy to get DenseMatrixImpl
+  // TODO(mwytock): fix this
+  std::shared_ptr<DenseMatrixImpl::Data> data_ptr(new DenseMatrixImpl::Data);
+  data_ptr->data.reset(new double[m*n]);
+  memcpy(data_ptr->data.get(), x.data(), m*n*sizeof(double));
+
+  LinearMap X(new DenseMatrixImpl(m, n, data_ptr, 'N'));
   return ToVector((A_*(B_*X).Transpose()).Transpose().impl().AsDense());
 }
 

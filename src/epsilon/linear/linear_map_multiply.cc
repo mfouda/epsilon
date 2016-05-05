@@ -5,15 +5,7 @@
 #include "epsilon/linear/linear_map.h"
 #include "epsilon/linear/scalar_matrix_impl.h"
 #include "epsilon/linear/sparse_matrix_impl.h"
-
-extern "C" {
-
-void dgemm_(
-    char *transa, char *transb, int *m, int *n, int *k,
-    double *alpha, double *A, int *lda, double *B, int *ldb,
-    double *beta, double *C, int *ldc);
-
-}  // extern "C"
+#include "epsilon/linear/lapack.h"
 
 namespace linear_map {
 
@@ -22,23 +14,25 @@ LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  char trans = 'N';
   int m = lhs.m();
   int n = rhs.n();
   int k = rhs.m();
   double alpha = 1;
   double beta = 0;
 
-  const Eigen::MatrixXd& A = static_cast<const DenseMatrixImpl&>(lhs).dense();
-  const Eigen::MatrixXd& B = static_cast<const DenseMatrixImpl&>(rhs).dense();
-  Eigen::MatrixXd C(m, n);
-  dgemm_(&trans, &trans, &m, &n, &k, &alpha,
-	 const_cast<double*>(A.data()), &m,
-	 const_cast<double*>(B.data()), &k,
-	 &beta,
-	 C.data(), &m);
+  const DenseMatrixImpl& A = static_cast<const DenseMatrixImpl&>(lhs);
+  const DenseMatrixImpl& B = static_cast<const DenseMatrixImpl&>(rhs);
 
-  return new DenseMatrixImpl(C);
+  std::shared_ptr<DenseMatrixImpl::Data> C_data_ptr(new DenseMatrixImpl::Data);
+  C_data_ptr->data.reset(new double[m*k]);
+
+  dgemm_(A.trans(), B.trans(),
+         &m, &n, &k, &alpha,
+         A.data(), &m,
+         B.data(), &k,
+	 &beta,
+	 C_data_ptr->data.get(), &m);
+  return new DenseMatrixImpl(m, k, C_data_ptr, 'N');
 }
 
 LinearMapImpl* Multiply_DenseMatrix_SparseMatrix(
