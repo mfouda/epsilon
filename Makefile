@@ -36,11 +36,14 @@ benchmark_LDLIBS = -L/usr/local/lib -lbenchmark
 # System-specific configuration
 SYSTEM = $(shell uname -s)
 
-LDLIBS = -lblas
+ifeq ($(SYSTEM),Darwin)
+LDLIBS += -framework Accelerate
+endif
+
 ifeq ($(SYSTEM),Linux)
 CFLAGS += -fPIC
 CXXFLAGS += -fPIC
-LDLIBS += -lpthread
+LDLIBS += -lpthread -lblas
 endif
 
 common_cc = \
@@ -107,6 +110,7 @@ proto = \
 	epsilon/solver_params.proto
 
 tests = \
+	epsilon/linear/dense_matrix_impl_test \
 	epsilon/linear/kronecker_product_impl_test \
 	epsilon/linear/linear_map_test \
 	epsilon/vector/block_cholesky_test \

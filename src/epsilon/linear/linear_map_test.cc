@@ -43,11 +43,23 @@ class LinearMapTest : public testing::Test {
 
     x = Eigen::VectorXd(2);
     x << 3,4;
+
+    A0T = A0.transpose();
+    B0T = B0.transpose();
+    C0T = C0.transpose();
+    D0T = D0.transpose();
+
+    AT = A.Transpose();
+    BT = B.Transpose();
+    CT = C.Transpose();
+    DT = D.Transpose();
   }
 
   Eigen::VectorXd x;
   Eigen::MatrixXd A0, B0, C0, D0, E0;
+  Eigen::MatrixXd A0T, B0T, C0T, D0T, E0T;
   LinearMap A, B, C, D, E;
+  LinearMap AT, BT, CT, DT, ET;
 };
 
 TEST_F(LinearMapTest, Multiply) {
@@ -72,6 +84,40 @@ TEST_F(LinearMapTest, Multiply) {
   EXPECT_TRUE(MatrixEquals(D0*D0, (D*D).impl().AsDense()));
 }
 
+TEST_F(LinearMapTest, MultiplyTranspose) {
+  EXPECT_TRUE(MatrixEquals(A0T*A0T, (AT*AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T*B0T, (AT*BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T*C0T, (AT*CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T*D0T, (AT*DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(B0T*A0T, (BT*AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T*B0T, (BT*BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T*C0T, (BT*CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T*D0T, (BT*DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(C0T*A0T, (CT*AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T*B0T, (CT*BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T*C0T, (CT*CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T*D0T, (CT*DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(D0T*A0T, (DT*AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T*B0T, (DT*BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T*C0T, (DT*CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T*D0T, (DT*DT).impl().AsDense()));
+}
+
+TEST_F(LinearMapTest, MultiplyTranspose_NonEqual) {
+  Eigen::MatrixXd M0 = Eigen::MatrixXd(2,3);
+  M0 << 1, 2, 3, 4, 5, 6;
+  LinearMap M = LinearMap(new DenseMatrixImpl(M0));
+
+  Eigen::MatrixXd M0T = M0.transpose();
+  LinearMap MT = M.Transpose();
+
+  EXPECT_TRUE(MatrixEquals(M0*M0T, (M*MT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(M0T*M0, (MT*M).impl().AsDense()));
+}
+
 TEST_F(LinearMapTest, Add) {
   EXPECT_TRUE(MatrixEquals(A0+A0, (A+A).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(A0+B0, (A+B).impl().AsDense()));
@@ -92,6 +138,28 @@ TEST_F(LinearMapTest, Add) {
   EXPECT_TRUE(MatrixEquals(D0+B0, (D+B).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0+C0, (D+C).impl().AsDense()));
   EXPECT_TRUE(MatrixEquals(D0+D0, (D+D).impl().AsDense()));
+}
+
+TEST_F(LinearMapTest, AddTranspose) {
+  EXPECT_TRUE(MatrixEquals(A0T+A0T, (AT+AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T+B0T, (AT+BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T+C0T, (AT+CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(A0T+D0T, (AT+DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(B0T+A0T, (BT+AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T+B0T, (BT+BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T+C0T, (BT+CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(B0T+D0T, (BT+DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(C0T+A0T, (CT+AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T+B0T, (CT+BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T+C0T, (CT+CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(C0T+D0T, (CT+DT).impl().AsDense()));
+
+  EXPECT_TRUE(MatrixEquals(D0T+A0T, (DT+AT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T+B0T, (DT+BT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T+C0T, (DT+CT).impl().AsDense()));
+  EXPECT_TRUE(MatrixEquals(D0T+D0T, (DT+DT).impl().AsDense()));
 }
 
 TEST_F(LinearMapTest, Multiply_KroneckerScalar) {

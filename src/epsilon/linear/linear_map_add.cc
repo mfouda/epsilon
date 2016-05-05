@@ -14,15 +14,15 @@ LinearMapImpl* Add_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()+
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()+
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Add_DenseMatrix_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()+
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()+
       static_cast<DenseMatrixImpl::DenseMatrix>(
           static_cast<const SparseMatrixImpl&>(rhs).sparse()));
 }
@@ -31,7 +31,7 @@ LinearMapImpl* Add_DenseMatrix_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   DenseMatrixImpl::DenseMatrix A =
-      static_cast<const DenseMatrixImpl&>(lhs).dense();
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense();
   A.diagonal() +=
       static_cast<const DiagonalMatrixImpl&>(rhs).diagonal().diagonal();
   return new DenseMatrixImpl(A);
@@ -42,7 +42,7 @@ LinearMapImpl* Add_DenseMatrix_ScalarMatrix(
     const LinearMapImpl& rhs) {
   auto const& S = static_cast<const ScalarMatrixImpl&>(rhs);
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()+
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()+
       S.alpha()*DenseMatrixImpl::DenseMatrix::Identity(S.n(), S.n()));
 }
 
@@ -50,7 +50,7 @@ LinearMapImpl* Add_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()+rhs.AsDense());
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()+rhs.AsDense());
 }
 
 LinearMapImpl* Add_SparseMatrix_DenseMatrix(
@@ -59,7 +59,7 @@ LinearMapImpl* Add_SparseMatrix_DenseMatrix(
   return new DenseMatrixImpl(
       static_cast<DenseMatrixImpl::DenseMatrix>(
           static_cast<const SparseMatrixImpl&>(lhs).sparse())+
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Add_SparseMatrix_SparseMatrix(

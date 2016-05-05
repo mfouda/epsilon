@@ -24,15 +24,14 @@ LinearMapImpl* DenseMatrixImpl::Inverse() const {
   // NOTE(mwytock): This assumes matrix is symmetric, do we need non-symmetric?
   CHECK_EQ(m(), n());
   Eigen::LDLT<DenseMatrix> ldlt;
-  ldlt.compute(dense());
+  ldlt.compute(AsDense());
   CHECK_EQ(ldlt.info(), Eigen::Success) << DebugString();
   return new DenseMatrixImpl(ldlt.solve(DenseMatrix::Identity(n(), n())));
 }
 
 std::string DenseMatrixImpl::DebugString() const {
-  return "";
-  // return StringPrintf(
-  //     "dense matrix %d x %d\n%s", m(), n(), MatrixDebugString(A_).c_str());
+  return StringPrintf(
+      "dense matrix %d x %d\n%s", m(), n(), MatrixDebugString(AsDense()).c_str());
 }
 
 bool DenseMatrixImpl::operator==(const LinearMapImpl& other) const {
@@ -51,21 +50,12 @@ DenseMatrixImpl::DenseVector DenseMatrixImpl::Apply(const DenseVector& x) const 
   int* n = const_cast<int*>(&n_);
   int incx = 1;
   int incy = 1;
-  DenseVector y(m_);
+  DenseVector y(trans_ == 'N' ? m_ : n_);
   dgemv_(trans(), m, n, &alpha, data(), m,
          const_cast<double*>(x.data()), &incx, &beta,
          const_cast<double*>(y.data()), &incy);
   return y;
 }
-
-DenseMatrixImpl::DenseMatrix DenseMatrixImpl::AsDense() const {
-  //if (trans_ == 'N') {
-  return Eigen::Map<DenseMatrix>(data(), m_, n_);
-  // } else {
-  //   return Eigen::Map<DenseMatrix>(n_, m_, data_.get()).transpose();
-  // }
-}
-
 
 
 }  // namespace

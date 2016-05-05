@@ -29,14 +29,17 @@ class DenseMatrixImpl final : public LinearMapImpl {
       data_ptr_(data_ptr),
       trans_(trans) {}
 
-  int m() const override { return m_; }
-  int n() const override { return n_; }
+  int m() const override { return trans_ == 'N' ? m_ : n_; }
+  int n() const override { return trans_ == 'N' ? n_ : m_; }
   std::string DebugString() const override;
-  DenseMatrix AsDense() const override;
+  DenseMatrix AsDense() const override {
+    DenseMatrix A = Eigen::Map<DenseMatrix>(data(), m_, n_);
+    return trans_ == 'N' ? A : static_cast<DenseMatrix>(A.transpose());
+  }
   DenseVector Apply(const DenseVector& x) const override;
 
   LinearMapImpl* Transpose() const override {
-    return new DenseMatrixImpl(n_, m_, data_ptr_, trans_ == 'Y' ? 'N' : 'Y');
+    return new DenseMatrixImpl(m_, n_, data_ptr_, trans_ == 'T' ? 'N' : 'T');
   }
 
   LinearMapImpl* Inverse() const override;
@@ -44,11 +47,6 @@ class DenseMatrixImpl final : public LinearMapImpl {
   bool operator==(const LinearMapImpl& other) const override;
 
   // Dense matrix API
-
-  // Eigen representation for multipying other types
-  Eigen::Map<const DenseMatrix> dense() const {
-    return Eigen::Map<const DenseMatrix>(data(), m(), n());
-  }
 
   // Direct access for lapack calls
   Scalar* data() const { return data_ptr_->data.get(); }

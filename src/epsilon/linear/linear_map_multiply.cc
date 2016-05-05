@@ -14,32 +14,33 @@ LinearMapImpl* Multiply(const LinearMapImpl& lhs, const LinearMapImpl& rhs);
 LinearMapImpl* Multiply_DenseMatrix_DenseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
-  int m = lhs.m();
-  int n = rhs.n();
-  int k = rhs.m();
-  double alpha = 1;
-  double beta = 0;
-
   const DenseMatrixImpl& A = static_cast<const DenseMatrixImpl&>(lhs);
   const DenseMatrixImpl& B = static_cast<const DenseMatrixImpl&>(rhs);
 
-  std::shared_ptr<DenseMatrixImpl::Data> C_data_ptr(new DenseMatrixImpl::Data);
-  C_data_ptr->data.reset(new double[m*k]);
+  int m = lhs.m();
+  int k = lhs.n();
+  int n = rhs.n();
+  int lda = *A.trans() == 'N' ? m : k;
+  int ldb = *B.trans() == 'N' ? k : n;
+  double alpha = 1;
+  double beta = 0;
 
+  std::shared_ptr<DenseMatrixImpl::Data> C_data_ptr(new DenseMatrixImpl::Data);
+  C_data_ptr->data.reset(new double[m*n]);
   dgemm_(A.trans(), B.trans(),
          &m, &n, &k, &alpha,
-         A.data(), &m,
-         B.data(), &k,
+         A.data(), &lda,
+         B.data(), &ldb,
 	 &beta,
 	 C_data_ptr->data.get(), &m);
-  return new DenseMatrixImpl(m, k, C_data_ptr, 'N');
+  return new DenseMatrixImpl(m, n, C_data_ptr, 'N');
 }
 
 LinearMapImpl* Multiply_DenseMatrix_SparseMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()*
       static_cast<const SparseMatrixImpl&>(rhs).sparse());
 }
 
@@ -47,7 +48,7 @@ LinearMapImpl* Multiply_DenseMatrix_DiagonalMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()*
       static_cast<const DiagonalMatrixImpl&>(rhs).diagonal());
 }
 
@@ -55,7 +56,7 @@ LinearMapImpl* Multiply_DenseMatrix_ScalarMatrix(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()*
       static_cast<const ScalarMatrixImpl&>(rhs).alpha());
 }
 
@@ -63,7 +64,7 @@ LinearMapImpl* Multiply_DenseMatrix_KroneckerProduct(
     const LinearMapImpl& lhs,
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
-      static_cast<const DenseMatrixImpl&>(lhs).dense()*
+      static_cast<const DenseMatrixImpl&>(lhs).AsDense()*
       rhs.AsDense());
 }
 
@@ -72,7 +73,7 @@ LinearMapImpl* Multiply_SparseMatrix_DenseMatrix(
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
       static_cast<const SparseMatrixImpl&>(lhs).sparse()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Multiply_SparseMatrix_SparseMatrix(
@@ -112,7 +113,7 @@ LinearMapImpl* Multiply_DiagonalMatrix_DenseMatrix(
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
       static_cast<const DiagonalMatrixImpl&>(lhs).diagonal()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Multiply_DiagonalMatrix_SparseMatrix(
@@ -156,7 +157,7 @@ LinearMapImpl* Multiply_ScalarMatrix_DenseMatrix(
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
       static_cast<const ScalarMatrixImpl&>(lhs).alpha()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Multiply_ScalarMatrix_SparseMatrix(
@@ -201,7 +202,7 @@ LinearMapImpl* Multiply_KroneckerProduct_DenseMatrix(
     const LinearMapImpl& rhs) {
   return new DenseMatrixImpl(
       lhs.AsDense()*
-      static_cast<const DenseMatrixImpl&>(rhs).dense());
+      static_cast<const DenseMatrixImpl&>(rhs).AsDense());
 }
 
 LinearMapImpl* Multiply_KroneckerProduct_SparseMatrix(

@@ -52,8 +52,8 @@ LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
   std::shared_ptr<DenseMatrixImpl::Data> data_ptr(new DenseMatrixImpl::Data);
   data_ptr->data.reset(new double[m*n]);
   memcpy(data_ptr->data.get(), x.data(), m*n*sizeof(double));
-
   LinearMap X(new DenseMatrixImpl(m, n, data_ptr, 'N'));
+
   return ToVector((A_*(B_*X).Transpose()).Transpose().impl().AsDense());
 }
 
