@@ -32,7 +32,7 @@ Mac OS X
 
 .. code:: bash
 
-   pip install -U http://epopt.s3.amazonaws.com/epopt-0.3.1-cp27-none-macosx_10_11_x86_64.whl
+   pip install -U http://epopt.s3.amazonaws.com/epopt-0.3.2-cp27-none-macosx_10_11_x86_64.whl
 ..
 
 Linux
@@ -40,7 +40,7 @@ Linux
 
 .. code:: bash
 
-   pip install -U http://epopt.s3.amazonaws.com/epopt-0.3.1-cp27-none-linux_x86_64.whl
+   pip install -U http://epopt.s3.amazonaws.com/epopt-0.3.2-cp27-none-linux_x86_64.whl
 ..
 
 Source installation

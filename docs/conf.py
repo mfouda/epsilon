@@ -9,8 +9,8 @@ import shlex
 project = u'Epsilon'
 copyright = u'2016, Matt Wytock'
 author = u'Matt Wytock'
-version = u'0.3.1'
-release = u'0.3.1'
+version = u'0.3.2'
+release = u'0.3.2'
 
 # Settings
 extensions = [
