@@ -51,7 +51,6 @@ class LinearMapImpl {
 
   // Works for either vector or matrix
   virtual DenseVector Apply(const DenseVector& x) const = 0;
-  virtual DenseMatrix ApplyMatrix(const DenseMatrix& X) const = 0;
 
  private:
   ImplType type_;

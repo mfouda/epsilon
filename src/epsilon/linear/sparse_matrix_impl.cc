@@ -33,12 +33,6 @@ public:
     return solver_.solve(x);
   }
 
-  DenseMatrix ApplyMatrix(const DenseMatrix& x) const override {
-    if (transpose_)
-      LOG(FATAL) << "Not implemented";
-    return solver_.solve(x);
-  }
-
   LinearMapImpl* Transpose() const override {
     LOG(FATAL) << "Not implemented";
   }

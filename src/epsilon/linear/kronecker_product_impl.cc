@@ -44,10 +44,9 @@ LinearMap::SparseMatrix KroneckerProductImpl::AsSparse() const {
 
 LinearMapImpl::DenseVector KroneckerProductImpl::Apply(
     const LinearMapImpl::DenseVector& x) const {
-  DenseMatrix X = ToMatrix(x, B_.impl().n(), A_.impl().n());
-  return ToVector(
-      A_.impl().ApplyMatrix(
-          B_.impl().ApplyMatrix(X).transpose()).transpose());
+  LinearMap X(new DenseMatrixImpl(
+      ToMatrix(x, B_.impl().n(), A_.impl().n())));
+  return ToVector((A_*(B_*X).Transpose()).Transpose().impl().AsDense());
 }
 
 bool KroneckerProductImpl::operator==(const LinearMapImpl& other) const {

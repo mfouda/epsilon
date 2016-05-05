@@ -37,8 +37,8 @@ class LinearMapTest : public testing::Test {
     E1 << 1, 2;
     E2 << 3, 4;
     E = LinearMap(new KroneckerProductImpl(
-        new DenseMatrixImpl(E1),
-        new DenseMatrixImpl(E2)));
+        LinearMap(new DenseMatrixImpl(E1)),
+        LinearMap(new DenseMatrixImpl(E2))));
     E0 = E.impl().AsDense();
 
     x = Eigen::VectorXd(2);
@@ -101,11 +101,11 @@ TEST_F(LinearMapTest, Multiply_KroneckerScalar) {
 
 TEST_F(LinearMapTest, Add_KroneckerScalar) {
   LinearMap K(new KroneckerProductImpl(
-      new DenseMatrixImpl(A0),
-      new ScalarMatrixImpl(3, -2.3)));
+      LinearMap(new DenseMatrixImpl(A0)),
+      LinearMap(new ScalarMatrixImpl(3, -2.3))));
   LinearMap L(new KroneckerProductImpl(
-      new ScalarMatrixImpl(3, 1.5),
-      new DenseMatrixImpl(A0)));
+      LinearMap(new ScalarMatrixImpl(3, 1.5)),
+      LinearMap(new DenseMatrixImpl(A0))));
   LinearMap S(new ScalarMatrixImpl(6, 1.3));
 
   Eigen::MatrixXd K0 = K.impl().AsDense();

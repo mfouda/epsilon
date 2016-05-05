@@ -16,7 +16,6 @@ class DenseMatrixImpl final : public LinearMapImpl {
   std::string DebugString() const override;
   DenseMatrix AsDense() const override { return A_; }
 
-  DenseMatrix ApplyMatrix(const DenseMatrix& X) const override { return A_*X; }
   DenseVector Apply(const DenseVector& x) const override { return A_*x; }
 
   LinearMapImpl* Transpose() const override;

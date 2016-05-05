@@ -171,13 +171,13 @@ LinearMapImpl* Add_ScalarMatrix_KroneckerProduct(
   // kron(A + beta/alpha*I, alpha*I)
   if (K.A().impl().type() == SCALAR_MATRIX) {
     auto const& KS = static_cast<const ScalarMatrixImpl&>(K.A().impl());
-    LinearMap S1 = linear_map::Scalar(K.A().impl().n(), 0);
-    LinearMap S2 = linear_map::Scalar(K.B().impl().n(), S.alpha()/KS.alpha());
+    LinearMap S1 = linear_map::Scalar(0, K.A().impl().n());
+    LinearMap S2 = linear_map::Scalar(S.alpha()/KS.alpha(), K.B().impl().n());
     return new KroneckerProductImpl(S1 + K.A(), S2 + K.B());
   } else if (K.B().impl().type() == SCALAR_MATRIX) {
     auto const& KS = static_cast<const ScalarMatrixImpl&>(K.B().impl());
-    LinearMap S1 = linear_map::Scalar(K.A().impl().n(), S.alpha()/KS.alpha());
-    LinearMap S2 = linear_map::Scalar(K.B().impl().n(), 0);
+    LinearMap S1 = linear_map::Scalar(S.alpha()/KS.alpha(), K.A().impl().n());
+    LinearMap S2 = linear_map::Scalar(0, K.B().impl().n());
     return new KroneckerProductImpl(S1 + K.A(), S2 + K.B());
   }
   return new SparseMatrixImpl(S.AsSparse() + K.AsSparse());
