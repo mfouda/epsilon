@@ -33,8 +33,13 @@ uint64_t ComputeFill(const BlockMatrix& A, const std::string& k) {
       linear_map::ImplType type = linear_map::ComputeType(
           linear_map::MULTIPLY, Aik_type, A(j, k).impl().type());
 
-      fill += linear_map::Nonzeros(
-          type, A(i, k).impl().m(), A(j, k).impl().m());
+      const int m = A(i, k).impl().m();
+      const int n = A(j, k).impl().m();
+      uint64_t fill_ij = linear_map::Nonzeros(type, m, n);
+      fill += fill_ij;
+
+      VLOG(2) << "fill(" << i << "," << k << "," << j << "): " << fill_ij
+              << " (" << type << ", " << m << " x " << n << ")";
     }
   }
 

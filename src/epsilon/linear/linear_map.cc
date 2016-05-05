@@ -148,7 +148,7 @@ ImplType ComputeType(OpType type, ImplType A, ImplType B) {
   return DENSE_MATRIX;
 }
 
-uint64_t Nonzeros(ImplType type, int m, int n) {
+uint64_t Nonzeros(ImplType type, uint64_t m, uint64_t n) {
   switch (type) {
     case DENSE_MATRIX:
     case SPARSE_MATRIX:
