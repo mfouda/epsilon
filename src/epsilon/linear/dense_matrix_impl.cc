@@ -40,7 +40,16 @@ bool DenseMatrixImpl::operator==(const LinearMapImpl& other) const {
       other.n() != n())
     return false;
   const DenseMatrixImpl& A = static_cast<const DenseMatrixImpl&>(other);
-  return (A.trans_ == trans_ && A.data_ptr_.get() == data_ptr_.get());
+
+  if (A.trans_ != trans_)
+    return false;
+
+  if (A.data_ptr_.get() == data_ptr_.get())
+    return true;
+
+  // TODO(mwytock): Comparing values shouldn't be necessary here because we
+  // shouldn't have multiple copies of data matrices in memory. Fix this.
+  return memcmp(A.data(), data(), m_*n_*sizeof(Scalar)) == 0;
 }
 
 DenseMatrixImpl::DenseVector DenseMatrixImpl::Apply(const DenseVector& x) const {
