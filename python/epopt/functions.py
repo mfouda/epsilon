@@ -43,7 +43,7 @@ def multiclass_hinge_loss(Theta, X, y):
 def quantile_loss(alphas, Theta, X, y):
     m, n = X.shape
     k = len(alphas)
-    Y = np.tile(y, (k, 1)).T
+    Y = np.tile(y.flatten(), (k, 1)).T
     A = np.tile(alphas, (m, 1))
     Z = X*Theta - Y
     return cp.sum_entries(
