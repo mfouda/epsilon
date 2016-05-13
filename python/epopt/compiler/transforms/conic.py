@@ -222,7 +222,12 @@ def transform_matrix_frac(expr):
 def transform_exp(expr):
     x = only_arg(expr)
     t = epi_var(expr, "exp")
-    return t, [expression.epigraph(expr, t)]
+    return t, [expression.leq_constraint(expr, t)]
+
+def transform_log(expr):
+    x = only_arg(expr)
+    t = epi_var(expr, "log")
+    return t, [expression.leq_constraint(expression.exp(t), x)]
 
 def transform_indicator(expr):
     return expression.scalar_constant(0, size=dims(expr)), [expr]

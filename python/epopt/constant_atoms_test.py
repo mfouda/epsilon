@@ -34,16 +34,20 @@ v_np = np.matrix([-1.,2,-2]).T
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-# TODO(mwytock): Fix tests that are slow/broken:
-# - exp/log: requires exponential cone implementation
+log_sum_exp_axis_0 = lambda x: log_sum_exp(x, axis=0)
+log_sum_exp_axis_1 = lambda x: log_sum_exp(x, axis=1)
+
+
+# TODO(mwytock): Fix these
 # - lambda_sum_largest/smallest: need SemidefUpperTri variables
+# - Add atoms: kl_div, log_sum_exp, logistic, log1p, entr
 atoms = [
     ([
         (abs, (2, 2), [ [[-5,2],[-3,1]] ], Constant([[5,2],[3,1]])),
         (diag, (2, 1), [ [[-5,2],[-3,1]] ], Constant([-5, 1])),
         (diag, (2, 2), [ [-5, 1] ], Constant([[-5, 0], [0, 1]])),
-        # (exp, (2, 2), [ [[1, 0],[2, -1]] ],
-        #     Constant([[math.e, 1],[math.e**2, 1.0/math.e]])),
+        (exp, (2, 2), [ [[1, 0],[2, -1]] ],
+            Constant([[math.e, 1],[math.e**2, 1.0/math.e]])),
         (huber, (2, 2), [ [[0.5, -1.5],[4, 0]] ], Constant([[0.25, 2],[7, 0]])),
         (lambda x: huber(x, 2.5), (2, 2), [ [[0.5, -1.5],[4, 0]] ],
          Constant([[0.25, 2.25],[13.75, 0]])),
@@ -63,7 +67,7 @@ atoms = [
         (lambda_max, (1, 1), [ [[5,7],[7,-3]] ], Constant([9.06225775])),
 
         # (lambda x: lambda_sum_largest(x, 2), (1, 1), [ [[1, 2, 3], [2,4,5], [3,5,6]] ], Constant([11.51572947])),
-        # (log_sum_exp, (1, 1), [ [[5, 7], [0, -3]] ], Constant([7.1277708268])),
+        (log_sum_exp, (1, 1), [ [[5, 7], [0, -3]] ], Constant([7.1277708268])),
         # (log_sum_exp_axis_0, (1,2), [ [[5, 7], [0, -3]] ], Constant([7.12692801, 0.04858735]).T),
         # (log_sum_exp_axis_1, (2,1), [ [[5, 7], [0, -3]] ], Constant([5.00671535, 7.0000454])),
         # (logistic, (2, 2),
@@ -202,7 +206,7 @@ atoms = [
         (lambda_min, (1, 1), [ [[5,7],[7,-3]] ], Constant([-7.06225775])),
         # (lambda x: lambda_sum_smallest(x, 2), (1, 1), [ [[1, 2, 3], [2,4,5], [3,5,6]] ], Constant([-0.34481428])),
 
-        # (log, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ], Constant([[0, 1],[2, -1]])),
+        (log, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ], Constant([[0, 1],[2, -1]])),
         # (log1p, (2, 2), [ [[0, math.e-1],[math.e**2-1, 1.0/math.e-1]] ], Constant([[0, 1],[2, -1]])),
 
         (min_elemwise, (2, 1), [ [-5,2],[-3,1],0,[1,2] ], Constant([-5,0])),
@@ -221,9 +225,28 @@ atoms = [
 
 # atoms = [
 #     ([
-#         (lambda x: pnorm(x, 2, axis=0), (1, 2), [ [[1,2],[3,4]] ], Constant([math.sqrt(5), 5.]).T),
-#         (lambda x: pnorm(x, 2, axis=1), (2, 1), [ [[1,2],[4,5]] ], Constant([math.sqrt(17), math.sqrt(29)])),
+#         # Need atoms
+#         # (kl_div, (1, 1), [math.e, 1], Constant([1])),
+#         # (kl_div, (1, 1), [math.e, math.e], Constant([0])),
+#         #(log_sum_exp_axis_0, (1,2), [ [[5, 7], [0, -3]] ], Constant([7.12692801, 0.04858735]).T),
+#         #(log_sum_exp_axis_1, (2,1), [ [[5, 7], [0, -3]] ], Constant([5.00671535, 7.0000454])),
+#         # (logistic, (2, 2),
+#         #  [
+#         #      [[math.log(5), math.log(7)],
+#         #       [0,           math.log(0.3)]] ],
+#         #  Constant(
+#         #      [[math.log(6), math.log(8)],
+#         #       [math.log(2), math.log(1.3)]])),
 #     ], Minimize),
+# ]
+
+# atoms = [
+#     ([
+#         # Need atoms
+#         # (entr, (2, 2), [ [[1, math.e],[math.e**2, 1.0/math.e]] ],
+#         #  Constant([[0, -math.e], [-2*math.e**2, 1.0/math.e]])),
+#         # (entr(0), Constant([0])),
+#     ], Maximize),
 # ]
 
 def check_solver(prob, solver_name):

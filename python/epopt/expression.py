@@ -324,6 +324,13 @@ def sum_entries(x):
         func_curvature=AFFINE,
         arg=[x])
 
+def exp(x):
+    return Expression(
+        expression_type=expression_pb2.Expression.EXP,
+        arg_monotonicity=[INCREASING],
+        size=x.size,
+        arg=[x])
+
 def transpose(x):
     m, n = x.size.dim
     return Expression(
@@ -424,6 +431,3 @@ def prox_function(f, *args, **kwargs):
         size=Size(dim=kwargs.get("size", (1,1))),
         prox_function=f,
         arg=args)
-
-def epigraph(f, t):
-    return leq_constraint(f, t)
