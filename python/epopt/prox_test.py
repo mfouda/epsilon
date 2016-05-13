@@ -223,7 +223,7 @@ PROX_TESTS = [
 # Epigraph operators
 PROX_TESTS += [
     epigraph("NEG_LOG_DET", None, lambda: [-cp.log_det(X) <= t]),
-    #epigraph("EXP", None, lambda: [cp.exp(x) <= z])
+    epigraph("EXP", None, lambda: [cp.exp(x) <= z]),
     epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(x) <= t]),
     epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(X, axis=0) <= t_rvec]),
     epigraph("LOG_SUM_EXP", None, lambda: [cp.log_sum_exp(X, axis=1) <= t_vec]),
@@ -246,11 +246,6 @@ PROX_TESTS += [
     #epigraph("SUM_SQUARE", None, lambda: [f_quad_form() <= t]),
     epigraph("SUM_SQUARE", None, lambda: [cp.sum_squares(x) <= t]),
 ]
-
-PROX_TESTS = [
-    prox("ZERO", None, C_linear_equality),
-]
-
 
 def run_prox(prox_function_type, prob, v_map, lam=1, epigraph=False):
     eval_prox_impl(prob, v_map, lam, prox_function_type, epigraph)

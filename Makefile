@@ -63,6 +63,7 @@ common_cc = \
 	epsilon/linear/scalar_matrix_impl.cc \
 	epsilon/linear/sparse_matrix_impl.cc \
 	epsilon/prox/affine.cc \
+	epsilon/prox/exp.cc \
 	epsilon/prox/lambda_max.cc \
 	epsilon/prox/log_sum_exp.cc \
 	epsilon/prox/max.cc \

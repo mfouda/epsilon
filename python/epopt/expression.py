@@ -426,4 +426,4 @@ def prox_function(f, *args, **kwargs):
         arg=args)
 
 def epigraph(f, t):
-    return leq_constraint(a, b)
+    return leq_constraint(f, t)
