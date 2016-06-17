@@ -57,7 +57,7 @@ PROBLEMS = [
 # ProblemInstance("max_gaussian", max_gaussian.create, dict(m=200, n=100, k=5))
 PROBLEMS_ICML = [
     ProblemInstance("chebyshev", chebyshev.create, dict(m=5000, n=200)),
-    ProblemInstance("max_softmax", max_softmax.create, dict(m=400, k=120, n=10)),
+    ProblemInstance("max_softmax", max_softmax.create, dict(m=400, k=120, n=10, epsilon_eps=1e-4, scs_eps=1e-1, ecos_abstol=1e-1)),
     ProblemInstance("oneclass_svm", oneclass_svm.create, dict(m=6000, n=600)),
     ProblemInstance("robust_svm", robust_svm.create, dict(m=2500, n=750)),
 ]
@@ -157,6 +157,12 @@ def benchmark_cvxpy(solver, cvxpy_prob):
             kwargs["eps"] = 1e-3
         if "scs_eps" in cvxpy_prob.kwargs:
             kwargs["eps"] = cvxpy_prob.kwargs["scs_eps"]
+    else:
+        if "ecos_abstol" in cvxpy_prob.kwargs:
+            # to prevent ecos breakdown at max_softmax
+            kwargs["abstol"] = cvxpy_prob.kwargs["ecos_abstol"]
+            kwargs["reltol"] = 1e-1*kwargs["abstol"]
+            kwargs["feastol"] = 1e-6*kwargs["abstol"]
 
     try:
         # TODO(mwytock): ProblemInstanceably need to run this in a separate thread/process
