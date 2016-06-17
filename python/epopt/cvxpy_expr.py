@@ -189,9 +189,12 @@ for expr_cls, expr_type in EXPRESSION_TYPES:
     assert inspect.isclass(expr_cls), expr_cls
 
 def convert_expression(expr):
-    for expr_cls, convert in EXPRESSION_TYPES:
-        if type(expr) is expr_cls:
-            return convert(expr)
+    if expr.is_constant():
+        return convert_constant(expr)
+    else:
+        for expr_cls, convert in EXPRESSION_TYPES:
+            if type(expr) is expr_cls:
+                return convert(expr)
     raise RuntimeError("Unknown type: %s" % type(expr))
 
 def convert_constraint(constraint):
